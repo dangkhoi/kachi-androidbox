@@ -122,10 +122,10 @@ class AccessibilityGrantSafetyContractTest {
         val appopsTargets = Regex("""appops set (\S+)""").findAll(pre).map { it.groupValues[1] }.toList()
         assertTrue(appopsTargets.isNotEmpty(), "phải có lệnh cấp quyền overlay")
         appopsTargets.forEach {
-            assertTrue(it == "\$PKG" || it == "com.byd.launcher", "lệnh cấp nhắm vào '$it' — phải là gói của chính app")
+            assertTrue(it == "\$PKG" || it == com.byd.clusternav.BuildConfig.APPLICATION_ID, "lệnh cấp nhắm vào '$it' — phải là gói của chính app")
         }
         assertTrue(
-            pre.contains("""const val PKG = "com.byd.launcher""""),
+            pre.contains("const val PKG = BuildConfig.APPLICATION_ID"),
             "hằng số gói phải đúng là gói của app này",
         )
     }

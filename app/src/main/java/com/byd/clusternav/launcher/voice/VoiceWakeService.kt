@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher.voice
 
+import com.byd.clusternav.BuildConfig
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -461,7 +462,7 @@ class VoiceWakeService : Service() {
         }
 
         /** Action của [listenNow]. */
-        const val ACTION_LISTEN_NOW = "com.byd.launcher.LISTEN_NOW"
+        const val ACTION_LISTEN_NOW = BuildConfig.APPLICATION_ID + ".LISTEN_NOW"
 
         /** FIX286 · VK6 — lối vào của [listenNow] (`WakeSessionJournal.Entry.code`) cho nhật ký phiên `:wake`. */
         private const val EXTRA_ENTRY = "entry"

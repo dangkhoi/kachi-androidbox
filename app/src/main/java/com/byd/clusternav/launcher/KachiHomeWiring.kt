@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher
 
+import com.byd.clusternav.BuildConfig
 import android.app.Activity
 import android.content.Intent
 import android.view.View
@@ -474,7 +475,7 @@ internal fun Activity.bringUpShellChannel(
         return
     }
     onSeam(seam)
-    runCatching { seam("appops set com.byd.launcher SYSTEM_ALERT_WINDOW allow") }  // vẽ dải header nổi lên app freeform
+    runCatching { seam("appops set ${BuildConfig.APPLICATION_ID} SYSTEM_ALERT_WINDOW allow") }  // vẽ dải header nổi lên app freeform
     val dispatcher = container.windowDispatcher
     runOnUiThread {
         // GẮN NGUYÊN KHỐI (P-bug2): 1 lời gọi mang đủ kênh shell + kênh chạm + đăng ký/gỡ màn ảo, rồi WorkspaceView

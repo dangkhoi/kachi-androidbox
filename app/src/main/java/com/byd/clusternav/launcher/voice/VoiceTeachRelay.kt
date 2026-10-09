@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher.voice
 
+import com.byd.clusternav.BuildConfig
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -131,10 +132,10 @@ internal class VoiceTeachRelay(
 
     companion object {
         private const val TAG = "KachiVoiceTeach"
-        const val ACTION_TEACH_LISTEN = "com.byd.launcher.TEACH_LISTEN"
-        const val ACTION_TEACH_CANCEL = "com.byd.launcher.TEACH_CANCEL"
-        const val ACTION_TEACH_ACK = "com.byd.launcher.TEACH_ACK"
-        const val ACTION_TEACH_EVENT = "com.byd.launcher.TEACH_EVENT"
+        const val ACTION_TEACH_LISTEN = BuildConfig.APPLICATION_ID + ".TEACH_LISTEN"
+        const val ACTION_TEACH_CANCEL = BuildConfig.APPLICATION_ID + ".TEACH_CANCEL"
+        const val ACTION_TEACH_ACK = BuildConfig.APPLICATION_ID + ".TEACH_ACK"
+        const val ACTION_TEACH_EVENT = BuildConfig.APPLICATION_ID + ".TEACH_EVENT"
         private const val EXTRA_NONCE = "nonce"
         private const val EXTRA_STATE = "state"
         private const val EXTRA_LEVEL = "level"

@@ -26,7 +26,7 @@ import java.util.Locale
  * ═══ T-BRIDGE · CẦU KIỂM THỬ QUA adb ═════════════════════════════════════════════════════════════════════════
  *
  * Spec `docs/specs/kachi-test-bridge.html`. Owner 2026-09-14: *"sẽ adb vào xe, nên chuẩn bị toàn bộ script test
- * automation trên xe thông qua adb"*. Ví dụ: `am broadcast -a com.byd.launcher.TEST -p com.byd.launcher --es cmd state`.
+ * automation trên xe thông qua adb"*. Ví dụ: `am broadcast -a com.kachi.box.TEST -p com.kachi.box --es cmd state`.
  *
  * ## Vì sao `exported="true"` — và bốn thứ bù lại
  * [ĐO] nghiên cứu 09-14: uid shell (2000) **không** gửi được vào một receiver `exported=false` (`SecurityException`),

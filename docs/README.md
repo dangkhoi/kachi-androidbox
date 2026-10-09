@@ -5,6 +5,14 @@
 **(VI)** Đây là **nguồn map tài liệu duy nhất** của repo. Đọc file này trước → rồi mở doc cụ thể. Task = `PROJECT-BACKLOG.md`. Luật bền = `../.kiro/steering/`.
 **(EN)** This is the repo's **single documentation map**. Read this first → then open the specific doc. Tasks live in `PROJECT-BACKLOG.md`; durable rules in `../.kiro/steering/`.
 
+
+**📦 Kachi Android box (repo này — 2026-10-09).** Repo tách từ Kachi BYD 2.98; mọi doc BYD bên dưới là **lịch sử kế thừa**, không áp dụng trừ khi spec box dẫn tới.
+
+| Doc | Mục đích | Trạng thái | Cập nhật |
+|---|---|---|---|
+| [`specs/androidbox-plan.html`](specs/androidbox-plan.html) | Kế hoạch Android box B1–B5 (B1 tách sạch xong) | Current | 2026-10-09 |
+| [`_handoff/HANDOFF-androidbox-2026-10-09.md`](_handoff/HANDOFF-androidbox-2026-10-09.md) | Handoff tách repo (đọc đầu phiên) | Session | 2026-10-09 |
+| [`../CLAUDE.md`](../CLAUDE.md) | Luật dự án viết lại cho Android box | Current | 2026-10-09 |
 **Legend — trạng thái:** `Current` = hiện hành/authoritative · `Session` = handoff phiên (tạm) · `Historical` = lineage/context, giữ tại chỗ, KHÔNG authoritative · `Pending` = sẽ tạo (stage khác).
 
 **9-loại taxonomy (R4):** 1) Index · 2) Backlog · 3) Rules/Steering · 4) Overview · 5) Spec · 6) Diagnostics · 7) Guide · 8) ADR · 9) Handoff · (+ `archive/` = trạng thái doc bị thay thế).

@@ -162,7 +162,7 @@ object VoiceGeocoder {
         //  (a) connectTimeout ngắn hơn budget để CÒN thời gian đọc; (b) UA đúng CHUẨN Nominatim (điều khoản đòi UA
         //  nhận dạng được + contact) — UA chung "ClusterNav-Updater" dễ bị tarpit/rate-limit ⇒ treo.
         conn.connectTimeout = GEO_CONNECT_TIMEOUT_MS
-        conn.setRequestProperty("User-Agent", "KachiLauncher/1.0 (BYD DiLink; https://github.com/dangkhoi/byd-kachi)")
+        conn.setRequestProperty("User-Agent", "KachiBox/1.0 (Android; https://github.com/dangkhoi/kachi-androidbox)")
         try {
             if (conn.responseCode != 200) {
                 Log.w(TAG, "máy chủ tra cứu trả ${conn.responseCode}")

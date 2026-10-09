@@ -15,7 +15,7 @@ set -uo pipefail
 SERIAL="emulator-5554"
 APK=""
 OUT="/tmp/kachi-voice-teach"
-PKG="com.byd.launcher"
+PKG="com.kachi.box"
 ADB="${ADB:-$HOME/Library/Android/sdk/platform-tools/adb}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PICK=""

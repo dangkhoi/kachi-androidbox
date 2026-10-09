@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher
 
+import com.byd.clusternav.BuildConfig
 import android.content.Context
 import android.os.Process
 import android.util.Log
@@ -12,7 +13,7 @@ import java.io.File
  * trình dùng — để có nhiều thông tin patch nếu lỗi."*
  *
  * Thư mục: `getExternalFilesDir(null)/kachi-logs/` =
- * `/sdcard/Android/data/com.byd.launcher/files/kachi-logs/`. Vì sao chỗ này:
+ * `/sdcard/Android/data/com.kachi.box/files/kachi-logs/`. Vì sao chỗ này:
  *  - **Trên thẻ (external)**, KHÔNG phải bộ nhớ trong app ⇒ nhẹ đầu xe.
  *  - Đọc qua `adb pull` **KHÔNG cần root** (thư mục external của chính app).
  *  - Tự xoá khi gỡ app; [DiagStorageCap] dọn `kachi-logs/` (có trong danh sách cho phép `DiagFiles` — 2.92 bộ
@@ -23,7 +24,7 @@ import java.io.File
  *  - `usage-<ts>.log` — logcat CỦA CHÍNH app (theo pid) chạy nền suốt phiên = "log trong quá trình dùng".
  *  - `snapshot-<ts>.log` — chụp một phát toàn bộ logcat gần đây (gồm cả hệ thống) khi bấm — cho lỗi cần ngữ cảnh rộng.
  *
- * **Lấy về:** `adb pull /sdcard/Android/data/com.byd.launcher/files/kachi-logs/ ./kachi-logs/`
+ * **Lấy về:** `adb pull /sdcard/Android/data/com.kachi.box/files/kachi-logs/ ./kachi-logs/`
  */
 object KachiLog {
     private const val TAG = "KachiLog"
@@ -40,7 +41,7 @@ object KachiLog {
 
     /** Đường dẫn để hướng dẫn `adb pull`. Vắng thẻ ⇒ trả đường dẫn quy ước (ASCII, không dịch — ca hiếm). */
     fun pullPath(ctx: Context): String =
-        dir(ctx)?.absolutePath ?: "/sdcard/Android/data/com.byd.launcher/files/$FOLDER"
+        dir(ctx)?.absolutePath ?: "/sdcard/Android/data/${BuildConfig.APPLICATION_ID}/files/$FOLDER"
 
     /** Lệnh adb lấy log về (hiện trên màn để owner sao chép). */
     fun pullCommand(ctx: Context): String = "adb pull ${pullPath(ctx)}/ ./kachi-logs/"

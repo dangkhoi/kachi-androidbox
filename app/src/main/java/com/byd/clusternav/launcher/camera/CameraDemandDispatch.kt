@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher.camera
 
+import com.byd.clusternav.BuildConfig
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -49,7 +50,7 @@ object CameraDemandDispatch {
     private const val TAG = "KachiCamDemand"
 
     /** `:wake` → chính: một lệnh camera đã mã hoá ([CameraDemand.encode]). Chỉ trong gói (`setPackage`). */
-    const val ACTION = "com.byd.launcher.CAMERA_DEMAND"
+    const val ACTION = BuildConfig.APPLICATION_ID + ".CAMERA_DEMAND"
     private const val EXTRA_OP = "op"
 
     /** Hạn của bên gửi (`SystemClock.elapsedRealtime`, chung mọi tiến trình) — receiver bỏ lệnh tới SAU nó ([CameraWakeAsk.expired]). */

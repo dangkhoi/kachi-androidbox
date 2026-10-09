@@ -12,7 +12,7 @@ set -euo pipefail
 LABEL="${1:?label}"; WINDOW="${2:-60}"; SERIAL="${3:-}"
 ADB="${ADB:-$HOME/Library/Android/sdk/platform-tools/adb}"
 [[ -n "$SERIAL" ]] && ADB="$ADB -s $SERIAL"
-PKG="${PKG:-com.byd.launcher}"
+PKG="${PKG:-com.kachi.box}"
 OUT_DIR="${OUT_DIR:-docs/diagnostics/perf-closeout-2026-09-25}"
 mkdir -p "$OUT_DIR"
 # `< /dev/null`: adb shell đọc stdin ⇒ trong vòng `while read` nó nuốt hết dòng còn lại của process substitution.

@@ -394,7 +394,7 @@ class TestBridgeSafetyContractTest {
                 .filter { (_, line) ->
                     val l = line.trim()
                     !l.startsWith("#") && l.contains("am broadcast") &&
-                        (l.contains("KACHI_TEST_ACTION") || l.contains("com.byd.launcher.TEST")) &&
+                        (l.contains("KACHI_TEST_ACTION") || l.contains("com.kachi.box.TEST")) &&
                         !l.contains("-n ")
                 }
         }

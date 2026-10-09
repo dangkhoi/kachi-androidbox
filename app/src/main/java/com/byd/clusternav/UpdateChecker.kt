@@ -15,7 +15,7 @@ import com.byd.clusternav.net.HttpConn
  * KIỂM TRA & TẢI BẢN CẬP NHẬT từ GitHub — không cần server riêng, không thư viện ngoài.
  *
  * Cách hoạt động: repo public để sẵn APK release trong thư mục `apk/`. Hỏi GitHub Contents API xem thư mục
- * đó có file `Kachi-<ver>-release.apk` (hoặc tên cũ `ClusterNav-…`) nào mới hơn bản đang cài không, rồi tải từ
+ * đó có file `Kachi-box-<ver>-release.apk` nào mới hơn bản đang cài không, rồi tải từ
  * `download_url` và cài. Cùng khoá ký Kachi (keystore riêng từ 1.41, L2) nên `pm install -r` chạy được.
  *
  * CÀI qua dadb loopback (`dadb.install(file, "-r")`): app chạy trên đầu xe nối `localhost:5555` = uid shell,
@@ -37,15 +37,19 @@ object UpdateChecker {
      * L2 (2026-09-13) — kênh cập nhật RIÊNG của Kachi: repo `dangkhoi/byd-kachi` (đúng remote của mã này), thư mục
      * `apk/` trên nhánh [BRANCH]. Trước đây trỏ `dangkhoi/byd-launcher` (tên repo ClusterNav 2.0 kế thừa) ⇒ Kachi
      * dò nhầm kênh của app khác — không bao giờ thấy bản của mình.
+     *
+     * Android box (2026-10-09, spec `androidbox-plan` B1): repo RIÊNG `dangkhoi/kachi-androidbox`, KHÔNG chung kênh
+     * với Kachi BYD (`byd-kachi`) — bản box dò kênh BYD sẽ tự "cập nhật" thành bản BYD.
      */
-    private const val REPO = "dangkhoi/byd-kachi"
+    private const val REPO = "dangkhoi/kachi-androidbox"
     /** Nhánh chứa APK phát hành. Để trống = nhánh mặc định của repo (main). */
     private const val BRANCH = "main"
     /**
-     * Tên tệp phát hành: `Kachi-<ver>-release.apk`. Vẫn nhận `ClusterNav-<ver>-release.apk` để nếu owner đăng theo
-     * tên cũ thì kênh không câm — hai tiền tố, một dải phiên bản; bản mới nhất thắng bất kể tiền tố.
+     * Tên tệp phát hành (Android box): `Kachi-box-<ver>-release.apk` — CHỈ tiền tố này. Cố ý không nhận khuôn của
+     * bản BYD (`Kachi-<ver>` / `ClusterNav-<ver>`): lỡ chép nhầm APK BYD vào `apk/` repo này thì box không mời cài
+     * một app khác (`com.byd.launcher`) lên máy.
      */
-    internal val RE_APK = Regex("""(?:Kachi|ClusterNav)-([0-9]+(?:\.[0-9]+)*)-release\.apk""")
+    internal val RE_APK = Regex("""Kachi-box-([0-9]+(?:\.[0-9]+)*)-release\.apk""")
 
     /** Phiên bản trong tên tệp phát hành, `null` nếu tên không đúng khuôn (thuần — test off-device). */
     internal fun apkVersion(fileName: String): String? = RE_APK.matchEntire(fileName)?.groupValues?.get(1)

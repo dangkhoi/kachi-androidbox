@@ -149,7 +149,7 @@ class VoiceWakeHomeRelayWiringContractTest {
         // CHÍNH `slots.placeTemporary` (cùng lớp `KachiHomeSlots` lo cả state lẫn cửa sổ), không còn `slots.assignApp`.
         assertTrue(activity.contains("assignAppToSlot = { idx, pkg -> slots.placeTemporary(idx, pkg) }"), "Activity vẫn truyền CHÍNH lối đặt tạm của KachiHomeSlots")
         assertTrue(activity.contains("onLayout = { preset -> selectPreset(preset); true }"), "Activity vẫn truyền CHÍNH selectPreset (đường chip bố cục)")
-        assertTrue(entry.contains("const val ACTION_HOME_ACTION_ACK = \"com.byd.launcher.HOME_ACTION_ACK\""))
+        assertTrue(entry.contains("const val ACTION_HOME_ACTION_ACK = BuildConfig.APPLICATION_ID + \".HOME_ACTION_ACK\""))
         assertTrue(SourceRoots.body(entry, "fun ackHome(ctx: Context, nonce: String, ack: VoiceHomeRelay.Ack)").contains("setPackage(ctx.packageName)"), "ack chỉ trong gói")
     }
 

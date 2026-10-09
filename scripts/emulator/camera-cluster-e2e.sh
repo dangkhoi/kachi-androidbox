@@ -23,7 +23,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-PKG="com.byd.launcher"
+PKG="com.kachi.box"
 HOME_ACT="$PKG/com.byd.clusternav.launcher.KachiHome"
 SERIAL="emulator-5554"
 OUT="${TMPDIR:-/tmp}/kachi-camera-cluster-$(date -u +%Y%m%d-%H%M%S)"
@@ -190,11 +190,11 @@ def edge_at(edge, y, flat):
     i = min(int(t), len(edge) - 2)
     return round(edge[i] + (t - i) * (edge[i + 1] - edge[i]))
 t = open(f"{out}/windows-{tag}.txt", encoding="utf-8", errors="replace").read()
-# Cửa sổ overlay camera của Kachi trên display cụm: block "Window #n Window{... com.byd.launcher}" có mDisplayId=<did> + ty=APPLICATION_OVERLAY.
+# Cửa sổ overlay camera của Kachi trên display cụm: block "Window #n Window{... com.kachi.box}" có mDisplayId=<did> + ty=APPLICATION_OVERLAY.
 blocks = re.split(r"\n(?=  Window #\d+ )", t)
 frame = None
 for b in blocks:
-    if "com.byd.launcher" not in b or f"mDisplayId={did} " not in b or "APPLICATION_OVERLAY" not in b: continue
+    if "com.kachi.box" not in b or f"mDisplayId={did} " not in b or "APPLICATION_OVERLAY" not in b: continue
     m = re.search(r"mFrame=\[(\d+),(\d+)\]\[(\d+),(\d+)\]", b) or re.search(r"Frames: containing=.*?\n.*?frame=\[(\d+),(\d+)\]\[(\d+),(\d+)\]", b)
     if m: frame = tuple(map(int, m.groups())); break
 if frame is None:

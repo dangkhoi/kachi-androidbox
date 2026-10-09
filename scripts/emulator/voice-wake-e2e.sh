@@ -11,7 +11,7 @@ set -uo pipefail
 SERIAL="${1:-emulator-5554}"
 VOICES="${2:-Linh}"
 ADB="$HOME/Library/Android/sdk/platform-tools/adb -s $SERIAL"
-B="am broadcast -a com.byd.launcher.TEST -n com.byd.launcher/com.byd.clusternav.launcher.testbridge.KachiTestBridge"
+B="am broadcast -a com.kachi.box.TEST -n com.kachi.box/com.byd.clusternav.launcher.testbridge.KachiTestBridge"
 WD=/tmp/kachi-wake-e2e; mkdir -p "$WD"
 
 # id \t câu \t nhóm(POS=phải wake / NEG=không được wake)
@@ -29,9 +29,9 @@ UPMS=$(python3 -c "print(int(float('${UP:-0}')*1000))" 2>/dev/null||echo 0)
 if [ -n "$BID" ] && [ "$UPMS" != 0 ]; then
   printf '<?xml version="1.0" encoding="utf-8" standalone="yes" ?>\n<map>\n    <string name="test_bridge_until">%s:%s</string>\n</map>\n' "$BID" "$((UPMS+3600000))" > "$WD/tb.xml"
   $ADB push "$WD/tb.xml" /data/local/tmp/tb.xml >/dev/null 2>&1
-  $ADB shell "su 0 sh -c 'cp /data/local/tmp/tb.xml /data/data/com.byd.launcher/shared_prefs/kachi_test_bridge.xml; chown u0_a163:u0_a163 /data/data/com.byd.launcher/shared_prefs/kachi_test_bridge.xml'" >/dev/null 2>&1
-  $ADB shell am force-stop com.byd.launcher >/dev/null 2>&1; sleep 2
-  $ADB shell am start -n com.byd.launcher/com.byd.clusternav.launcher.KachiHomeActivity >/dev/null 2>&1; sleep 4
+  $ADB shell "su 0 sh -c 'cp /data/local/tmp/tb.xml /data/data/com.kachi.box/shared_prefs/kachi_test_bridge.xml; chown u0_a163:u0_a163 /data/data/com.kachi.box/shared_prefs/kachi_test_bridge.xml'" >/dev/null 2>&1
+  $ADB shell am force-stop com.kachi.box >/dev/null 2>&1; sleep 2
+  $ADB shell am start -n com.kachi.box/com.byd.clusternav.launcher.KachiHomeActivity >/dev/null 2>&1; sleep 4
 fi
 
 pos_hit=0; pos_n=0; neg_bad=0; neg_n=0; n=0

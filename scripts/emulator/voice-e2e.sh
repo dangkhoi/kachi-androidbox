@@ -22,7 +22,7 @@ APK=""
 WAVDIR="/tmp/kachi-voice-wav"
 MODELDIR=""
 OUT="/tmp/kachi-voice-e2e"
-PKG="com.byd.launcher"
+PKG="com.kachi.box"
 # shellcheck disable=SC2034  # đọc trong voice-common.sh (start_home)
 HOME_ACT="$PKG/com.byd.clusternav.launcher.KachiHomeActivity"
 # 2.98: app dùng bản int8 (SherpaModelCatalog) — bản fp32 cũ không còn được nạp.

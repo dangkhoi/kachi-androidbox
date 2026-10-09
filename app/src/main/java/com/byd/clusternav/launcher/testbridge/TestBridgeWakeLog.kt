@@ -6,7 +6,7 @@ import com.byd.clusternav.launcher.voice.WakeSessionLog
 /**
  * ═══ T-BRIDGE · `wakelog` — ĐỌC NHẬT KÝ PHIÊN NGHE CỦA `:wake` (FIX286 · VK6) ═══════════════════════════════════
  *
- * `am broadcast -a com.byd.launcher.TEST -p com.byd.launcher --es cmd wakelog [--ei n 50]`
+ * `am broadcast -a com.kachi.box.TEST -p com.kachi.box --es cmd wakelog [--ei n 50]`
  *
  * Ranh giới ở KDoc [TestBridgeCommands.WAKELOG]. Ở đây chỉ là phần chạm Android: đọc tệp qua ĐÚNG
  * [WakeSessionLog.read] (cùng hai lớp khoá với các lượt ghi từ `:wake` — không mở tệp lần hai bằng tay).

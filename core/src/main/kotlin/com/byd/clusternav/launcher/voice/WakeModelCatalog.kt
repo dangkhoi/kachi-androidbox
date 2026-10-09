@@ -1,6 +1,9 @@
 package com.byd.clusternav.launcher.voice
 
 /**
+ * Android box (spec `androidbox-plan` OQ5, 2026-10-09): CỐ Ý vẫn tải từ `byd-kachi/voice/` — tài nguyên chỉ đọc, ghim sha256,
+ * dùng chung với bản BYD; kênh OTA APK thì tách riêng (`UpdateChecker`). Dọn `voice/` bên BYD ⇒ box hết tải được.
+ *
  * ═══ "Hey Kachi" · GÓI MODEL KEYWORD-SPOTTER — GHIM BẰNG SỐ ĐO THẬT CỦA CHÍNH 5 TỆP ĐÃ ĐẶT TRONG REPO ══════════
  *
  * Spec `docs/specs/kachi-wake-word.html`. Thuần Kotlin (`:core`) ⇒ luật ghim kiểm off-car; phần chạm đĩa/mạng

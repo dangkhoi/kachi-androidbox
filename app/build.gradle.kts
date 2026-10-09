@@ -55,7 +55,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.byd.launcher"
+        // Android box (spec `androidbox-plan` B1, owner 09/10): mã riêng — giữ `com.byd.launcher` thì cài lên xe BYD sẽ ĐÈ
+        // Kachi BYD. Lịch sử số hiệu bên dưới là của Kachi BYD (≤ 2.98), giữ làm lịch sử; box đánh số lại từ 1.0 (1).
+        applicationId = "com.kachi.box"
         minSdk = 29
         targetSdk = 37
         // VISUAL-REFRESH P1 (bề mặt + icon app hoa anh đào). 1.67 đã có 2 commit nhưng **chưa đăng APK nào**
@@ -110,8 +112,10 @@ android {
         // 2.98 (201) — "hả" ≠ "hạ" · liên từ "xong" · câu "đã rời ô" khi hai màn chính · lối tắt nhớ vị trí trôi · tên màn ảo ô cố định
         // (display_settings.xml không phình) · rà hiệu năng 4 trạng thái: log shell chỉ đọc theo thay đổi, dọn khung app đã gỡ, trần log nav,
         // dọn chẩn đoán lúc khởi động, xoá APK OTA đã cài (spec kachi-298-plan).
-        versionCode = 201
-        versionName = "2.98"
+        // Kachi Android box 1.0 (1) — B1 tách khỏi BYD: appId `com.kachi.box`, kênh OTA `dangkhoi/kachi-androidbox`
+        // (`apk/Kachi-box-<ver>-release.apk`).
+        versionCode = 1
+        versionName = "1.0"
 
         // ─── V1 pha NGHE · Vosk mang thư viện NATIVE, và APK chỉ chở ABI có thật trên xe ───────────────
         // [ĐO] 2026-09-14 `vosk-android-0.3.47.aar` (12,3 MB) chở `libvosk.so` cho BỐN ABI:

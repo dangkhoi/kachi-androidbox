@@ -12,7 +12,7 @@
 # ─────────────────────────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
 
-KACHI_PKG="${KACHI_PKG:-com.byd.launcher}"
+KACHI_PKG="${KACHI_PKG:-com.kachi.box}"
 KACHI_HOME_COMP="${KACHI_HOME_COMP:-$KACHI_PKG/com.byd.clusternav.launcher.KachiHomeActivity}"
 ADB="${ADB:-adb}"
 
@@ -278,11 +278,11 @@ k_state_diff() {
 # CẦU KIỂM THỬ QUA ADB (`KachiTestBridge`) — thay cho `input tap` theo toạ độ
 #
 # Giao thức (broadcast, kết quả trả bằng `setResultData` + một tệp JSON):
-#   adb shell am broadcast -n com.byd.launcher/com.byd.clusternav.launcher.testbridge.KachiTestBridge \
-#       -a com.byd.launcher.TEST \
+#   adb shell am broadcast -n com.kachi.box/com.byd.clusternav.launcher.testbridge.KachiTestBridge \
+#       -a com.kachi.box.TEST \
 #       --es cmd <say|wav|listen|state|profiles|profile|preset|slot|slot_clear|open|prefs|reapply|diag> \
 #       [--es text … | --es path … | --es name … | --es pkg …] [--ei n <số>] [--ez auto_confirm true]
-#   ⇒ JSON mới nhất ở /sdcard/Android/data/com.byd.launcher/files/test/
+#   ⇒ JSON mới nhất ở /sdcard/Android/data/com.kachi.box/files/test/
 #
 # ⚠ Cầu CHỈ sống khi công tắc **Cài đặt › Hệ thống & quyền › Nâng cao › Chế độ kiểm thử qua adb**
 #   đang bật, và **tự tắt sau 60 phút**. Đó là thiết kế đúng (một cửa thi hành lệnh mở vĩnh viễn trên
@@ -295,11 +295,11 @@ k_state_diff() {
 #   lời thì in đúng việc cần làm bằng tay. Không bước nào được *phụ thuộc* vào cầu.
 # ═════════════════════════════════════════════════════════════════════════════════════════════════
 
-KACHI_TEST_ACTION="${KACHI_TEST_ACTION:-com.byd.launcher.TEST}"
+KACHI_TEST_ACTION="${KACHI_TEST_ACTION:-com.kachi.box.TEST}"
 
 # ⚠⚠ [ĐO xe 2026-09-20] Broadcast PHẢI mang **thành phần tường minh** (`-n`), không chỉ action.
 #   Android 10 chặn broadcast ngầm tới receiver khai trong manifest, và cái chặn đó **im lặng**:
-#   `am broadcast -a com.byd.launcher.TEST …` trả `result=0` **không kèm `data=`** ⇒ mọi lượt gọi
+#   `am broadcast -a com.kachi.box.TEST …` trả `result=0` **không kèm `data=`** ⇒ mọi lượt gọi
 #   cầu rơi, mà lỗi lại đọc giống hệt "cầu chưa bật / adb hỏng". Cả mấy buổi test trước nghi oan
 #   cho kết nối chính là vì dòng lệnh này, không phải vì xe. Dạng `-n <gói>/<lớp> -a <action>` trả
 #   `result=1` + `data=<JSON>` + receiver chạy thật.

@@ -47,7 +47,7 @@ class ControlSentRelayWiringContractTest {
         assertTrue(onReceive.contains("ControlLastSent.shared.absorb(id, index)"), "đầu nhận kiểm hợp lệ + KHÔNG chuyển tiếp")
         assertFalse(onReceive.contains(".record("), "ghi bằng record ở đầu nhận = mở đường cho vòng chuyển tiếp")
         val manifest = SourceRoots.text("src/main/AndroidManifest.xml")
-        assertFalse(manifest.contains("com.byd.launcher.CONTROL_SENT"), "không khai receiver tĩnh/exported cho kênh nội bộ này")
+        assertFalse(manifest.contains("CONTROL_SENT"), "không khai receiver tĩnh/exported cho kênh nội bộ này")
     }
 
     /**

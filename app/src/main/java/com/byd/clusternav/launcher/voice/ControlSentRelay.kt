@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher.voice
 
+import com.byd.clusternav.BuildConfig
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -38,7 +39,7 @@ internal object ControlSentRelay {
     private const val TAG = "KachiCtlRelay"
 
     /** `:wake` → chính: "nút `control_id` vừa thành chỉ số `index`". Chỉ trong gói (`setPackage`), không phải API cho ai khác. */
-    const val ACTION_CONTROL_SENT = "com.byd.launcher.CONTROL_SENT"
+    const val ACTION_CONTROL_SENT = BuildConfig.APPLICATION_ID + ".CONTROL_SENT"
     private const val EXTRA_ID = "control_id"
     private const val EXTRA_INDEX = "index"
 

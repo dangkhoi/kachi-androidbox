@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
  */
 class AccessibilityGrantBehaviourTest {
 
-    private val kachi = "com.byd.launcher/com.byd.clusternav.modules.navaccess.NavAccessibilityService"
+    private val kachi = com.byd.clusternav.BuildConfig.APPLICATION_ID + "/com.byd.clusternav.modules.navaccess.NavAccessibilityService"
     private val other = "com.other.app/com.other.app.TalkBackLike"
 
     private fun writeListCmd(cmds: List<String>): String? =

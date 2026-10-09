@@ -258,15 +258,18 @@ class SlotParkWiringContractTest {
      * Review 2.89 Pass 3 · whole-r2-5 — ĐỔI GHIM có lý do: khoá BẤT BIẾN (không lùi dưới bản thử 190 / 2.89 đã báo owner — CLAUDE.md
      * §9), không khoá con số nhất thời: bước REL-2.89 bump ≥ 191 / "2.89" không được làm đỏ `:app`.
      */
+    // Android box (spec `androidbox-plan` B1, 2026-10-09): app MỚI `com.kachi.box` đánh số lại từ 1.0 (1) — sàn
+    // 190/2.89 là của Kachi BYD (`com.byd.launcher`), không áp cho box. Bất biến giữ nguyên: không lùi dưới bản box
+    // đầu tiên 1.0 (1).
     @Test
-    fun `phien ban khong lui duoi ban thu 190, 2_89`() {
+    fun `phien ban box khong lui duoi 1_0 (1)`() {
         val gradle = SourceRoots.text("build.gradle.kts")
         val code = Regex("""versionCode = (\d+)""").find(gradle)?.groupValues?.get(1)?.toInt()
         val name = Regex("""versionName = "([^"]+)"""").find(gradle)?.groupValues?.get(1)
-        assertTrue(code != null && code >= 190, "versionCode = $code")
+        assertTrue(code != null && code >= 1, "versionCode = $code")
         val num = com.byd.clusternav.UpdateChecker.numericPrefix(name ?: "")
-        val cmp = num.zip(listOf(2, 89)).firstOrNull { (a, b) -> a != b }?.let { (a, b) -> a.compareTo(b) } ?: num.size.compareTo(2)
-        assertTrue(cmp >= 0, "versionName = $name (phần số $num) không được dưới 2.89")
+        val cmp = num.zip(listOf(1, 0)).firstOrNull { (a, b) -> a != b }?.let { (a, b) -> a.compareTo(b) } ?: num.size.compareTo(2)
+        assertTrue(cmp >= 0, "versionName = $name (phần số $num) không được dưới 1.0")
     }
 
     /**

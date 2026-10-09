@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher
 
+import com.byd.clusternav.BuildConfig
 import android.content.ComponentName
 import android.content.Context
 import android.widget.Toast
@@ -239,7 +240,7 @@ object PermissionPreflight {
 
     private fun flat(cls: String) = "$PKG/$cls"
 
-    private const val PKG = "com.byd.launcher"
+    private const val PKG = BuildConfig.APPLICATION_ID
 
     /**
      * CHẠY vòng kiểm rồi BÁO — gồm: đọc trạng thái · tự cấp phần tự cấp được · nói ra phần làm mất tính năng lõi.

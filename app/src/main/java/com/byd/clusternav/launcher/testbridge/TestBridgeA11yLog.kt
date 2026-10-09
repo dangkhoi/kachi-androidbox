@@ -14,7 +14,7 @@ import com.byd.clusternav.modules.navaccess.AccessibilityHealGates
 /**
  * ═══ T-BRIDGE · `a11ylog` — ĐỌC NHẬT KÝ GẮN DỊCH VỤ HỖ TRỢ TRÊN BẢN PHÁT HÀNH (2.83) ═══════════════════════════
  *
- * `am broadcast -a com.byd.launcher.TEST -p com.byd.launcher --es cmd a11ylog [--ei n 50]`
+ * `am broadcast -a com.kachi.box.TEST -p com.kachi.box --es cmd a11ylog [--ei n 50]`
  *
  * Lý do tồn tại + ranh giới ở KDoc [TestBridgeCommands.A11YLOG]. Ở đây chỉ là phần chạm Android: đọc tệp qua ĐÚNG
  * [A11yBindJournalStore.read] (cùng khoá với hai luồng ghi — không mở tệp lần thứ hai bằng tay) và đọc hai mốc qua

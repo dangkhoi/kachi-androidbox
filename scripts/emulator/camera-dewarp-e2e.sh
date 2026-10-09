@@ -34,7 +34,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-PKG="com.byd.launcher"
+PKG="com.kachi.box"
 HOME_ACT="$PKG/com.byd.clusternav.launcher.KachiHome"
 SERIAL="emulator-5554"
 OUT="${TMPDIR:-/tmp}/kachi-camera-dewarp-$(date -u +%Y%m%d-%H%M%S)"

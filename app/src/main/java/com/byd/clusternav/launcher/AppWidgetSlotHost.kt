@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher
 
+import com.byd.clusternav.BuildConfig
 import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetManager
@@ -392,6 +393,6 @@ class AppWidgetSlotHost(
          * ⚠ Gói ghi **cứng** chứ không lấy từ `ctx.packageName`: lệnh này chỉ mở đúng cho launcher, và nếu một ngày
          * ai đó gọi từ một tiến trình khác thì lệnh phải vẫn nói đúng gói cần cấp, không "cấp cho chính mình".
          */
-        const val GRANT_CMD = "appwidget grantbind --package com.byd.launcher --user 0"
+        const val GRANT_CMD = "appwidget grantbind --package " + BuildConfig.APPLICATION_ID + " --user 0"
     }
 }

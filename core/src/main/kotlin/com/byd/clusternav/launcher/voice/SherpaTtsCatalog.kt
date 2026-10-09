@@ -1,6 +1,9 @@
 package com.byd.clusternav.launcher.voice
 
 /**
+ * Android box (spec `androidbox-plan` OQ5, 2026-10-09): CỐ Ý vẫn tải từ `byd-kachi/voice/` — tài nguyên chỉ đọc, ghim sha256,
+ * dùng chung với bản BYD; kênh OTA APK thì tách riêng (`UpdateChecker`). Dọn `voice/` bên BYD ⇒ box hết tải được.
+ *
  * ═══ V1 pha NÓI · GÓI GIỌNG ĐỌC sherpa-onnx — GHIM BẰNG SỐ ĐO THẬT, KHÔNG BỊA ═════════════════════════════════
  *
  * Spec `docs/specs/kachi-voice-feedback.html` **R2b · T8**. Thuần Kotlin (`:core`) ⇒ luật ghim kiểm off-car;

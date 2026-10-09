@@ -20,7 +20,7 @@ Chuẩn bị (một lần) — GIỐNG HỆT `hotword-matrix.py`, cố ý dùng 
   (bpe_vocab.txt chép từ app/src/main/assets/voice/zipformer-vi-2025-04-20.bpe_vocab.txt)
 
 Lấy gói zip từ xe:
-  adb shell am broadcast -a com.byd.launcher.TEST -p com.byd.launcher --es cmd voice_dump   # in ra `path`
+  adb shell am broadcast -a com.kachi.box.TEST -p com.kachi.box --es cmd voice_dump   # in ra `path`
   adb pull /sdcard/Download/kachi-voice-<stamp>.zip /tmp/
 
 Dùng:

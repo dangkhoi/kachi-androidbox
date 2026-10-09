@@ -63,21 +63,24 @@ class UpdateCheckerTest {
         assertFalse(src.contains("cmp(bestVer!!, cur) > 0"), "đường cũ so trần (đọc 2.89-thử1 thành 2.0) đã bỏ")
     }
 
-    /** L2 — kênh riêng: repo byd-kachi, tên Kachi-<ver>-release.apk, vẫn nhận tên cũ; tên lạ thì bỏ qua. */
-    @Test fun `ten tep phat hanh Kachi va ten cu deu doc ra phien ban`() {
-        assertEquals("1.41", UpdateChecker.apkVersion("Kachi-1.41-release.apk"))
-        assertEquals("1.38", UpdateChecker.apkVersion("ClusterNav-1.38-release.apk"))
-        assertEquals(null, UpdateChecker.apkVersion("Kachi-1.41-debug.apk"))
-        assertEquals(null, UpdateChecker.apkVersion("Kachi-1.41-abc123-release.apk"), "tên có lát cắt (collector T10) không phải bản OTA")
+    /** Android box B1 — kênh riêng: CHỈ `Kachi-box-<ver>-release.apk`; khuôn BYD (`Kachi-`/`ClusterNav-`) bị bỏ qua. */
+    @Test fun `ten tep phat hanh Kachi-box doc ra phien ban, khuon BYD bi bo qua`() {
+        assertEquals("1.0", UpdateChecker.apkVersion("Kachi-box-1.0-release.apk"))
+        assertEquals("1.12", UpdateChecker.apkVersion("Kachi-box-1.12-release.apk"))
+        assertEquals(null, UpdateChecker.apkVersion("Kachi-2.98-release.apk"), "APK Kachi BYD không bao giờ là bản OTA của box")
+        assertEquals(null, UpdateChecker.apkVersion("ClusterNav-1.38-release.apk"))
+        assertEquals(null, UpdateChecker.apkVersion("Kachi-box-1.0-debug.apk"))
+        assertEquals(null, UpdateChecker.apkVersion("Kachi-box-1.0-abc123-release.apk"), "tên có lát cắt không phải bản OTA")
         assertEquals(null, UpdateChecker.apkVersion("README.md"))
     }
 
-    @Test fun `kenh cap nhat la repo byd-kachi`() {
+    @Test fun `kenh cap nhat la repo kachi-androidbox, khong phai byd-kachi`() {
         val src = java.nio.file.Path.of(System.getProperty("user.dir")).let { d ->
             val f = d.resolve("src/main/java/com/byd/clusternav/UpdateChecker.kt")
             (if (java.nio.file.Files.exists(f)) f else d.resolve("app").resolve("src/main/java/com/byd/clusternav/UpdateChecker.kt")).toFile().readText()
         }
-        assertTrue(src.contains("REPO = \"dangkhoi/byd-kachi\""), "OTA phải dò đúng repo của Kachi (remote origin), không phải byd-launcher")
+        assertTrue(src.contains("REPO = \"dangkhoi/kachi-androidbox\""), "OTA của box phải dò repo của box")
+        assertFalse(src.contains("REPO = \"dangkhoi/byd-kachi\""), "box dò kênh BYD ⇒ tự cài thành bản BYD")
     }
 
     // ── U11 · LÝ DO CÀI HỎNG → CÂU NÓI ─────────────────────────────────────────────────────────────

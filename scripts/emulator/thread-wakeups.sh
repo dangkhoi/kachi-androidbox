@@ -7,7 +7,7 @@ set -euo pipefail
 W="${1:-60}"; SERIAL="${2:-}"
 ADB="${ADB:-$HOME/Library/Android/sdk/platform-tools/adb}"
 [[ -n "$SERIAL" ]] && ADB="$ADB -s $SERIAL"
-PKG="${PKG:-com.byd.launcher}"
+PKG="${PKG:-com.kachi.box}"
 pid=$($ADB shell pidof "$PKG" </dev/null | tr -d '\r')
 [[ -n "$pid" ]] || { echo "không thấy tiến trình $PKG" >&2; exit 1; }
 snap() { $ADB shell "for t in /proc/$pid/task/*; do echo \${t##*/} \$(cat \$t/comm | tr ' ' _) \$(grep '^voluntary_ctxt_switches' \$t/status | awk '{print \$2}'); done" </dev/null | tr -d '\r'; }

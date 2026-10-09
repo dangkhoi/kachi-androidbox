@@ -6,7 +6,7 @@ import com.byd.clusternav.launcher.CtlJournalStore
 /**
  * ═══ T-BRIDGE · `ctllog` — ĐỌC NHẬT KÝ MỖI LỆNH GHI XE (FIX286 · SR6) ═══════════════════════════════════════════
  *
- * `am broadcast -a com.byd.launcher.TEST -p com.byd.launcher --es cmd ctllog [--ei n 50]`
+ * `am broadcast -a com.kachi.box.TEST -p com.kachi.box --es cmd ctllog [--ei n 50]`
  *
  * Ranh giới ở KDoc [TestBridgeCommands.CTLLOG]. Ở đây chỉ là phần chạm Android: đọc tệp qua ĐÚNG
  * [CtlJournalStore.read] (cùng hai lớp khoá với các lượt ghi — không mở tệp lần hai bằng tay).

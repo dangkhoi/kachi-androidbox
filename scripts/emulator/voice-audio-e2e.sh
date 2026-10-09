@@ -12,7 +12,7 @@
 set -uo pipefail
 SERIAL="${1:-emulator-5554}"
 # shellcheck disable=SC2034  # PKG · OUT đọc trong voice-common.sh (bridge · enable_test_mode)
-PKG="com.byd.launcher"
+PKG="com.kachi.box"
 # Đường dẫn adb — mọi lời gọi đi `adbs` của voice-common.sh ("$ADB" -s "$SERIAL", có nháy). Senior review 2.93 Pass 1 · [P3]:
 # bỏ bản ghép `ADBX="$ADB -s $SERIAL"` dùng trần (tách từ theo dấu cách ⇒ vỡ khi đường dẫn adb có dấu cách).
 ADB="${ADB:-$HOME/Library/Android/sdk/platform-tools/adb}"
@@ -21,7 +21,7 @@ VOICE="${VOICE:-Linh}"
 WD=/tmp/kachi-audio-e2e; mkdir -p "$WD"; chmod 700 "$WD" 2>/dev/null || true
 # shellcheck disable=SC2034
 OUT="$WD"
-BRIDGE="am broadcast -a com.byd.launcher.TEST -n com.byd.launcher/com.byd.clusternav.launcher.testbridge.KachiTestBridge"
+BRIDGE="am broadcast -a com.kachi.box.TEST -n com.kachi.box/com.byd.clusternav.launcher.testbridge.KachiTestBridge"
 # 2.93 DEBT-VOICE-COMMON-SH — bật/tắt cầu kiểm thử + kiểm ngôn ngữ đi MỘT bản dùng chung với voice-e2e.sh.
 # shellcheck source=voice-common.sh
 . "$HERE/voice-common.sh"

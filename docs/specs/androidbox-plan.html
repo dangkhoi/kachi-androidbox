@@ -43,10 +43,10 @@ svg .x{stroke:var(--deny);stroke-width:2}
 </head>
 <body><div class="wrap">
 <h1>Kachi cho Android box — Kế hoạch (DRAFT, chờ owner duyệt)</h1>
-<p class="muted">Slug: <code>androidbox-plan</code> · Repo RIÊNG <code>kachi-androidbox</code> (clone từ <code>byd-launcher</code> nhánh 2.98 <code>bf54415</code>, KHÔNG remote) · Owner: dangkhoi · Owner 09/10: <i>"không đụng gì vào 2.97 2.98 đang chạy OK nhé, có làm gì thì làm trên code mới clone qua cho android-box thôi"</i>.</p>
+<p class="muted">Slug: <code>androidbox-plan</code> · Repo RIÊNG <code>kachi-androidbox</code> (clone từ <code>byd-launcher</code> nhánh 2.98 <code>bf54415</code>; remote <code>dangkhoi/kachi-androidbox</code>) · Owner: dangkhoi · Owner 09/10: <i>"không đụng gì vào 2.97 2.98 đang chạy OK nhé, có làm gì thì làm trên code mới clone qua cho android-box thôi"</i>.</p>
 <p class="muted">Mức bằng chứng: <b>[ĐO]</b> · <b>[SUY]</b> · <b>[ĐOÁN]</b> · <b>[CHƯA BIẾT]</b>.</p>
 
-<h2>1. Changelog</h2><ul><li><b>Pass 0 — 2026-10-09</b>: bản nháp đầu, chưa code.</li></ul>
+<h2>1. Changelog</h2><ul><li><b>Pass 0 — 2026-10-09</b>: bản nháp đầu, chưa code.</li><li><b>Pass 1 — 2026-10-09</b>: owner trả lời OQ1–OQ3 — Android box thường (mọi loại như nhau) · tạm chỉ cần launcher (B4 hoãn) · tên app <b>Kachi</b>. Thêm OQ4–OQ6 (khoá ký · gói giọng nói · CLAUDE.md) kèm mặc định đề xuất.</li><li><b>Pass 2 — 2026-10-09</b>: owner duyệt (<i>"ok"</i>) Requirements + mặc định OQ3–OQ6. <b>B1 có mã</b> — xem §9.</li></ul>
 
 <h2>2. Context</h2>
 <ul>
@@ -58,10 +58,10 @@ svg .x{stroke:var(--deny);stroke-width:2}
 <h2>3. Requirements</h2>
 <table>
 <tr><th>#</th><th>Yêu cầu</th><th>Ghi chú</th><th>Trạng thái</th></tr>
-<tr><td>B1</td><td><b>Tách sạch khỏi BYD</b>: applicationId riêng (đề xuất <code>com.kachi.box</code>), tên app riêng, cài song song; KHÔNG chia sẻ kênh OTA với bản BYD.</td><td>repo riêng; OTA <code>Kachi-box-&lt;ver&gt;.apk</code> trên repo mới</td><td>đề xuất</td></tr>
+<tr><td>B1</td><td><b>Tách sạch khỏi BYD</b>: tên app <b>Kachi</b> (owner 09/10), applicationId riêng <code>com.kachi.box</code> (đề xuất — không thể giữ <code>com.byd.launcher</code> vì sẽ đè bản BYD), cài song song; KHÔNG chia sẻ kênh OTA với bản BYD.</td><td>OTA <code>apk/Kachi-box-&lt;ver&gt;-release.apk</code> trên <code>dangkhoi/kachi-androidbox</code></td><td>đề xuất</td></tr>
 <tr><td>B2</td><td><b>Gỡ phần chỉ-BYD</b>: HAL BYD (đọc/điều khiển xe), chiếu cụm, HUD, camera 360, biển tốc độ cụm, phím mã BYD, cài đặt tiện nghi xe, sửa lỗi firmware BYD (HomeGuard launcher BYD…). Không hiện chức năng chết.</td><td>nhẹ APK + UI gọn</td><td>đề xuất</td></tr>
-<tr><td>B3</td><td><b>Tự đo năng lực máy</b>: có kênh adb mạng không ⇒ ô chạy app thật / chỉ widget + nút mở app · có trợ năng ⇒ gán phím · có GPS ⇒ tốc độ · có mic ⇒ giọng nói. Không giả định theo hãng (CLAUDE.md §7).</td><td>nhiều box không cho adb mạng [CHƯA BIẾT]</td><td>đề xuất</td></tr>
-<tr><td>B4</td><td><b>Nguồn dữ liệu xe cắm thêm</b>: (a) GPS — tốc độ, hướng; (b) OBD2 Bluetooth ELM327 — tốc độ, vòng tua, nhiệt nước, điện áp…; (c) broadcast MCU đầu Android (FYT/TS…) — tuỳ loại.</td><td>(a) off-car được; (b)(c) cần thiết bị thật</td><td>chờ owner chọn</td></tr>
+<tr><td>B3</td><td><b>Tự đo năng lực máy</b>: có kênh adb mạng không ⇒ ô chạy app thật / chỉ widget + nút mở app · có trợ năng ⇒ gán phím · có mic ⇒ giọng nói. (GPS/tốc độ thuộc B4, hoãn.) Không giả định theo hãng (CLAUDE.md §7).</td><td>nhiều box không cho adb mạng [CHƯA BIẾT]</td><td>đề xuất</td></tr>
+<tr><td>B4</td><td><b>Nguồn dữ liệu xe cắm thêm</b>: (a) GPS — tốc độ, hướng; (b) OBD2 Bluetooth ELM327 — tốc độ, vòng tua, nhiệt nước, điện áp…; (c) broadcast MCU đầu Android (FYT/TS…) — tuỳ loại.</td><td>Owner 09/10: <i>"tạm chỉ cần launcher đã nhé"</i></td><td>BACKLOG (hoãn)</td></tr>
 <tr><td>B5</td><td><b>Song ngữ VI/EN</b> như bản BYD; giới thiệu/hướng dẫn riêng.</td><td></td><td>đề xuất</td></tr>
 </table>
 
@@ -77,22 +77,23 @@ svg .x{stroke:var(--deny);stroke-width:2}
 
 <h2>5. Tasks (DAG)</h2>
 <table><tr><th>#</th><th>Việc</th><th>Trạng thái</th></tr>
-<tr><td>T1</td><td>Owner trả lời OQ1–OQ3, duyệt Requirements</td><td>chờ</td></tr>
-<tr><td>T2</td><td>B1 đổi applicationId/tên/khoá OTA · build xanh</td><td>chờ T1</td></tr>
+<tr><td>T1</td><td>Owner trả lời OQ1–OQ6, duyệt Requirements</td><td>✅ 09/10</td></tr>
+<tr><td>T2</td><td>B1 đổi applicationId/tên/khoá OTA · build xanh</td><td>✅ mã + test 09/10 · chưa QA máy ảo</td></tr>
 <tr><td>T3</td><td>B2 gỡ phần BYD theo đợt · test xanh · QA máy ảo</td><td>chờ T1</td></tr>
 <tr><td>T4</td><td>B3 đo năng lực + UI tự ẩn/hiện</td><td>chờ T1</td></tr>
-<tr><td>T5</td><td>B4(a) GPS; B4(b)(c) sau khi có thiết bị</td><td>chờ T1</td></tr>
+<tr><td>T5</td><td>B4 nguồn dữ liệu xe</td><td>hoãn (owner)</td></tr>
 </table>
 
 <h2>6. Verification</h2><ul><li>Máy ảo Android 10/12 (giống box), sau đó một Android box thật của owner.</li></ul>
 
 <h2>7. Open Questions</h2>
 <ul>
-<li>OQ1 — Loại máy nhắm tới: (a) box cắm cổng CarPlay chạy Android trên màn zin (Carlinkit, Ottocast…) · (b) đầu Android thay màn zin (FYT/TS10…) · (c) cả hai.</li>
-<li>OQ2 — Cần dữ liệu xe không (tốc độ/nhiên liệu…), hay chỉ phần launcher?</li>
-<li>OQ3 — Tên app + applicationId + repo GitHub mới (đề xuất <code>com.kachi.box</code>, repo <code>dangkhoi/kachi-box</code> — owner tạo repo).</li>
+<li>OQ1 — Loại máy ⇒ <b>CHỐT</b> (owner 09/10): <i>"androidbox bình thường, có màn android vậy thôi, loại nào cũng như nhau"</i> ⇒ chỉ dựa API Android chuẩn, không rẽ nhánh theo hãng box.</li>
+<li>OQ2 — Dữ liệu xe ⇒ <b>CHỐT</b>: <i>"tạm chỉ cần launcher đã nhé"</i> ⇒ B4 hoãn; widget/chip dữ liệu xe bị gỡ ở B2 thay vì hiện "—".</li>
+<li>OQ3 — Tên ⇒ <b>CHỐT</b>: <i>"Kachi luôn"</i> ⇒ nhãn app "Kachi". applicationId: đề xuất <code>com.kachi.box</code> (chờ owner gật). Repo: <code>dangkhoi/kachi-androidbox</code> (đã có).</li><li>OQ4 — Khoá ký: đề xuất dùng chung khoá <code>~/.kachi</code> của bản BYD (appId khác ⇒ không xung đột; một khoá ít thứ phải giữ). Đổi ý sau phải gỡ cài lại.</li><li>OQ5 — Gói giọng nói: đề xuất GIỮ tải từ <code>byd-kachi/voice/</code> (chỉ đọc, ghim sha256; repo box không phình ~300 MB). Rủi ro: dọn <code>voice/</code> bên BYD ⇒ box hết tải được.</li><li>OQ6 — <code>CLAUDE.md</code>: đề xuất viết lại cho Android box ở B1 (giữ quy trình, bỏ HAL/cụm/firmware BYD).</li>
 </ul>
 <h2>8. References</h2><ul><li>Repo gốc <code>byd-launcher</code> (2.98 <code>bf54415</code>) · <code>docs/index.html</code> (giới thiệu bản BYD).</li></ul>
-<h2>9. Nhật ký triển khai</h2><ul><li>2026-10-09 — clone repo riêng <code>../kachi-androidbox</code>, nhánh <code>androidbox/main</code>, gỡ remote.</li></ul>
-<h2>10. Reviewer Log</h2><p class="muted">Append-only.</p>
+<h2>9. Nhật ký triển khai</h2><ul><li>2026-10-09 — clone repo riêng <code>../kachi-androidbox</code>, nhánh <code>androidbox/main</code>; sau đó gắn remote <code>dangkhoi/kachi-androidbox</code>.</li>
+<li>2026-10-09 — <b>B1</b>: <code>applicationId</code> <code>com.kachi.box</code>, bản <b>1.0 (1)</b> (đánh số lại — app mới; sàn phiên bản BYD 190/2.89 trong <code>SlotParkWiringContractTest</code> đổi thành sàn box 1.0 (1)). OTA: <code>UpdateChecker.REPO</code> = <code>dangkhoi/kachi-androidbox</code>, chỉ nhận <code>Kachi-box-&lt;ver&gt;-release.apk</code> (cố ý KHÔNG nhận khuôn BYD <code>Kachi-&lt;ver&gt;</code> — lỡ chép APK BYD vào <code>apk/</code> thì box không mời cài app khác). Mọi hằng gói/action viết cứng <code>com.byd.launcher</code> ở <code>:app</code> (lệnh <code>appops</code>/<code>pm grant</code>/<code>appwidget grantbind</code>, 10 action broadcast nội bộ, đường log dự phòng) nay dựng từ <code>BuildConfig.APPLICATION_ID</code> — trước đó đổi appId sẽ làm tự cấp quyền nhắm nhầm gói. <code>:core</code> chỉ còn tên gói trong chú thích/fixture. Gói giọng nói giữ URL <code>byd-kachi/voice/</code> (OQ5, chú thích tại chỗ). User-Agent geocoder đổi sang repo box. Script máy ảo + <code>_common.sh</code> đổi gói; script xe BYD để B2 (<code>BOX-SCRIPTS-BYD</code>). <code>CLAUDE.md</code> viết lại. [ĐO] <code>./gradlew test --continue</code> 9 705 / 0 (XML, gồm bài canh mới `OwnPackageLiteralContractTest` của lượt soát) · <code>assembleRelease</code>: <code>package com.kachi.box</code> 1.0 (1), nhãn "Kachi", cert SHA-256 <code>92:57…99:17</code> (khoá <code>~/.kachi</code>). Chưa QA máy ảo (máy ảo dùng chung với phiên BYD). Senior review 09/10: thêm <code>OwnPackageLiteralContractTest</code> (mã ba module + manifest + <code>res/</code> không còn literal gói BYD ngoài chú thích; <code>GRANT_CMD</code> dựng từ <code>BuildConfig</code>) · <code>CLAUDE.md</code> §15 sửa: hai tệp steering cục bộ chưa có trong repo · [ĐO] 9 705 / 0.</li></ul>
+<h2>10. Reviewer Log</h2><p class="muted">Append-only.</p><h3>Pass 1 — 2026-10-09</h3><p>Senior review B1 (Opus 5.5 — Fable 5.1 không có trong môi trường này). Thêm bài canh <code>OwnPackageLiteralContractTest</code>: mã (bỏ chú thích) ở mọi module nguồn + manifest + <code>res/</code> không còn <code>com.byd.launcher</code>; <code>GRANT_CMD</code> dựng từ <code>BuildConfig.APPLICATION_ID</code>. Test 9 705 / 0. Quét bảo mật: CLEAN (0 BLOCK · 0 WARN).</p>
 </div></body></html>

@@ -1,5 +1,6 @@
 package com.byd.clusternav.launcher.voice
 
+import com.byd.clusternav.BuildConfig
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -118,7 +119,7 @@ class VoiceEntry(
         private const val TAG = "KachiVoiceEntry"
 
         /** `:wake` → tiến trình chính: "đã nhận LISTEN_NOW". Chỉ trong gói (`setPackage`), không phải API cho ai khác. */
-        const val ACTION_LISTEN_ACK = "com.byd.launcher.LISTEN_ACK"
+        const val ACTION_LISTEN_ACK = BuildConfig.APPLICATION_ID + ".LISTEN_ACK"
 
         /** Gọi từ `VoiceWakeService.onStartCommand` ngay khi nhận `ACTION_LISTEN_NOW`. */
         fun ack(ctx: Context) {
@@ -130,7 +131,7 @@ class VoiceEntry(
          * VOICE-WAKE-SLOT-LAYOUT (2.69) — Activity → `:wake`: "việc `nonce` đã thi hành, kết quả `done`". Cùng khuôn
          * [ACTION_LISTEN_ACK] (trong gói, một chiều); `VoiceWakeHomeRelay.perform` đang chờ đúng nonce này.
          */
-        const val ACTION_HOME_ACTION_ACK = "com.byd.launcher.HOME_ACTION_ACK"
+        const val ACTION_HOME_ACTION_ACK = BuildConfig.APPLICATION_ID + ".HOME_ACTION_ACK"
         const val EXTRA_HOME_ACTION_DONE = "done"
 
         /** VOICE-WAKE-SLOTCOUNT — số ô THẬT khi việc gắn ô bị từ chối vì ngoài dải; vắng/`0` = không có. */
