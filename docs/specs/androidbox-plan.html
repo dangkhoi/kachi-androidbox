@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kachi Android box kế hoạch</title>
+<style>
+:root{--bg:#fff;--fg:#1d1d1f;--muted:#6e6e73;--line:#e5e5ea;--card:#f5f5f7;--accent:#0071e3;--warn:#bf5f00;--ok:#1a7f37;--code:#f2f2f7;--diag:#0071e3;--user:#1a7f37;--deny:#bf5f00}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#f5f5f7;--muted:#98989d;--line:#2c2c2e;--card:#1c1c1e;--accent:#2997ff;--warn:#ff9f0a;--ok:#30d158;--code:#1c1c1e;--diag:#2997ff;--user:#30d158;--deny:#ff9f0a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:40px 24px 120px}
+h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+h2{font-size:22px;font-weight:650;letter-spacing:-.01em;margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--line)}
+h3{font-size:17px;font-weight:650;margin:24px 0 8px}
+p,li{font-size:15.5px}.muted{color:var(--muted)}
+code{background:var(--code);padding:2px 6px;border-radius:5px;font-family:"SF Mono",ui-monospace,monospace;font-size:13.5px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--card);color:var(--muted);border:1px solid var(--line)}
+.pill.wait{background:rgba(191,95,0,.12);color:var(--warn);border-color:transparent}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+ul{padding-left:22px}li{margin:3px 0}
+.ok{color:var(--ok)}.warn{color:var(--warn)}
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+.fnode{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 14px;text-align:center;font-size:13.5px;min-width:110px}
+.fnode.new{background:rgba(0,113,227,.12)}
+.fnode b{display:block;font-size:14px}.fnode span{color:var(--muted);font-size:12px}
+.flow .arrow{color:var(--accent);font-weight:700;font-size:18px;padding:0 2px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0;font-size:12.5px;color:var(--muted)}
+.legend .sw{display:inline-flex;align-items:center;gap:6px}
+.legend .box{width:12px;height:12px;border-radius:3px;border:1px solid var(--line);display:inline-block}
+svg .root{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+svg .dg{fill:none;stroke:var(--diag);stroke-width:2}
+svg .us{fill:none;stroke:var(--user);stroke-width:2}
+svg .tx{fill:var(--fg);font-size:12px;font-family:-apple-system,"SF Pro Text",Roboto,sans-serif}
+svg .sm{fill:var(--muted);font-size:10.5px;font-family:-apple-system,"SF Pro Text",Roboto,sans-serif}
+svg .wire{stroke:var(--line);stroke-width:1.5}
+svg .x{stroke:var(--deny);stroke-width:2}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Kachi cho Android box — Kế hoạch (DRAFT, chờ owner duyệt)</h1>
+<p class="muted">Slug: <code>androidbox-plan</code> · Repo RIÊNG <code>kachi-androidbox</code> (clone từ <code>byd-launcher</code> nhánh 2.98 <code>bf54415</code>, KHÔNG remote) · Owner: dangkhoi · Owner 09/10: <i>"không đụng gì vào 2.97 2.98 đang chạy OK nhé, có làm gì thì làm trên code mới clone qua cho android-box thôi"</i>.</p>
+<p class="muted">Mức bằng chứng: <b>[ĐO]</b> · <b>[SUY]</b> · <b>[ĐOÁN]</b> · <b>[CHƯA BIẾT]</b>.</p>
+
+<h2>1. Changelog</h2><ul><li><b>Pass 0 — 2026-10-09</b>: bản nháp đầu, chưa code.</li></ul>
+
+<h2>2. Context</h2>
+<ul>
+<li>Mục tiêu: một launcher cho xe KHÔNG phải BYD chạy Android box / đầu Android — chỉ lấy phần launcher (màn chính theo ô, widget, hồ sơ, giọng nói offline, nhạc/YouTube phát tiếp, gán phím, OTA).</li>
+<li>[ĐO máy ảo 08–09/10] Kachi 2.97/2.98 đã chạy trên Android thường (máy ảo A10): màn chính, ô app (khi có kênh adb), widget, hồ sơ, giọng nói, YouTube phát tiếp — dữ liệu xe hiện "—" khi không có HAL BYD.</li>
+<li>[SUY] Launcher đa xe (Dudu, Agama, CarWebGuru, FCC…) dựa trên API Android chuẩn + nguồn dữ liệu xe cắm thêm (OBD2 Bluetooth ELM327 · broadcast MCU của đầu Android FYT/TS… · GPS); không ghi cụm/HUD zin.</li>
+</ul>
+
+<h2>3. Requirements</h2>
+<table>
+<tr><th>#</th><th>Yêu cầu</th><th>Ghi chú</th><th>Trạng thái</th></tr>
+<tr><td>B1</td><td><b>Tách sạch khỏi BYD</b>: applicationId riêng (đề xuất <code>com.kachi.box</code>), tên app riêng, cài song song; KHÔNG chia sẻ kênh OTA với bản BYD.</td><td>repo riêng; OTA <code>Kachi-box-&lt;ver&gt;.apk</code> trên repo mới</td><td>đề xuất</td></tr>
+<tr><td>B2</td><td><b>Gỡ phần chỉ-BYD</b>: HAL BYD (đọc/điều khiển xe), chiếu cụm, HUD, camera 360, biển tốc độ cụm, phím mã BYD, cài đặt tiện nghi xe, sửa lỗi firmware BYD (HomeGuard launcher BYD…). Không hiện chức năng chết.</td><td>nhẹ APK + UI gọn</td><td>đề xuất</td></tr>
+<tr><td>B3</td><td><b>Tự đo năng lực máy</b>: có kênh adb mạng không ⇒ ô chạy app thật / chỉ widget + nút mở app · có trợ năng ⇒ gán phím · có GPS ⇒ tốc độ · có mic ⇒ giọng nói. Không giả định theo hãng (CLAUDE.md §7).</td><td>nhiều box không cho adb mạng [CHƯA BIẾT]</td><td>đề xuất</td></tr>
+<tr><td>B4</td><td><b>Nguồn dữ liệu xe cắm thêm</b>: (a) GPS — tốc độ, hướng; (b) OBD2 Bluetooth ELM327 — tốc độ, vòng tua, nhiệt nước, điện áp…; (c) broadcast MCU đầu Android (FYT/TS…) — tuỳ loại.</td><td>(a) off-car được; (b)(c) cần thiết bị thật</td><td>chờ owner chọn</td></tr>
+<tr><td>B5</td><td><b>Song ngữ VI/EN</b> như bản BYD; giới thiệu/hướng dẫn riêng.</td><td></td><td>đề xuất</td></tr>
+</table>
+
+<h2>4. Design</h2>
+<div class="flow">
+  <div class="fnode"><b>Lõi launcher (giữ)</b><span>ô · widget · hồ sơ · giọng nói · nhạc · OTA</span></div><span class="arrow">→</span>
+  <div class="fnode new"><b>Đo năng lực máy</b><span>adb · trợ năng · GPS · mic</span></div><span class="arrow">→</span>
+  <div class="fnode new"><b>Nguồn dữ liệu xe</b><span>GPS · OBD2 · MCU</span></div><span class="arrow">→</span>
+  <div class="fnode"><b>Widget/thanh trạng thái</b><span>hiện cái nào có</span></div>
+</div>
+<ul><li>Cách tách: repo riêng (đã clone), gỡ module/màn BYD theo từng đợt, mỗi đợt build + test xanh. Không đụng repo <code>byd-launcher</code>.</li>
+<li>Nghiên cứu trước khi chốt thư viện OBD2/MCU (rule §1.1 — Context7 + nguồn): giao thức ELM327, broadcast FYT/TS — [CHƯA BIẾT], đo trên thiết bị thật trước khi viết mã (CLAUDE.md §14).</li></ul>
+
+<h2>5. Tasks (DAG)</h2>
+<table><tr><th>#</th><th>Việc</th><th>Trạng thái</th></tr>
+<tr><td>T1</td><td>Owner trả lời OQ1–OQ3, duyệt Requirements</td><td>chờ</td></tr>
+<tr><td>T2</td><td>B1 đổi applicationId/tên/khoá OTA · build xanh</td><td>chờ T1</td></tr>
+<tr><td>T3</td><td>B2 gỡ phần BYD theo đợt · test xanh · QA máy ảo</td><td>chờ T1</td></tr>
+<tr><td>T4</td><td>B3 đo năng lực + UI tự ẩn/hiện</td><td>chờ T1</td></tr>
+<tr><td>T5</td><td>B4(a) GPS; B4(b)(c) sau khi có thiết bị</td><td>chờ T1</td></tr>
+</table>
+
+<h2>6. Verification</h2><ul><li>Máy ảo Android 10/12 (giống box), sau đó một Android box thật của owner.</li></ul>
+
+<h2>7. Open Questions</h2>
+<ul>
+<li>OQ1 — Loại máy nhắm tới: (a) box cắm cổng CarPlay chạy Android trên màn zin (Carlinkit, Ottocast…) · (b) đầu Android thay màn zin (FYT/TS10…) · (c) cả hai.</li>
+<li>OQ2 — Cần dữ liệu xe không (tốc độ/nhiên liệu…), hay chỉ phần launcher?</li>
+<li>OQ3 — Tên app + applicationId + repo GitHub mới (đề xuất <code>com.kachi.box</code>, repo <code>dangkhoi/kachi-box</code> — owner tạo repo).</li>
+</ul>
+<h2>8. References</h2><ul><li>Repo gốc <code>byd-launcher</code> (2.98 <code>bf54415</code>) · <code>docs/index.html</code> (giới thiệu bản BYD).</li></ul>
+<h2>9. Nhật ký triển khai</h2><ul><li>2026-10-09 — clone repo riêng <code>../kachi-androidbox</code>, nhánh <code>androidbox/main</code>, gỡ remote.</li></ul>
+<h2>10. Reviewer Log</h2><p class="muted">Append-only.</p>
+</div></body></html>
