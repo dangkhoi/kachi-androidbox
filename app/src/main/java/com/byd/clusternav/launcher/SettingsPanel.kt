@@ -18,7 +18,7 @@ import com.byd.clusternav.launcher.KachiSpace as Sp
  * Mọi thứ màn Cài đặt cần biết, gom một chỗ (S1).
  *
  * Vì sao là một lớp giữ **lambda + hàm đọc state** chứ không phải 20 tham số hàm dựng như bảng cũ: bảng cũ nhận
- * **ảnh chụp** giá trị lúc mở (`unitPrefs`, `wallpaper`, `topStrip`…), nên sau khi state đổi thì bảng đang mở nói
+ * **ảnh chụp** giá trị lúc mở (`wallpaper`…), nên sau khi state đổi thì bảng đang mở nói
  * sai — chấp nhận được khi bảng chỉ sống một lượt, nhưng màn Cài đặt có **7 nhóm dựng lười và được nhớ lại**
  * ([SettingsPanel.pages]) nên một trang dựng lại phải thấy giá trị MỚI. Đọc qua [state] thì mỗi lượt dựng đều lấy
  * từ nguồn sự thật duy nhất, không có bản sao nào để lệch.
@@ -52,19 +52,11 @@ class SettingsDeps(
     val onPreset: (LayoutPreset) -> Unit,
     val onOpenLayoutEditor: () -> Unit,
     val onWallpaper: (WallpaperPrefs) -> Unit,
-    val onTopStrip: (String, Boolean) -> Unit,
-    /**
-     * V3 · R14 — đặt **cả** cấu hình thanh trên một lượt (nay có hai phần: danh sách chip + cờ nhãn).
-     *
-     * Cùng lập luận [onDockConfig]: [onTopStrip] chỉ diễn tả được *"bật/tắt một mã"*, không diễn tả được
-     * *"đổi cách vẽ cả hàng"*. Thêm một cổng `onTopStripLabels(Boolean)` riêng là mở đường thứ hai tới cùng
-     * một chỗ lưu — mà chỗ lưu ấy ghi hai khoá trong MỘT lượt (`WorkspacePrefs.setTopStrip`).
-     */
-    val onTopStripConfig: (TopStripConfig) -> Unit,
+    // Android box B2 · W3: `onTopStrip`/`onTopStripConfig` (chip xe thanh trên) gỡ cùng chip xe.
     /**
      * UX-OVERHAUL · WP4 — **thứ tự các vật trên thanh trên** (nhận cả [HeaderLayout] đã chốt).
      *
-     * Cùng lập luận [onDockConfig]/[onTopStripConfig]: phép DỜI là hàm thuần ở `:core`
+     * Cùng lập luận [onDockConfig]: phép DỜI là hàm thuần ở `:core`
      * ([HeaderLayout.move] → [BarOrder.move]), nên một cổng `onMoveHeaderItem(item, delta)` chỉ nhân đôi luật
      * kẹp biên ở tầng vẽ. Thứ tự thanh NÚT không có cổng riêng — nó đi trong [onDockConfig].
      */
@@ -89,14 +81,7 @@ class SettingsDeps(
     val trip: TripSettingsPort,
     /** 2.91 VOICE-APP-NAMES — trang *Dạy tên app* (đọc tên đã dạy + ghi qua ViewModel); xem [VoiceNamesPort]. */
     val voiceNames: VoiceNamesPort,
-    /**
-     * Công cụ kiểm tra từng nút (owner 2026-09-15): chạy MỘT hành động xe theo id + tham số ([CarControlPort.actByKind]).
-     * Trả `true` nếu lệnh gửi được (off-car / chưa map ⇒ `false`). KHÔNG gate — người dùng tự chấm kết quả bằng mắt.
-     */
-    val runAction: (String, Int) -> Boolean,
-    /** Đọc MỘT datum theo id → chuỗi hiển thị kèm đơn vị, hoặc `null` (off-car / chưa map). */
-    val readInfo: (String) -> String?,
-    val onUnitPrefs: (UnitPrefs) -> Unit,
+    // Android box B2 · W3: `runAction`/`readInfo` (công cụ kiểm tra từng nút xe) và `onUnitPrefs` (đơn vị datum xe) gỡ.
     /**
      * **Sổ địa chỉ** của hồ sơ đang dùng (spec `docs/specs/kachi-voice-addresses.html` R1) — ghi **cả danh sách**
      * đã chốt, không phải từng thao tác.

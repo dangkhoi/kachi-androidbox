@@ -56,7 +56,6 @@ private fun KachiPalette.recolored(seed: Int): KachiPalette {
         tileOnFrom = rc(tileOnFrom), tileOnTo = rc(tileOnTo), tileOnLine = rc(tileOnLine),
         surfOnFrom = rc(surfOnFrom), surfOnTo = rc(surfOnTo),
         glow1 = rc(glow1), glow2 = rc(glow2),
-        domainTints = domainTints + (IDENTITY to rc(domainTints.getValue(IDENTITY))),
     )
 }
 
@@ -118,4 +117,3 @@ private fun KachiPalette.toned(tone: CardTone): KachiPalette {
     )
 }
 
-private const val IDENTITY = "IDENTITY"

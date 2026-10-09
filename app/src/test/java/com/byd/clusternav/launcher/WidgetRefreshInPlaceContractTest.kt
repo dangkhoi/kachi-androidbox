@@ -43,7 +43,7 @@ class WidgetRefreshInPlaceContractTest {
     @Test
     fun `lam moi TAI CHO chi thay o con la muc DOC`() {
         val fn = SourceRoots.body(widgets, "fun refreshRead(")
-        assertTrue(fn.contains("CapabilityCatalog.isWrite("), "phải GIỮ view của nút HÀNH ĐỘNG")
+        // Android box B2 · W3: nút HÀNH ĐỘNG trong ô widget gỡ cùng nút xe — chỉ còn widget tự-lo-nội-dung cần giữ view.
         assertTrue(
             fn.contains("WorkspaceRenderPlanner.selfDriven("),
             "phải GIỮ view của widget tự-lo-nội-dung (trình chiếu ảnh) — thay nó là đặt lại vòng quay ảnh",
@@ -66,15 +66,6 @@ class WidgetRefreshInPlaceContractTest {
             refreshAt in 1 until removeAt,
             "làm mới tại chỗ phải được thử TRƯỚC khi tháo view — đảo thứ tự là mất cú bấm như cũ",
         )
-    }
-
-    @Test
-    fun `chot chong bam kep khong nam trong View`() {
-        // Nếu chốt sống trong ô thì mọi lần dựng lại ô là một lần mở lại cửa cho cú bấm thứ hai.
-        val tile = SourceRoots.body(factory, "fun macroTile(")
-        assertFalse(tile.contains("AtomicBoolean("), "chốt KHÔNG được tạo trong thân ô")
-        assertTrue(tile.contains("state.beginRun("), "phải dùng chốt ở bảng trạng thái dùng chung")
-        assertTrue(tile.contains("state.endRun("), "và nhả nó")
     }
 
     @Test

@@ -65,7 +65,9 @@ data class DockConfig(
      * "không nhét rác vào cấu hình bền" của bản cũ.
      */
     fun setEnabled(id: String, on: Boolean): DockConfig {
-        if (CapabilityCatalog.kindOf(id) == null) return this
+        // Android box B2 · W3 (2026-10-09): thanh nút chỉ còn hành động LAUNCHER — `ControlDockView` bỏ qua mã
+        // ĐỌC (widget), nên nhận chúng ở đây là tái tạo đúng lỗi "đặt 10 hiện 6" (`DockSelection.sanitize`).
+        if (CapabilityCatalog.kindOf(id) != CapabilityKind.LAUNCHER) return this
         val cur = enabled.toMutableList()
         if (on) { if (id !in cur) cur.add(id) } else cur.remove(id)
         return copy(enabled = cur)
@@ -96,7 +98,7 @@ data class DockConfig(
         /**
          * Android box W0 (2026-10-09, spec `androidbox-plan.html` §4.1) — thanh nút mặc định chỉ gồm **hành động của
          * launcher** ([LauncherActions]): mở ngăn kéo · Cài đặt · phiên nghe · khối lối tắt. Trước đó mặc định là các nút
-         * xe `enabledByDefault` của [ControlRegistry] — trên Android box không có xe ⇒ thanh nút xe chết.
+         * xe `enabledByDefault` của `ControlRegistry` — trên Android box không có xe ⇒ thanh nút xe chết.
          * Cấu hình đã lưu (danh sách mã) không đổi; chỉ máy chưa từng lưu thanh mới nhận mặc định này.
          */
         val DEFAULT_ENABLED: List<String> = listOf(

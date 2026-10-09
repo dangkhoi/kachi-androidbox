@@ -212,7 +212,7 @@ class SlotHostingLifecycleContractTest {
         assertTrue("post {" in attached, "dựng lại SAU lượt gắn (post), không sửa danh sách con giữa lúc đang duyệt nó")
         assertTrue("isAttachedToWindow && SlotHostHeal.anyReleased(slotViews)" in attached,
             "chỉ dựng lại khi CÒN gắn và thật sự có ô cầm host đã nhả — không đốt một lượt dựng lại vô cớ")
-        assertTrue("renderInternal(displayed, displayedStatus, embedChanged = true)" in attached,
+        assertTrue("renderInternal(displayed, embedChanged = true)" in attached,   // W3: `displayedStatus` gỡ cùng trạng thái xe
             "đi qua đường dựng-lại-ô-App sẵn có, không viết đường thứ hai")
         val heal = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/SlotHostHeal.kt")
         assertTrue("as? VdAppHost)?.isReleased == true" in heal, "phải hỏi đúng host của ô")

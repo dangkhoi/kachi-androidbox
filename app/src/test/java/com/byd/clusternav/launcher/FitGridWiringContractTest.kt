@@ -112,7 +112,8 @@ class FitGridWiringContractTest {
     @Test
     fun `o tu ve theo khung khong bi co hai lan`() {
         val self = SourceRoots.body(layout, "fun selfFitting(v: View)")
-        listOf("RingView", "TyreBoardView", "PhotoWidgetView", "CarMiniView", "DoorBoardView", "ShortcutIconsView", "GroupTileView")
+        // Android box B2 · W3: RingView · TyreBoardView · CarMiniView · DoorBoardView · GroupTileView gỡ cùng widget xe.
+        listOf("PhotoWidgetView", "ShortcutIconsView", "MediaFitLayout")
             .forEach { assertTrue(self.contains("is $it"), "ô tự vẽ $it phải được để nguyên (FILL), không co bằng FitScale") }
         assertTrue(SourceRoots.body(layout, "fun single(ctx: Context, child: View)").contains("if (selfFitting(child)) child"),
             "ô đơn tự vẽ trả NGUYÊN view như 2.86")
@@ -120,7 +121,7 @@ class FitGridWiringContractTest {
 
     @Test
     fun `va B5 cua MiniCard da go - mot co che chinh co duy nhat`() {
-        val tele = code("WidgetTelemetry.kt")
+        val tele = code("WidgetCards.kt")   // W3: MiniCard dời từ WidgetTelemetry.kt (gỡ)
         val card = tele.substringAfter("internal class MiniCard(").substringBefore("internal fun miniCard(")
         assertFalse(card.contains("setAutoSizeTextTypeUniformWithConfiguration"), "autosize WRAP chỉ co, không giãn")
         assertFalse(card.contains("addOnLayoutChangeListener"), "ẩn icon theo bố cục đánh nhau với dạng NGANG của lưới")
@@ -143,7 +144,7 @@ class FitGridWiringContractTest {
         assertTrue(uses(app, "GridFit.fit(", "GridFit.kt"))
         assertTrue(uses(app, "GridFit.capacity(", "GridFit.kt"), "sức chứa có chỗ dùng thật (nhật ký QA)")
         assertTrue(uses(app, "IconRepeat.ofIds(", "IconRepeat.kt"))
-        assertTrue(uses(core, "IconRepeat.distinguishable(", "IconRepeat.kt"), "ô nhóm dùng CÙNG luật icon")
+        // Android box B2 · W3: `IconRepeat.distinguishable` (ô nhóm xe) gỡ cùng `GroupBoardModel`.
         assertTrue(uses(core, "GridFit.fit(", "GridFit.kt"), "lưới lối tắt (ShortcutGridFit) là một cấu hình của GridFit")
     }
 
@@ -154,12 +155,11 @@ class FitGridWiringContractTest {
             "src/main/java/com/byd/clusternav/launcher/FitScale.kt",
             "src/main/java/com/byd/clusternav/launcher/FitProbe.kt",
             "src/main/java/com/byd/clusternav/launcher/WidgetViews.kt",
-            "src/main/java/com/byd/clusternav/launcher/WidgetTelemetry.kt",
+            "src/main/java/com/byd/clusternav/launcher/WidgetCards.kt",   // W3: WidgetTelemetry.kt gỡ, MiniCard dời sang đây
             "src/main/java/com/byd/clusternav/launcher/KachiSpaceBars.kt",
             "src/main/kotlin/com/byd/clusternav/launcher/GridFit.kt",
             "src/main/kotlin/com/byd/clusternav/launcher/ShortcutGridFit.kt",
             "src/main/kotlin/com/byd/clusternav/launcher/IconRepeat.kt",
-            "src/main/kotlin/com/byd/clusternav/launcher/GroupBoardModel.kt",
         ).forEach { rel ->
             val n = SourceRoots.text(rel).lines().size
             assertTrue(n <= 500, "$rel dài $n dòng — trần là 500 (CLAUDE.md §4.1)")

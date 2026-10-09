@@ -54,7 +54,6 @@ class VoiceWakeSlotCountDispatchTest {
             VoiceHomeRelay.slotOutcome(activity.perform(VoiceHomeAction.ASSIGN_APP_TO_SLOT, VoiceHomeRelay.encodeSlot(idx, pkg)))
 
         val dispatcher = VoiceDispatcher(
-            control = { error("bài này không chạm nút xe") },
             // wake: ĐÚNG state mà `buildSession` đưa vào — ảnh chụp ngữ pháp, bố cục mặc định.
             state = if (wake) ({ VoiceGrammarSnapshot(profiles = listOf("Mặc định")).homeState() }) else ({ real }),
             media = { error("bài này không chạm nhạc") },
@@ -134,7 +133,7 @@ class VoiceWakeSlotCountDispatchTest {
         val placed = ArrayList<Pair<Int, String>>()
         val said = ArrayList<String>()
         val d = VoiceDispatcher(
-            control = { error("") }, state = { VoiceGrammarSnapshot().homeState() }, media = { error("") },
+            state = { VoiceGrammarSnapshot().homeState() }, media = { error("") },
             appsByLabel = { mapOf("YouTube" to YT) }, openApp = { error("") }, openAppList = {}, openSettings = {},
             onSwitchProfile = {}, onListen = {}, confirm = { _, y, _ -> y() }, say = { said += it },
             assignAppToSlot = { idx, pkg -> placed += idx to pkg; true },

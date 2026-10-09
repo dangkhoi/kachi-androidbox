@@ -143,33 +143,6 @@ internal object VoiceQuestion {
     fun readsLead(t: List<Token>): Boolean = READ_LEADS.any { VoiceLexicon.phraseAt(t, 0, it) }
 
     /**
-     * ═══ D2 · Câu hỏi mức bằng **một chữ ở cuối** (*"ghế mát mức mấy"* → ASR *"ghế mất mấy"*) ════════════════
-     *
-     * Trả phần THÂN (bỏ chữ hỏi cuối) khi câu có hình dạng `<đối tượng> mấy`, hoặc `null`.
-     *
-     * ## Vì sao cần một hình dạng thứ ba, dù KDoc lớp nói *"chỉ có hai"*
-     * [ĐO xe 2026-09-18, `20260918-…-ghế mất mấy.json`] owner nói *"ghế mát mức mấy"*; mô hình in ra **`ghế mất
-     * mấy`** — rụng hẳn chữ *"mức"*, tức cụm hỏi HAI TỪ [ASK_EXTRA] không còn gì để khớp. Bỏ dấu thì *"mát"* và
-     * *"mất"* trùng nhau (`mat`) nên phần đối tượng vẫn đúng; thứ duy nhất thiếu là **chữ hỏi**. Câu rơi vào
-     * `NO_VERB` = *"không hiểu"*, trong khi người lái đã nói một câu hoàn toàn rõ.
-     *
-     * ## Ba cổng — và cổng thứ tư nằm ở chỗ gọi
-     * Chữ `may` đứng trần là thứ KDoc lớp **cấm** làm dấu hiệu, vì bỏ dấu xong nó trùng hệt *"máy"* (*"bật **máy**
-     * lạnh"*). Nên nó chỉ được nhận trong đúng một hình dạng rất hẹp:
-     *  1. **phải là từ CUỐI câu** ⇒ *"bật máy lạnh"* (chữ `may` ở giữa) không bao giờ vào đây;
-     *  2. **phải còn ≥ 2 từ phía trước** ⇒ *"mở máy"* · *"tắt máy"* · *"nổ máy"* bị loại bằng chính độ dài;
-     *  3. **không có động từ HÀNH ĐỘNG ở vị trí 0** ⇒ một câu ra lệnh vẫn là câu ra lệnh.
-     *  4. …và chỗ gọi ([VoiceIntentParser]) chỉ nhận kết quả khi phần thân ra được **một datum THẬT**; không thì
-     *     câu đi tiếp y như chưa có gì xảy ra. Đây là cổng mạnh nhất: nó làm hình dạng này chỉ biến được câu
-     *     thành một lệnh **ĐỌC**, không bao giờ thành một lệnh ghi, và chỉ khi thứ đứng trước thật sự đọc được.
-     */
-    fun bareAskBody(t: List<Token>): List<Token>? {
-        if (t.size < MIN_BARE_WORDS || t.last().norm !in BARE_ASK) return null
-        if (actionAtHead(t)) return null
-        return t.subList(0, t.size - 1)
-    }
-
-    /**
      * ═══ [SOÁT senior 2026-09-18 · P0] Câu [t] **có dấu hiệu hỏi**, dù [isQuestion] chưa dám nhận ══════════════
      *
      * Câu hỏi yếu hơn [isQuestion]: chỉ cần một đuôi `không`/`chưa`, hoặc một chữ `hay` không đứng đầu câu.
@@ -195,17 +168,6 @@ internal object VoiceQuestion {
     }
 
     /**
-     * Chữ hỏi đứng TRẦN ở cuối câu — xem ba cổng ở [bareAskBody].
-     *
-     * Chỉ `may` (*"mấy"*). **Không** thêm `nhieu`: *"bao nhiêu"* đã là một cụm của [VoiceLexicon.READ_TAILS] cắt
-     * được ở bất kỳ đâu, nên thêm nó ở đây chỉ nhân đôi một đường đang chạy — và một bản sao là một bản sẽ lệch.
-     */
-    private val BARE_ASK: Set<String> = setOf("may")
-
-    /** Ít nhất ba từ: hai từ đối tượng + chữ hỏi — xem cổng (2) ở [bareAskBody]. */
-    private const val MIN_BARE_WORDS = 3
-
-    /**
      * MỌI từ chỉ dựng nên **bộ khung câu hỏi** — không từ nào mang nghĩa về xe.
      *
      * Gom từ đúng ba bảng của tệp này (không khai một danh sách thứ tư — một bản sao là một bản sẽ lệch), để
@@ -217,14 +179,7 @@ internal object VoiceQuestion {
     val FRAME_WORDS: Set<String> = buildSet {
         ASK_PHRASES.forEach { addAll(it) }
         addAll(SCAFFOLD)
-        addAll(BARE_ASK)
     }
-
-    /**
-     * Ý định này có **GHI vào xe** không — tức có thể làm một việc không hoàn lại được.
-     *
-     * [VoiceIntent.Macro] cũng tính: một gói lệnh là nhiều lệnh ghi liền nhau (*"Rời xe"* đóng kính rồi khoá xe).
-     * Đổi hồ sơ / đổi bố cục / mở app **không** tính — chúng không chạm thân xe và đảo lại được bằng một câu.
-     */
-    fun writesToCar(i: VoiceIntent): Boolean = i is VoiceIntent.Control || i is VoiceIntent.Macro
+    // Android box B2 · W3: `writesToCar` (cổng "câu hỏi không thành lệnh ghi xe") + `bareAskBody` (câu hỏi mức ghế rụng chữ hỏi)
+    // gỡ cùng nút / datum xe.
 }

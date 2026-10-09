@@ -129,7 +129,6 @@ class PrefsWorkspaceRepository(context: Context) : WorkspaceRepository {
             // cục tự vẽ của hồ sơ mới được nạp cùng lúc với mọi thứ khác — trước đây phải nhớ nạp lại bằng tay ở tầng
             // UI (và đã từng quên, làm hồ sơ B hiện bố cục của A rồi bấm Lưu là ghi đè mất bố cục của B).
             customLayout = prefs.gridLayout().takeIf { it.frames.isNotEmpty() },
-            unitPrefs = prefs.unitPrefs(),
             wallpaper = prefs.wallpaperPrefs(),
             // Sổ địa chỉ (spec `kachi-voice-addresses.html` R1): nạp CÙNG lượt vì hai chỗ đọc nó — bảng Cài đặt
             // (vẽ danh sách) và đường lệnh giọng nói (tra sổ lúc thi hành) — đều đọc `HomeUiState`. Nạp ở đây thì
@@ -139,9 +138,8 @@ class PrefsWorkspaceRepository(context: Context) : WorkspaceRepository {
             // F1 — lối tắt ứng dụng (theo hồ sơ), nạp CÙNG lượt như sổ địa chỉ ⇒ đổi hồ sơ là khối + widget đổi theo.
             shortcuts = prefs.appShortcuts(),
             trip = prefs.tripConfig(),   // F2/F3 — chuyến lên xe theo hồ sơ, nạp cùng lượt ⇒ đổi hồ sơ là trang Cài đặt đổi theo
-            topStrip = prefs.topStrip(),
-            // UX-OVERHAUL · WP4 — thứ tự các vật trên thanh trên, nạp CÙNG lượt (theo hồ sơ như `topStrip` ngay
-            // trên) ⇒ đổi hồ sơ là thanh sắp lại theo hồ sơ đó, không phải nhớ nạp bằng tay ở tầng UI.
+            // UX-OVERHAUL · WP4 — thứ tự các vật trên thanh trên, nạp CÙNG lượt (theo hồ sơ) ⇒ đổi hồ sơ là thanh sắp lại
+            // theo hồ sơ đó, không phải nhớ nạp bằng tay ở tầng UI.
             header = prefs.headerLayout(),
             // S1·T4: nạp cùng lượt với mọi thứ khác ⇒ mở lại màn Cài đặt là thấy đúng cờ đang lưu (bài học P1-1: nạp
             // bằng tay ở tầng UI thì sẽ có lần quên).
@@ -265,21 +263,11 @@ class PrefsWorkspaceRepository(context: Context) : WorkspaceRepository {
 
     override fun touchRecentApp(pkg: String) = prefs.touchRecentApp(pkg)
 
-    override fun unitPrefs(): UnitPrefs = prefs.unitPrefs()
-
-    // Tên tham số KHÔNG đặt là `prefs`: field `prefs` (WorkspacePrefs) sẽ bị che, phải viết `this.prefs` mới đúng —
-    // đọc dễ tưởng gọi đệ quy.
-    override fun setUnitPrefs(units: UnitPrefs) = prefs.setUnitPrefs(units)
-
     override fun gridLayout(): GridLayout = prefs.gridLayout()
 
     override fun setGridLayout(layout: GridLayout?) = prefs.setGridLayout(layout)
 
     override fun profileLayout(name: String): Pair<LayoutPreset?, Int> = prefs.profileLayout(name)
-
-    override fun topStrip(): TopStripConfig = prefs.topStrip()
-
-    override fun setTopStrip(config: TopStripConfig) = prefs.setTopStrip(config)
 
     override fun headerLayout(): HeaderLayout = prefs.headerLayout()
 

@@ -239,34 +239,6 @@ class ThemePaletteContractTest {
         }
     }
 
-    /**
-     * Ô điều khiển đang BẬT phải tô icon **và** chữ bằng [KachiPalette.inkOnAccent], không phải [KachiPalette.onAccent].
-     *
-     * Hai vai này chỉ khác nhau ở **loại nền**, và đó chính là chỗ dễ lẫn: `onAccent` (trắng) dành cho nền nhấn ĐẶC
-     * (gradient của pill), còn ô điều khiển dùng `gradientSoft` = nền nhấn **BÁN TRONG SUỐT**. [ĐO trên ảnh máy ảo]
-     * bản đầu của T1 tô icon bằng `onAccent` ⇒ trên bảng sáng nền trộn ra (214,217,248) và icon trắng chỉ **1.39:1**.
-     *
-     * Bài này canh **dây nối**, không canh con số: phép kiểm tương phản ở trên đã chứng minh `inkOnAccent` đủ tương
-     * phản trên nền `tileOn*`, nhưng nó không thể biết bộ vẽ có thật sự dùng vai đó hay không.
-     */
-    @Test
-    fun `o dieu khien dang bat dung inkOnAccent chu khong dung onAccent`() {
-        val tint = SourceRoots.body(
-            SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/ControlTileFactory.kt"),
-            "private fun tint(",
-        )
-        assertTrue(tint.contains("INK_ON_ACCENT"), "nhánh BẬT phải dùng INK_ON_ACCENT (nền nhấn bán trong suốt)")
-        assertTrue(
-            !tint.contains("ON_ACCENT") || tint.contains("INK_ON_ACCENT"),
-            "không được dùng ON_ACCENT ở đây: nó dành cho nền nhấn ĐẶC",
-        )
-        assertEquals(
-            2, Regex("INK_ON_ACCENT").findAll(tint).count(),
-            "cả ICON và CHỮ của ô đang bật đều phải dùng INK_ON_ACCENT — [ĐO] chữ đúng mà icon sai thì bảng sáng " +
-                "mất glyph nhưng vẫn còn nhãn, nên lỗi rất dễ lọt qua một lượt nhìn nhanh",
-        )
-    }
-
     /** Viền KẾT CẤU — thứ nói *"đây là một thành phần riêng"*. WCAG 1.4.11 (non-text) đòi 3:1. */
     @Test
     fun `vien ket cau dat 3 to 1 o ca hai bang`() {
@@ -406,10 +378,8 @@ class ThemePaletteContractTest {
             .map { it.name }
             .filterNot { theme.contains("palette.$it") }
         assertEquals(emptyList<String>(), missing, "vai màu không có getter ở KachiTheme (không ai dùng được): $missing")
-        assertTrue(
-            "palette.domainTint(" in theme,
-            "bảng sắc lĩnh vực phải tra qua ĐÚNG MỘT hàm (KachiPalette.domainTint) — xem chú thích ngay trên",
-        )
+        // Android box B2 · W3: bảng sắc lĩnh vực (`domainTints`/`domainTint`) gỡ cùng `Domain` — không còn bảng tra nào.
+        assertTrue("domainTint" !in theme, "sắc lĩnh vực xe đã gỡ")
     }
 
     /**

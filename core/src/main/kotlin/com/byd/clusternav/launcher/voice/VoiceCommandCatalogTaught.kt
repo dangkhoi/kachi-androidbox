@@ -23,6 +23,6 @@ internal object VoiceCommandCatalogTaught {
         val verb = SherpaSpokenWords.VERBS[VoiceVerb.OPEN].orEmpty().firstOrNull() ?: return null
         val examples = aliases.distinctBy { it.pkg to it.accented }
             .map { a -> ex("$verb ${a.accented}" to VoiceIntent.OpenApp(a.labelKey)) }
-        return VoiceCommandGroup(ID, title(lang), null, examples)
+        return VoiceCommandGroup(ID, title(lang), examples)
     }
 }

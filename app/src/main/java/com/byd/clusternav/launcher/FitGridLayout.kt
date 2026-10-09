@@ -489,8 +489,8 @@ internal class FitGridLayout private constructor(
          * hai lần. Xét theo LOẠI view trong cây ô, không theo mã widget (CLAUDE.md §7).
          */
         fun selfFitting(v: View): Boolean = when (v) {
-            is RingView, is TyreBoardView, is PhotoWidgetView, is CarMiniView, is DoorBoardView,
-            is ShortcutIconsView, is ShortcutGridLayout, is GroupTileView, is FitGridLayout, is MediaFitLayout -> true
+            // (Android box B2 · W3: vòng đo, bảng lốp, hình xe, bảng cửa, ô nhóm xe gỡ cùng widget xe.)
+            is PhotoWidgetView, is ShortcutIconsView, is ShortcutGridLayout, is FitGridLayout, is MediaFitLayout -> true
             is ViewGroup -> (0 until v.childCount).any { selfFitting(v.getChildAt(it)) }
             else -> false
         }

@@ -10,7 +10,6 @@ import com.byd.clusternav.launcher.SettingsCatalog
 import com.byd.clusternav.launcher.SlotCodec
 import com.byd.clusternav.launcher.SlotContent
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.launcher.UnitFormat
 import com.byd.clusternav.Prefs
 import com.byd.clusternav.inputdDisabled
 import com.byd.clusternav.system.inputd.InputDaemonClient
@@ -77,10 +76,6 @@ internal object TestBridgeState {
                         "dock_visible" to s.dock.visible,
                         "dock_scale" to s.dock.scalePct,   // 2.89 · B3 — % cỡ thanh nút (E2E máy ảo đọc lại)
                         "dock" to TestBridgeJson.Raw(TestBridgeJson.arr(s.dock.enabled)),
-                        "chips" to TestBridgeJson.Raw(TestBridgeJson.arr(s.topStrip.ids)),
-                        // V3 · R14 — công tắc nhãn chip. Phơi ra để E2E máy ảo chốt được *"tắt rồi thì chip còn
-                        // gì"* bằng một lượt `state`, thay vì so hai ảnh chụp bằng mắt.
-                        "chip_labels" to s.topStrip.showLabels,
                     ),
                 ),
                 "look" to TestBridgeJson.Raw(
@@ -90,10 +85,6 @@ internal object TestBridgeState {
                         // Tiếng GIỌNG NÓI mà `previewOf` dùng (CÙNG biểu thức) — voice-e2e.sh đòi `vi` trước khi so
                         // preview với voice-cases.tsv (tiếng Việt); `lang` = AUTO thì chỉ trường này nói thật (soát 2.87).
                         "voice_lang" to Strings.current.voice.code,
-                        "units" to s.unitPrefs.encode(),
-                        "units_in_use" to TestBridgeJson.Raw(
-                            TestBridgeJson.arr(UnitFormat.quantitiesInUse().map { q -> q.name + "=" + s.unitPrefs.unitFor(q) }),
-                        ),
                     ),
                 ),
                 "hosting" to TestBridgeJson.Raw(

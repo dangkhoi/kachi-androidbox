@@ -14,23 +14,19 @@ import com.byd.clusternav.launcher.voice.VoiceRiskTable
  * ## Vì sao bài này dựng [VoiceDispatcher] THẬT trong khi các bài `:app` khác chỉ quét chuỗi nguồn
  * Thứ cần khoá ở đây là **thứ tự thời gian** (*"vế sau có chạy trước khi vế trước được đồng ý không"*), mà thứ tự
  * thì không đọc ra được từ một chuỗi ký tự — `SettingsScreenWiringContractTest` quét nguồn vì nó nói về **dây
- * nối**, còn đây nói về **hành vi**. Dựng được thật vì lớp này không chạm `android.*` trên đường đi của một nút
- * xe: `ControlTileState` là ConcurrentHashMap thuần, `actByKind` ở `:core`, và các lambda còn lại do bài tự cấp.
+ * nối**, còn đây nói về **hành vi**. Dựng được thật vì lớp này không chạm `android.*` trên đường đi của một việc
+ * launcher/hồ sơ: các lambda do bài tự cấp.
  *
  * [ĐO] bệnh nó khoá: bản đầu bắn **mọi** vế ngay lập tức và chỉ *hỏi thêm* cho vế CONFIRM ⇒ câu *"mở khoá cửa rồi
  * mở hết kính"* hạ hết kính **trong lúc** hộp hỏi của vế mở khoá còn đang mở.
  */
 class VoiceDispatcherSafetyTest {
 
-    /** Cổng xe giả — chỉ ghi lại lệnh nào đã bắn (không có gì để "thật" off-car). */
-    private class Port : CarControlPort {
-        val fired = ArrayList<String>()
-        override fun toggle(id: String, on: Boolean): Boolean { fired += "toggle:$id:$on"; return true }
-        override fun step(id: String, value: Int): Boolean { fired += "step:$id:$value"; return true }
-        override fun cover(id: String, open: Boolean): Boolean { fired += "cover:$id:$open"; return true }
-        override fun select(id: String, index: Int): Boolean { fired += "select:$id:$index"; return true }
-        override fun press(id: String): Boolean { fired += "press:$id"; return true }
-    }
+    /**
+     * Việc đã bắn — Android box B2 · W3: cổng xe giả (`CarControlPort`) gỡ cùng nút xe; ghi lại việc launcher / hồ sơ
+     * mà dispatcher THẬT gọi tới (cùng mục đích: chứng minh thứ tự thời gian của cổng xác nhận).
+     */
+    private class Fired { val log = ArrayList<String>() }
 
     /** Hộp hỏi lại giả: **không** trả lời ngay — bài tự quyết định lúc nào bấm Đồng ý / Huỷ. */
     private class Ask {
@@ -43,7 +39,7 @@ class VoiceDispatcherSafetyTest {
     }
 
     private class Rig {
-        val port = Port()
+        val port = Fired()
         val ask = Ask()
         val said = ArrayList<String>()
         val profiles = ArrayList<String>()
@@ -51,14 +47,13 @@ class VoiceDispatcherSafetyTest {
         /** Số lần câu lệnh yêu cầu mở một phiên NGHE (V1 pha nghe · `launcher_voice`). */
         var listens = 0
         val dispatcher = VoiceDispatcher(
-            control = { port },
             state = { HomeUiState(profiles = listOf("Mặc định", "Vợ")) },
             media = { error("bài này không chạm tới nhạc") },
             appsByLabel = { emptyMap() },
             openApp = { false },
-            openAppList = {},
-            openSettings = {},
-            onSwitchProfile = { profiles += it },
+            openAppList = { port.log += "apps" },
+            openSettings = { port.log += "settings" },
+            onSwitchProfile = { profiles += it; port.log += "profile:$it" },
             onListen = { listens++ },
             confirm = { q, y, n -> ask.onConfirm(q, y, n) },
             // ⚠ V3 · R7 (1.66): mặc định **không hỏi gì cả** (owner 2026-09-16). Bài này canh CƠ CHẾ của
@@ -78,64 +73,45 @@ class VoiceDispatcherSafetyTest {
     }
 
     // ══ 1 · Vế CONFIRM DỪNG cả chuỗi ══════════════════════════════════════════════════════════════════════
+    // Android box B2 · W3: câu mẫu cũ (mở cốp · bật đèn đọc) là lệnh xe đã gỡ ⇒ vế CONFIRM nay là ĐỔI HỒ SƠ, vế thường
+    // là MỞ CÀI ĐẶT / ỨNG DỤNG. Cơ chế canh giữ nguyên: vế sau KHÔNG chạy trước khi vế CONFIRM được đồng ý.
 
     @Test
     fun `ve sau KHONG chay truoc khi ve CONFIRM duoc dong y`() {
         val r = Rig()
-        r.dispatcher.submit("mở cốp và bật đèn đọc")
-
-        assertEquals(1, r.ask.asked.size, "phải hỏi đúng một lần, cho vế mở cốp")
-        assertEquals(emptyList<String>(), r.port.fired, "CHƯA đồng ý mà đã có lệnh bắn — cổng xác nhận vô nghĩa")
-
+        r.dispatcher.submit("đổi sang hồ sơ Vợ và mở cài đặt")
+        assertEquals(1, r.ask.asked.size, "phải hỏi đúng một lần, cho vế đổi hồ sơ")
+        assertEquals(emptyList<String>(), r.port.log, "CHƯA đồng ý mà đã chạy là cổng vô nghĩa")
         r.ask.agreeLast()
-        assertEquals(listOf("cover:trunk:true", "toggle:readl:true"), r.port.fired,
-            "đồng ý rồi thì chạy vế CONFIRM TRƯỚC, xong mới tới vế sau — đúng thứ tự nói")
+        assertEquals(listOf("profile:Vợ", "settings"), r.port.log, "đồng ý ⇒ chạy đúng thứ tự nói")
     }
 
     @Test
     fun `huy thi ca chuoi dung, va noi ro con may viec khong chay`() {
         val r = Rig()
-        r.dispatcher.submit("mở cốp và bật đèn đọc")
+        r.dispatcher.submit("đổi sang hồ sơ Vợ và mở cài đặt")
         r.ask.cancelLast()
-
-        assertEquals(emptyList<String>(), r.port.fired, "huỷ mà vẫn bắn là mất trắng cổng an toàn")
-        assertTrue(r.said.any { it.contains("huỷ") && it.contains("1") },
-            "phải nói ra là đã huỷ và còn 1 việc không chạy; im lặng ⇒ người dùng tưởng nửa sau đã chạy. Thấy: ${r.said}")
+        assertEquals(emptyList<String>(), r.port.log, "huỷ mà vẫn bắn là mất trắng cổng an toàn")
+        assertTrue(r.said.any { it.contains("1 việc sau không chạy") }, "phải nói rõ còn việc không chạy: ${r.said}")
     }
 
-    /** Hai vế CONFIRM liên tiếp: hộp thứ hai chỉ được mở SAU khi hộp thứ nhất được trả lời. */
     @Test
     fun `hai ve CONFIRM hoi lan luot, khong chong hop`() {
         val r = Rig()
-        r.dispatcher.submit("mở cốp và đổi sang hồ sơ Vợ")
+        r.dispatcher.submit("đổi sang hồ sơ Vợ rồi đổi sang hồ sơ Mặc định")
         assertEquals(1, r.ask.asked.size, "hai hộp hỏi chồng nhau thì người lái không biết đang trả lời cho vế nào")
-
         r.ask.agreeLast()
-        assertEquals(2, r.ask.asked.size, "trả lời xong vế đầu thì mới tới vế sau")
-        assertEquals(emptyList<String>(), r.profiles, "hồ sơ chưa được đổi khi chưa đồng ý")
+        assertEquals(2, r.ask.asked.size, "đồng ý vế một mới hỏi vế hai")
         r.ask.agreeLast()
-        assertEquals(listOf("Vợ"), r.profiles)
+        assertEquals(listOf("Vợ", "Mặc định"), r.profiles)
     }
-
-    // ══ 2 · Đường thường vẫn chạy thẳng, không hỏi ════════════════════════════════════════════════════════
 
     @Test
     fun `viec khong nguy hiem chay thang, khong hoi lai`() {
         val r = Rig()
-        r.dispatcher.submit("bật đèn đọc và đặt nhiệt độ hai lăm")
+        r.dispatcher.submit("mở cài đặt và mở ứng dụng")
         assertEquals(emptyList<String>(), r.ask.asked, "đừng hỏi lại những việc nói ngược lại là xong")
-        assertEquals(listOf("toggle:readl:true", "step:temp:25"), r.port.fired)
-    }
-
-    /** Lệnh tương đối cộng vào **mức đang dùng** của bảng dùng chung, không vào mốc mặc định của registry. */
-    @Test
-    fun `tang giam cong vao muc dang dung`() {
-        val r = Rig()
-        val def = ControlRegistry.byId("fan")!!
-        ControlTileState.shared.setValue("fan", 6)
-        r.dispatcher.submit("tăng gió")
-        assertEquals(listOf("step:fan:${def.clamp(7)}"), r.port.fired)
-        ControlTileState.shared.setValue("fan", def.value)   // trả bảng dùng chung về mốc cũ
+        assertEquals(listOf("settings", "apps"), r.port.log)
     }
 
     // ══ 3 · Không có đường nào bắn mà bỏ qua cổng ═════════════════════════════════════════════════════════
@@ -147,12 +123,22 @@ class VoiceDispatcherSafetyTest {
     @Test
     fun `preview khong thi hanh bat cu thu gi`() {
         val r = Rig()
-        val intents = r.dispatcher.preview("mở cốp và bật đèn đọc")
+        val intents = r.dispatcher.preview("đổi sang hồ sơ Vợ và mở cài đặt")
         assertEquals(2, intents.size)
-        assertTrue(intents.first() is VoiceIntent.Control)
-        assertEquals(emptyList<String>(), r.port.fired)
+        assertTrue(intents.first() is VoiceIntent.Profile)
+        assertEquals(emptyList<String>(), r.port.log)
         assertEquals(emptyList<String>(), r.ask.asked)
         assertEquals(emptyList<String>(), r.said)
+    }
+
+    /** Android box B2 · W3 — câu xe ra "đã gỡ": dispatcher nói ra, KHÔNG gọi việc nào, KHÔNG hỏi gì. */
+    @Test
+    fun `cau xe noi da go va khong chay gi`() {
+        val r = Rig()
+        r.dispatcher.submit("mở kính")
+        assertEquals(emptyList<String>(), r.port.log)
+        assertEquals(emptyList<String>(), r.ask.asked)
+        assertTrue(r.said.any { it.contains("điều khiển xe") }, "phải nói lý do: ${r.said}")
     }
 
     // ══ 4 · V1 pha NGHE — `launcher_voice` là một việc THẬT, không phải một mã trơ ═════════════════════════
@@ -176,8 +162,8 @@ class VoiceDispatcherSafetyTest {
     @Test
     fun `noi voi xe ghep duoc vao cau ghep`() {
         val r = Rig()
-        r.dispatcher.submit("bật đèn đọc rồi nói với xe")
+        r.dispatcher.submit("mở cài đặt rồi nói với xe")
         assertEquals(1, r.listens)
-        assertTrue(r.port.fired.any { it.contains("readl") }, "vế đầu vẫn phải chạy: ${r.port.fired}")
+        assertEquals(listOf("settings"), r.port.log, "vế đầu vẫn phải chạy")
     }
 }

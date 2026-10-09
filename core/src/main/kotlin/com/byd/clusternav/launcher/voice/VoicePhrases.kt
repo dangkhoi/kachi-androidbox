@@ -1,7 +1,5 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.LauncherActions
 
 /**
@@ -192,16 +190,7 @@ object VoicePhrases {
         places: List<String>,
     ): List<String> {
         val out = ArrayList<String>(1024)
-        ControlRegistry.ALL.forEach { c ->
-            out.add(c.label); c.labelEn?.let(out::add); c.short?.let(out::add); c.shortEn?.let(out::add)
-            out.addAll(c.args); out.addAll(c.argsEn)
-            VoiceSynonyms.CONTROL[c.id]?.let(out::addAll)
-        }
-        VoiceTelemetry.SPOKEN.forEach { t ->   // 2.88: trừ 13 mã lốp thô — KDoc [VoiceTelemetry]
-            out.add(t.label); t.labelEn?.let(out::add); t.short?.let(out::add); t.shortEn?.let(out::add)
-            VoiceSynonyms.TELEMETRY[t.id]?.let(out::addAll)
-        }
-        ActionMacros.ALL.forEach { m -> out.add(m.label); m.labelEn?.let(out::add) }
+        // Android box B2 · W3: nhãn nút / datum / gói lệnh xe gỡ cùng bộ đăng ký xe.
         LauncherActions.ALL.forEach { a -> out.add(a.label); a.labelEn?.let(out::add) }
         out.addAll(VoiceSynonyms.MEDIA_WORDS)
         out.addAll(VoiceSynonyms.NAV_WORDS)

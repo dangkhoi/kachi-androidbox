@@ -6,7 +6,7 @@ package com.byd.clusternav.launcher
  * Spec `docs/specs/kachi-274-ux-voice-camera.html` §3 R2 (bảng lốp, 2.74 · UX2) và §3 R7 (mọi bảng khác, UX7).
  *
  * ## Vì sao một tệp THUẦN cho việc "đặt chữ vào ô"
- * Bốn ô vẽ Canvas của launcher ([TyreBoardView] · `RingView` · `PhotoWidgetView` · `GridEditorView` ở `:app`) đều
+ * Bốn ô vẽ Canvas của launcher (`TyreBoardView` · `RingView` · `PhotoWidgetView` · `GridEditorView` ở `:app`) đều
  * phải trả lời đúng ba câu: *baseline ở đâu để khối chữ cân giữa ô*, *con số có nằm trên trục ô không*, *chữ có
  * vừa ô không*. Trước UX7, mỗi ô tự trả lời bằng **hằng ma thuật** (`cy + textSize*0.36f`, `centerY + big*0.10f −
  * sub*0.60f`, `h/2 − textSize*0.4f`, `centerY + textSize*0.35f`) — bốn công thức khác nhau cho cùng một câu hỏi,

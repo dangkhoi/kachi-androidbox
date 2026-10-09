@@ -142,12 +142,11 @@ class ZeroBorderContractTest {
          * Giá trị = lý do, để lượt sửa sau đọc được vì sao nó ở đây mà không phải "một viền được tha".
          */
         val INK_VIEWS: Map<String, String> = mapOf(
-            "RingView.kt" to "cung + rãnh của đồng hồ đo — nét CHÍNH LÀ cái vòng; gỡ là không còn đồng hồ",
+            // Android box B2 · W3 — `RingView.kt` (đồng hồ đo dữ liệu xe) + `DatumIconView.kt` (chấm mức datum) gỡ cùng ô đọc.
             // ⚠ WP3-v5: "CarArtPainter.kt" (hình xe vector) đã XOÁ — hình xe nay là ẢNH bitmap ([CarImageLayer],
             // dùng FILL + PorterDuff feather, KHÔNG stroke). "DoorBoardView.kt" cũng bỏ khỏi đây: bản mới không còn
             // đường tách vùng tô (chấm màu FILL trên ảnh), nên nó hết dùng STROKE — để lại là "mục chết".
             // Android box B2 · W2e — `SeatDiagramView.kt` + `Pm25GaugeView.kt` (tiện nghi xe) gỡ cùng trang Tiện nghi xe.
-            "DatumIconView.kt" to "chấm MỨC rỗng dưới icon (viền tròn) = trạng thái datum (mức 1/2) — nét LÀ cái chấm chưa đầy, gỡ là mất mức",
             "VoiceWaveView.kt" to "hai vòng ripple mờ (STROKE) quanh vòng tròn khi ĐANG NGHE = tín hiệu 'máy đang nghe' (voice-ux R2) — nét LÀ waveform, không phải khung",
             "GridEditorView.kt" to "LƯỚI ô của trình vẽ bố cục — thứ người dùng canh theo khi kéo khung " +
                 "(viền quanh từng khung đã GỠ ở WP1; chỉ còn lưới)",

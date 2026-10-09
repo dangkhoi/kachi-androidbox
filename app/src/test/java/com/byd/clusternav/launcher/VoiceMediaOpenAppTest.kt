@@ -47,7 +47,6 @@ class VoiceMediaOpenAppTest {
         }
 
         val dispatcher = VoiceDispatcher(
-            control = { error("bài này không chạm nút xe") },
             state = { HomeUiState() },
             media = { bridge },
             appsByLabel = { labels },

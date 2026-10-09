@@ -1,7 +1,5 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.voice.VoiceLexicon.Token
 import com.byd.clusternav.launcher.voice.VoicePhoneticConfusions.Syl
@@ -58,10 +56,8 @@ internal object VoicePhoneticMatch {
      */
     private val TOTAL_CAP = VoicePhoneticConfusions.SUB_OTHER
 
-    /** Chỉ **nút · thông tin · gói lệnh · hành động launcher**: xem KDoc lớp về app/hồ sơ. */
-    private val FUZZY_KINDS = setOf(
-        VoiceTermKind.CONTROL, VoiceTermKind.TELEMETRY, VoiceTermKind.MACRO, VoiceTermKind.LAUNCHER,
-    )
+    /** Chỉ **hành động launcher** (≤ 2.98 BYD còn nút · thông tin · gói lệnh xe): xem KDoc lớp về app/hồ sơ. */
+    private val FUZZY_KINDS = setOf(VoiceTermKind.LAUNCHER)
 
     /**
      * Sửa chuỗi từ [t] thành chuỗi **đọc được**, hoặc `null` khi không sửa được / không dám sửa.
@@ -263,9 +259,6 @@ internal object VoicePhoneticMatch {
             if (toks.isEmpty()) return
             out.putIfAbsent(toks.joinToString(" ") { it.norm }, toks.map { VoicePhoneticConfusions.toneOf(it.raw) })
         }
-        ControlRegistry.ALL.forEach { put(it.label); put(it.short) }
-        VoiceTelemetry.SPOKEN.forEach { put(it.label); put(it.short) }   // 2.88 — KDoc [VoiceTelemetry]
-        ActionMacros.ALL.forEach { put(it.label) }
         LauncherActions.ALL.forEach { put(it.label) }
         out
     }

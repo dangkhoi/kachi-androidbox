@@ -43,23 +43,4 @@ class Widget293ContrastTest {
         }
     }
 
-    @Test
-    fun `fadeOff noi vao tint cua o dieu khien va nho de refit tinh lai`() {
-        val icons = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/KachiIcons.kt")
-        val fade = SourceRoots.body(icons, "fun fadeOff(img: ImageView, sizeDp: Int, active: Boolean, dim: Float)")
-        assertTrue("IconFade.offAlpha(" in fade && "UNSELECTED_ALPHA" in fade, "mặt lớn chủ đề tối: bộ lọc đã mờ ⇒ inner")
-        assertTrue("d.offDim?.let { fadeOff(img, dp, active = false, dim = it) }" in SourceRoots.body(icons, "fun refit(img: ImageView, sidePx: Int)"))
-        val factory = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/ControlTileFactory.kt")
-        val macro = SourceRoots.body(factory, "fun macroTile(macro: ActionMacro): View")
-        assertTrue(Regex("""applyBg\(tile, false\); tint\(icon, label, false\)""").findAll(macro).count() == 2,
-            "gói lệnh lúc nghỉ: nền tắt + mực tắt (trước: mực 'đang bật' trên nền tắt)")
-    }
-
-    @Test
-    fun `o lop nen chua phan duoc la MUT2`() {
-        assertEquals(KachiTheme.MUT2, WidgetViews.tyreInk(TyreSeverity.NONE))
-        assertEquals(KachiTheme.INK, WidgetViews.tyreInk(TyreSeverity.OK))
-        assertEquals(KachiTheme.RED, WidgetViews.tyreInk(TyreSeverity.ALERT))
-        assertEquals(KachiTheme.AMBER, WidgetViews.tyreInk(TyreSeverity.WARN))
-    }
 }

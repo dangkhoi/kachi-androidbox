@@ -1,9 +1,7 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.launcher.TelemetryRegistry
 
 /**
  * ═══ V3 · HỎI LẠI CHO TỚI KHI HIỂU ═══════════════════════════════════════════════════════════════════════════
@@ -73,8 +71,6 @@ object VoiceClarify {
             -> return null
             else -> Unit
         }
-        // 2.93 VOICE-BARE-NOUN-IMPLICIT-VERB — tên bộ phận chuyển động trần ⇒ *"Mở hay đóng …?"* ([VoiceBareCover.ask]).
-        if (unknown.reason == VoiceUnknownReason.NO_VERB) VoiceBareCover.ask(unknown.text, terms, lang)?.let { return it }
         val raw = VoiceLexicon.tokenize(unknown.text)
         val tokens = raw.filterNot { it.norm in VoiceLexicon.FILLERS }
         if (tokens.isEmpty()) return null
@@ -100,7 +96,7 @@ object VoiceClarify {
             return Ask(question(Strings.t("hồ sơ", "profile", lang), names, lang), tokens.map { it.raw })
         }
 
-        ambiguity(tokens, terms, asking, asked, lang)?.let { return it }
+        // (≤ 2.98 BYD: dạng 2 "đối tượng nhập nhằng" — *"Kính nào — …?"* — chỉ có họ nút/datum xe; gỡ ở Android box B2 · W3.)
 
         // *"&lt;động từ&gt; gì?"* chỉ đúng khi đầu câu THẬT LÀ một động từ. [ĐO xe 2026-09-18] *"hev đi được bao
         // nhiêu"* trước đây ra *"Hev gì?"* — máy lấy một danh từ làm động từ rồi hỏi một câu vô nghĩa; nay câu ấy
@@ -146,8 +142,8 @@ object VoiceClarify {
         GIVE_UP_EXAMPLE,
     )
 
-    /** Câu mẫu của [giveUp] — một lệnh có thật mà bộ phân tích hiểu (`VoiceClarifyTest` khoá: ra `Control`). */
-    internal const val GIVE_UP_EXAMPLE = "bật đèn đọc"
+    /** Câu mẫu của [giveUp] — một lệnh có thật mà bộ phân tích hiểu (`VoiceClarifyTest` khoá: ra `Launcher`). */
+    internal const val GIVE_UP_EXAMPLE = "mở cài đặt"
 
     /**
      * Ghép câu trả lời của lượt hỏi với ngữ cảnh đã có: `["mở"] + "kính lái"` → `"mở kính lái"`.
@@ -163,98 +159,16 @@ object VoiceClarify {
      * Hôm nay không ai thấy vì [carry] luôn là `listOf(verb)` một từ (:76-80) — nhưng đó là một **bất biến ngầm**
      * không được ghi ở đâu và không được test nào giữ: đúng thứ hỏng im lặng ở lần ai đó mang theo cả cụm
      * *"bật đèn"*. Nay cả hai vế đi qua **cùng** [VoiceLexicon.tokenize].
-     *
-     * 2.93 — [carry] là một TÊN bộ phận chuyển động (câu hỏi *"Mở hay đóng …?"*) thì động từ trả lời đứng TRƯỚC nó:
-     * [VoiceBareCover.verbFirst]. Mọi [carry] khác (động từ · [READ_VERB] · vế hồ sơ) đi đúng đường cũ.
+
      */
     fun combine(carry: List<String>, answer: String): String {
         val a = answer.trim()
         if (a.isEmpty()) return carry.joinToString(" ")
         if (carry.isEmpty()) return a
-        VoiceBareCover.verbFirst(carry, a)?.let { return it }
         val answerNorms = VoiceLexicon.tokenize(a).map { it.norm }
         val carryNorms = carry.flatMap { c -> VoiceLexicon.tokenize(c).map { it.norm } }
         if (carryNorms.isNotEmpty() && answerNorms.take(carryNorms.size) == carryNorms) return a
         return (carry + a).joinToString(" ")
-    }
-
-    // ── nhập nhằng ───────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * ═══ D1 · Từ nào trong câu là **đầu một HỌ** còn thiếu một chữ — và lượt trả lời đi đường nào ═════════════
-     *
-     * ## ⚠⚠ Bệnh NẶNG NHẤT của phiên log, và nó KHÔNG nằm ở lượt phân tích đầu
-     * [ĐO xe 2026-09-18, `20260917-200206-017.json`] người lái hỏi *"tất cả cửa đang khóa hay đang mở"* và kết
-     * quả ghi trong nhật ký là **`Control(sunroof=1)`** — *"✗ Bật Cửa sổ trời"*, tức một lệnh **mở cửa sổ trời**
-     * trên xe đang chạy. Cùng tệp đó ghi `clarify: true` và `follow_up: true`, và đây là chỗ mấu chốt: lượt phân
-     * tích ĐẦU không hề bắn lệnh nào — nó ra `NO_OBJECT`, rồi Kachi hỏi lại *"Cửa nào …?"*, người lái đọc một
-     * cái tên, và **chính lượt trả lời ấy** mới thành lệnh ghi. Tức mọi cổng đặt ở lượt đầu (kể cả
-     * [VoiceQuestion.isChoice]) đều **không** đóng được đường này: câu trả lời *"cửa sổ trời"* đứng một mình là
-     * một câu ra lệnh hoàn toàn hợp lệ, và nó không còn mang dấu hiệu nào của câu hỏi ban đầu.
-     *
-     * ## Cách đóng: mang theo một động từ ĐỌC, không thêm một cổng thứ hai
-     * Câu gốc là câu hỏi ⇒ [Ask.carry] = [READ_VERB]. [combine] dán nó vào trước câu trả lời (*"cửa sổ trời"* →
-     * *"xem cửa sổ trời"*), nên lượt hai đi **đường ĐỌC** của [VoiceIntentParser]. Hệ quả kiểm được:
-     *  • trả lời một thứ ĐỌC được (*"cửa trước trái"*) ⇒ `Read(door_lf)` — đúng câu hỏi;
-     *  • trả lời một thứ chỉ có NÚT (*"cửa sổ trời"*) ⇒ `MISMATCH` = *"việc đó không đi với thứ đó"*, **không**
-     *     phải một lệnh ghi;
-     *  • người lái tự thêm động từ (*"mở cửa sổ trời"*) cũng vậy: `xem` đứng ở vị trí 0 giữ cả câu trong đường đọc.
-     * Cơ chế này dùng lại đúng đường [carry]/[combine] đã có (`VoiceSessionTurns.kt:188`), nên nó không thêm một
-     * mảnh trạng thái nào vào `:app` — nơi hai tệp phiên thoại đang ở 498/491 dòng.
-     *
-     * Và vì đã biết câu là câu hỏi, danh sách lựa chọn **ưu tiên thứ ĐỌC được** ([readsFirst]): hỏi *"cửa đang
-     * khóa hay mở"* thì bốn datum cửa mới là câu trả lời, không phải nút cửa sổ trời/hạ kính.
-     *
-     * ## Chọn đầu họ theo **mức ủng hộ của cả câu**, không theo từ đứng trước
-     * [ĐO xe 2026-09-18] ba câu hỏi về lốp đều hỏi lại sai chỗ, vì bản cũ lấy **từ khớp đầu tiên**:
-     *  • *"chỉ số áp suất lốp"* → *"**Số** nào — Odo tổng hay Số VIN?"* (chữ *"số"* của cụm dẫn *"chỉ số"* thắng);
-     *  • *"kiểm tra áp suất"* → *"Áp nào — **Áp cell cao, Áp cell thấp**, hay Áp lốp trước-trái?"* (hai lựa chọn
-     *    đầu là điện áp cell pin, cho một câu hỏi về lốp).
-     * Nay mỗi đầu họ được tính **mức ủng hộ** = số từ CÒN LẠI của câu xuất hiện trong cách nói của họ ấy
-     * ([support]), và các thành viên cũng xếp theo mức ấy. *"suất"* + *"lốp"* nâng họ lốp lên trước họ cell;
-     * *"số"* không được từ nào đỡ nên nó tự rơi xuống. Hoà thì **giữ thứ tự câu** (`sortedByDescending` ổn định)
-     * ⇒ mọi câu hỏi lại đang đúng không đổi một chữ.
-     */
-    private fun ambiguity(
-        tokens: List<VoiceLexicon.Token>,
-        terms: List<VoiceTerm>,
-        asking: Boolean,
-        asked: Boolean,
-        lang: Lang,
-    ): Ask? {
-        // Chỉ đo trên từ mang NGHĨA VỀ XE: bộ khung câu hỏi bị trừ ra — xem KDoc [VoiceQuestion.FRAME_WORDS] về
-        // ca *"kính lái đang mở bao nhiêu"* từng hỏi lại thành *"Đang nào — Tốc độ hay Đèn đọc?"*.
-        val words = tokens.asSequence()
-            .map { it.norm }
-            .filterNot { it in VoiceQuestion.FRAME_WORDS }
-            .toHashSet()
-        val heads = tokens.indices.filter { i ->
-            // ⚠ BỎ QUA ĐỘNG TỪ. [ĐO off-car] không có điều kiện này thì *"mở kính"* hỏi *"Mở nào — Mô-men mô-tơ
-            // trước, Mở cửa cảnh báo trái, hay Mở cửa cảnh báo phải?"*: chữ `mo` là chữ mở đầu của hàng chục
-            // nhãn, nên câu hỏi bám vào đúng cái từ mà máy ĐÃ hiểu. Thứ thiếu là đối tượng, không phải động từ.
-            //
-            // ⚠⚠ Và **KHÔNG** thêm điều kiện `matchAt(...).isEmpty()` ở đây, dù [namesAFamily] có nó. Hai hàm hỏi
-            // hai câu khác nhau: bên kia hỏi *"câu này có nêu một họ CHƯA khớp ai không"* (để chặn tầng chữa chính
-            // tả), còn ở đây thứ cần là *"hỏi lại cho ra một câu dùng được"* — mà một cụm đã khớp trọn vẫn có thể
-            // là đầu một họ. [ĐO off-car 2026-09-18] thêm điều kiện đó làm *"kính lái đang mở bao nhiêu"* mất hẳn
-            // ứng viên `kinh` (vì *"kính lái"* khớp trọn nút `window`) ⇒ câu hỏi lại rơi sang một họ khác.
-            tokens[i].norm !in VERB_HEADS && familyIds(tokens[i].norm, terms).size >= 2
-        }
-        val carry = carryFor(tokens, asking, asked)
-        // Đi theo mức ủng hộ giảm dần, nhưng vẫn **thử tiếp** nếu một đầu họ không đủ hai nhãn đọc được — giữ
-        // đúng hành vi "quét tới khi tìm được" của bản cũ, chỉ đổi THỨ TỰ quét.
-        heads.sortedByDescending { i -> support(familyIds(tokens[i].norm, terms), words - tokens[i].norm, terms) }
-            .forEach { i ->
-                val head = tokens[i]
-                val others = words - head.norm
-                val labels = readsFirst(familyIds(head.norm, terms), asking)
-                    .sortedByDescending { id -> support(listOf(id), others, terms) }
-                    .mapNotNull { labelOf(it, lang) }
-                    .distinct()
-                    .take(MAX_CHOICES)
-                if (labels.size >= 2) return Ask(question(head.raw, labels, lang), carry)
-            }
-        return null
     }
 
     /**
@@ -304,127 +218,12 @@ object VoiceClarify {
     }
 
     /**
-     * Số từ của [others] xuất hiện trong cách nói của [ids] — lấy mã được ủng hộ NHIỀU NHẤT.
-     *
-     * Đọc thẳng [terms] (từ vựng đã sinh từ bộ đăng ký) nên thêm một cách nói ở [VoiceSynonyms] là phép đo này
-     * tự chính xác hơn; không có bảng "từ liên quan" nào chép tay.
-     */
-    private fun support(ids: List<String>, others: Set<String>, terms: List<VoiceTerm>): Int {
-        if (others.isEmpty() || ids.isEmpty()) return 0
-        return ids.maxOf { id ->
-            terms.asSequence()
-                .filter { it.id == id }
-                .flatMap { it.words.asSequence() }
-                .toSet()
-                .count { it in others }
-        }
-    }
-
-    /**
-     * Câu HỎI ⇒ chỉ đưa ra những mã **đọc được**; câu ra lệnh ⇒ để nguyên.
-     *
-     * ## ⚠ Bản trước có một đường LÙI, và nó nói ngược lại chính [ambiguity]
-     * Tới 1.79 hàm này trả về **nguyên** danh sách khi họ ấy còn dưới 2 mã đọc được, với lý do *"một câu hỏi không
-     * có gì để chọn còn tệ hơn một câu hỏi lệch loại"*. Nhưng [ambiguity] đã có sẵn đường xử lý ca ấy — nó **thử
-     * tiếp đầu họ sau** khi một họ không đủ hai nhãn (xem ghi chú ở vòng `forEach` đó) — nên đường lùi này chỉ làm
-     * đúng một việc: **chặn** vòng thử tiếp, bằng cách trả về đủ 2 nhãn của loại SAI.
-     *
-     * [ĐO off-car 2026-09-19, lượt D] *"tất cả cửa đang khóa hay đang mở"* hỏi lại thành
-     * *"Khóa nào — Khóa / mở khóa hay Khóa trẻ em?"* — mời người lái đọc tên hai cái **nút** để trả lời một câu
-     * hỏi về trạng thái, trong khi họ *"Cửa …"* ở ngay sau đó có đủ 4 datum cửa. (Lượt D chỉ **làm lộ** chỗ này:
-     * nó đổi thứ tự ủng hộ giữa hai đầu họ `cua` / `khoa`, chứ không sinh ra nó.)
-     *
-     * Không có mã đọc được nào ⇒ trả rỗng ⇒ [ambiguity] bỏ qua họ đó và thử họ tiếp; không họ nào đủ thì câu hỏi
-     * rơi về [vague] — vẫn mang [READ_VERB] nên cổng D1 còn nguyên.
-     */
-    private fun readsFirst(ids: List<String>, asking: Boolean): List<String> {
-        if (!asking) return ids
-        return ids.filter { TelemetryRegistry.byId(it) != null }
-    }
-
-    /**
      * Động từ ĐỌC mang theo cho lượt trả lời của một câu HỎI — xem KDoc [ambiguity].
      *
      * Phải là một cụm của [VoiceGrammar.VERBS] trỏ tới [VoiceVerb.READ]. `VoiceClarifyQuestionTest` ép bằng máy:
      * đổi thành một chữ không có trong bảng ấy là bịt cổng D1 **mà vẫn xanh**, nên phép canh không thể là mắt người.
      */
     const val READ_VERB = "xem"
-
-    /** Chỉ hỏi về thứ **bấm/đọc được**; hồ sơ/app/nhạc/điểm đến có đường hỏi riêng hoặc không hỏi được. */
-    private val ASKABLE = setOf(VoiceTermKind.CONTROL, VoiceTermKind.TELEMETRY)
-
-    /**
-     * Các mã mà [head] là **chữ mở đầu** của một cụm nhiều từ trỏ tới chúng — *"kính"* → 4 nút kính + 4 datum.
-     *
-     * Tách ra vì [namesAFamily] hỏi **cùng một câu hỏi** với [ambiguity]; hai bản sao của phép lọc này là hai bản
-     * sẽ lệch (CLAUDE.md §4.1).
-     *
-     * ⚠ Đọc lựa chọn theo THỨ TỰ DANH MỤC, không theo thứ tự [terms]. [terms] xếp **cụm dài trước** (luật L-RE2
-     * của [VoiceGrammar]) — một thứ tự đúng cho việc so khớp và vô nghĩa cho một câu hỏi. [ĐO off-car] *"lọc"*
-     * trước đây hỏi *"Lọc nào — Lọc ngay hay Lọc bụi?"*: `pm25_clean_now` lên trước chỉ vì nó tình cờ có một cách
-     * nói BA từ (*"lọc không khí ngay"*), không vì nó quan trọng hơn. Thứ tự danh mục là thứ tự các nút nằm trên
-     * màn hình, tức thứ tự người lái đã quen ⇒ *"Lọc bụi hay Lọc ngay?"*, đúng câu owner nêu.
-     */
-    private fun familyIds(head: String, terms: List<VoiceTerm>): List<String> = terms
-        .filter { it.words.size > 1 && it.words.first() == head && it.kind in ASKABLE }
-        .map { it.id }
-        .distinct()
-        .sortedBy { rank(it) }
-
-    /**
-     * ═══ D1 · Câu này nêu một **HỌ** thứ mà chưa nói cái nào ══════════════════════════════════════════════
-     *
-     * *"áp suất lốp bên trái"* nêu họ **Áp …** (4 lốp × áp/nhiệt) mà không nói lốp nào; *"đèn khẩn cấp"* nêu họ
-     * **Đèn …** mà Kachi không có cái đèn ấy. Trả `true` cho cả hai.
-     *
-     * ## Ai dùng, và để làm gì
-     * [VoiceIntentParser] hỏi hàm này **trước** tầng chữa chính tả ([VoicePhoneticMatch]). Lý do là một lỗi ĐÃ ĐO
-     * (`oncar-voice-cases-findings-2026-09-18.md` §D1): với câu *"áp suất lốp bên trái là bao nhiêu"*, tầng chữa
-     * sửa *"bên"* → *"pin"* rồi trả **`Read(soc)`** — máy trả lời **phần trăm pin** cho một câu hỏi về lốp. Khi
-     * câu đã nêu rõ một họ, thứ đúng đắn là **hỏi lại cái nào** ([ambiguity] có sẵn câu hỏi đó), không phải đoán
-     * sang một họ khác.
-     *
-     * ## Cổng thứ hai là thứ giữ cho nó không siết quá tay
-     * `matchAt` rỗng = **chưa có thành viên nào của họ khớp trọn**. Thiếu cổng này thì *"bằng ghế sưởi"* (một ca
-     * chữa chính tả đang chạy đúng: `bằng` → `bật`) cũng bị coi là nhập nhằng, vì *"ghế"* là chữ mở đầu của cả
-     * họ ghế — trong khi *"ghế sưởi"* đã khớp trọn một nhãn ngay tại đó, tức không còn gì để hỏi.
-     */
-    fun namesAFamily(tokens: List<VoiceLexicon.Token>, terms: List<VoiceTerm> = VoiceGrammar.terms()): Boolean =
-        tokens.indices.any { i ->
-            val tk = tokens[i]
-            tk.norm !in VERB_HEADS &&
-                VoiceGrammar.matchAt(tokens, i, terms).isEmpty() &&
-                familyIds(tk.norm, terms).size >= 2
-        }
-
-    /**
-     * Từ mở đầu của MỌI động từ — sinh từ [VoiceGrammar.VERBS], không chép tay.
-     *
-     * Chép tay một danh sách động từ thứ hai ở đây là đúng bẫy mà [VoiceSynonyms] sinh ra để chặn: thêm một động
-     * từ ở bảng kia mà quên ở đây thì câu hỏi lại bám vào chính động từ ấy, và cái sai đó **im lặng**.
-     */
-    private val VERB_HEADS: Set<String> by lazy { VoiceGrammar.VERBS.map { it.first.first() }.toSet() }
-
-    /** Nhiều hơn ba lựa chọn thì câu hỏi dài hơn câu lệnh — người lái không nghe hết. */
-    private const val MAX_CHOICES = 3
-
-    private fun labelOf(id: String, lang: Lang): String? =
-        ControlRegistry.byId(id)?.labelIn(lang) ?: TelemetryRegistry.byId(id)?.labelIn(lang)
-
-    /**
-     * Vị trí của một mã trong danh mục — nút trước, datum sau; mã lạ xuống cuối.
-     *
-     * Sinh **một lần** từ chính hai bộ đăng ký (không chép tay một thứ tự thứ hai): thêm/đổi chỗ một dòng
-     * registry là câu hỏi tự đọc theo thứ tự mới.
-     */
-    private fun rank(id: String): Int = RANK[id] ?: Int.MAX_VALUE
-
-    private val RANK: Map<String, Int> by lazy {
-        val out = HashMap<String, Int>(ControlRegistry.ALL.size + TelemetryRegistry.ALL.size)
-        ControlRegistry.ALL.forEachIndexed { i, c -> out[c.id] = i }
-        TelemetryRegistry.ALL.forEachIndexed { i, t -> out.putIfAbsent(t.id, ControlRegistry.ALL.size + i) }
-        out
-    }
 
     private fun question(head: String, labels: List<String>, lang: Lang): String {
         val list = when (labels.size) {

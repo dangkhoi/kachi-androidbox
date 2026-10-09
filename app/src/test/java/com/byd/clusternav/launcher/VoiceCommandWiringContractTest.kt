@@ -35,11 +35,8 @@ class VoiceCommandWiringContractTest {
      */
     private val dispatcher by lazy {
         code("src/main/java/com/byd/clusternav/launcher/VoiceDispatcher.kt") + "\n" +
-            code("src/main/java/com/byd/clusternav/launcher/VoiceTargetDispatch.kt") + "\n" +
-            code("src/main/java/com/byd/clusternav/launcher/VoiceReadback.kt") + "\n" +
-            code("src/main/java/com/byd/clusternav/launcher/VoiceClimateStep.kt") + "\n" +
-            // VOICE-WRITE-LANE (2.76): vai *"một nút xe — ghi gì, chờ ở đâu, và lúc nào thì XONG"* tách sang tệp riêng.
-            code("src/main/java/com/byd/clusternav/launcher/VoiceControlDispatch.kt")
+            code("src/main/java/com/byd/clusternav/launcher/VoiceTargetDispatch.kt")
+        // Android box B2 · W3: VoiceReadback · VoiceClimateStep · VoiceControlDispatch (nút xe) gỡ cùng lõi HAL BYDAuto.
     }
     private val console by lazy { code("src/main/java/com/byd/clusternav/launcher/VoiceTextConsole.kt") }
     private val sections by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSections.kt") }
@@ -58,14 +55,11 @@ class VoiceCommandWiringContractTest {
     fun `moi nhanh VoiceIntent deu co dich that`() {
         val run = SourceRoots.body(dispatcher, "private fun run(")
         mapOf(
-            // VOICE-WRITE-LANE (2.76): hai nhánh ghi HAL nhận `next` — vế sau chỉ chạy khi chúng báo xong.
-            "is VoiceIntent.Control ->" to "runControl(intent, next)",
-            "is VoiceIntent.Macro ->" to "runMacro(intent, next)",
+            // Android box B2 · W3: nhánh Control · Macro · Read (nút xe / gói lệnh / đọc số) gỡ cùng lõi HAL BYDAuto.
             // 2.93 wave 2B · D1: nhánh thứ BA giữ `next` — vế camera theo yêu cầu chờ KẾT QUẢ controller; `rerun` = vế thay thế
             // (*"tắt camera"* trần không có gì để tắt ⇒ nút Camera 360) đi lại qua cổng của `runFrom`.
             "is VoiceIntent.Launcher ->" to "runLauncher(intent, next)",
             "is VoiceIntent.Profile ->" to "onSwitchProfile(intent.name)",
-            "is VoiceIntent.Read ->" to "runRead(intent)",
             "is VoiceIntent.Nav ->" to "runNav(intent, labels)",
             // Sổ địa chỉ (docs/specs/kachi-voice-addresses.html R2) — nhánh THỨ MƯỜI. Nó phải có đích riêng chứ
             // không gộp vào `runNav`: điểm đến ở đây là dữ liệu ĐÃ LƯU (không geocode, không hỏi lại) và app đích
@@ -85,10 +79,8 @@ class VoiceCommandWiringContractTest {
     @Test
     fun `tung nhanh di dung duong da co`() {
         listOf(
-            "actByKind(" to "nút xe phải qua bảng định tuyến dùng chung, không tự chọn cửa (xem KDoc actByKind)",
-            "ControlTileState.shared" to "phải ghi lại trạng thái vào bảng DÙNG CHUNG, không thì thanh nút nói khác",
-            "MacroRunner.run(" to "gói lệnh phải qua bộ chạy thuần ở `:core`",
-            "TelemetryReadout.of(" to "đọc số phải qua đúng bộ định dạng mà ô đọc đang dùng",
+            // Android box B2 · W3: bốn đường của nút xe / gói lệnh / đọc số (actByKind · ControlTileState · MacroRunner ·
+            // TelemetryReadout) gỡ cùng lõi HAL BYDAuto.
             // SOÁT 2026-09-14: chỗ gọi đổi từ `media().play()` sang `val bridge = media()` + `bridge.play()` để
             // ĐỌC được kết quả transport (bắn vào phiên rỗng là no-op im lặng — xem KDoc `runMedia`). Tính chất
             // được bảo vệ KHÔNG đổi: nhạc vẫn phải đi qua MediaBridge, không tự bắn intent.
@@ -140,158 +132,6 @@ class VoiceCommandWiringContractTest {
             "số ô phải đọc từ bố cục ĐANG dùng (bố cục tự vẽ đổi được giữa hai câu), không phải một hằng")
         assertTrue(fn.contains("place(slot - 1, pkg)") && place.contains("{ assignAppToSlot(idx, pkg) }"),
             "phép đổi 1-based (người nói) → 0-based (mảng ô) phải nằm ở ĐÚNG một chỗ, là chỗ này")
-    }
-
-    /**
-     * Lệnh *"tăng/giảm"* phải cộng vào **số THẬT của xe**, và chỉ lùi về bảng của Kachi khi xe không trả lời.
-     *
-     * ## Bài này đã SIẾT ở 1.69 — và lý do siết là một phép đo, không phải một ý thích
-     * Tới 1.68 nó chỉ đòi mốc lấy từ `ControlTileState.shared`. Đúng so với 1.66 (bảng ấy ít ra còn nhớ những gì
-     * chính Kachi đã bấm), nhưng [ĐO xe 2026-09-16] cho thấy nó vẫn sai ở ca thường gặp nhất: bảng khởi tạo bằng
-     * `ControlDef.value` (gió **4** · nhiệt **22**) và **không hề biết** người lái vừa chỉnh gì trên màn BYD gốc,
-     * nên *"tăng gió"* lúc xe đang ở **gió 1** bắn ra **5** — đúng câu tester tả: *"quất một phát như lò heo quay"*.
-     *
-     * ⇒ Thứ tự bắt buộc: hỏi xe ([CarControlPort.readState]) **trước**, `st.value(def)` là **đường lùi**. Ghim cả
-     * hai vế: thiếu vế đầu thì bệnh cũ quay lại; thiếu vế sau thì máy ảo/off-car mất luôn hành vi 1.68 (bịa một
-     * con số còn tệ hơn dùng một con số cũ).
-     */
-    @Test
-    fun `lenh tuong doi cong vao so THAT cua xe, chi lui ve bang cua Kachi khi doc khong duoc`() {
-        // 2.76 (VOICE-WRITE-LANE): thân nút xe chuyển NGUYÊN sang `VoiceControlDispatch.run` (tệp đã nằm trong `dispatcher`).
-        val fn = SourceRoots.body(dispatcher, "fun run(i: VoiceIntent.Control, done: () -> Unit)")
-        assertTrue(fn.contains("ControlRegistry.byId(i.id)"), "vùng quét phải là thân thật của nút xe — rỗng là bài canh giả")
-        assertTrue(
-            fn.contains("control().readState(def.id)"),
-            "phải HỎI XE trước khi cộng — đọc qua `ControlDef.readKey` (khoá ĐỌC), không phải `bindingKey` (khoá GHI)",
-        )
-        assertTrue(
-            fn.contains("?: st.value(def)"),
-            "đọc không được (`null`) thì phải lùi về mức đang hiển thị — đúng hành vi 1.68, không được bịa số",
-        )
-        assertTrue(
-            fn.contains("i.relative * def.step"),
-            "bước nhảy phải là `def.step` của chính nút đó, không phải một hằng 1",
-        )
-        // ⚠ UX4 (2026-09-26) — phép cộng+kẹp KHÔNG còn viết tay ở đây: nó đã về [ClimateAuto.stepIntent], nơi nấc đáy
-        // của nút khai `autoId` là BẬT AUTO thay vì ghi mức 0 ([ĐO xe 2026-09-20] xe bỏ qua lệnh ấy). Vì thế bài này
-        // ghim **hình dạng mới** ở cả hai đầu, KHÔNG nới: (a) câu nói đi qua đúng bảng quyết định thuần mà cú chạm
-        // −/+ dùng; (b) `def.clamp` vẫn là thứ kẹp giá trị ở nhánh KHÔNG-auto của bảng ấy. Bỏ vế (b) là để một lượt
-        // "dọn" sau này gỡ phép kẹp mà không bài nào đỏ.
-        assertTrue(
-            fn.contains("ClimateAuto.stepPlan(def, actual, i.relative * def.step"),
-            "bước tương đối phải đi qua ĐÚNG bảng quyết định thuần mà ô −/+ dùng, không tự cộng một phép thứ hai",
-        )
-        val stepIntent = SourceRoots.body(
-            code("src/main/kotlin/com/byd/clusternav/launcher/ClimateAuto.kt"), "fun stepIntent(",
-        )
-        assertTrue(stepIntent.contains("def.clamp(current + delta)"), "giá trị mới phải kẹp bằng chính `ControlDef.clamp`")
-        assertTrue(
-            stepIntent.contains("if (def.autoId.isBlank()) return StepIntent.SetLevel(target)"),
-            "nút không khai `autoId` phải ra nhánh SetLevel **đã kẹp** — y nguyên hành vi trước UX4",
-        )
-        // Và cú ghi đi đúng những cửa mà ô nút dùng: công tắc auto qua `toggle(def.autoId, …)`, mức qua `actByKind`.
-        val apply = SourceRoots.body(dispatcher, "private fun applyStep(")
-        assertTrue(apply.contains("control().toggle(def.autoId"), "công tắc AUTO phải ghi qua đúng mã `ControlDef.autoId`")
-        assertTrue(apply.contains("control().actByKind(def.id"), "mức vẫn đi qua bảng định tuyến DUY NHẤT của dự án")
-        // ⚠ [SOÁT 2.74 · P2] (2026-09-27) — nhịp chờ đã **ra khỏi** `applyStep` và vào đúng chỗ gọi của nó, vì chỗ
-        // duy nhất được phép chờ là luồng nền (xem bài `nhip cho 400ms…` dưới). Vế này KHÔNG nới: nó vẫn đòi đúng
-        // hằng đó, chỉ đổi vùng quét sang chỗ mà nhịp chờ nay thật sự nằm — và bài dưới còn ghim thêm rằng vùng ấy
-        // phải là một lambda nền. Gỡ nhịp chờ đi thì cả hai bài đỏ.
-        val stepEntry = SourceRoots.body(dispatcher, "fun apply(def: ControlDef")
-        assertTrue(
-            stepEntry.contains("ActionMacros.DEFAULT_GAP_MS"),
-            "rời AUTO là hai lệnh: thiếu nhịp chờ thì lệnh sau rơi (cùng lý do `MacroStep.waitAfterMs` tồn tại)",
-        )
-        // ⚠⚠ [SOÁT Opus 2026-09-27] CÙNG bất biến mà `ControlStateUxContractTest` canh cho ô nút, nay canh cho cả
-        // đường GIỌNG NÓI — trước lượt soát này chỉ ô nút có lưới. Cờ auto có HAI cửa và chúng NGƯỢC cực nhau:
-        // `autoOnFromRaw` đọc số THÔ của datum (`0` = AUTO) còn `autoOnFromControl` đọc giá trị đã qua
-        // `applyInverted` của nút (`1` = AUTO). Đổi cửa ở đây là đảo cực lần thứ hai ⇒ câu nói *"tăng gió"* đi nhầm
-        // nhánh, `rc` vẫn 0, xe vẫn nhận một lệnh — sai IM LẶNG, đúng họ lỗi CLAUDE.md §2 nói tới.
-        // 2.93 VOICE-WAKE-AUTOON (đổi chốt có lý do, KHÔNG nới): số cờ nay đến từ `autoState` — `readState(autoId)` đọc tươi,
-        // ảnh chụp `controls` là đường lùi. CẢ HAI nguồn đều là cửa của NÚT (đã applyInverted) ⇒ vẫn đúng `autoOnFromControl`.
-        assertTrue(
-            fn.contains("ClimateAuto.autoOnFromControl(autoState(def))"),
-            "cờ auto của đường giọng nói phải đọc qua cửa của NÚT (đã applyInverted), không phải cửa của datum",
-        )
-        val auto = SourceRoots.body(dispatcher, "private fun autoState(def: ControlDef): Int?")
-        assertTrue(
-            auto.contains("runCatching { control().readState(def.autoId) }.getOrNull() ?: state().carStatus.controls[def.autoId]"),
-            "hai nguồn của cờ (readState · ảnh chụp controls) đều là số của NÚT — không datum nào lọt vào",
-        )
-        assertFalse(fn.contains("ClimateAuto.autoOnFromRaw(") || auto.contains("autoOnFromRaw"), "cửa của DATUM không được dùng ở đường nút")
-    }
-
-    /**
-     * ═══ [SOÁT 2.74 · P2] NHỊP CHỜ 400 ms CHỈ ĐƯỢC TỒN TẠI **BÊN TRONG** MỘT LAMBDA NỀN ═══════════════════════
-     *
-     * ## Bệnh nó khoá — một câu nói làm đơ giao diện của xe đang lăn bánh
-     * UX4 dựng đường *"tăng gió lúc đang AUTO"* = HAI lệnh + `Thread.sleep(400)` giữa chúng, nhưng bản đầu chạy cả
-     * chuỗi **trên luồng gọi** — mà `VoiceSession` gọi `VoiceDispatcher` trên luồng VẼ. Cú **chạm** ô −/+ chờ đúng
-     * cùng nhịp ấy mà không đơ, vì nó chờ trên làn nền tuần tự của `ControlTileWrite`; chỉ câu nói là chờ sai chỗ.
-     *
-     * ## Vì sao canh NGUỒN chứ không chỉ canh hành vi
-     * `VoiceRelativeStepTest.roi AUTO ghi tren luong NEN…` đã khoá hành vi (giữ lại lambda nền ⇒ chưa lệnh nào bắn).
-     * Nhưng một lượt *"dọn dẹp"* sau này có thể trả `Thread.sleep` về thẳng trong `applyStep` mà **mọi** bài đơn vị
-     * vẫn xanh, vì bài nào cũng chạy `background = { it() }` cho tất định — tức luồng vẽ và luồng nền là **cùng một
-     * luồng** trong JVM. Đúng hình dạng CLAUDE.md §8 kể: chỉ chiếc xe biết. Nên bất biến này cần một bài quét nguồn.
-     */
-    @Test
-    fun `nhip cho 400ms cua duong giong noi nam tron trong lambda nen`() {
-        // 2.76: `runControl` của cầu là một dòng uỷ quyền; thân thật là `VoiceControlDispatch.run` (chuyển nguyên).
-        val runControl = SourceRoots.body(dispatcher, "fun run(i: VoiceIntent.Control, done: () -> Unit)")
-        assertTrue(runControl.contains("actByKind("), "thân nút xe phải còn ở `VoiceControlDispatch.run` — vùng quét rỗng là bài canh giả")
-        assertFalse(
-            runControl.contains("Thread.sleep("),
-            "`VoiceControlDispatch.run` chạy trên luồng VẼ ⇒ một `Thread.sleep` ở đây là giao diện đứng hình giữa lúc đang lái",
-        )
-        val applyStep = SourceRoots.body(dispatcher, "private fun applyStep(")
-        assertFalse(
-            applyStep.contains("Thread.sleep("),
-            "`applyStep` còn được gọi THẲNG ở nhánh một-lệnh ⇒ nhịp chờ không được nằm trong nó, mà ở chỗ gọi",
-        )
-        val stepEntry = SourceRoots.body(dispatcher, "fun apply(def: ControlDef")
-        assertTrue(stepEntry.contains("background {"), "nhánh HAI lệnh phải xuống luồng nền — cùng lambda mà `runMacro` dùng")
-        val lane = SourceRoots.body(stepEntry, "background {")
-        assertTrue(
-            lane.contains("Thread.sleep(ActionMacros.DEFAULT_GAP_MS)"),
-            "nhịp chờ phải nằm TRỌN trong lambda nền; ngoài nó là chờ trên luồng vẽ",
-        )
-        assertTrue(
-            lane.contains("onUi {"),
-            "ghi xong thì câu trả lời (và bảng `ControlTileState`) phải quay về luồng VẼ — cùng lẽ `VoiceReadback`",
-        )
-    }
-
-    /**
-     * ═══ [SOÁT 1.69 · P2] …và NỬA KIA của H1: cú **CHẠM** ô −/+ phải đi đúng đường ấy ══════════════════════
-     *
-     * H1 có hai bề mặt cho cùng một phép cộng: câu nói (`VoiceDispatcher.runControl`, bài ngay trên) và cú chạm
-     * (`ControlTileFactory.nudge`). Tới lượt soát này chỉ bề mặt thứ nhất được ghim. Bề mặt thứ hai mang **đúng
-     * cùng một bệnh** — mốc lấy từ `ControlTileState` là bảng lạc quan, không biết người lái vừa chỉnh gì trên
-     * màn BYD gốc — và nó là bề mặt người ta dùng nhiều hơn hẳn.
-     *
-     * Vì sao một bài canh chứ không tin vào mã đang đúng: `nudge` là **bốn dòng nằm giữa một hàm dựng view dài**,
-     * đúng hình dạng mà CLAUDE.md §8 kể (`CastShell.evictVd` mất call site vì một lượt thay theo dải dòng). Mất
-     * dòng `readState` ở đây thì compile vẫn xanh, bài đơn vị vẫn xanh, và **chỉ chiếc xe** biết.
-     */
-    @Test
-    fun `cham o cong tru cung cong vao so THAT cua xe`() {
-        val factory = code("src/main/java/com/byd/clusternav/launcher/ControlTileFactory.kt")
-        val fn = SourceRoots.body(factory, "fun nudge(")
-        assertTrue(
-            fn.contains("control().readState(def.id)"),
-            "cú chạm −/+ cũng phải HỎI XE trước khi cộng — cùng đường với câu nói (H1)",
-        )
-        assertTrue(
-            fn.contains("?: state.value(def)"),
-            "đọc không được (`null`) thì lùi về mức đang hiển thị — đúng hành vi 1.68, không bịa số",
-        )
-        // ⚠ UX4 (2026-09-26) — phép KẸP dời vào `:core` (`ClimateAuto.stepIntent` gọi `def.clamp`), cùng chỗ với
-        // bảng quyết định nấc AUTO, nên nó kiểm được bằng bài CHẠY THẬT (`ClimateAutoTest`) thay vì bằng quét mã.
-        // Bài này vì thế ghim CHỖ GỌI: cú chạm phải hỏi `:core` chứ không tự cộng-trừ ở tầng vẽ.
-        assertTrue(fn.contains("ClimateAuto.stepPlan(def,"), "mức mới phải do `:core` quyết (kèm nấc AUTO)")
-        val climate = SourceRoots.text("src/main/kotlin/com/byd/clusternav/launcher/ClimateAuto.kt")
-        assertTrue(climate.contains("def.clamp("), "và phép kẹp vẫn là chính `ControlDef.clamp`, không viết lại")
     }
 
     /**

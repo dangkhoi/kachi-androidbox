@@ -28,37 +28,6 @@ class WidgetFitJ1ContractTest {
     private val probe by lazy { code("FitProbe.kt") }
     private val layout by lazy { code("FitGridLayout.kt") }
     private val names by lazy { code("FitNames.kt") }
-    private val factory by lazy { code("ControlTileFactory.kt") }
-    private val tele by lazy { code("WidgetTelemetry.kt") }
-
-    @Test
-    fun `1 - nhan ngan - bo dung khai hai ban, bo ap doi chu tai cho, dau chu theo ban day`() {
-        val tile = SourceRoots.body(factory, "fun actionTile(def: ControlDef)")
-        assertTrue(tile.contains("FitScale.named(this, def.displayLabel, def.displayShortLabel)"), "nhãn ĐÃ DỊCH, không nhãn gốc")
-        val card = tele.substringAfter("internal class MiniCard(").substringBefore("internal fun miniCard(")
-        assertTrue(card.contains("FitScale.named(subView, v.caption, v.captionShort, name = v.captionShort != null)"))
-        val mini = SourceRoots.body(tele, "internal fun telemetryMini(")
-        assertTrue(mini.contains("TelemetryRegistry.byId(id)?.displayShortLabel"), "nhãn ngắn của datum đã dịch")
-        assertTrue(mini.contains("captionShort = if (named) short ?: v.label else null"), "đơn vị KHÔNG phải tên")
-        val named = SourceRoots.body(scale, "fun named(tv: TextView")
-        listOf("R.id.kachi_fit_full_text", "R.id.kachi_fit_short_text", "R.id.kachi_fit_use_short")
-            .forEach { assertTrue(named.contains(it), "named ghi $it") }
-        val ids = SourceRoots.text("src/main/res/values/ids.xml")
-        listOf("kachi_fit_full_text", "kachi_fit_short_text", "kachi_fit_use_short").forEach { assertTrue(ids.contains(it)) }
-        val variant = SourceRoots.body(scale, "fun variant(v: FitLabels.Variant)")
-        assertTrue(variant.contains("TextUtils.TruncateAt.START") && variant.contains("tv.maxLines == 1"),
-            "`…` ở đầu chỉ chữ MỘT dòng (StaticLayout.java:1078-1103 r47)")
-        // Soát vòng 5 [P3] — ĐỔI GHIM có lý do: nhãn đầy ghi lên ô BẤM (`descHost`) THAY cả cây con ⇒ TalkBack mất chữ chọn
-        // (`EV`) của nút nhiều lựa chọn và con số của ô đọc. Nay bản đầy nằm trên CHÍNH chữ tên (FitLabels.spoken — FitRulesRound5Test);
-        // ô bấm chỉ nhận nhãn ở dạng chỉ-icon (nhãn `GONE`).
-        assertTrue(variant.contains("val say = FitLabels.spoken(use, fullText(tv), b.text?.desc)") &&
-            variant.contains("tv.contentDescription = say"), "nhãn ngắn ⇒ nhãn đầy làm mô tả của CHÍNH chữ tên")
-        assertFalse(variant.contains("descHost.contentDescription"), "variant không ghi mô tả lên ô bấm")
-        assertFalse(SourceRoots.body(scale, "private fun desc(dropLabels: Boolean)").contains("usesShort"),
-            "mô tả ô bấm không còn theo nhãn ngắn (chỉ theo chỉ-icon)")
-        assertTrue(SourceRoots.body(probe, "fun signature(fs: FitScale)").contains("fs.fullText(tv)"))
-        listOf("addView(", "removeView", "inflate(").forEach { assertFalse(variant.contains(it)) }
-    }
 
     @Test
     fun `2 - luat chu ten chay tren bo cuc that, sau kiem lai, truoc khi xet ket`() {
@@ -128,7 +97,7 @@ class WidgetFitJ1ContractTest {
         listOf("FitLabels.choose(", "FitLabels.variants(", "FitLabels.visible(", "FitValues.valuePx(")
             .forEach { assertTrue(uses(it, "-"), "$it chưa có chỗ gọi ở :app") }
         assertTrue(uses("FitNames.pick(", "FitNames.kt"))
-        assertTrue(uses("FitScale.named(", "FitScale.kt"))
+        // Android box B2 · W3: `FitScale.named` (chữ TÊN hai bản của ô nút/datum xe) gỡ cùng các ô ấy.
         assertTrue(uses("FitProbe.more(", "FitProbe.kt"))
         assertTrue(uses("FitProbe.cut(", "FitProbe.kt"))
         assertTrue(uses(".fitValues(", "FitScale.kt"))
@@ -138,8 +107,7 @@ class WidgetFitJ1ContractTest {
             "src/main/java/com/byd/clusternav/launcher/FitScale.kt",
             "src/main/java/com/byd/clusternav/launcher/FitProbe.kt",
             "src/main/java/com/byd/clusternav/launcher/FitGridLayout.kt",
-            "src/main/java/com/byd/clusternav/launcher/ControlTileFactory.kt",
-            "src/main/java/com/byd/clusternav/launcher/WidgetTelemetry.kt",
+            "src/main/java/com/byd/clusternav/launcher/WidgetCards.kt",   // W3: ControlTileFactory · WidgetTelemetry gỡ
             "src/main/kotlin/com/byd/clusternav/launcher/FitLabels.kt",
             "src/main/kotlin/com/byd/clusternav/launcher/FitRules.kt",
             "src/main/kotlin/com/byd/clusternav/launcher/GridFit.kt",

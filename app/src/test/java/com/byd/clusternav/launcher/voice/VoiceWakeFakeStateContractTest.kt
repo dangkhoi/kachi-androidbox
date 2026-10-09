@@ -29,7 +29,6 @@ class VoiceWakeFakeStateContractTest {
 
     private val dispatcher by lazy { code("src/main/java/com/byd/clusternav/launcher/VoiceDispatcher.kt") }
     private val targets by lazy { code("src/main/java/com/byd/clusternav/launcher/VoiceTargetDispatch.kt") }
-    private val controls by lazy { code("src/main/java/com/byd/clusternav/launcher/VoiceControlDispatch.kt") }
     private val factory by lazy { code("src/main/java/com/byd/clusternav/launcher/voice/VoiceWakeSessionFactory.kt") }
     private val relay by lazy { code("src/main/java/com/byd/clusternav/launcher/voice/VoiceWakeHomeRelay.kt") }
     private val entry by lazy { code("src/main/java/com/byd/clusternav/launcher/voice/VoiceEntry.kt") }
@@ -55,22 +54,18 @@ class VoiceWakeFakeStateContractTest {
         // carStatus của câu hỏi số liệu + tốc độ cổng cốp/ca-pô ⇒ freshCar đọc tươi trước (test (4)). `carStatus.controls`
         // (gió đang AUTO?): 2.93 VOICE-WAKE-AUTOON — `readState(autoId)` đọc tươi TRƯỚC, ảnh chụp (`:wake` luôn rỗng, Activity
         // khi ô điều hoà không trên màn cũng rỗng) chỉ là đường lùi — canh ở test (4).
+        // Android box B2 · W3: `state().carStatus` (câu hỏi số liệu xe) + `VoiceControlDispatch` (nút xe) gỡ cùng lõi HAL.
         assertEquals(
-            listOf("VoiceSlotPlace.slotCountOf(state())", "state().carStatus", "state().profiles", "state().savedPlaces"),
+            listOf("VoiceSlotPlace.slotCountOf(state())", "state().profiles", "state().savedPlaces"),
             reads(dispatcher), "VoiceDispatcher đọc state() ở chỗ mới — trong `:wake` trường ấy thật hay GIẢ?",
         )
         assertEquals(listOf("state().savedPlaces"), reads(targets), "VoiceTargetDispatch đọc state() ở chỗ mới")
+        // Bảng trên chỉ ĐÓNG khi lambda `state` không chảy sang lớp nào ngoài hai tệp đã quét — xem [handOffs].
         assertEquals(
-            listOf("state().carStatus.controls", "state().carStatus.drivetrain.speedKmh"),
-            reads(controls), "VoiceControlDispatch đọc state() ở chỗ mới",
-        )
-        // Bảng trên chỉ ĐÓNG khi lambda `state` không chảy sang lớp nào ngoài ba tệp đã quét — xem [handOffs].
-        assertEquals(
-            listOf("VoiceControlDispatch(state = state)", "VoiceTargetDispatch(state = state)"),
+            listOf("VoiceTargetDispatch(state = state)"),
             handOffs(dispatcher), "VoiceDispatcher chuyển lambda `state` cho chỗ mới — quét chỗ ấy vào bảng này",
         )
         assertEquals(emptyList<String>(), handOffs(targets), "VoiceTargetDispatch chuyển lambda `state` đi tiếp")
-        assertEquals(emptyList<String>(), handOffs(controls), "VoiceControlDispatch chuyển lambda `state` đi tiếp")
     }
 
     /**
@@ -139,38 +134,6 @@ class VoiceWakeFakeStateContractTest {
     }
 
     // ══ (4) số liệu xe trong :wake đọc tươi ═══════════════════════════════════════════════════════════════════
-
-    @Test
-    fun `wake - nhu cau man rong de cau hoi so lieu va cong toc do doc TUOI, khong roi ve CarStatus rong`() {
-        val build = SourceRoots.body(factory, "internal fun VoiceWakeService.buildSession(): VoiceSession {")
-        assertTrue(build.contains("screenless = true,"),
-            "`:wake` để nhu cầu `null` ⇒ refreshForRead luôn null ⇒ đọc CarStatus() rỗng của homeState()")
-        // Không chạm đồ thị DI trong tệp wake (bài canh `VoiceWakeIsolationContractTest`): việc đặt nhu cầu nằm ở bộ dây
-        // chung, LƯỜI trong `freshCar` — cùng chỗ đã gọi `AppContainer.get(ctx).refreshForRead` từ trước bản này.
-        val wiringFn = SourceRoots.body(voiceWiring, "fun dispatcher(")
-        assertTrue(voiceWiring.contains("screenless: Boolean = false,"), "mặc định phải là hành vi 2.85 (bề mặt có màn)")
-        val set = wiringFn.indexOf("if (screenless && c.carDemand.get() == null) c.carDemand.set(emptySet())")
-        assertTrue(set >= 0, "tiến trình không màn: nhu cầu màn = RỖNG (sự thật), không phải null (= 'poll đọc hết')")
-        // 2.93 VOICE-READ-STALE-BG (đổi chốt có lý do): lượt đọc tươi đi `readFresh` — `refreshForRead` + (màn chính đã khuất,
-        // nhu cầu `null`) đọc ĐÚNG MỘT datum qua `withSoloIfIdle`. `:wake` đặt nhu cầu rỗng trước ⇒ nhánh solo không bao giờ chạy ở đó.
-        assertTrue(set in 0 until wiringFn.indexOf("c.readFresh(id)"), "nhu cầu phải đặt TRƯỚC lượt đọc tươi")
-        val readFresh = SourceRoots.body(code("src/main/java/com/byd/clusternav/AppContainer.kt"), "fun readFresh(id: String)")
-        assertTrue(readFresh.contains("refreshForRead(id) ?: carDemand.withSoloIfIdle(setOf(id)) { carStatusRepository.refreshNow() }"),
-            "tiến trình chính, màn khuất (wake TẮT, app khác toàn màn) ⇒ câu hỏi số liệu phải đọc TƯƠI, không ảnh chụp lúc màn còn hiện")
-        // 2.93 VOICE-WAKE-AUTOON — cờ AUTO đọc TƯƠI qua đúng cửa readState (cùng lượt mốc mức), ảnh chụp chỉ là đường lùi.
-        val auto = SourceRoots.body(controls, "private fun autoState(def: ControlDef): Int?")
-        assertTrue(auto.contains("runCatching { control().readState(def.autoId) }.getOrNull() ?: state().carStatus.controls[def.autoId]"),
-            "trong `:wake` ảnh chụp controls luôn rỗng ⇒ phải đọc tươi cờ AUTO, nếu không 'tăng gió' lúc AUTO đi SetLevel thay vì LeaveAuto")
-        assertTrue(controls.contains("ClimateAuto.autoOnFromControl(autoState(def))"), "bảng quyết định phải nhận cờ đọc tươi")
-        // Hai chỗ đọc carStatus mà kết quả là SỐ cho người nghe / CỔNG an toàn: phải hỏi freshCar TRƯỚC, state chỉ là đường lùi.
-        assertTrue(dispatcher.contains("runCatching { freshCar(i.datumId) }.getOrNull() ?: state().carStatus"))
-        assertTrue(Regex("freshCar\\(\"speed\"\\)[^\\n]*\\n\\s*\\?: state\\(\\)\\.carStatus\\.drivetrain\\.speedKmh").containsMatchIn(controls),
-            "cổng cốp/ca-pô phải đọc tốc độ TƯƠI trước — trong `:wake` state().carStatus là CarStatus() rỗng (fail-open)")
-        // refreshForRead: nhu cầu khác `null` và datum không trong nhu cầu ⇒ đọc NGAY đúng datum ấy.
-        val refresh = SourceRoots.body(code("src/main/java/com/byd/clusternav/AppContainer.kt"), "fun refreshForRead(id: String)")
-        assertTrue(refresh.contains("val want = carDemand.get() ?: return null") && refresh.contains("carDemand.withExtra(setOf(id)) { carStatusRepository.refreshNow() }"),
-            "tiền đề của dây (4) đổi — xem lại vì sao `:wake` đặt nhu cầu rỗng")
-    }
 
     /**
      * [SOÁT lượt 3 · 02/10] *"Đường Activity không đổi"* chỉ đúng khi CHỈ `:wake` rời mặc định của hai tham số mới. Bài

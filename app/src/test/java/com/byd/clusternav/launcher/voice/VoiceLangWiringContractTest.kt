@@ -31,7 +31,8 @@ class VoiceLangWiringContractTest {
 
     /** Tệp của đường nói — nơi câu trả lời được dựng rồi hiện/đọc cho người lái. */
     private val voicePath = listOf(
-        "VoiceDispatcher.kt", "VoiceTargetDispatch.kt", "VoiceControlDispatch.kt", "VoiceReadback.kt",
+        // Android box B2 · W3: VoiceControlDispatch · VoiceReadback (nút xe / đọc số) gỡ cùng lõi HAL BYDAuto.
+        "VoiceDispatcher.kt", "VoiceTargetDispatch.kt",
         "VoiceTextConsole.kt", "voice/VoiceSession.kt", "voice/VoiceSessionTurns.kt", "voice/VoiceSessionListen.kt",
         "testbridge/KachiTestBridge.kt",
     )
@@ -58,7 +59,8 @@ class VoiceLangWiringContractTest {
                 if (!langArg.containsMatchIn(args)) missing += "$rel: ${m.value}$args)"
             }
         }
-        assertTrue(seen >= 60, "chỉ thấy $seen lời gọi — bộ quét đang đọc vùng SAI (bài canh giả)")
+        // Android box B2 · W3 [ĐO]: sàn 60 → 30 (lời gọi của nút xe / đọc số gỡ cùng hai tệp ấy).
+        assertTrue(seen >= 30, "chỉ thấy $seen lời gọi — bộ quét đang đọc vùng SAI (bài canh giả)")
         assertEquals(
             emptyList<String>(), missing,
             "lời gọi dựng câu NÓI rơi về mặc định Strings.current (tiếng MÀN) ⇒ giao diện zh/th/ms đưa chữ Hán/Thái cho giọng Việt",
@@ -92,9 +94,7 @@ class VoiceLangWiringContractTest {
         assertTrue(fn.contains("lang = lang,"), "…và đưa nó vào VoiceDispatcher")
         assertTrue(fn.contains("VoiceGeocoder.resolveBounded(ctx, place, lang)"), "geocoder theo tiếng giọng nói của lượt")
         val dispatcher = code(l + "VoiceDispatcher.kt")
-        assertTrue(dispatcher.contains("lang = { lang },"), "nút xe (VoiceControlDispatch) phải nói cùng tiếng của cầu")
         assertTrue(dispatcher.contains("lang = lang,"), "app đích (VoiceTargetDispatch) phải nói cùng tiếng của cầu")
-        assertTrue(dispatcher.contains("TelemetryReadout.of(i.datumId, car, lang)"), "đọc số liệu: chữ giá trị theo tiếng giọng nói")
         val home = SourceRoots.body(code(l + "KachiHomeWiring.kt"), "internal fun Activity.voiceSession(")
         assertTrue(home.contains("lang = session.voiceLang()"), "màn chính: dispatcher lấy tiếng của CHÍNH phiên")
         val turns = code(l + "voice/VoiceSessionTurns.kt")

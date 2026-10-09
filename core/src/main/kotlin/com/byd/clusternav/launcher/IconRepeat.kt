@@ -1,8 +1,8 @@
 package com.byd.clusternav.launcher
 
 /**
- * Luật *"icon có PHÂN BIỆT được không"* — MỘT chỗ cho ô nhóm ([GroupBoardModel.iconsDistinguish] /
- * [GroupBoardModel.actionIconsDistinguish]) và lưới widget (L5 WIDGET-FIT-ALL: dạng CHỈ-ICON của [GridFit] chỉ được
+ * Luật *"icon có PHÂN BIỆT được không"* — MỘT chỗ cho ô nhóm (`GroupBoardModel.iconsDistinguish` /
+ * `GroupBoardModel.actionIconsDistinguish`) và lưới widget (L5 WIDGET-FIT-ALL: dạng CHỈ-ICON của [GridFit] chỉ được
  * phép khi [ofIds] đúng).
  *
  * Rút ra khỏi `GroupBoardModel` (2.87, L5) vì lưới widget cần ĐÚNG luật đó: khung quá nhỏ cho nhãn thì lưới có thể bỏ
@@ -19,8 +19,7 @@ object IconRepeat {
      */
     const val CAP = 3
 
-    /** `true` nếu không hình nào trong [icons] lặp ≥ [CAP] lần. */
-    fun distinguishable(icons: Iterable<String>): Boolean = icons.groupingBy { it }.eachCount().none { it.value >= CAP }
+    // Android box B2 · W3: `distinguishable` (luật theo TÊN của ô nhóm xe, `GroupBoardModel`) gỡ cùng ô nhóm — 0 chỗ gọi.
 
     /**
      * Mảnh tên icon chỉ VỊ TRÍ trên cùng một hình (`ic-car-top-window-lf` ↔ `-rf`/`-lr`/`-rr`/`-all`, `ic-seat-heat-left`
@@ -34,8 +33,7 @@ object IconRepeat {
     /**
      * Luật cho ô KHÔNG NHÃN (dạng chỉ-icon của lưới widget, L5): đếm theo [silhouette], không theo tên tệp. QA 04/10
      * ([ĐO] máy ảo, ảnh `icononly-zoom.png` (bằng chứng phiên, ngoài repo)): bốn nút kính mang bốn tên khác nhau nên luật theo tên cho bỏ nhãn,
-     * nhưng ở 20–40dp bốn bóng xe chỉ khác một dấu kính cỡ 1–2px — người lái không phân biệt được kính nào. Ô nhóm vẫn
-     * dùng [distinguishable] theo tên vì ở đó nhãn LUÔN hiện cạnh icon (icon chỉ là phụ).
+     * nhưng ở 20–40dp bốn bóng xe chỉ khác một dấu kính cỡ 1–2px — người lái không phân biệt được kính nào.
      *
      * Soát vòng 4 (P3, quyết định điều phối J1): KHÔNG có trần [CAP] ở đây — HAI ô cùng một bóng hình cũng chặn. Lý do
      * [CAP] = 3 ("một cặp trái/phải vẫn đọc được NHỜ NHÃN") không tồn tại khi nhãn bị ẩn: cặp kính lái/phụ

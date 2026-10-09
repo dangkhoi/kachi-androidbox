@@ -168,24 +168,7 @@ class SettingsSections(
         // Footnote màu đứng sau các hàng màu (nhấn + tông + độ đục) — nó nói về màu, không phải hình xe. Nếu để sau
         // khối HÌNH XE thì nó đọc như đang giải thích hình xe (đúng họ lỗi U12/U13: cơ chế đúng, UI nói sai chỗ).
         body.addView(rows.note(context.getString(R.string.kachi_color_note)))
-        // WP3-v5 + WP-C — HÌNH XE là ẢNH bitmap thả vào thư mục máy. Xe không có màn chọn tệp hệ thống (khoá),
-        // nên KHÔNG có picker; thay vào đó nói RÕ đang dùng ảnh nào + hướng dẫn TỪNG BƯỚC + nút sao chép đường dẫn.
-        body.addView(rows.subHeader(context.getString(R.string.kachi_sec_car_image)))
-        if (CarImageStore.hasUserImage(context)) {
-            body.addView(rows.note(context.getString(
-                R.string.kachi_car_image_current, CarImageStore.imageNames(context).first(),
-            )))
-        } else {
-            body.addView(rows.note(context.getString(R.string.kachi_car_image_default)))
-        }
-        val carFolder = CarImageStore.folderHint(context)
-        body.addView(rows.note(context.getString(R.string.kachi_car_image_steps, carFolder)))
-        body.addView(rows.button(context.getString(R.string.kachi_copy_path)) {
-            copyToClipboard(context.getString(R.string.kachi_car_image_title), carFolder)
-            android.widget.Toast.makeText(
-                context, context.getString(R.string.kachi_path_copied), android.widget.Toast.LENGTH_SHORT,
-            ).show()
-        })
+        // Android box B2 · W3: khối HÌNH XE (ảnh xe top-down `files/car/` — `CarImageStore`) gỡ cùng widget xe.
     }
 
     /** Chép một chuỗi vào bộ nhớ tạm — dùng cho các nút "Sao chép đường dẫn" (WP-C). */

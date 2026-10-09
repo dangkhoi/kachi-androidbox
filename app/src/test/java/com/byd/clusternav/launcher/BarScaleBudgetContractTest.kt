@@ -78,11 +78,9 @@ class BarScaleBudgetContractTest {
                 val d = density(base, p)
                 val chrome = 2 * px(dock.padDp, d) + px(dock.iconDp, d) + px(KachiSpace.XS, d)
                 val twoLines = chrome + 2 * line(dock.labelSp, d)                                   // TOGGLE/COVER/BUTTON (reserveTwoLines)
-                val step = chrome + maxOf(px(KachiSpace.TOUCH_TIGHT, d).toFloat(), line(dock.valueSp, d))  // hàng [−][giá trị][+]
                 listOf(KachiBars.DOCK_TILE_H to "ngang", KachiBars.DOCK_TILE_H_VERTICAL to "dọc").forEach { (h, side) ->
                     val have = px(h, d) + ROUND_PX
                     assertTrue(twoLines <= have, "@$base dpi $p % ô $side: nhãn 2 dòng ${twoLines}px > ô ${px(h, d)}px")
-                    assertTrue(step <= have, "@$base dpi $p % ô $side: ô STEP ${step}px > ô ${px(h, d)}px")
                 }
             }
         }
@@ -112,16 +110,13 @@ class BarScaleBudgetContractTest {
 
     @Test
     fun `e - thanh co khong dai hon 100, dai don dieu theo phan tram`() {
-        // W0 (2026-10-09): thanh MẶC ĐỊNH nay chỉ có hành động launcher (không STEP) ⇒ dựng mẫu từ các nút xe từng là
-        // mặc định — bài này đo HÌNH HỌC của ô STEP khi co giãn, không đo danh sách mặc định.
-        val ids = ControlRegistry.ALL.filter { it.enabledByDefault }.map { it.id }
-        assertTrue(ids.any { ControlRegistry.byId(it)?.kind == ControlKind.STEP }, "tiền đề: thanh mặc định có ô STEP")
+        // Android box B2 · W3 (2026-10-09): ô STEP (nút xe) gỡ cùng `ControlRegistry` ⇒ thanh chỉ còn ô một-đích (hành
+        // động launcher). Bài đo HÌNH HỌC co giãn của chính các ô ấy.
+        val ids = DockConfig().enabled
+        assertTrue(ids.isNotEmpty(), "tiền đề: thanh mặc định có ô")
         bases.forEach { base ->
             listOf(false, true).forEach { v ->
-                fun length(p: Int): Int = 2 * px(KachiBars.DOCK_PAD, density(base, p)) + ids.sumOf { id ->
-                    val step = ControlRegistry.byId(id)?.kind == ControlKind.STEP && !v
-                    cellAlong(base, p, v, if (step) 2 else 1)
-                }
+                fun length(p: Int): Int = 2 * px(KachiBars.DOCK_PAD, density(base, p)) + ids.sumOf { cellAlong(base, p, v, 1) }
                 val lens = positions.map(::length)
                 assertEquals(lens.sorted(), lens, "@$base dpi ${if (v) "dọc" else "ngang"}: bề dài phải đơn điệu theo %")
                 assertTrue(positions.filter { it < 100 }.all { length(it) <= length(100) }, "@$base dpi: co mà dài hơn 100 %")

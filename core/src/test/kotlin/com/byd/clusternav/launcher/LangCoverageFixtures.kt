@@ -17,8 +17,8 @@ internal object LangCoverageFixtures {
      * Mỗi mục là một quyết định phải giải thích được (cùng khuôn [SettingsCatalog.NOT_SETTINGS]): nếu danh sách
      * này chỉ là một tập chuỗi thì nó sẽ thành chỗ nhét mã vào cho bài canh im.
      */
-    val SAME_ON_PURPOSE: Map<String, String> = mapOf(
-        "PM2.5" to "ký hiệu ngành cho bụi mịn 2.5µm — dịch thành câu dài là sai chuẩn (spec §6 OQ2)",
+    val SAME_ON_PURPOSE: Map<String, String> = mapOf<String, String>(
+        // ⚠ Android box B2 · W3: "PM2.5" gỡ cùng widget/nút lọc bụi (lõi HAL BYDAuto) ⇒ bảng rỗng.
         // ⚠ Ba mục "ESP" · "LDW" · "LDP" đã gỡ 2026-09-16 cùng toàn bộ ADAS/an toàn, và mục "Eco" đã gỡ
         // (V) 2026-09-17 cùng nút `drive_mode` — bài
         // `moi muc trong danh sach cho phep trung deu co ly do, va deu dung toi` bắt ngay nếu để lại.
@@ -33,9 +33,8 @@ internal object LangCoverageFixtures {
      * (`I18nPairs.runtime`) nên thiếu một bộ là thiếu cả một khối chữ cần dịch.
      */
     fun localizedRows(): List<Localized> =
-        TelemetryRegistry.ALL + ControlRegistry.ALL + CapabilityGroups.ALL + WidgetRegistry.ALL +
-            ActionMacros.ALL + SettingsCatalog.GROUPS + SettingsCatalog.ENTRIES +
-            Domain.values().toList() + Quantity.values().toList() + TyreCorner.values().toList() +
+        // Android box B2 · W3: datum · nút · nhóm · gói lệnh · lĩnh vực · đại lượng · góc bánh gỡ cùng lõi HAL BYDAuto.
+        WidgetRegistry.ALL + SettingsCatalog.GROUPS + SettingsCatalog.ENTRIES +
             LauncherRequirements.ALL + LauncherActions.ALL + LauncherActions.BLOCKS + HeaderItem.values().toList()
 
     /**
@@ -53,18 +52,11 @@ internal object LangCoverageFixtures {
     /** Ảnh chụp MỌI nhãn hiện ra — dùng để chứng minh đổi ngôn ngữ không để lại vết. */
     fun snapshot(): List<String> =
         localizedRows().map { it.displayLabel } +
-            TelemetryRegistry.ALL.map { it.displayShortLabel } +
-            ControlRegistry.ALL.flatMap { it.displayArgs } +
-            CapabilityGroups.ALL.map { it.contentLine } +
-            listOf(
-                CapabilityPicker.GROUPS_TITLE, CapabilityPicker.GROUPS_NOTE,
-                CapabilityPicker.SINGLES_TITLE, CapabilityPicker.HINT_PREFIX,
-            ) +
+            listOf(CapabilityPicker.LAUNCHER_TITLE, CapabilityPicker.LAUNCHER_NOTE) +
             ThemeMode.values().map { it.label() } +
             DockEdge.values().map { it.label } +
             LayoutPreset.values().map { it.label } +
-            ImageFit.values().map { it.label } +
-            TyreStatus.values().mapNotNull { it.reason }
+            ImageFit.values().map { it.label }
 
     fun assertNotEquals(a: Any?, b: Any?) =
         assertFalse(a == b, "hai bên phải khác nhau — nếu giống thì phép đo này không chứng minh gì")

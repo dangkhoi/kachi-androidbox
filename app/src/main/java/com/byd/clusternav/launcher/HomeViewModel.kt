@@ -143,7 +143,7 @@ class HomeViewModel(
     fun setColorChoice(choice: ColorChoice) = mutate { it.copy(colorChoice = choice) }
 
     /**
-     * U5·T3 — NGÔN NGỮ. State + lưu bền trong MỘT lượt, cùng khuôn [setAutostart]/[setTopStrip]: khoá này nằm ngoài
+     * U5·T3 — NGÔN NGỮ. State + lưu bền trong MỘT lượt, cùng khuôn [setAutostart]: khoá này nằm ngoài
      * bộ khoá theo hồ sơ (chung cả máy) nên không đi qua [mutate]/`persist`.
      *
      * Chỉ ghi *lựa chọn*. Việc giải nghĩa ra ngôn ngữ thật (`Strings.current` + locale của `Context`) là của `LangHost`
@@ -207,15 +207,12 @@ class HomeViewModel(
     /** Cập nhật cờ nhúng (dadb loopback nối được / ROM platform-signed). Chỉ runtime, KHÔNG ghi bền. */
     fun setEmbedded(embedded: Boolean) = _uiState.update { it.copy(embedded = embedded) }
 
-    /**
-     * Cập nhật trạng thái xe LIVE (do Activity thu từ `CarStatusRepository.status` qua `repeatOnLifecycle` rồi bơm
-     * vào — MỘT CHIỀU). Chỉ runtime, KHÔNG ghi bền (off-car mọi field null ⇒ widget "—").
-     */
-    fun setCarStatus(status: CarStatus) = _uiState.update { it.copy(carStatus = status) }
+    // Android box B2 · W3: `setCarStatus` (trạng thái xe LIVE) · `setUnitPrefs` (đơn vị datum xe) · `setTopStrip`/`toggleTopStrip`
+    // (chip xe thanh trên) gỡ cùng lõi HAL BYDAuto.
 
     // ── Bền, nhưng lưu ở KHOÁ RIÊNG (không nằm trong `persist`) ─────────────────
     // Ba intent dưới đây tồn tại để tầng UI KHÔNG tự gọi repository: trước đây màn chính ghi thẳng
-    // `workspaceRepository.setGridLayout/setUnitPrefs/setWallpaperPrefs`, tức có đường ghi bền đi VÒNG qua
+    // `workspaceRepository.setGridLayout/setWallpaperPrefs`, tức có đường ghi bền đi VÒNG qua
     // ViewModel ⇒ state trên màn và state đã lưu có thể lệch nhau mà không ai phát hiện.
 
     /** Bố cục tự vẽ (P9). `null` = quay về bố cục sẵn. Cập nhật state + lưu bền trong MỘT lượt. */
@@ -234,23 +231,8 @@ class HomeViewModel(
      */
     private fun persistLayout(layout: GridLayout?) = repository.setGridLayout(layout)
 
-    /** Lựa chọn đơn vị (R11). */
-    fun setUnitPrefs(prefs: UnitPrefs) {
-        _uiState.update { it.copy(unitPrefs = prefs) }
-        repository.setUnitPrefs(prefs)
-    }
-
-    /** Chip thanh trên (RW0 vùng thứ ba) — state + lưu bền trong MỘT lượt. */
-    fun setTopStrip(config: TopStripConfig) {
-        _uiState.update { it.copy(topStrip = config) }
-        repository.setTopStrip(config)
-    }
-
-    /** Bật/tắt một chip. Luật (trần 4 · chỉ nhận mục ĐỌC) nằm ở `:core`, đây chỉ chuyển tiếp. */
-    fun toggleTopStrip(id: String, on: Boolean) = setTopStrip(_uiState.value.topStrip.setEnabled(id, on))
-
     /**
-     * UX-OVERHAUL · WP4 — **thứ tự các vật trên thanh trên**. State + lưu bền trong MỘT lượt, cùng khuôn [setTopStrip]
+     * UX-OVERHAUL · WP4 — **thứ tự các vật trên thanh trên**. State + lưu bền trong MỘT lượt, cùng khuôn [setAutostart]
      * (khoá `header_order` nằm ngoài bộ khoá mà `persist` ghi).
      *
      * Phép DỜI là hàm thuần ở `:core` ([HeaderLayout.move] → [BarOrder.move]); ở đây chỉ nhận thứ tự đã chốt. Không
@@ -263,7 +245,7 @@ class HomeViewModel(
     }
 
     /**
-     * **Sổ địa chỉ** của hồ sơ đang dùng — state + lưu bền trong MỘT lượt, cùng khuôn mẫu [setTopStrip].
+     * **Sổ địa chỉ** của hồ sơ đang dùng — state + lưu bền trong MỘT lượt, cùng khuôn mẫu [setHeaderLayout].
      *
      * Không đi qua [mutate]/`persist` vì khoá này nằm ngoài bộ khoá mà `persist` ghi (đúng như đơn vị, hình nền,
      * chip thanh trên). Phép thêm/sửa/xoá là hàm thuần ở `:core` ([SavedPlaces]); ở đây chỉ nhận danh sách đã chốt.
@@ -314,7 +296,7 @@ class HomeViewModel(
     }
 
     /**
-     * S1·T4 — **tự mở khi nổ máy**. State + lưu bền trong MỘT lượt, cùng khuôn mẫu [setTopStrip].
+     * S1·T4 — **tự mở khi nổ máy**. State + lưu bền trong MỘT lượt, cùng khuôn mẫu [setHeaderLayout].
      *
      * Không đi qua [mutate]/`persist` vì khoá này nằm ngoài bộ khoá theo hồ sơ (chung cả máy), đúng như đơn vị và
      * hình nền.
@@ -351,13 +333,9 @@ class HomeViewModel(
         repository.persist(next)
     }
 
-    /** Nạp lại state từ repository (đổi/thêm/xoá hồ sơ) — giữ nguyên cờ runtime [HomeUiState.embedded] VÀ [carStatus]. */
+    /** Nạp lại state từ repository (đổi/thêm/xoá hồ sơ) — giữ nguyên cờ runtime [HomeUiState.embedded]. */
     private fun reload(loader: () -> HomeUiState) {
         val embedded = _uiState.value.embedded
-        // #3 (owner 2026-09-24): GIỮ carStatus LIVE qua reload. carStatus là dữ liệu xe theo thời gian thực (không
-        // thuộc hồ sơ) — loader() dựng HomeUiState mới với carStatus mặc định (null), nên không giữ thì đổi hồ sơ =
-        // MẤT áp suất lốp + mọi datum xe cho tới nhịp poll sau. Giống [embedded]: runtime, không phải cấu hình hồ sơ.
-        val car = _uiState.value.carStatus
-        _uiState.value = loader().copy(embedded = embedded, carStatus = car)
+        _uiState.value = loader().copy(embedded = embedded)
     }
 }

@@ -132,7 +132,7 @@ class WallWindowDrawable(
  * Tham số dựng nền của một view kính — giữ trong tag để [KachiGlass.refresh] dựng lại đúng thứ đó khi ảnh đổi.
  * [fade] = nền này theo độ đục chung [KachiChrome] (đã gộp điều kiện tone — xem [KachiChrome.fades]).
  */
-internal class GlassSpec(val radius: Int, val tone: SurfaceTone, val domain: Domain?, val fade: Boolean)
+internal class GlassSpec(val radius: Int, val tone: SurfaceTone, val fade: Boolean)
 
 /**
  * Cửa DUY NHẤT gắn nền **kính** cho một view (thẻ nội dung, khay ô làm việc, ô con của nhóm).
@@ -151,10 +151,10 @@ object KachiGlass {
      *   Tone BẬT/LÕM không bao giờ mờ dù cờ này là gì ([KachiChrome.fades]).
      */
     fun apply(
-        view: View, radius: Int = KachiSpace.RADIUS_XL, tone: SurfaceTone = SurfaceTone.NEUTRAL, domain: Domain? = null,
+        view: View, radius: Int = KachiSpace.RADIUS_XL, tone: SurfaceTone = SurfaceTone.NEUTRAL,
         fade: Boolean = true,
     ) {
-        val spec = GlassSpec(radius, tone, domain, fade && KachiChrome.fades(tone))
+        val spec = GlassSpec(radius, tone, fade && KachiChrome.fades(tone))
         view.setTag(R.id.kachi_glass_spec, spec)
         paint(view, spec)
     }
@@ -188,7 +188,7 @@ object KachiGlass {
         val ctx = view.context
         if (art == null || spec.tone == SurfaceTone.SUNKEN) {
             unbind(view)
-            view.background = KachiTheme.surface(ctx, spec.radius, spec.tone, spec.domain)
+            view.background = KachiTheme.surface(ctx, spec.radius, spec.tone)
             if (spec.fade) view.background?.let { KachiChrome.fade(it) }   // R-OP: 100 % ⇒ không chạm gì
             return
         }
@@ -203,7 +203,7 @@ object KachiGlass {
             inks = veilInks(spec.tone),
             fade = if (spec.fade) KachiChrome.fraction else 1.0,
         )
-        val top = KachiTheme.surface(ctx, spec.radius, spec.tone, spec.domain, overArtwork = true)
+        val top = KachiTheme.surface(ctx, spec.radius, spec.tone, overArtwork = true)
         if (spec.fade) KachiChrome.fade(top)
         view.background = LayerDrawable(arrayOf(window, top))
         bind(view, window::relocate)

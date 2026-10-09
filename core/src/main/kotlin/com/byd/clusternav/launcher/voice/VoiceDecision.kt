@@ -8,17 +8,13 @@ package com.byd.clusternav.launcher.voice
  * bộ phân tích ra `Control(temp, 25)` hay `Unknown(MISMATCH)`, nên không biết lỗi ở tai hay ở đầu. Thuần để test.
  */
 object VoiceDecision {
-    /** `Control(temp=25)` · `Read(soc)` · `OpenApp(YouTube→ô 2)` · `không hiểu: MISMATCH` — nhiều vế nối bằng ` + `. */
+    /** `Launcher(launcher_apps)` · `OpenApp(YouTube→ô 2)` · `không hiểu: MISMATCH` — nhiều vế nối bằng ` + `. */
     fun describe(intents: List<VoiceIntent>): String =
         if (intents.isEmpty()) "không hiểu: rỗng" else intents.joinToString(" + ") { one(it) }
 
     private fun one(i: VoiceIntent): String = when (i) {
-        is VoiceIntent.Control -> "Control(${i.id}" +
-            (i.value?.let { "=$it" } ?: "") + (if (i.relative != 0) " ${if (i.relative > 0) "+" else ""}${i.relative}" else "") + ")"
-        is VoiceIntent.Macro -> "Macro(${i.id})"
         is VoiceIntent.Launcher -> "Launcher(${i.id})"
         is VoiceIntent.Profile -> "Profile(${i.name})"
-        is VoiceIntent.Read -> "Read(${i.datumId}${if (i.aloud) " đọc to" else ""})"
         is VoiceIntent.Nav -> "Nav(${i.query}${i.app?.let { " bằng $it" } ?: ""})"
         is VoiceIntent.NavigateSaved -> "NavigateSaved(${i.placeName})"
         is VoiceIntent.Media -> "Media(${i.op}${if (i.query.isNotEmpty()) " ${i.query}" else ""})"

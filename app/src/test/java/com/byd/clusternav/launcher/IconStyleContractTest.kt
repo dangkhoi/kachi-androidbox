@@ -117,7 +117,8 @@ class IconStyleContractTest {
         }
         assertEquals(emptyList<String>(), offenders, "độ dày nét phải là 1.8 (chính) hoặc 1.2 (phụ) — AC2.2")
         val total = piped().sumOf { (_, xml) -> paths(xml).count { stroked(it) } }
-        assertTrue(total > 100) { "chỉ đếm được $total đường có nét — bài đang quét vùng sai" }
+        // Android box B2 · W3 [ĐO]: sàn 100 → 20 (24 đường có nét sau khi gỡ icon nút/datum xe).
+        assertTrue(total >= 20) { "chỉ đếm được $total đường có nét — bài đang quét vùng sai" }
     }
 
     // ── 2. AC2.1 · thang alpha ba bậc ───────────────────────────────────────────────────────────────
@@ -174,7 +175,8 @@ class IconStyleContractTest {
     fun `icon large co du bien the 32 va 48 va duoc noi vao KachiIcons`() {
         val ic = grammar.getJSONObject("icons")
         val large = ic.keys().asSequence().filter { ic.getJSONObject(it).optBoolean("large") }.toSet()
-        assertTrue(large.size >= 20) { "đọc hụt cờ large ($large)" }
+        // Android box B2 · W3 [ĐO]: còn 4 icon `large` (grid · music · photo · sun) — 20+ trước khi gỡ icon xe.
+        assertTrue(large.size >= 4) { "đọc hụt cờ large ($large)" }
         val files = icons().map { it.first }.toSet()
         val variants = files.filter { isVariant(it) }.map { idOf(it) }.toSet()
         assertEquals(large, variants, "tệp _l/_xl phải là ĐÚNG tập icon large của ngữ pháp")
@@ -226,13 +228,11 @@ class IconStyleContractTest {
             assertTrue(f in names) { "$f không còn tồn tại — bỏ khỏi legacy" }
             assertTrue(why.length >= 8) { "$f: lý do quá ngắn, phải nói được VÌ SAO" }
         }
-        // Mọi tệp trong đường ống phải có nguồn: glyph (design/glyph/<id>.svg) hoặc xe (bảng ICONS của gen-car.py).
+        // Mọi tệp trong đường ống phải có nguồn glyph (design/glyph/<id>.svg). Android box B2 · W3: hình xe (gen-car.py ·
+        // design/car/) gỡ ⇒ không còn nguồn thứ hai.
         val glyphs = Files.list(SourceRoots.path("../design/glyph")).use { s -> s.map { it.fileName.toString().removeSuffix(".svg") }.toList().toSet() }
-        // Bảng ICONS sống trong gói `scripts/design/gencar/` từ L6-debt 2026-09-27 (gen-car.py chỉ còn là điểm vào CLI).
-        val genCar = File("scripts/design/gencar/icons.py").readText()
-        val noSource = piped().map { it.first }.filter { n ->
-            if (isCar(n)) !genCar.contains("\"${n.removeSuffix(".xml")}\"") else idOf(n) !in glyphs
-        }
+        assertTrue(piped().none { isCar(it.first) }, "hình xe theo vị trí đã gỡ cùng gen-car.py")
+        val noSource = piped().map { it.first }.filter { n -> idOf(n) !in glyphs }
         assertEquals(emptyList<String>(), noSource, "tệp ic_* không có nguồn sinh — vá tay? khai vào legacy kèm lý do")
     }
 
@@ -258,7 +258,6 @@ class IconStyleContractTest {
         assumeTrue(python != null, "không có python3 ≥ 3.10 trên máy này — bài sinh-lại-so-byte bỏ qua (chạy tay: gen-icons.py --check)")
         listOf(
             listOf(python!!, "scripts/design/gen-icons.py", "--check", "app/src/main/res/drawable"),
-            listOf(python, "scripts/design/gen-car.py", "--check"),
         ).forEach { cmd ->
             val pr = ProcessBuilder(cmd).directory(root).redirectErrorStream(true).start()
             val out = pr.inputStream.bufferedReader().readText()
@@ -293,59 +292,21 @@ class IconStyleContractTest {
         orphanPending.forEach { (f, why) -> assertTrue(why.length >= 20) { "$f: lý do chờ-dùng quá mỏng" } }
     }
 
-    // ── 9. 9 icon nhóm phải tra ra được ─────────────────────────────────────────────────────────────
-
-    @Test
-    fun `moi icon nhom cua core tra ra duoc mot drawable that`() {
-        val declared = CapabilityGroups.ALL.map { it.icon }
-        assertEquals(8, declared.size, "spec §4.1 chốt 8 nhóm (09-16 gỡ ADAS: 12→9 · WP8 gỡ g_ambient: 9→8)")
-        assertEquals(declared.size, declared.toSet().size, "hai nhóm khai trùng tên icon")
-        val table = SourceRoots.text("src/main/java/com/byd/clusternav/launcher/KachiTheme.kt")
-        val files = icons().map { it.first }.toSet()
-        declared.forEach { n ->
-            assertTrue(n.startsWith("ic-group-")) { "$n: icon nhóm phải mang tiền tố ic-group-" }
-            val hit = Regex("\"$n\"\\s*->\\s*R\\.drawable\\.(\\w+)").find(table)
-            assertTrue(hit != null) { "$n chưa có dòng trong KachiTheme.iconRes ⇒ tra ra 0 = ô nhóm không có icon" }
-            assertTrue(hit!!.groupValues[1] + ".xml" in files) { "$n trỏ vào tệp không tồn tại" }
-        }
-        assertEquals(declared.toSet(), KachiTheme.GROUP_ICON_NAMES.toSet(), "danh sách hợp đồng ở :app lệch với CapabilityGroups ở :core")
-    }
+    // ── 9. icon nhóm — Android box B2 · W3: `CapabilityGroups` gỡ cùng lõi HAL BYDAuto ──────────────
 
     // ── 10. MỌI tên `ic-…` phải tra ra một drawable có thật ─────────────────────────────────────────
 
-    private val unusedMapping: Map<String, String> = mapOf(
-        "ic-door" to
-            "gói lệnh 'Mở cửa + đèn' đã gỡ theo control door (1.94, NOT_PROVISIONED); giữ dòng để icon không mồ côi",
-        "ic-car-top-door-all" to
-            "nút 'Mở khoá cửa' (door) đã gỡ 1.94 (NOT_PROVISIONED trên xe); giữ hình cho lần wire lại nếu trim khác cho",
-        "ic-car-top-lock" to
-            "nút 'Khoá / mở khoá' (lock) đã gỡ 1.94 (NOT_PROVISIONED); giữ hình cho lần wire lại nếu trim khác cho",
-        // ⚠ L6 (owner 03/10) — `ic-close` RA khỏi danh sách: nút *tắt* cạnh ⇄ (`SlotActionsCluster`) dùng lại đúng hình mà dòng
-        // miễn-trừ cũ đã giữ "để bày lại nút đóng ở đâu đó là có sẵn đúng hình".
-        "ic-target" to
-            "datum 'Mục tiêu sạc' (target_soc) đã gỡ 2026-09-25 — SET_DR_SOC_TARGET không phân giải trên ROM xe " +
-                "owner; icon là tài sản SINH (design/icon-grammar.json) nên xoá tệp sẽ làm gen-icons --check lệch byte",
-        "ic-car-top-sunroof-pos" to
-            "datum 'Vị trí cửa sổ trời' (sunroof_pos) đã gỡ 2026-09-25 — getSunroofPosition = 65535, xe owner không " +
-                "có cửa sổ trời; hình xe là tài sản SINH (design/car/manifest.json), xoá tệp làm gen-car --check lệch",
-        // ⚠ UX5 (2026-09-26) — bốn ô ghế + hai datum ghế chuyển sang glyph GHÉP (`ic-seat-{heat,vent}-{left,right}`)
-        // vì sưởi và mát trước đó trông y hệt nhau trên chip thanh trên. Dòng dưới mất chỗ dùng cuối cùng trong
-        // `.kt` NHƯNG phải ở lại: xoá dòng tra ⇒ tệp vector thành mồ côi, mà nó là tài sản SINH/legacy nên xoá tệp
-        // lại làm `gen-icons --check` lệch byte.
-        // ⚠⚠ UX5b (2026-09-27) — **`ic-seat` đã RA khỏi danh sách này**: chip ghế PHỤ dùng nó cho trạng thái *"cả
-        // hai tắt / chưa biết"* (một cái ghế không kèm phương thức), đúng ca mà dòng miễn-trừ cũ đã nói trước là
-        // *"giữ hình cho ca cần"*. `ic-seat-left` chưa bao giờ ở đây vì chip ghế LÁI đã dùng nó từ UX5.
-        "ic-car-top-seat-fl" to
-            "ghế-lái-nhìn-từ-trên, từng là hình của datum `seat_vent_state` trước UX5 — nay datum dùng CHUNG hình " +
-                "với nút của nó (ic-seat-vent-left); giữ dòng để tệp xe SINH không thành mồ côi",
-    )
+    // Android box B2 · W3 (2026-10-09): mọi dòng miễn-trừ (ic-door · ic-car-top-* · ic-target · ic-seat…) gỡ cùng tệp vector
+    // của chúng — bảng tra chỉ còn tên đang dùng. Giữ bảng (rỗng) để nợ mới vẫn phải ghi lý do tại chỗ.
+    private val unusedMapping: Map<String, String> = emptyMap()
 
     @Test
     fun `moi ten icon dung trong ma tra ra duoc mot drawable that`() {
         val table = SourceRoots.text("src/main/java/com/byd/clusternav/launcher/KachiTheme.kt")
         val mapped: Map<String, String> = Regex("\"(ic-[a-z0-9-]+)\"\\s*->\\s*R\\.drawable\\.(\\w+)")
             .findAll(table).associate { it.groupValues[1] to it.groupValues[2] }
-        assertTrue(mapped.size > 50) { "chỉ đọc được ${mapped.size} dòng bảng tra — bài đang quét vùng sai" }
+        // Android box B2 · W3 [ĐO]: 12 dòng (trước > 50 — icon nút/datum xe gỡ).
+        assertTrue(mapped.size >= 12) { "chỉ đọc được ${mapped.size} dòng bảng tra — bài đang quét vùng sai" }
         val files = icons().map { it.first.removeSuffix(".xml") }.toSet()
         assertEquals(emptyList<String>(), mapped.filterValues { it !in files }.map { (n, d) -> "$n → $d.xml (không có tệp)" })
 
@@ -358,7 +319,7 @@ class IconStyleContractTest {
                     Regex("\"(ic-[a-z0-9-]+)\"").findAll(code).forEach { m -> used.getOrPut(m.groupValues[1]) { mutableListOf() } += file.name }
                 }
         }
-        assertTrue(used.size > 50) { "chỉ thấy ${used.size} tên icon được dùng — bài đang quét vùng sai" }
+        assertTrue(used.size >= 12) { "chỉ thấy ${used.size} tên icon được dùng — bài đang quét vùng sai" }
         assertEquals(emptyList<String>(), used.filterKeys { it !in mapped }.map { (n, where) -> "$n (dùng ở ${where.distinct()})" },
             "tên icon KHÔNG có dòng trong KachiTheme.iconRes ⇒ `else -> 0` ⇒ ô mất icon mà KHÔNG lỗi gì")
         val dead = mapped.keys.filterNot { it in used || it in unusedMapping }

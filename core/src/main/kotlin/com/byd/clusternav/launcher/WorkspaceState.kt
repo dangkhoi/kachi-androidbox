@@ -141,7 +141,7 @@ data class WorkspaceState(
      *  1. **MỘT-APP-MỘT-Ô** (owner 2026-09-15): dữ liệu lưu TRƯỚC bản vá đó có thể có cùng app ở hai ô. Giữ lần
      *     xuất hiện ĐẦU (ô index thấp = ô đang hiện cửa sổ thật), xoá các ô trùng SAU về trống.
      *  2. **MÃ KHẢ NĂNG ĐÃ BIẾN MẤT** ⇒ bỏ khỏi ô. [ĐO đọc source] `WidgetViews.build` cho mã lạ rơi xuống
-     *     `telemetry(...)` → [TelemetryReadout.of] trả `null` → ô vẽ ra **`"ADAS_FCW"` + `"—"` mãi mãi**: không
+     *     `telemetry(...)` → `TelemetryReadout.of` trả `null` → ô vẽ ra **`"ADAS_FCW"` + `"—"` mãi mãi**: không
      *     sập, nhưng người dùng nhìn thấy một ô hỏng mà không có cách nào biết vì sao. Thanh nút và chip thanh
      *     trên vốn ĐÃ bỏ mã lạ (`ControlDockView.rebuild` nhánh `null -> Unit`; `TopStripChips.render` dùng
      *     `mapNotNull`), nên ô giữa màn là bề mặt DUY NHẤT còn giữ lại rác — chữa ở đây thì cả ba khớp nhau.

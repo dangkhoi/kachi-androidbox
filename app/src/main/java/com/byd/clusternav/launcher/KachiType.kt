@@ -31,7 +31,7 @@ import android.widget.TextView
  * ## KHÔNG thuộc thang này
  * Cỡ chữ VẼ trên Canvas của widget/board (số áp suất lốp, nhãn bộ phận thân xe…) tính theo **tỉ lệ cạnh ô** để bất biến với
  * cỡ ô — đó là kích thước hình học, không phải một bậc chữ giao diện. Chúng khai riêng tại chỗ vẽ, có lý do (xem
- * [TyreBoardView]/[DoorBoardView]).
+ * `TyreBoardView`/[DoorBoardView]).
  *
  * ## Bài canh
  * [TypeScaleContractTest] quét mã nguồn các bề mặt đã áp và **đỏ** khi có `setTextSize(COMPLEX_UNIT_SP, <số>)`

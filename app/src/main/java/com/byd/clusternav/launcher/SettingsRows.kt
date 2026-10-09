@@ -226,25 +226,7 @@ class SettingsRows(internal val context: Context) {
         }
     }
 
-    // ── R11–R13 · chọn ĐƠN VỊ theo LOẠI đại lượng ─────────────────────────────────────────────────────
-    /** Một hàng cho mỗi loại đại lượng ĐANG DÙNG; chip dùng chung [addChip] với [chipRow]. */
-    fun unitRow(q: Quantity, current: String, onPick: (String) -> Unit): View {
-        val chips = HashMap<String, TextView>()
-        var chosen = current
-        fun paint() = chips.forEach { (code, tv) ->
-            val on = code == chosen
-            tv.setTextColor(c(if (on) KachiTheme.ON_ACCENT else KachiTheme.MUT))
-            tv.background = if (on) KachiTheme.gradient(context, Sp.RADIUS_PILL)
-            else KachiTheme.card(context, Sp.RADIUS_PILL, KachiTheme.CHIP_OFF)
-        }
-        return LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-            layoutParams = stackLp()
-            addView(rowLabel(q.displayLabel))
-            Units.options(q).forEach { opt -> chips[opt.code] = addChip(this, opt.code) { chosen = opt.code; paint(); onPick(opt.code) } }
-            paint()
-        }
-    }
+    // Android box B2 · W3: `unitRow` (chọn ĐƠN VỊ theo loại đại lượng — chỉ cho datum xe) gỡ cùng `Units`.
 
     // ── Hàng dùng chung: dòng chữ + nút bấm ───────────────────────────────────────────────────────
     /**
@@ -386,7 +368,7 @@ class SettingsRows(internal val context: Context) {
      * Đây là điều khiển **bấm nhiều lần liên tiếp** trong lúc xe có thể đang lăn bánh: ngón tay không quay lại
      * đúng một điểm, nên đích chạm nhỏ biến "giảm 2 nấc" thành "trượt ra ngoài, không có gì xảy ra". [ĐO] design
      * system §10 [P1] đã ghi đúng bệnh này ở nút −/+ của thanh nút xe (rộng 14–22dp). Ở đây không có trần vật lý
-     * nào ép nhỏ (khác [KachiSpace.TOUCH_TIGHT]) ⇒ lấy đủ 48.
+     * nào ép nhỏ ⇒ lấy đủ 48.
      *
      * Giá trị nằm GIỮA hai nút và **đậm** — nó là thứ người dùng nhìn khi bấm; nhãn chỉ nói đang chỉnh cái gì.
      */

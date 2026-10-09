@@ -24,7 +24,7 @@ class LauncherActionTileWiringContractTest {
     private fun code(relative: String): String = SourceRoots.codeOf(relative)
 
     private val dock by lazy { code("src/main/java/com/byd/clusternav/launcher/ControlDockView.kt") }
-    private val factory by lazy { code("src/main/java/com/byd/clusternav/launcher/ControlTileFactory.kt") }
+    private val factory by lazy { code("src/main/java/com/byd/clusternav/launcher/LauncherTile.kt") }   // W3: ControlTileFactory gỡ
     private val wiring by lazy { code("src/main/java/com/byd/clusternav/launcher/KachiHomeWiring.kt") }
     private val activity by lazy { code("src/main/java/com/byd/clusternav/launcher/KachiHomeActivity.kt") }
     private val strip by lazy { code("src/main/java/com/byd/clusternav/launcher/KachiTopStrip.kt") }
@@ -40,7 +40,8 @@ class LauncherActionTileWiringContractTest {
                 "báo gì — đúng lỗi 'bật vào thanh rồi tưởng hỏng' đã phải vá cho gói lệnh ở W2",
         )
         val fn = SourceRoots.body(dock, "private fun rebuild()")
-        assertTrue(fn.contains("tiles.launcherTile("), "phải dùng BỘ DỰNG Ô DÙNG CHUNG, không tự dựng ô thứ hai")
+        // Android box B2 · W3: bộ dựng ô dùng chung `ControlTileFactory.launcherTile` gỡ cùng ô nút xe ⇒ `launcherTileOf` (LauncherTile.kt).
+        assertTrue(fn.contains("launcherTileOf(ui, TileSize.DOCK, pick)"), "phải dùng BỘ DỰNG Ô DÙNG CHUNG, không tự dựng ô thứ hai")
         assertTrue(fn.contains("onLauncherAction(id)"), "cú bấm phải đẩy RA NGOÀI qua callback (view thuần)")
     }
 
@@ -62,7 +63,7 @@ class LauncherActionTileWiringContractTest {
 
     @Test
     fun `o launcher KHONG di qua cong dieu khien xe va KHONG mang dau chua kiem`() {
-        val fn = SourceRoots.body(factory, "fun launcherTile(")
+        val fn = SourceRoots.body(factory, "internal fun launcherTileOf(")
         assertFalse(
             fn.contains("control()"),
             "mã launcher không có dòng nào trong ControlRegistry ⇒ bắn `press` xuống cổng xe là gửi một lệnh " +
@@ -146,8 +147,9 @@ class LauncherActionTileWiringContractTest {
         val launcherAt = dockBranch.indexOf("CapabilityPicker.launcherPicks()")
         // 2.93 wave 2B: khối camera dựng ở MỘT hàm (`cameraSection`) cho cả hai bộ chọn — bài dưới canh thân hàm ấy.
         val cameraAt = dockBranch.indexOf("cameraSection(body)")
-        val groupAt = dockBranch.indexOf("groupSection(body)")
-        assertTrue(launcherAt in 0 until groupAt, "để nó ở cuối thì phải cuộn qua trọn 187 ô mới đặt được nút Ứng dụng")
+        // Android box B2 · W3: mục NHÓM / mục lẻ xe gỡ khỏi bộ chọn nút thanh ⇒ khối Launcher là khối DUY NHẤT.
+        assertTrue(launcherAt >= 0, "khối Launcher phải có trong bộ chọn nút thanh")
+        assertTrue("groupSection(body)" !in dockBranch && "singlesSection(body)" !in dockBranch, "không còn mục nhóm/mục lẻ xe")
         // V1 pha NGHE: 2 → 3 (`launcher_voice`). Con số ghim ở đây là một lời nhắc *"khối này cố ý NHỎ"*: nó đứng
         // TRƯỚC 187 ô khả năng trong bộ chọn, nên mỗi mục thêm vào là một hàng đẩy lưới xuống. Ba mục vẫn là một
         // hàng; mục thứ tư thì phải xét lại chỗ đứng của cả khối, không được lặng lẽ nâng số.
@@ -170,7 +172,7 @@ class LauncherActionTileWiringContractTest {
         val init = SourceRoots.body(drawer, "    init {")
         val assignBranch = init.substringAfter("} else if (assign) {").substringBefore("} else if (pick) {")
         assertTrue("cameraSection" !in drawer && "cameraPicks()" !in drawer, "ngăn kéo không còn bày camera BYD")
-        assertTrue(assignBranch.contains("groupSection(body)"))
+        assertFalse(assignBranch.contains("groupSection(body)"), "W3: mục NHÓM xe gỡ khỏi gán-ô")
         assertFalse(assignBranch.contains("launcherPicks()"), "ba việc Launcher (ngăn kéo · Cài đặt · phiên nghe) vẫn không bày ở gán-ô")
         val widgets = code("src/main/java/com/byd/clusternav/launcher/WidgetViews.kt")
         assertFalse(widgets.contains("cameraDemandTile"), "widget lưới không còn ô camera")

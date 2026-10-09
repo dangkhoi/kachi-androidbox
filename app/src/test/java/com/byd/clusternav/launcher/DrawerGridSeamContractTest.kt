@@ -34,7 +34,8 @@ class DrawerGridSeamContractTest {
      * đi qua [CapabilityTileGrid] nên phải nằm trong bài canh này, không thì một bề mặt đã vá tự rơi ra khỏi phạm vi.
      */
     private val gridUsers = listOf(
-        "AppDrawer.kt", "AppDrawerTiles.kt", "AppDrawerApps.kt", "TopStripPicker.kt",
+        // Android box B2 · W3: bộ chọn chip (`TopStripPicker.kt`) gỡ cùng chip xe.
+        "AppDrawer.kt", "AppDrawerTiles.kt", "AppDrawerApps.kt",
     )
 
     /** Tệp THẬT SỰ dựng hàng lưới — `AppDrawer.kt` chỉ còn thanh đáy + mục; lưới ô ở `AppDrawerTiles.kt` (L6-debt 2026-09-27). */
@@ -65,7 +66,6 @@ class DrawerGridSeamContractTest {
             val n = Regex("""orientation = LinearLayout\.HORIZONTAL""").findAll(code(f)).count()
             val allowed = when (f) {
                 "AppDrawer.kt" -> 1        // 1 = thanh đáy (câu nhắc + nút áp)
-                "TopStripPicker.kt" -> 1   // 1 = hàng ◀▶ dời chip (#15) — control trong Ô, KHÔNG phải hàng của lưới
                 else -> 0
             }
             assertEquals(
@@ -154,7 +154,7 @@ class DrawerGridSeamContractTest {
     /** Ô trong lưới căn DỌC-TRÊN — căn giữa dọc làm icon ô nhãn ngắn tụt xuống lệch với ô cùng hàng. */
     @Test
     fun `o trong luoi can tren, khong can giua doc`() {
-        listOf("AppDrawerTiles.kt", "AppDrawerApps.kt", "TopStripPicker.kt").forEach { f ->
+        listOf("AppDrawerTiles.kt", "AppDrawerApps.kt").forEach { f ->
             val src = code(f)
             val topAligned = Regex("""Gravity\.CENTER_HORIZONTAL or Gravity\.TOP""").findAll(src).count()
             assertTrue(topAligned >= 1, "$f: ô lưới phải căn NGANG-giữa + DỌC-TRÊN")
@@ -190,17 +190,7 @@ class DrawerGridSeamContractTest {
             fn.contains("KachiTheme.surface("),
             "ô chưa chọn phải có nền dựng từ hệ thiết kế (KachiTheme.surface)",
         )
-        val stripPaint = SourceRoots.body(code("TopStripPicker.kt"), "private fun paint(")
-        assertTrue(
-            stripPaint.contains("KachiTheme.surface("),
-            "lưới chọn chip của Cài đặt phải dùng CÙNG hàm dựng bề mặt với ngăn kéo — hai lưới bày cùng một tập ô " +
-                "thì chúng phải đọc như một; hai cách vẽ là cách chúng trôi khỏi nhau (đã lệch 3 lần: cột 4-vs-5, " +
-                "thụt 6px, cỡ chữ ngoài thang).",
-        )
-        assertTrue(
-            "SurfaceTone.ACTIVE" in fn && "SurfaceTone.ACTIVE" in stripPaint,
-            "trạng thái ĐANG CHỌN của cả hai lưới cũng phải đi qua cùng một `tone`, không ai dựng Drawable tại chỗ",
-        )
+        assertTrue("SurfaceTone.ACTIVE" in fn, "trạng thái ĐANG CHỌN đi qua `tone`, không ai dựng Drawable tại chỗ")
     }
 
     // ══ (3) R-UI (e) — đáy vùng cuộn không cắt chữ ════════════════════════════════════════════════════════

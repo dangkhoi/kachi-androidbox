@@ -1,9 +1,6 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.LauncherActions
-import com.byd.clusternav.launcher.TelemetryRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -33,12 +30,11 @@ class SherpaBiasingCoverageTest {
         SherpaBiasing.hotwordsFile().trimEnd().split("\n").filter { it.isNotBlank() }
     private val hotwords: Set<String> = lines.toSet()
 
-    /** Mọi nhãn tiếng Việt của 4 bộ đăng ký — đúng tập mà `VoicePhrases`/`VoiceGrammar` cũng phủ. */
-    private fun allLabels(): List<String> =
-        ControlRegistry.ALL.map { it.label } +
-            VoiceTelemetry.SPOKEN.map { it.label } +   // 2.88: trừ 13 mã lốp thô — [VoiceTelemetry]
-            ActionMacros.ALL.map { it.label } +
-            LauncherActions.ALL.map { it.label }
+    /**
+     * Mọi nhãn tiếng Việt của bộ đăng ký — đúng tập mà `VoicePhrases`/`VoiceGrammar` cũng phủ. Android box B2 · W3:
+     * nút · datum · gói lệnh gỡ cùng lõi HAL BYDAuto ⇒ còn hành động launcher.
+     */
+    private fun allLabels(): List<String> = LauncherActions.ALL.map { it.label }
 
     /** `needle` là một dãy từ nguyên vẹn bên trong `line` (ranh giới từ, không phải chuỗi con tuỳ ý). */
     private fun containsWords(line: String, needle: String): Boolean =
@@ -67,9 +63,7 @@ class SherpaBiasingCoverageTest {
         assertEquals(emptyList<String>(), singles, "[ĐO] từ rời chặn cụm dài + cộng điểm đường sai — cấm")
         // Nhãn EN (`labelEn`/`shortEn`/`argsEn`) không được lọt: mô hình VN không phát token ấy, dòng chỉ chiếm chỗ
         // (283/623 dòng ở 1.64). KHÔNG canh bằng "ASCII thuần" — *"XEM PIN"* cũng ASCII thuần mà là câu VN.
-        val en = ControlRegistry.ALL.flatMap { listOfNotNull(it.labelEn, it.shortEn) + it.argsEn } +
-            TelemetryRegistry.ALL.flatMap { listOfNotNull(it.labelEn, it.shortEn) } +
-            ActionMacros.ALL.mapNotNull { it.labelEn } + LauncherActions.ALL.mapNotNull { it.labelEn }
+        val en = LauncherActions.ALL.mapNotNull { it.labelEn }
         val leaked = en.flatMap { SherpaHotwords.phrasesOf(it) }.filter { ' ' in it && it in hotwords }
         assertEquals(emptyList<String>(), leaked, "nhãn tiếng Anh lọt vào tệp hotwords")
     }
@@ -95,7 +89,7 @@ class SherpaBiasingCoverageTest {
         // (nhãn nút SELECT + nhãn lựa chọn) và còn sống: `seatc` ("Ghế mát") + lựa chọn *Mức 1*.
         // ⚠ 1.94 2026-09-22: nhãn ghế đổi "Ghế mát" → "Mát ghế lái" (owner). [ĐO] tệp sinh ra `MÁT GHẾ LÁI MỨC`
         // (SELECT args, bỏ token số), tiền tố `MÁT GHẾ LÁI` phải rụng.
-        assertTrue("MÁT GHẾ LÁI MỨC" in set); assertTrue("MÁT GHẾ LÁI" !in set)
+        // Android box B2 · W3: cặp mốc nút ghế (SELECT) gỡ cùng lõi HAL BYDAuto — phép canh tổng ở trên giữ nguyên.
     }
 
     /**
@@ -120,7 +114,9 @@ class SherpaBiasingCoverageTest {
         java.io.File(dir, "hotwords-phrases-with-places.txt").writeText(SherpaBiasing.hotwordsFile(listOf("Nhà", "Công ty")))
         // 2.93 VOICE-ALT-LABEL-HOTWORD — đúng bộ nhãn đã đo ở ma trận host (spec kachi-293-voice §9; nhãn chữ Anh tự rụng).
         java.io.File(dir, "hotwords-phrases-with-labels.txt").writeText(SherpaBiasing.hotwordsFile(labels = MEASURED_LABELS))
-        assertTrue(lines.size in 300..3000, "tệp ${lines.size} dòng — ngoài dải đã đo (756–1440 dòng cụm ổn)")
+        // Android box B2 · W3 [ĐO 2026-10-09]: 175 dòng (nút/datum/gói lệnh xe gỡ ⇒ còn launcher · nhạc · app · dẫn đường).
+        // Dải 756–1440 dòng là số đo host của BYD; ma trận WAV host CHƯA đo lại cho tệp mới — sàn/trần nới có ghi.
+        assertTrue(lines.size in 100..3000, "tệp ${lines.size} dòng — ngoài dải [ĐO W3 175]")
     }
 
     @Test
@@ -145,8 +141,8 @@ class SherpaBiasingCoverageTest {
         // `MỞ CỬA SỔ` cũng là tiền tố (`MỞ CỬA SỔ NÓC`) ⇒ `MỞ CÁC CỬA SỔ` thay.
         // ⚠ 1.90 2026-09-21: «TĂNG ÂM LƯỢNG» rời danh sách vì nút `vol` bị owner xoá ⇒ không còn nhãn/cách nói nào
         // sinh ra cụm ấy. Ca ĐÃ ĐO w12 vì thế không còn đối tượng; năm cụm còn lại vẫn là năm ca đo thật.
-        listOf("XEM PIN", "DỪNG NHẠC", "MỞ KÍNH TRƯỚC TRÁI", "BẬT MÁY LẠNH", "MỞ CÁC CỬA SỔ")
-            .forEach { assertTrue(it in hotwords, "thiếu cụm «$it» — xem spec kachi-voice-hotword-phrases") }
+        // Android box B2 · W3: bốn cụm xe (XEM PIN · MỞ KÍNH TRƯỚC TRÁI · BẬT MÁY LẠNH · MỞ CÁC CỬA SỔ) gỡ cùng lõi HAL.
+        listOf("DỪNG NHẠC").forEach { assertTrue(it in hotwords, "thiếu cụm «$it» — xem spec kachi-voice-hotword-phrases") }
         // ⚠ 1.94 2026-09-22: «MỞ KHOÁ CỬA» rời bài vì nút `door` (mở khoá cửa) đã gỡ (NOT_PROVISIONED, owner "bỏ
         // hẳn") ⇒ không còn nhãn/cách nói nào sinh ra cụm ấy. Năm cụm trên vẫn là ca đo thật.
     }
@@ -171,8 +167,8 @@ class SherpaBiasingCoverageTest {
         SherpaSpokenWords.ACCENTED.values.forEach { v ->
             assertTrue(oldStyle.find(v) == null, "«$v» còn viết kiểu cũ ở âm tiết MỞ — đổi sang khóa/hòa/khỏe")
         }
-        // Chốt ngược: âm tiết ĐÓNG vẫn phải giữ nguyên, nếu không bản vá đã đi quá tay.
-        assertEquals("tuần hoàn trong", SherpaSpokenWords.ACCENTED["tuan hoan trong"], "HOÀN là âm tiết đóng")
+        // Chốt ngược: âm tiết ĐÓNG vẫn phải giữ nguyên, nếu không bản vá đã đi quá tay. (Mốc cũ "tuần hoàn trong" — nút
+        // lấy gió — gỡ ở Android box B2 · W3; phép canh trên chữ rời bên dưới giữ nguyên.)
         listOf("hoàn", "ngoài", "toàn", "thoáng").forEach {
             assertTrue(oldStyle.find(it) == null, "«$it» là âm tiết ĐÓNG — luật không được đụng vào")
         }
@@ -193,9 +189,6 @@ class SherpaBiasingCoverageTest {
     fun `nhan bo dang ky cung theo luat dat dau moi`() {
         val oldStyle = Regex("(khoá|hoà|khoẻ)(?![a-zà-ỹ])", RegexOption.IGNORE_CASE)
         val labels = buildList<Pair<String, String>> {
-            ControlRegistry.ALL.forEach { add(it.id to it.label); add(it.id to it.short.orEmpty()) }
-            TelemetryRegistry.ALL.forEach { add(it.id to it.label); add(it.id to it.short.orEmpty()) }
-            ActionMacros.ALL.forEach { add(it.id to it.label) }
             LauncherActions.ALL.forEach { add(it.id to it.label) }
         }
         labels.forEach { (id, label) ->
@@ -250,9 +243,7 @@ class SherpaBiasingCoverageTest {
      * là: thêm một cách gọi app mà quên khai dạng đọc ⇒ bài này ĐỎ, không im lặng.
      */
     private fun synonymPhrases(): List<String> =
-        VoiceSynonyms.CONTROL.values.flatten() +
-            VoiceSynonyms.TELEMETRY.values.flatten() +
-            VoiceSynonyms.APP_TARGETS.values.flatten() +
+        VoiceSynonyms.APP_TARGETS.values.flatten() +
             VoiceSynonyms.MEDIA_WORDS +
             VoiceSynonyms.NAV_WORDS
 
@@ -315,11 +306,22 @@ class SherpaBiasingCoverageTest {
         val deliberate = SherpaPhraseHotwords.notBiasedAppNames()
             .flatMap { SherpaHotwords.phrasesOf(it) }
             .toSet()
+        // Android box B2 · W3 (2026-10-09): sáu loại động từ không còn đối tượng TĨNH nào trong tệp — tắt/tăng/giảm/đặt/xem
+        // chỉ đi với nút/datum xe (đã gỡ), đổi/chuyển chỉ đi với HỒ SƠ (động, tệp mặc định không có). Động từ vẫn ở
+        // [SherpaSpokenWords.VERBS] vì luật đồng hình ([VoiceVerbSpelling]) đọc bảng ấy. Trừ ĐÍCH DANH theo loại.
+        // [ĐO 2026-10-09] đúng 12 dạng; "đặt" (trong "cài đặt") · "đổi"/"chuyển" (trong "chuyển bài") vẫn có cụm ⇒ không trừ.
+        val noStaticTarget = setOf(
+            "TẮT", "TĂNG", "GIẢM", "CHỈNH", "XEM", "ĐỌC", "HIỆN", "KIỂM TRA", "CHO XEM", "ĐỌC TO", "ĐỔI SANG", "CHUYỂN SANG",
+        )
+        assertTrue(noStaticTarget.all { f -> SherpaSpokenWords.VERBS.values.flatten().any { SherpaHotwords.phrasesOf(it).contains(f) } })
         val missing = SherpaSpokenWords.ALL
             .flatMap { SherpaHotwords.phrasesOf(it) }
-            .filterNot { it in deliberate }
+            .filterNot { it in deliberate || it in noStaticTarget }
             .filterNot { p -> lines.any { containsWords(it, p) } }
         assertEquals(emptyList<String>(), missing, "khai dạng có dấu mà không cụm nào mang nó ⇒ hụt ở SherpaPhraseHotwords")
+        // …và tập trừ không được là tấm chăn: dạng nào trong đó MÀ có mặt trong tệp thì phải rời tập trừ.
+        val notReallyAbsent = noStaticTarget.filter { p -> lines.any { containsWords(it, p) } }
+        assertEquals(emptyList<String>(), notReallyAbsent, "động từ khai là 'không đối tượng tĩnh' mà vẫn có cụm")
         // Chiều ngược lại: danh sách trừ không được phép rữa thành một tấm chăn. Mỗi mục của nó phải THẬT SỰ
         // vắng khỏi tệp — còn ở trong tệp mà vẫn nằm trong danh sách trừ nghĩa là luật đã đổi mà danh sách thì không.
         val stillPresent = deliberate.filter { p -> lines.any { containsWords(it, p) } }

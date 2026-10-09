@@ -6,6 +6,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.streams.toList
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -356,18 +357,8 @@ class SpacingScaleContractTest {
      */
     @Test
     fun `dich cham duoi muc toi thieu phai co ly do tai cho`() {
-        val space = SourceRoots.text("src/main/java/com/byd/clusternav/launcher/KachiSpace.kt")
-        // Đòi KDoc của TOUCH_TIGHT SUY từ cỡ ô thật (`DOCK_TILE_W`/`DOCK_TILE_H`), không phải chỉ nhắc một con
-        // số. Bản đầu của bài này so chuỗi "84dp" nên đỏ oan ngay khi KDoc viết "84×86dp" — canh chữ thì giòn,
-        // canh việc "có dẫn ra hằng nguồn" mới đúng ý.
-        val tight = space.substringAfter("const val TOUCH_TIGHT", "")
-        val tightDoc = space.substringBefore("const val TOUCH_TIGHT").takeLast(1400)
-        assertTrue(tight.isNotEmpty(), "KachiSpace phải khai TOUCH_TIGHT")
-        assertTrue(
-            tightDoc.contains("DOCK_TILE_W") && tightDoc.contains("DOCK_TILE_H"),
-            "KDoc của TOUCH_TIGHT phải suy từ [DOCK_TILE_W]×[DOCK_TILE_H] (trần vật lý của ô), " +
-                "không phải tự chọn một con số",
-        )
+        // Android box B2 · W3: đích chạm hẹp `TOUCH_TIGHT` (nút −/+ ô STEP nút xe) gỡ ⇒ còn một ngoại lệ dưới Sp.TOUCH.
+        assertFalse("const val TOUCH_TIGHT" in SourceRoots.text("src/main/java/com/byd/clusternav/launcher/KachiSpace.kt"))
         val ws = SourceRoots.text("src/main/java/com/byd/clusternav/launcher/WorkspaceView.kt")
         val head = SourceRoots.body(ws, "private fun headLp()")
         assertTrue(head.contains("Sp.SLOT_HEAD_CLEAR"), "headLp phải lấy độ hở từ Sp.SLOT_HEAD_CLEAR")

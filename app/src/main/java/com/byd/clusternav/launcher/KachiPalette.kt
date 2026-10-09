@@ -145,18 +145,9 @@ package com.byd.clusternav.launcher
  *   [mut] chỉ còn **3.15–3.91:1** ⇒ **P1b BẮT BUỘC** phải thêm lớp che (scrim 35–50 %) hoặc chọn mực theo độ chói
  *   đo được của chính vùng ảnh dưới thẻ. Ghi ra đây, không giấu: đây là ràng buộc của pha sau, không phải một chỗ
  *   đã xong.
- * @property partFill / @property partLine vùng tô · nét của bộ phận xe ở tone NEUTRAL (P3 §4.4); `partLine` cũng là
- *   VIỀN BẮT BUỘC khi màu sơn chạm nền (§4.8 luật (a)). @property glassFrom / @property glassTo chuyển sắc KÍNH (mức
- *   tả thực (1)); @property lampOn đèn bật · @property lampGlow tâm quầng đèn (toả về trong suốt, không blur) ·
- *   @property tailOn đèn hậu bật (đỏ ĐÈN, khác [red] cảnh báo) · @property carShadow tâm bóng đổ. ⚠ Hai vai MÉP KÍNH
- *   `glassSheen`/`glassShade` (thêm sáng 2026-09-20) GỠ chiều cùng ngày — owner: *"bug gạch trên đầu mỗi khung"*;
- *   lần thứ BA sau `surfEdge`/`surfOnEdge` ⇒ đừng thêm lại dưới tên khác ([KachiTheme.surface]).
- * @property domainTints lớp sắc LĨNH VỰC phủ lên gradient thẻ (4.7–7 % — [ĐO] bước sáng 1.07–1.15× so với thẻ
- *   không tint, tức nhìn ra được mà không đánh nhau với chữ: mọi mực vẫn ≥ 4.5:1 trên **cả hai** đầu gradient).
- *   Khoá là **tên `Domain`** (chuỗi, không phải kiểu enum) để tệp này giữ nguyên tính chất *không phụ thuộc mô
- *   hình khả năng* — nó là bảng màu, không phải chỗ biết về `:core`. Tra qua [domainTint].
- *   Vì sao cần: [ĐO ảnh máy ảo 2026-09-16] màn chính bày 2–4 thẻ nhóm cùng lúc, tất cả cùng một xám ⇒ muốn biết
- *   thẻ nào là Khí hậu phải **đọc chữ**. Sắc lĩnh vực cho mắt tìm vùng trước khi đọc.
+ * (Android box B2 · W3: các vai hình xe — `partFill` · `partLine` · `glassFrom` · `glassTo` · `lampOn` · `lampGlow` · `tailOn` ·
+ * `carShadow` — và sắc lĩnh vực `domainTints` gỡ cùng hình xe / mô hình khả năng xe; hai vai mép kính `glassSheen`/`glassShade`
+ * đã gỡ từ WP1 — owner: *"bug gạch trên đầu mỗi khung"* ⇒ đừng thêm lại dưới tên khác ([KachiTheme.surface]).)
  */
 data class KachiPalette(
     val bg: String,
@@ -223,79 +214,14 @@ data class KachiPalette(
     val fieldSunken: String,
     val surfFromOverArt: String,
     val surfToOverArt: String,
-    val partFill: String,
-    val partLine: String,
-    val glassFrom: String,
-    val glassTo: String,
-    val lampOn: String,
-    val lampGlow: String,
-    val tailOn: String,
-    val carShadow: String,
-    val domainTints: Map<String, String>,
     val clear: String = "#00000000",
 ) {
-
-    /**
-     * Sắc lĩnh vực cho một `Domain` — **chỗ tra DUY NHẤT** (CLAUDE.md §7: khác biệt phải lộ ra qua một bảng, không
-     * rải `if` theo tên nhóm/tên gói ở chỗ vẽ).
-     *
-     * @param domain tên hằng của `Domain` (`domain?.name`). `null` hoặc tên lạ ⇒ [clear] = **không tint**, chứ
-     *   không phải một màu mặc định: thẻ không thuộc lĩnh vực nào thì phải trông trung tính, không mượn sắc của
-     *   lĩnh vực khác.
-     */
-    fun domainTint(domain: String?): String = domainTints[domain] ?: clear
 
     companion object {
 
         // ⚠ Hạt giống màu nhấn (P1b) · tông thẻ · MÀU SƠN xe (P3) ở `KachiPaletteSeeds.kt` (tách vì trần 500 dòng).
-        /**
-         * Sắc lĩnh vực bản TỐI — 7 % (`0x12`) của **màu mang nghĩa đã có**, không phải tám màu mới.
-         *
-         * Vì sao dùng lại `green`/`cyan`/`amber`…: một lĩnh vực phải mang **một** sắc ở mọi chỗ nó xuất hiện (chấm
-         * trạng thái, icon, nền thẻ). Đặt một dải màu thứ hai chỉ để tô nền là mời hai bảng lệch nhau — đúng bệnh
-         * `ChipTone` mà bài canh đã ghi (bản nháp viết `#37d67a` trong khi bảng là `#34d399`).
-         *
-         * Lục = pin/sạc · tím = chuyển động (cùng trục nhấn) · lam-xanh = không khí · xám-lam = lốp · bạc = thân xe ·
-         * vàng ấm = đèn · xanh nhấn = danh tính · cam = giải trí.
-         *
-         * ⚠ [SOÁT Pass 4] Alpha nâng **7 % → 10.2 %** (`0x12` → `0x1a`). Lý do đo được, không phải sở thích: ở 7 %
-         * bước sáng của thẻ đã tint so với thẻ trơ chỉ **1.07–1.15×**, tức là dưới đúng cái ngưỡng 1.15× mà bài
-         * `the chat lieu tach duoc khoi nen` dùng để nói *"mắt đọc ra được"* — sắc lĩnh vực khi ấy tồn tại trong
-         * bảng màu mà không tồn tại trên màn. Ở 10.2 % bước sáng là **1.11–1.24×**, và mực tệ nhất vẫn **4.59:1**
-         * (trên sàn 4.5) sau khi bốn vai mực của bảng tối đã sáng lên một bậc — xem [DARK].
-         */
-        private val DARK_TINTS: Map<String, String> = mapOf(
-            "ENERGY" to "#1a34d399",
-            "DRIVETRAIN" to "#1a7b5cff",
-            "CLIMATE" to "#1a29d3ee",
-            "TYRES" to "#1a94a3b8",
-            "BODY" to "#1aaeb8c8",
-            "LIGHTS" to "#1afbbf24",
-            "IDENTITY" to "#1a4c7dff",
-            "INFOTAINMENT" to "#1af59e0b",
-        )
-
-        /**
-         * Sắc lĩnh vực bản SÁNG — 4.7 % (`0x0c`) của màu mang nghĩa **bản sáng** (đã tối đi sẵn, §3.2 mục 3).
-         *
-         * Alpha thấp hơn bản tối vì chiều tác dụng **ngược**: trên thẻ trắng, tint làm nền TỐI đi ⇒ nó ăn vào
-         * tương phản của chữ. [ĐO] ở 7 % thì `mut2`/`accentInk`/`slate` tụt xuống 4.25–4.35:1 (dưới sàn); ở 4.7 %
-         * mọi mực vẫn ≥ 4.5:1 mà bước sáng so với thẻ không tint vẫn 1.07–1.08× — vẫn nhìn ra được.
-         *
-         * ⚠ [SOÁT Pass 4] Nâng **4.7 % → 7.8 %** (`0x0c` → `0x14`) — vẫn thấp hơn bản tối (10.2 %) vì chiều tác
-         * dụng ngược vẫn đúng, nhưng đủ để sắc lĩnh vực **tồn tại trên màn**. [ĐO] mực tệ nhất trên thẻ trắng đã
-         * tint: **5.13:1** sau khi sáu vai mực của bảng sáng đậm lên một bậc (xem [LIGHT]), còn dư sàn; mốc chặn thật của bảng sáng là thẻ LÕM và khay, không phải tint.
-         */
-        private val LIGHT_TINTS: Map<String, String> = mapOf(
-            "ENERGY" to "#1404684c",
-            "DRIVETRAIN" to "#145b3ee0",
-            "CLIMATE" to "#14026e83",
-            "TYRES" to "#145a6779",
-            "BODY" to "#144f5b6d",
-            "LIGHTS" to "#147d5200",
-            "IDENTITY" to "#142f5ae0",
-            "INFOTAINMENT" to "#14a5480a",
-        )
+        // Android box B2 · W3 (2026-10-09): `DARK_TINTS`/`LIGHT_TINTS` (sắc LĨNH VỰC xe phủ lên thẻ — `Domain`) gỡ cùng mô hình
+        // khả năng xe; bốn vai tranh xe (`lampOn` · `lampGlow` · `tailOn` · `carShadow`) gỡ cùng hình xe vector/ảnh xe.
 
         /**
          * Bảng TỐI — giữ **byte-y-nguyên** các mã của prototype đã được owner duyệt, trừ đúng **hai** vai kết cấu:
@@ -394,11 +320,6 @@ data class KachiPalette(
             fieldSunken = KachiPaletteSeeds.DARK_RAMP.at(-2),
             surfFromOverArt = KachiPaletteSeeds.DARK_RAMP.at(2, 0xcc),
             surfToOverArt = KachiPaletteSeeds.DARK_RAMP.at(-5, 0xcc),
-            // ── VISUAL-REFRESH P3 · hình xe mức tả thực (1) (§4.1 đề xuất partFill/partLine · §4.8): kính lam nhạt→sẫm,
-            //    đèn trắng-lam, đèn hậu = đỏ ĐÈN (không phải `red` cảnh báo), bóng đổ 55 % đen toả về trong suốt
-            partFill = "#33ffffff", partLine = "#8caeb8c8", glassFrom = "#ebdbe8ff", glassTo = "#eb43566e",
-            lampOn = "#eaf3ff", lampGlow = "#f29dc4ff", tailOn = "#ff6b6b", carShadow = "#8c000000",
-            domainTints = DARK_TINTS,
         )
 
         /**
@@ -486,10 +407,6 @@ data class KachiPalette(
             fieldSunken = KachiPaletteSeeds.LIGHT_RAMP.at(-2),
             surfFromOverArt = KachiPaletteSeeds.LIGHT_RAMP.at(2, 0xcc),
             surfToOverArt = KachiPaletteSeeds.LIGHT_RAMP.at(1, 0xcc),
-            // ── VISUAL-REFRESH P3 — bản SÁNG: bộ phận phải SẪM hơn nền (đèn trắng-lam sẽ tan vào nền ⇒ lam đậm) ──
-            partFill = "#33000000", partLine = "#a6667487", glassFrom = "#eb9fb6d6", glassTo = "#eb34465e",
-            lampOn = "#5b8def", lampGlow = "#b36f9dff", tailOn = "#d43d3d", carShadow = "#66000000",
-            domainTints = LIGHT_TINTS,
         )
     }
 }

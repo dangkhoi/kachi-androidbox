@@ -94,7 +94,7 @@ object PickerBadge {
      * có một ô khác cỡ (icon 32/44dp ở bộ chọn · ô nút 84×86dp ở thanh nút).
      *
      * ## U10 — vì sao hàm này phải tồn tại thay vì mỗi nơi tự vẽ một hình tròn
-     * R6 hạ chấm từ hổ phách xuống [KachiTheme.MUT2] cho **bộ chọn**, nhưng [ControlTileFactory.withBadge] (thanh
+     * R6 hạ chấm từ hổ phách xuống [KachiTheme.MUT2] cho **bộ chọn**, nhưng `ControlTileFactory.withBadge` (thanh
      * nút + ô giữa màn) vẫn tự vẽ một chấm hổ phách của riêng nó ⇒ **cùng một sự thật** (*"mã này chưa kiểm trên
      * xe"*) nói bằng **hai giọng** ở hai bề mặt cạnh nhau, và giọng to hơn lại là giọng đã bị bác. Đúng bẫy "hai
      * bản sao của một quyết định" mà [PickerBadge] sinh ra để gom. Nay màu + hình chỉ còn MỘT chỗ quyết định.
@@ -105,15 +105,5 @@ object PickerBadge {
         background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(c(KachiTheme.MUT2)) }
     }
 
-    /**
-     * Câu *"N mục chưa kiểm trên xe"* cho một khối ô — `null` khi **không có mục nào** chưa kiểm.
-     *
-     * Trả `null` (chứ không phải chuỗi *"0 mục…"*) là cố ý, cùng luật với vòng kiểm quyền và với
-     * [CapabilityPicker.groupHint]: **đủ thì im lặng**. Một dòng nói "0" là một dòng chiếm chỗ mà không nói gì.
-     */
-    fun unverifiedNote(ctx: Context, picks: List<CapabilityPick>): String? {
-        val n = CapabilityPicker.unverifiedCount(picks)
-        if (n <= 0) return null
-        return ctx.resources.getQuantityString(R.plurals.kachi_picker_unverified_n, n, n)
-    }
+    // Android box B2 · W3: `unverifiedNote` (câu "N mục chưa kiểm trên xe") gỡ cùng `EvidenceTier` — 0 chỗ gọi.
 }

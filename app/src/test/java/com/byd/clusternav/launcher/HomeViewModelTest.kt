@@ -201,21 +201,6 @@ class HomeViewModelTest {
         assertEquals(2, fake.persistCount)
     }
 
-    @Test fun `switchProfile GIU carStatus live (khong mat ap suat lop)`() = runTest {
-        val fake = repo(HomeUiState(workspace = WorkspaceState(preset = LayoutPreset.ONE), activeProfile = "P1", profiles = listOf("P1", "P2")))
-        fake.seed("P2", HomeUiState(workspace = WorkspaceState(preset = LayoutPreset.QUAD), activeProfile = "P2"))
-        val vm = HomeViewModel(fake)
-        vm.uiState.test {
-            awaitItem()                                                  // initial
-            vm.setCarStatus(CarStatus().copy(energy = CarStatus().energy.copy(soc = 77)))
-            assertEquals(77, awaitItem().carStatus.energy.soc)           // car live
-            vm.switchProfile("P2")
-            val s = awaitItem()
-            assertEquals(LayoutPreset.QUAD, s.preset)                    // hồ sơ đổi
-            assertEquals(77, s.carStatus.energy.soc, "đổi hồ sơ KHÔNG được mất carStatus live")
-        }
-    }
-
     @Test fun `switchProfile nap lai workspace cua ho so khac`() = runTest {
         val fake = repo(HomeUiState(
             workspace = WorkspaceState(preset = LayoutPreset.ONE), activeProfile = "P1", profiles = listOf("P1", "P2"),
@@ -265,17 +250,6 @@ class HomeViewModelTest {
         assertEquals(0, fake.persistCount)   // setEmbedded KHÔNG ghi bền
     }
 
-    @Test fun `setCarStatus bom trang thai xe live vao state, KHONG persist`() = runTest {
-        val fake = repo()
-        val vm = HomeViewModel(fake)
-        vm.uiState.test {
-            assertEquals(CarStatus(), awaitItem().carStatus)                       // initial rỗng ("—")
-            vm.setCarStatus(CarStatus(energy = CarStatus.Energy(soc = 77)))
-            assertEquals(77, awaitItem().carStatus.energy.soc)                      // live cập nhật
-        }
-        assertEquals(0, fake.persistCount)   // trạng thái xe LIVE KHÔNG ghi bền
-    }
-
     /**
      * Đặt THẲNG một viền — đường DUY NHẤT còn lại sau khi bỏ pill "Thanh" khỏi thanh trên.
      *
@@ -302,18 +276,20 @@ class HomeViewModelTest {
     @Test fun `setDockConfig dat ca cau hinh, ca hai chieu, va persist`() = runTest {
         val fake = repo()
         val vm = HomeViewModel(fake)
+        val v = LauncherActions.VOICE
         vm.uiState.test {
+            // Android box B2 · W3: mốc cũ "defrost" (nút xe) gỡ ⇒ dùng hành động launcher `launcher_voice`.
             val dock0 = awaitItem().dock
-            assertFalse(dock0.enabled.contains("defrost"))               // "defrost" mặc định TẮT
-            // Chiều BẬT: thêm "defrost" vào tập người dùng vừa chốt.
-            vm.setDockConfig(DockSelection.apply(dock0, dock0.enabled.toSet() + "defrost"))
-            val dock1 = awaitItem().dock
-            assertTrue(dock1.enabled.contains("defrost"))
+            assertTrue(dock0.enabled.contains(v))                        // mặc định BẬT
             // Chiều TẮT: bỏ nó khỏi tập ⇒ phải rời thanh (cổng `toggleDock` cũ không có cách nào bắt hụt việc này).
-            vm.setDockConfig(DockSelection.apply(dock1, dock1.enabled.toSet() - "defrost"))
-            assertFalse(awaitItem().dock.enabled.contains("defrost"))
+            vm.setDockConfig(DockSelection.apply(dock0, dock0.enabled.toSet() - v))
+            val dock1 = awaitItem().dock
+            assertFalse(dock1.enabled.contains(v))
+            // Chiều BẬT: thêm lại vào tập người dùng vừa chốt.
+            vm.setDockConfig(DockSelection.apply(dock1, dock1.enabled.toSet() + v))
+            assertTrue(awaitItem().dock.enabled.contains(v))
         }
-        assertFalse(fake.lastPersisted!!.dock.enabled.contains("defrost"))
+        assertTrue(fake.lastPersisted!!.dock.enabled.contains(v))
     }
 
     /**

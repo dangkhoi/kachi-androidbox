@@ -43,7 +43,7 @@ class VoiceDispatcherLangTest {
         private val st = HomeUiState(profiles = listOf(HomeUiState.DEFAULT_PROFILE, "Vợ"))
 
         fun build(): VoiceDispatcher = VoiceDispatcher(
-            control = { error("không chạm nút xe") }, state = { st }, media = { error("không chạm nhạc") },
+            state = { st }, media = { error("không chạm nhạc") },
             appsByLabel = { mapOf("YouTube" to YT) }, openApp = { true }, openAppList = {}, openSettings = {},
             onSwitchProfile = {}, onListen = {}, confirm = { _, y, _ -> y() }, say = { said += it },
             assignAppToSlot = { _, _ -> true }, sendToApp = { false }, geocode = { null }, mediaPackage = { null },
@@ -51,7 +51,7 @@ class VoiceDispatcherLangTest {
         )
 
         fun build(lang: Lang): VoiceDispatcher = VoiceDispatcher(
-            control = { error("không chạm nút xe") }, state = { st }, media = { error("không chạm nhạc") },
+            state = { st }, media = { error("không chạm nhạc") },
             appsByLabel = { mapOf("YouTube" to YT) }, openApp = { true }, openAppList = {}, openSettings = {},
             onSwitchProfile = {}, onListen = {}, confirm = { _, y, _ -> y() }, say = { said += it },
             assignAppToSlot = { _, _ -> true }, sendToApp = { false }, geocode = { null }, mediaPackage = { null },

@@ -261,35 +261,11 @@ class IconGeometryContractTest {
 
     // ── 3 · chốt chống bộ quét hỏng + danh sách loại trừ tự rữa ────────────────────────────────────
 
-    /**
-     * Và mọi hình xe mới phải có **một dòng trong [KachiTheme.iconRes]** — không thì nó là tệp mồ côi (R5).
-     *
-     * ⚠ Bài này cũng là lý do tệp test nằm ở `:app`: nó quét tài nguyên **và** bảng tra của `:app`
-     * (`LayeringRulesTest` bắt test nào chỉ dùng logic `:core` phải dời sang `:core`, và ngược lại thì luật
-     * "bài quét module X phải nằm trong module X" của [IconStyleContractTest] giữ nó ở đây).
-     */
-    @Test
-    fun `moi hinh xe deu co mot dong trong bang tra cua KachiTheme`() {
-        val table = SourceRoots.text("src/main/java/com/byd/clusternav/launcher/KachiTheme.kt")
-        // Ba mặt hình xe theo vị trí; `ic_car`(+`_l`/`_xl`) là glyph "xe" của lĩnh vực Danh tính (P2), không thuộc bộ này.
-        val cars = icons().map { it.first.removeSuffix(".xml") }
-            .filter { n -> listOf("ic_car_top_", "ic_car_front_", "ic_car_rear_").any { n.startsWith(it) } }
-        // Sàn 55 → 42 sau khi owner gỡ toàn bộ ADAS/an toàn 2026-09-16 (13 tệp `ic_car_*` của điểm mù · chuyển làn ·
-        // cắt ngang sau · cảnh báo mở cửa · giữ làn · va chạm trước · cảm biến đỗ · dây an toàn · người ngồi đã xoá).
-        // → 34 sau UX-OVERHAUL WP8 2026-09-20 (8 tệp `ic_car_*` của gương · vị-trí-cốp · 6 biến thể đèn viền xoá
-        // cùng mã của chúng; nguồn sinh `gen-car.py` đã bỏ, `--check` canh không còn tệp mồ côi).
-        assertTrue(cars.size >= 34) { "chỉ thấy ${cars.size} hình xe — bài đang quét vùng sai" }
-        assertEquals(
-            emptyList<String>(),
-            cars.filterNot { Regex("R\\.drawable\\.$it\\b").containsMatchIn(table) },
-            "hình xe không có dòng trong KachiTheme.iconRes ⇒ tệp mồ côi (spec R5: 0 icon mồ côi)",
-        )
-    }
-
     @Test
     fun `phep do that su chay tren ca bo icon`() {
         val all = icons()
-        assertTrue(all.size >= 100) { "chỉ thấy ${all.size} tệp icon — bài đang quét vùng sai" }
+        // Android box B2 · W3 [ĐO]: sàn 100 → 20 (25 tệp `ic_*` còn lại sau khi gỡ 39 hình xe + 91 icon nút/datum xe).
+        assertTrue(all.size >= 20) { "chỉ thấy ${all.size} tệp icon — bài đang quét vùng sai" }
         val measured = all.count { inkBox(it.second) != null }
         assertEquals(all.size, measured, "có tệp icon không đo được hộp bao — pathData lạ hoặc bộ đọc hỏng")
         val names = all.map { it.first }.toSet()

@@ -218,25 +218,6 @@ class BarOrderWiringContractTest {
     }
 
     /**
-     * Nội dung ô STEP phải nằm trong ô **DỌC** — chiều chật nhất của cả launcher sau WP5.
-     *
-     * Ô STEP không vẽ nhãn (xem `ControlTileFactory.tileStep`), nên nội dung = lề trong + (icon + khe) + hàng nút.
-     * [ĐO số học] `8 + 24 + 27 = 59 ≤ 60`; giữ lề trong cũ (8dp) hoặc nút −/+ cũ (32dp) thì tràn.
-     */
-    @Test
-    fun `noi dung o STEP nam trong o doc`() {
-        val need = 2 * KachiBars.DOCK_PAD + (KachiSpace.ICON_S + KachiSpace.XS) + KachiSpace.TOUCH_TIGHT
-        assertTrue(
-            need <= KachiBars.DOCK_TILE_H_VERTICAL,
-            "ô STEP cần ${need}dp mà ô dọc chỉ cao ${KachiBars.DOCK_TILE_H_VERTICAL}dp ⇒ bị cắt im lặng",
-        )
-        assertTrue(
-            need <= KachiBars.DOCK_TILE_H,
-            "…và cả ô ngang (${KachiBars.DOCK_TILE_H}dp)",
-        )
-    }
-
-    /**
      * Hai mốc phần trăm của owner, khoá bằng SỐ HỌC thay vì bằng lời.
      *
      * Ghim cả mốc gốc: đổi một hằng mà quên mốc thì bài này nói ra con số mới, thay vì để tài liệu và mã lệch nhau
@@ -256,6 +237,6 @@ class BarOrderWiringContractTest {
         assertEquals(73, KachiBars.DOCK_TILE_H, "86 × 0.85 = 73.1 → 73")
         assertEquals(60, KachiBars.DOCK_TILE_H_VERTICAL, "70 × 0.85 = 59.5 → 60")
         assertEquals(83, KachiBars.DOCK_TILE_W_VERTICAL, "suy từ thanh: 99 − 8 − 8 (83 % của 100, lệch mốc 2 điểm)")
-        assertEquals(27, KachiSpace.TOUCH_TIGHT, "32 × 0.85 = 27.2 → 27 (bề cao VẼ của nút −/+)")
+        // Android box B2 · W3: mốc `TOUCH_TIGHT` (nút −/+ ô STEP) gỡ cùng nút xe.
     }
 }

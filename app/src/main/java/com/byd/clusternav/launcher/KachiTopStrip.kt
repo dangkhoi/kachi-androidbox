@@ -15,12 +15,16 @@ import com.byd.clusternav.launcher.KachiBars as Bars
 import com.byd.clusternav.launcher.KachiSpace as Sp
 
 /**
- * Thanh trạng thái trên cùng của HOME: đồng hồ + ngày + chip xe (cấu hình được) + hai pill **chỉ-icon**
+ * Thanh trạng thái trên cùng của HOME: đồng hồ + ngày + khoảng đệm co giãn + hai pill **chỉ-icon**
  * "Ứng dụng"/"Cài đặt" (S4 · R12 — xem [pill]) + **chip hồ sơ**. Tách khỏi [KachiHomeActivity] (B5b) để activity
  * còn là composition-root.
  *
  * THUẦN VIEW — KHÔNG giữ state launcher: mọi tương tác đẩy lên qua callback (một chiều), activity nối vào intent VM.
- * [setProfile]/[refreshChips]/[updateClock] do [KachiHomeActivity.render] / vòng tick gọi để phản chiếu state.
+ * [setProfile]/[updateClock] do [KachiHomeActivity.render] / vòng tick gọi để phản chiếu state.
+ *
+ * Android box B2 · W3 (2026-10-09): hàng **chip trạng thái xe** (`refreshChips` · `fitChips` · `TopStripChips`) gỡ — mọi chip
+ * là chip dữ liệu xe BYD. Vai *"phần co giãn của thanh"* mà hàng chip gánh (S4 · R11 b) nay là một [spacer] trơ đứng ngay
+ * SAU vật đồng hồ, nên thanh mặc định giữ đúng hình 1.85 (đồng hồ bên trái, các nút bên phải).
  *
  * ## S1 — MỘT cửa vào cấu hình
  * Trước S1 thanh này có **ba** bề mặt cấu hình: pill "Tuỳ biến" (bảng khả năng + đơn vị + hình nền + quyền), pill
@@ -76,7 +80,8 @@ class KachiTopStrip(
 ) {
     private lateinit var clock: TextView
     private lateinit var dateText: TextView
-    private lateinit var chipRow: LinearLayout
+    /** Khoảng đệm co giãn (`0dp + weight 1`) — vật duy nhất hút chỗ trống của thanh (xem [place]). */
+    private lateinit var spacer: View
     private lateinit var profileInitialView: TextView
     private lateinit var profileNameView: TextView
 
@@ -132,23 +137,9 @@ class KachiTopStrip(
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
             addView(clock); addView(dateText)
         }
-        // S4 · R7 — hàng 5 nút bố cục đã BỎ ở đây (nó từng đứng giữa ngày và khoảng đệm). Không thay bằng gì.
-        //
-        // ⚠⚠ S4 · R11 (b) — KHOẢNG ĐỆM CO GIÃN ĐÃ NHẬP VÀO CHÍNH HÀNG CHIP, và đó là phần cốt lõi của bản vá.
-        // Trước đây thanh có một `View` đệm riêng mang `weight = 1`, còn hàng chip thì `WRAP_CONTENT`. Sắp như thế
-        // thì LinearLayout đo hàng chip TRƯỚC ba vật bên phải (Ứng dụng · Cài đặt · chip hồ sơ) ⇒ 8 chip ăn hết
-        // bề rộng và ba vật kia bị **ép về 0 / đẩy khỏi mép** — đúng cái tràn mà R11 (b) cấm. Nay hàng chip LÀ
-        // phần co giãn (`0dp + weight 1`, xem [lpFor]): mọi vật khác được đo ở bề rộng tự nhiên trước, phần **còn
-        // lại** rơi vào đây, nên hàng chip không bao giờ lấn sang chúng dù có bao nhiêu chip. Phần chia đều chỗ ấy
-        // cho từng chip nằm ở [fitChips].
-        chipRow = LinearLayout(activity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            // Bề rộng còn lại chỉ biết được SAU một lượt bố cục (và nó đổi khi tên hồ sơ dài ra / ngôn ngữ đổi /
-            // màn đổi kích thước) ⇒ nghe theo bố cục thật thay vì đoán trước. So bề rộng cũ↔mới để không chạy lại
-            // ở mỗi lượt bố cục do chính [fitChips] gây ra.
-            addOnLayoutChangeListener { _, l, _, r, _, ol, _, or, _ -> if (r - l != or - ol) fitChips() }
-        }
-        items[HeaderItem.CHIPS] = chipRow
+        // S4 · R7 — hàng 5 nút bố cục đã BỎ ở đây. S4 · R11 (b): mọi vật khác `WRAP_CONTENT`, chỉ [spacer] co giãn ⇒ không
+        // tổ hợp thứ tự nào làm ba vật bên phải bị ép về 0 / đẩy khỏi mép.
+        spacer = View(activity)
         // V1 pha NGHE — nút mic. Thứ tự **DỰNG** ở đây là thứ tự mặc định (nói → ứng dụng → cài đặt); thứ tự
         // **ĐẶT** trên thanh do [HeaderLayout] quyết (WP4). Chỉ-icon + đích chạm [Bars.HEADER_BTN] (xem [pill]).
         //
@@ -160,15 +151,13 @@ class KachiTopStrip(
         items[HeaderItem.SETTINGS] = pill("ic-settings", R.string.kachi_pill_settings, true) { onOpenSettings() }
         items[HeaderItem.PROFILE] = profileChip()
         place(header())
-        refreshChips(CarStatus())
         return strip
     }
 
     /**
      * UX-OVERHAUL · WP4 — **ĐẶT LẠI CHỖ** các vật theo [layout]. Do `KachiHomeActivity.render` gọi khi state đổi.
      *
-     * Chỉ **sắp lại** view đã dựng (`removeAllViews` + gắn lại), KHÔNG dựng lại chúng. Dựng lại sẽ mất chữ đang
-     * hiện trên chip và tên trên chip hồ sơ, và mỗi lần bấm ◀/▶ lại tra + tint lại từng drawable — đúng việc mà
+     * Chỉ **sắp lại** view đã dựng (`removeAllViews` + gắn lại), KHÔNG dựng lại chúng. Dựng lại sẽ mất tên trên chip hồ sơ, và mỗi lần bấm ◀/▶ lại tra + tint lại từng drawable — đúng việc mà
      * bản vá [SOÁT P2-9] vừa dọn khỏi đường nóng.
      */
     fun setLayout(layout: HeaderLayout) {
@@ -178,25 +167,21 @@ class KachiTopStrip(
 
     private fun place(layout: HeaderLayout) {
         placed = layout
-        // Hàng chip là phần co giãn; nó hút chỗ trống, nên chỗ trống nằm TRƯỚC hay SAU chip là do căn lề của chính
-        // nó. Luật ở `:core` ([HeaderLayout.chipsAlignEnd]) để kiểm được off-car.
-        chipRow.gravity =
-            (if (layout.chipsAlignEnd) Gravity.END else Gravity.START) or Gravity.CENTER_VERTICAL
         stripRow.removeAllViews()
-        layout.order.forEach { item -> stripRow.addView(items.getValue(item), lpFor(item)) }
-        // Chip vừa đổi chỗ ⇒ bề rộng còn lại của hàng chip đổi. `-1` để chốt `cap == chipCap` ở [fitChips] không
-        // bỏ qua lượt đặt lại (bề rộng mới có thể tình cờ bằng bề rộng cũ ở một cấu hình khác).
-        chipCap = -1
+        layout.order.forEach { item ->
+            stripRow.addView(items.getValue(item), lpFor(item))
+            // Đệm ngay SAU đồng hồ: thứ tự mặc định (đồng hồ đầu) ⇒ đồng hồ trái, các nút phải — đúng hình 1.85.
+            if (item == HeaderItem.CLOCK) stripRow.addView(spacer, LinearLayout.LayoutParams(0, WRAP, 1f))
+        }
     }
 
     /**
      * Cách đặt của từng vật — **chỉ phụ thuộc LOẠI vật, không phụ thuộc chỗ nó đứng**.
      *
      * Đó là điều khiến WP4 an toàn: đổi thứ tự không đổi *cách* một vật chiếm chỗ, nên không có tổ hợp thứ tự nào
-     * làm thanh tràn (hàng chip vẫn là phần duy nhất co giãn, mọi vật khác vẫn `WRAP_CONTENT`).
+     * làm thanh tràn ([spacer] là phần duy nhất co giãn, mọi vật khác vẫn `WRAP_CONTENT`).
      */
     private fun lpFor(item: HeaderItem): LinearLayout.LayoutParams = when (item) {
-        HeaderItem.CHIPS -> LinearLayout.LayoutParams(0, WRAP, 1f)
         HeaderItem.CLOCK -> LinearLayout.LayoutParams(WRAP, WRAP)
         // UX1 · R1 — chip hồ sơ ĐI CHUNG khe với ba pill ([pillLp]). Khe rộng hơn ([Sp.SLOT_GAP]) là của thời chip
         // còn VẼ chữ tên nên cần tách khỏi hàng icon; từ 2.55 chữ tên `GONE` ⇒ nó là nút chỉ-icon thứ tư, và giữ
@@ -221,8 +206,6 @@ class KachiTopStrip(
     fun restyle() {
         stripRow.background = KachiChrome.fade(KachiTheme.card(activity, Sp.RADIUS_L, KachiTheme.BAR_TOP))   // R-OP
         painters.forEach { it() }             // QA 2.87 [P2]: đồng hồ · ngày · 3 pill · chip hồ sơ — mọi lượt tô của [build]
-        chipViews.forEach { it.tag = null }   // ép applyChipFace chạy lại (đổi màu icon/chữ) ở refreshChips kế
-        refreshChips(lastStatus, lastUnits, chipConfig)
     }
 
     fun refreshVoicePill() {
@@ -242,9 +225,7 @@ class KachiTopStrip(
      * Pill bấm được của thanh trên ("Ứng dụng" · "Cài đặt") — **CHỈ ICON** từ S4 · R12.
      *
      * ## Vì sao bỏ chữ (owner 2026-09-14: *"đổi chữ Ứng Dụng, Cài Đặt thành icon luôn cho gọn"*)
-     * [ĐO] hai pill chữ chiếm ≈ 200dp bề ngang của thanh trên. Cùng lượt R11 vừa nâng trần chip 4 → 8 và giao
-     * **toàn bộ chỗ còn lại** cho hàng chip ([fitChips] chia đều), nên 200dp đó là ≈ 25dp/chip — đủ để một chip
-     * nữa đọc được thay vì hiện `…`. Hai việc này thuộc CÙNG một thanh: chữ ở đây là chỗ của chip.
+     * [ĐO] hai pill chữ chiếm ≈ 200dp bề ngang của thanh trên (≤ 2.98 BYD: chỗ ấy nhường cho hàng chip xe).
      *
      * ## Chữ không mất, nó chuyển vai
      * `contentDescription` lấy **đúng khoá tài nguyên cũ** (`kachi_pill_apps` / `kachi_pill_settings`, VI+EN) ⇒
@@ -271,127 +252,6 @@ class KachiTopStrip(
         themed { if (primary) { background = KachiTheme.gradient(context, Sp.RADIUS_PILL); setColorFilter(c(KachiTheme.ON_ACCENT)) } else { background = KachiTheme.pill(context); setColorFilter(c(KachiTheme.INK)) } }
         setOnClickListener { onClick() }
     }
-
-    private fun chipLp() = LinearLayout.LayoutParams(WRAP, WRAP).also { it.marginStart = dp(Bars.CHIP_GAP) }
-
-    private fun chip(text: String, iconName: String?, color: String): TextView = TextView(activity).apply {
-        this.text = text; KachiType.apply(this, KachiType.BODY); gravity = Gravity.CENTER_VERTICAL
-        // UX6 — lề trong = 0 (trước là [Sp.XS] hai bên). Chip KHÔNG có nền riêng (không viền pill) nên lề trong
-        // cộng thẳng vào khe mắt người thấy giữa hai chip; khe ấy nay có đúng MỘT chủ là [Bars.CHIP_GAP].
-        setPadding(0, 0, 0, 0)
-        maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
-        applyChipFace(this, iconName, color.ifEmpty { chipInk(ChipTone.NEUTRAL) }, text)
-    }
-
-    /**
-     * Đặt màu chữ + icon dẫn đầu cho một chip. Tách riêng để đổi được mà không dựng lại view.
-     *
-     * ⚠ [label] là chữ **sắp** hiện và được truyền VÀO — KHÔNG đọc lại `v.text`. [ĐO máy ảo 2026-09-27] đọc
-     * `v.text` làm khe icon↔chữ ra **0 ở mọi chip**: hàng chip dựng với chữ rỗng, [refreshChips] gọi hàm này
-     * TRƯỚC khi đặt chữ, và khoá `tag` giữ nguyên kết quả sai đó mãi. Phép cộng ở KDoc [Bars.CHIP_ICON_GAP].
-     */
-    private fun applyChipFace(v: TextView, iconName: String?, color: String, label: String) {
-        v.setTextColor(c(color))
-        val r = iconName?.let { KachiTheme.iconRes(it) } ?: 0
-        if (r != 0) {
-            val d = activity.resources.getDrawable(r, activity.theme)
-                .apply { setBounds(0, 0, dp(Sp.ICON_XS), dp(Sp.ICON_XS)); setTint(c(color)) }
-            v.setCompoundDrawablesRelative(d, null, null, null)
-            // B6 (owner 2026-09-22): chip CHỈ-ICON (vd trạng thái sấy) không đệm — để nguyên thì icon thừa lề phải.
-            v.compoundDrawablePadding = if (label.isEmpty()) 0 else dp(Bars.CHIP_ICON_GAP)
-        } else {
-            v.setCompoundDrawablesRelative(null, null, null, null)
-        }
-    }
-
-    /**
-     * Làm mới chip xe theo **cấu hình** [TopStripConfig] (RW0 vùng thứ ba). Trước 2026-09-11 chỗ này là **3 chip viết
-     * cứng** nên thanh trên là vùng duy nhất người dùng không sửa được; nay danh sách chip là cấu hình bền, còn việc
-     * quyết định *chữ gì* nằm ở `:core` ([TopStripChips]) nên kiểm được off-car.
-     *
-     * **Dựng một lần, sau đó chỉ đổi CHỮ** — giữ nguyên bản vá [SOÁT P2-9]: bản trước gọi `removeAllViews()` rồi dựng
-     * lại 3 `TextView` (kèm tra + tint drawable) **mỗi nhịp trạng thái xe**, tức mỗi giây trên xe cho dữ liệu phần lớn
-     * không đổi. Chỉ dựng lại khi **danh sách chip đổi** (người dùng vừa sửa cấu hình).
-     *
-     * R11: mọi số đi qua lớp đơn vị. [ĐO] máy ảo bản đầu: người dùng chọn °F mà chip vẫn ghi °C, vì bề mặt này dựng
-     * chuỗi trực tiếp từ [CarStatus] — đúng bệnh "mỗi bề mặt tự đổi đơn vị theo ý mình".
-     *
-     * **S4 · R11 (b)**: trần chip lên 8 ⇒ hàng chip có thể dài hơn chỗ còn lại. Bề rộng từng chip do [fitChips]
-     * chia; ở đây chỉ gọi lại nó khi **số chip** đổi (bề rộng đổi thì `addOnLayoutChangeListener` tự gọi).
-     */
-    fun refreshChips(status: CarStatus, units: UnitPrefs = UnitPrefs.DEFAULT, config: TopStripConfig = chipConfig) {
-        lastStatus = status; lastUnits = units
-        chipConfig = config
-        val chips = TopStripChips.render(config, status, units)
-        if (chipViews.size != chips.size) {                 // danh sách đổi (hoặc lượt đầu) ⇒ dựng lại
-            chipRow.removeAllViews(); chipViews.clear()
-            chips.forEach { chipRow.addView(chip("", null, "").also { v -> chipViews.add(v) }, chipLp()) }
-            // Chip mới dựng chưa có trần bề rộng nào, và số chip vừa đổi ⇒ phần chia phải tính lại. Quên `-1` thì
-            // chốt "cap == chipCap" ở [fitChips] có thể bỏ qua đúng lượt cần đặt (cùng số nhưng view khác).
-            chipCap = -1
-            fitChips()
-        }
-        chips.forEachIndexed { idx, c ->
-            val v = chipViews[idx]
-            val color = chipInk(c.tone)   // bảng map MỘT chỗ (`TopStripChipInk.kt`)
-            // Icon/màu chỉ đặt lại khi ĐỔI — tra drawable + tint mỗi giây là việc bản vá P2-9 vừa dọn. UX6: khoá
-            // gồm CẢ *"có chữ hay không"* vì khe icon↔chữ bật/tắt theo đó, mà chữ đổi được khi icon/màu thì không.
-            val face = c.icon.toString() + color + c.text.isNotEmpty()
-            if (v.tag != face) { applyChipFace(v, c.icon, color, c.text); v.tag = face }
-            // H5 (PERF 2026-09-16) — cùng luật với dòng icon/màu ngay trên: `setText` với CHÍNH chuỗi đang hiện
-            // vẫn dựng lại `Layout` của TextView và gọi `requestLayout()`. Trên xe, trạng thái đổi kéo theo cả
-            // dải chip vẽ lại dù phần lớn chip (bụi mịn · nhiệt độ ngoài) đứng yên hàng phút. So chuỗi rẻ hơn
-            // nhiều lần so với đo-và-sắp lại một hàng 8 chip.
-            // 2.88 (R6): so bằng khoá CÓ MÀU từng đoạn (`applyChipText`) — chip lốp đổi màu một số mà chữ đứng yên vẫn vẽ lại.
-            applyChipText(v, c)
-            if (v.contentDescription?.toString() != c.desc) v.contentDescription = c.desc
-        }
-    }
-
-    /**
-     * S4 · R11 (b) — **CHIA CHỖ CÒN LẠI CHO TỪNG CHIP** để thanh trên không bao giờ tràn.
-     *
-     * ## Bề rộng "còn lại" là bao nhiêu, và vì sao không tự cộng trừ ra nó
-     * Đúng công thức của R11: `strip − (đồng hồ + ngày) − (chip hồ sơ + Ứng dụng + Cài đặt) − lề`. Nhưng tự cộng
-     * các số hạng đó ở đây nghĩa là đọc `width` của những view **có thể đã bị ép** (LinearLayout đo theo thứ tự,
-     * hàng chip đứng trước ba vật bên phải) — tức đo lại chính triệu chứng. Nên phép trừ được **giao cho bố cục**:
-     * hàng chip khai `0dp + weight 1` nên `chipRow.width` CHÍNH LÀ phần còn lại sau khi mọi vật khác đã lấy đủ bề
-     * rộng tự nhiên. Một nguồn số, không có bản sao để lệch.
-     *
-     * ## Chia đều, không chia theo độ dài chữ
-     * [SUY] 1920px: phần còn lại ≈ 1240dp ⇒ 8 chip được ≈ 155dp/chip — `"82% · 418 km"` thừa chỗ, `"Lốp TT · 2.4 bar"`
-     * cắt đuôi một chút. Chia theo độ dài chữ thì chip **đổi bề rộng mỗi khi số đổi** (mỗi giây trên xe) ⇒ cả hàng
-     * nhảy qua nhảy lại; chia đều thì mép chip đứng yên, chỉ phần đuôi chữ co lại. Trên thanh trạng thái của một
-     * chiếc xe đang chạy, ổn định quan trọng hơn tiết kiệm vài pixel.
-     *
-     * ## KHÔNG cấp phát gì trong vòng tick
-     * Đây là số nguyên + một phép gán thuộc tính; không tra drawable, không dựng paint, không sinh đối tượng (xem
-     * KDoc lớp và bản vá [SOÁT P2-9]). Và chốt `cap == chipCap` giữ cho `maxWidth` — thứ gọi `requestLayout()` —
-     * chỉ chạy khi con số thật sự đổi, nếu không thì mỗi lượt bố cục lại đẻ ra một lượt bố cục nữa.
-     */
-    private fun fitChips() {
-        val n = chipViews.size
-        if (n == 0) return
-        val room = chipRow.width
-        if (room <= 0) return                               // chưa qua lượt bố cục nào ⇒ listener sẽ gọi lại
-        // B6 (owner 2026-09-22): KHÔNG cap đều `room/n` — cách cũ ép MỌI chip cùng bề rộng nên chip dài
-        // ("15.9 kWh/50km") bị cắt bằng chip ngắn ("18°C"). Chip nay **rộng theo nội dung** (WRAP + margin ở
-        // [chipLp]); chỉ đặt một TRẦN RỘNG RÃI cho chip cá biệt quá dài (nửa hàng) để một chip khổng lồ không
-        // đẩy hết chip khác ra. Chip ngắn giữ ngắn; hàng chip là `0dp+weight1` nên nếu tổng vượt room thì hệ
-        // thống tự cắt chip cuối — không phải cắt đều mọi chip.
-        val cap = (room / 2).coerceAtLeast(dp(Sp.ICON_M) * 4)
-        if (cap == chipCap) return
-        chipCap = cap
-        chipViews.forEach { it.maxWidth = cap }
-    }
-
-    private var chipConfig: TopStripConfig = TopStripConfig.DEFAULT
-    private var lastStatus: CarStatus = CarStatus()
-    private var lastUnits: UnitPrefs = UnitPrefs.DEFAULT
-    private val chipViews = ArrayList<TextView>()
-
-    /** Trần bề rộng đang áp cho mỗi chip (px). `-1` = chưa tính / vừa dựng lại hàng chip. */
-    private var chipCap = -1
 
     // ── Hồ sơ tài xế: ĐĨA chữ-cái-đầu, chạm = mở bộ chọn hồ sơ ──
     /**

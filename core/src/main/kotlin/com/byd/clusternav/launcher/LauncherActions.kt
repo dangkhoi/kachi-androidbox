@@ -6,10 +6,10 @@ package com.byd.clusternav.launcher
  * Spec `docs/specs/kachi-profiles-are-everything.html` **R12 (b)**. Owner 2026-09-14: *"thêm cho chọn Ứng Dụng ở
  * chỗ chọn nút cho Thanh"*.
  *
- * ## Vì sao là một BỘ ĐĂNG KÝ THỨ SÁU chứ không phải một nút trong [ControlRegistry]
- * Mọi mã trong [ControlRegistry] đều **bắn lệnh xuống xe** qua `CarControlPort` (`toggle`/`step`/`press`…) và mang
+ * ## Vì sao là một BỘ ĐĂNG KÝ THỨ SÁU chứ không phải một nút trong `ControlRegistry`
+ * Mọi mã trong `ControlRegistry` đều **bắn lệnh xuống xe** qua `CarControlPort` (`toggle`/`step`/`press`…) và mang
  * một [EvidenceTier] nói *"lệnh này đã chạy thật trên xe chưa"*. *Ứng dụng* và *Cài đặt* không chạm vào xe một
- * chút nào — chúng mở ngăn kéo và mở màn Cài đặt của chính launcher. Nhét chúng vào [ControlRegistry] sẽ:
+ * chút nào — chúng mở ngăn kéo và mở màn Cài đặt của chính launcher. Nhét chúng vào `ControlRegistry` sẽ:
  *  • cho chúng một `bindingKey` HAL không tồn tại (bảng ràng buộc HAL có bài canh — nó sẽ đỏ, đúng),
  *  • và làm `ControlDockView` bắn `control().press("launcher_apps")` xuống cổng xe — một lệnh vô nghĩa gửi tới
  *    phần cứng, đúng loại "nối chéo âm thầm" mà [CapabilityCatalog] dựng ra để chặn.
@@ -18,8 +18,8 @@ package com.byd.clusternav.launcher
  * ## Ba tính chất chốt ở đây (test khoá từng cái)
  *  1. **Tier [EvidenceTier.PROVEN] ⇒ KHÔNG chấm "chưa kiểm"**: đường mở ngăn kéo / mở Cài đặt là đường mà thanh
  *     trên đã dùng hằng ngày; treo dấu chưa-kiểm lên nó là nói sai, và làm dấu đó mất giá trị ở chỗ nó đúng.
- *  2. **KHÔNG chippable**: [TopStripConfig.isChippable] chỉ nhận mục ĐỌC, nên loại này bị từ chối **do cấu tạo** —
- *     chip 24dp là chỗ HIỂN THỊ, không phải chỗ bấm (xem KDoc [TopStripConfig]).
+ *  2. **KHÔNG chippable**: (Android box B2 · W3 — chip thanh trên `TopStripConfig` gỡ cùng chip xe; tính chất còn
+ *     đúng vì không còn bộ chip nào.)
  *  3. **`domain = null`**: chúng không thuộc lĩnh vực nào của xe. Hệ quả cố ý: [CapabilityCatalog.byDomain] không
  *     bày chúng ⇒ bộ chọn nút phải có **khối riêng** ([CapabilityPicker.launcherPicks], nơi ghi vì sao khối ấy
  *     đứng đầu), và ngăn kéo gán-ô KHÔNG bày — một ô giữa màn chỉ để mở ngăn kéo là đổi chỗ đắt lấy việc rẻ.

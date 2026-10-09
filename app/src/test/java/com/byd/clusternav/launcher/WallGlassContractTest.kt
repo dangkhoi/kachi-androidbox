@@ -29,9 +29,9 @@ class WallGlassContractTest {
     fun `khong co anh nen thi nen the la dung KachiTheme surface nhu cu`() {
         val paint = SourceRoots.body(glass, "private fun paint(")
         assertTrue(
-            Regex("""if \(art == null[^\n]*\{[\s\S]*?view\.background = KachiTheme\.surface\(ctx, spec\.radius, spec\.tone, spec\.domain\)""")
+            Regex("""if \(art == null[^\n]*\{[\s\S]*?view\.background = KachiTheme\.surface\(ctx, spec\.radius, spec\.tone\)""")
                 .containsMatchIn(paint),
-            "không có WallArt ⇒ phải rơi về đúng KachiTheme.surface(radius, tone, domain) — người không dùng hình nền không thấy gì khác",
+            "không có WallArt ⇒ phải rơi về đúng KachiTheme.surface(radius, tone) — người không dùng hình nền không thấy gì khác (W3: `domain` gỡ)",
         )
         assertTrue("SurfaceTone.SUNKEN" in paint, "ô lõm không bao giờ là kính")
     }
@@ -45,7 +45,8 @@ class WallGlassContractTest {
         // ⚠ 2026-09-21 — thẻ widget dời tệp: khung ô nén / ô con bảng tổng hợp (`MiniCard`/`BoardCell`) tách khỏi
         // `WidgetViews.kt` sang `WidgetTelemetry.kt` khi tệp đó vượt trần 500 dòng. Đổi MỐC theo tệp mới, KHÔNG nới
         // phép kiểm: vẫn đòi đúng hai bề mặt (thẻ nhóm + thẻ widget) phải là kính.
-        assertTrue("GroupTileViews.kt" in callers && "WidgetTelemetry.kt" in callers, "thẻ nhóm + thẻ widget phải là kính")
+        // Android box B2 · W3: thẻ nhóm (GroupTileViews) gỡ; thẻ widget dời WidgetTelemetry.kt → WidgetCards.kt.
+        assertTrue("WidgetCards.kt" in callers, "thẻ widget phải là kính")
         val activity = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/KachiHomeActivity.kt")
         assertTrue("KachiGlass.refresh(rootFrame)" in activity, "ảnh đổi ⇒ dựng lại nền kính tại chỗ, không recreate")
     }
@@ -100,13 +101,7 @@ class WallGlassContractTest {
         assertTrue("setTag(R.id.kachi_glass_spec, null)" in plain, "plain() phải GỠ thẻ kính")
         assertTrue("unbind(view)" in plain, "plain() phải tháo listener layout/cuộn của lượt kính trước")
         assertTrue(plain.indexOf("unbind(view)") < plain.indexOf("view.background = background"), "gỡ trước, đặt nền sau")
-        val tiles = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/GroupTileViews.kt")
-        val surfaceOf = SourceRoots.body(tiles, "fun surfaceOf(")
-        assertTrue("KachiGlass.plain(" in surfaceOf, "nhánh WARN/ALERT phải qua KachiGlass.plain")
-        assertFalse(
-            Regex("""view\.background\s*=""").containsMatchIn(surfaceOf),
-            "không được gán thẳng view.background trong surfaceOf — thẻ kính của lượt trước sẽ ở lại",
-        )
+        // Android box B2 · W3: chỗ gọi WARN/ALERT của ô con nhóm (GroupTileViews.surfaceOf) gỡ cùng ô nhóm xe.
     }
 
     @Test

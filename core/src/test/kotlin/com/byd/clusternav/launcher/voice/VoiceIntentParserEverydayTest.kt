@@ -32,11 +32,8 @@ class VoiceIntentParserEverydayTest {
     // chỗ nào là `if (id == "…")`. Giữ nguyên cả mười ở đây để lần sau sửa ngữ pháp còn biết mình phá cái gì.
 
     @Test fun `cac cau doi thuong deu hieu duoc`() = expect(
-        // Trước: MISMATCH (cụm *"sổ"* khớp nhãn "Số" của datum `gear`). Nay: **kính LÁI** — lượt D 2026-09-19 dời
-        // cụm mơ hồ này khỏi nút GỘP (owner: *"mở kính"* hạ cả 4 là sai), xem KDoc `VoiceSynonyms.CONTROL`.
-        "mở cửa sổ" to VoiceIntent.Control("win_lf", 1),
-        "bật máy lạnh" to VoiceIntent.Control("ac_auto", 1),
-        "xem pin" to VoiceIntent.Read("soc"),
+        // Android box B2 · W3: ba câu xe ("mở cửa sổ" · "bật máy lạnh" · "xem pin") nay ra FEATURE_GONE —
+        // `VoiceFeatureGoneCarTest`.
         "đổi sang hồ sơ Mặc định" to VoiceIntent.Profile("Mặc định"),
         "phát nhạc" to VoiceIntent.Media(VoiceMediaOp.PLAY),
         // Trước: NO_VERB (*"bài"* là từ khoá NHẠC, mà `headMatch` không nhận loại đó).
@@ -49,7 +46,8 @@ class VoiceIntentParserEverydayTest {
     @Test fun `cau con lai noi thang la chua lam duoc`() {
         // *"tắt hết đèn"*: Kachi không có khả năng "mọi đèn" (không nút gộp, không gói lệnh) ⇒ nói thẳng còn hơn
         // tự chọn một cái đèn nào đó. Ngày có gói lệnh "tắt hết đèn", câu này tự hiểu được (từ vựng SINH từ registry).
-        unknown("tắt hết đèn", VoiceUnknownReason.NO_OBJECT)
+        // Android box B2 · W3: "đèn" là đồ vật của xe ⇒ "đã gỡ" (không đoán một cái đèn nào, như trước).
+        unknown("tắt hết đèn", VoiceUnknownReason.FEATURE_GONE)
     }
 
     /**
@@ -103,46 +101,14 @@ class VoiceIntentParserEverydayTest {
         )
     }
 
-    /**
-     * Cụm hỏi đứng GIỮA câu cũng là câu hỏi — xem KDoc `VoiceIntentParser.askAt`.
-     *
-     * Trước bản vá chỉ nhận cụm hỏi ở CUỐI, nên *"pin còn bao nhiêu"* hiểu được còn *"còn bao nhiêu pin"* thì câm.
-     */
-    @Test fun `cum hoi dung o giua cau van la cau hoi`() = expect(
-        "pin còn bao nhiêu" to VoiceIntent.Read("soc"),
-        "còn bao nhiêu pin" to VoiceIntent.Read("soc"),
-        "bao nhiêu phần trăm pin" to VoiceIntent.Read("soc"),
-    )
-
     /** …nhưng vẫn KHÔNG được biến câu hỏi ngoài tập đóng thành một câu trả lời bịa. */
     @Test fun `cum hoi o giua cau khong keo theo cau hoi ngoai tap dong`() {
         unknown("12 x 15 bằng bao nhiêu", VoiceUnknownReason.NO_OBJECT)
         unknown("Thời tiết hôm nay thế nào", VoiceUnknownReason.NO_OBJECT)
     }
 
-    /**
-     * ⚠ Số nói RÚT GỌN — bệnh nặng nhất lượt soát này: đọc hụt một chữ thì `ControlDef.clamp` kéo về `min`, tức
-     * máy **làm sai** mà vẫn báo "✓". *"đặt nhiệt độ hai lăm"* từng ra **17 °C** (lạnh nhất) thay vì 25.
-     */
-    @Test fun `so noi rut gon doc dung, khong roi ve min`() = expect(
-        "đặt nhiệt độ hai lăm" to VoiceIntent.Control("temp", 25),
-        "đặt nhiệt độ hăm bốn" to VoiceIntent.Control("temp", 24),
-        "đặt nhiệt độ hăm lăm" to VoiceIntent.Control("temp", 25),
-        "đặt nhiệt độ hai tư" to VoiceIntent.Control("temp", 24),
-        // ⚠ 1.90: hai ca *"đặt âm lượng…"* gỡ cùng `vol`. Bản đầy đủ vẫn phải y nguyên.
-        "đặt nhiệt độ hai mươi lăm" to VoiceIntent.Control("temp", 25),
-    )
-
     // ⚠ Hai bài về PHẠM VI câu nói về kính (cụm mơ hồ vs tường minh · mức Nửa) đã sang
     // `VoiceWindowScopeTest` ở lượt D 2026-09-19 — tệp này đứng sát trần 500 dòng, tách theo CHỦ ĐỀ.
-
-    /**
-     * …và cụm MỘT TỪ không được nuốt nhãn nào có chứa nó.
-     * ⚠ 1.90: *"chiếu"* (của `cast`) đã gỡ; vế CÒN giá trị: *"bật đèn chiếu xa"* phải trỏ `headl`.
-     */
-    @Test fun `cum mot tu khong nuot nhan dai hon`() = expect(
-        "bật đèn chiếu xa" to VoiceIntent.Control("headl", 1),
-    )
 
     /**
      * ═══ [SOÁT 1.69 · P1] Câu KHÔNG có động từ mà chỉ *bắt đầu* bằng một cái tên ⇒ **không phải một lệnh** ═══
@@ -165,52 +131,9 @@ class VoiceIntentParserEverydayTest {
         }
     }
 
-    /**
-     * …và cổng trên KHÔNG được siết quá tay: ba họ câu dưới vẫn phải chạy y như trước.
-     *
-     * Cột chia: có động từ ⇒ luôn qua · tên chiếm cả câu ⇒ qua · cụm **có đọc đuôi** (STEP tra số, SELECT tra
-     * nhãn, LAUNCHER tra tên app) ⇒ qua, vì lúc ấy phần đuôi đã là đối số thật.
-     */
-    @Test fun `cong danh tu dau cau khong sieu qua tay`() = expect(
-        // ⚠ 1.90: ca *"chiếu cụm"* gỡ cùng nút `cast`. ⚠ 2.93 VOICE-BARE-NOUN-IMPLICIT-VERB: *"cốp"* trần nay HỎI LẠI (bộ phận
-        // chuyển động không nhận động từ ngầm — `VoiceBareCoverTest`) ⇒ vế *"tên chiếm cả câu"* phủ bằng một nút bật/tắt.
-        "đèn đọc" to VoiceIntent.Control("readl", 1),           // tên chiếm cả câu
-        "mở hết kính ra" to VoiceIntent.Macro("mac_win_open_all"), // có động từ ⇒ đuôi thừa không đổi ý định
-        "nhiệt độ hai mươi bốn độ" to VoiceIntent.Control("temp", 24), // STEP đọc đuôi
-        "gió mức ba" to VoiceIntent.Control("fan", 3),          // STEP đọc đuôi
-    )
-
-    @Test fun `cau phan hoi goi ten nut bang nhan cua bo dang ky`() {
-        Strings.current = Lang.VI
-        assertEquals("Bật đèn đọc", VoiceReply.preview(VoiceIntent.Control("readl", 1)))
-        assertEquals("Đặt nhiệt độ 22", VoiceReply.preview(VoiceIntent.Control("temp", 22)))
-        Strings.current = Lang.EN
-        assertEquals("Turn on reading light", VoiceReply.preview(VoiceIntent.Control("readl", 1)))
-        assertTrue(VoiceReply.unknown(VoiceIntent.Unknown(VoiceUnknownReason.NO_VERB, "abc")).contains("abc"))
-    }
-
     // ══ LOG XE 2026-09-17 — số & câu hỏi (nguồn: /tmp/kvlog, 81 lượt thật) ══════════════════════════════
     //
     // Mỗi ca dưới đây là MỘT chuỗi owner/bạn bè NÓI THẬT trên xe + hành vi SAI đo được, nay khoá về đúng.
-
-    /** «tăng/giảm nhiệt độ HAI MƯƠI BỐN độ» = ĐẶT 24, KHÔNG phải ±24 (số trong dải 17..33 = setpoint). */
-    @Test fun `log xe · so trong dai nhiet do la SETPOINT tuyet doi`() = expect(
-        "tăng nhiệt độ hai mươi bốn độ" to VoiceIntent.Control("temp", 24),   // was: temp +24
-        "giảm nhiệt độ hai mươi hai độ" to VoiceIntent.Control("temp", 22),   // was: temp -22
-        "giảm nhiệt độ hai mươi bốn độ" to VoiceIntent.Control("temp", 24),   // was: temp -24
-        "tăng nhiệt độ hai mươi hai" to VoiceIntent.Control("temp", 22),      // was: temp +22
-    )
-
-    /** …nhưng số NGOÀI dải + không số ⇒ vẫn TƯƠNG ĐỐI (không phá hành vi bước đang đúng trong log). */
-    @Test fun `log xe · nhiet do ngoai dai va gio-am-luong van tuong doi`() = expect(
-        "giảm nhiệt độ năm độ" to VoiceIntent.Control("temp", null, relative = -5),   // 5 < 17 ⇒ bước
-        "giảm nhiệt độ bốn độ" to VoiceIntent.Control("temp", null, relative = -4),
-        "tăng nhiệt độ" to VoiceIntent.Control("temp", null, relative = 1),
-        "giảm nhiệt độ" to VoiceIntent.Control("temp", null, relative = -1),
-        "tăng quạt gió" to VoiceIntent.Control("fan", null, relative = 1),            // fan min 0 ⇒ luôn tương đối
-        // ⚠ 1.90: ca *"giảm âm lượng hai"* gỡ cùng `vol`; vế *"min 0 ⇒ số trần vẫn TƯƠNG ĐỐI"* nay đo bằng `fan`.
-        "giảm gió hai" to VoiceIntent.Control("fan", null, relative = -2),            // fan min 0 ⇒ giữ −2
-    )
 
     /**
      * Log xe (build cũ) từng BẮN NHẦM điều khiển cho câu về feature ĐÃ GỠ / không phải control / xe không có.
@@ -228,18 +151,4 @@ class VoiceIntentParserEverydayTest {
         }
     }
 
-    /** Câu HỎI: datum DÀI NHẤT thắng + bỏ cụm dẫn «chỉ số» ⇒ hết «số»→gear, hết ø. */
-    @Test fun `log xe · cau hoi map dung datum`() = expect(
-        "chỉ số bụi mịn là bao nhiêu" to VoiceIntent.Read("pm25_level"),  // was: Read(gear)
-        "chỉ số bụi mịn hiện nay" to VoiceIntent.Read("pm25_level"),      // was: Read(odometer)
-        "nhiệt độ đang bao nhiêu" to VoiceIntent.Read("inside_temp"),     // was: rỗng (không datum)
-        "máy lạnh đang bao nhiêu độ" to VoiceIntent.Read("inside_temp"),  // was: Read(media_vol)
-        "bin còn bao nhiêu" to VoiceIntent.Read("soc"),                   // giữ đúng (chống hồi quy)
-    )
-
-    /** «tắt bụi mịn» = tắt máy lọc (pm25 control), KHÔNG mở app; câu HỎI vẫn về telemetry (read/action tách). */
-    @Test fun `log xe · tat bui min dieu khien may loc khong mo app`() {
-        assertEquals(VoiceIntent.Control("pm25", 0), one("tắt bụi mịn"))
-        assertEquals(VoiceIntent.Read("pm25_level"), one("bụi mịn bao nhiêu"))
-    }
 }

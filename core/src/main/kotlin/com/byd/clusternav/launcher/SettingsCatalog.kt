@@ -76,6 +76,9 @@ object SettingsCatalog {
      */
     val RETIRED_CODE_REMOVED_KEYS: Set<String> = SettingsCatalogRetired.CODE_REMOVED
 
+    /** Android box B2 · W3 — hậu tố phía launcher mà mã đọc/ghi đã gỡ (chip · đơn vị · dấu di trú UX5b), còn khai kiểu tới W4. */
+    val RETIRED_LAUNCHER_CODE_REMOVED: Set<String> = SettingsCatalogRetired.LAUNCHER_CODE_REMOVED
+
     /** Tiền tố khoá dựng động phía ClusterNav → lý do (rỗng từ Android box B2 · W2e — `seat_level_` gỡ cùng mã ghế). */
     val CLUSTERNAV_DYNAMIC_KEY_PREFIXES: Map<String, String> = SettingsCatalogClusterNav.DYNAMIC_KEY_PREFIXES
 
@@ -208,12 +211,7 @@ object SettingsCatalog {
                 "nó về 0 khi tiến trình chết. Một lựa chọn mà máy tự đổi sau lưng thì không phải cấu hình; vòng kiểm " +
                 "quyền tự bật lại mỗi lần mở launcher",
         )
-        put(
-            "captest_results",
-            "trạng thái ĐO, không phải cấu hình — nhật ký công cụ 'kiểm tra từng nút' (`CapTestStore`, tệp " +
-                "`kachi_captest`): id nút → OK/Không OK + thời điểm. Là kết quả soát của CHIẾC XE này, người dùng " +
-                "không 'đặt' nó như một lựa chọn; bày ra như một dòng cài đặt thì vô nghĩa. Theo máy như OTA/chẩn đoán",
-        )
+        // Android box B2 · W3: `captest_results` (tệp `kachi_captest`, nhật ký soát nút xe) gỡ cùng `CapTestStore`.
         put(
             "nav_automation_fired",
             "AUTOMATION #2 (1.85) — trạng thái CHẠY, không phải cấu hình: `id luật` → ngày đã dẫn " +
@@ -256,10 +254,6 @@ object SettingsCatalog {
                 "`kachi_workspace`: tệp đó đi theo hồ sơ (chụp–áp, nhân bản, xoá hồ sơ) còn cái này thì **không " +
                 "được** đi đâu cả — một cửa mở-60-phút mà bị chép sang hồ sơ khác, hoặc sống lại qua một lượt áp " +
                 "ảnh chụp, là đúng thứ mà cửa sổ thời gian sinh ra để chặn (`TestBridgeWindow`)",
-        "kachi_captest" to
-            "Kiểm tra từng nút (owner 2026-09-15) — chỉ chứa `captest_results`, nhật ký OK/Không OK khi soát cạn " +
-                "trên xe. Cố ý ĐỂ RIÊNG khỏi `kachi_workspace`: nó là trạng thái ĐO của chiếc xe này, KHÔNG đi theo " +
-                "hồ sơ (chép hồ sơ sang xe khác không mang theo kết quả soát). Cùng lẽ với `kachi_test_bridge`/`kachi_voice`",
         "kachi_voice" to
             "Giọng nói — chỉ chứa `sherpa_model_id` (mã mô hình ASR đã tải về máy NÀY, xem `VoiceModelStore`). Cố ý ĐỂ " +
                 "RIÊNG khỏi `kachi_workspace`: nó là trạng thái THEO-MÁY (mô hình 78 MB nằm trên đĩa máy này), KHÔNG đi " +

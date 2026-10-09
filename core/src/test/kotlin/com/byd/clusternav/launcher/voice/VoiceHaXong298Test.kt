@@ -1,92 +1,49 @@
 package com.byd.clusternav.launcher.voice
 
-import java.text.Normalizer
+import com.byd.clusternav.launcher.LauncherActions
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * ═══ 2.98 R1 + R2 — khoá hai lỗi bộ phân tích có từ trước 2.93 (spec `kachi-298-plan.html` §3) ══════════════════════════
+ * ═══ 2.98 R2 — liên từ "xong" (spec `kachi-298-plan.html` §3) ══════════════════════════════════════════════════════════
  *
- * R1 `VOICE-HA-HOMOGRAPH`: luật *"hạ kính"* (= MỞ kính) và *"hạ cốp"* (= ĐÓNG cốp) so trên chữ BỎ DẤU ⇒ câu nói thẳng *"hả kính
- * lái"* (hỏi lại) từng MỞ kính lái, *"hả cốp"* từng ĐÓNG cốp. Nay chữ MANG dấu chỉ là lệnh khi viết đúng *"hạ"* (luật
- * [VoiceHomograph] qua [VoiceGrammar.ACTION_HEAD_WORDS]); chữ không dấu giữ hành vi cũ. [ĐO 09-16] mô hình đang ship in
- * `HẠ KÍNH TRƯỚC TRÁI` (thanh nặng) cho câu nói *"hạ kiếng trước trái"* — `voice-ft-2026-09-16.md` + `voice-rec-2026-09-16/`.
+ * R2 `VOICE-XONG-CONNECTOR`: *"… xong …"* từng ra MỘT lệnh, vế sau mất im lặng — *"xong"* không phải liên từ của
+ * [VoiceIntentParser.parse]. Gỡ bản vá ⇒ các bài `xong …` dưới đây đỏ.
  *
- * R2 `VOICE-XONG-CONNECTOR`: *"đóng kính lái xong đèn đọc"* từng ra MỘT lệnh, vế *"đèn đọc"* mất im lặng — *"xong"* không phải
- * liên từ của [VoiceIntentParser.parse] (chỉ là từ nối đuôi của phép tách MIX, mà vế sau không có động từ nên phép ấy không chạy).
- *
- * Gỡ bản vá ⇒ các bài `ha …` / `xong …` dưới đây đỏ.
+ * Android box B2 · W3 (2026-10-09): R1 (`VOICE-HA-HOMOGRAPH` — "hạ kính"/"hạ cốp") gỡ cùng lệnh xe; câu mẫu của R2
+ * (kính · đèn đọc · cốp) đổi sang lệnh launcher/app — phép tách là của bộ phân tích, không của nút xe.
  */
 class VoiceHaXong298Test {
 
-    private fun p(s: String) = VoiceIntentParser.parse(s)
+    private val apps = listOf("YouTube", "Spotify")
+    private fun p(s: String) = VoiceIntentParser.parse(s, apps = apps)
+    private val settings = VoiceIntent.Launcher(LauncherActions.SETTINGS)
+    private val appList = VoiceIntent.Launcher(LauncherActions.APPS)
 
-    /** Không ý định nào là lệnh ĐIỀU KHIỂN (ghi lên xe) — câu hỏi lại không được chạm phần cứng. */
-    private fun noWrite(s: String) {
-        val got = p(s)
-        assertFalse(got.any { it is VoiceIntent.Control || it is VoiceIntent.Macro }, "«$s» KHÔNG được ra lệnh ghi: $got")
-    }
-
-    // ── R1 ──────────────────────────────────────────────────────────────────────────────────────────────────────────
-
+    /** "hả/hạ kính" — câu xe đã gỡ, mọi cách viết đều KHÔNG thành mở một app hay việc launcher. */
     @Test
-    fun `ha hoi lai khong mo kinh khong dong cop`() {
-        listOf("hả kính lái", "hả cốp", "hả cốp sau", "hả kính trước trái", "hả kính lái xuống").forEach(::noWrite)
-        // Mô hình in HOA có dấu (tầng nghe hạ chữ thường) — cùng luật.
-        listOf("HẢ KÍNH LÁI", "HẢ CỐP").forEach { noWrite(it.lowercase()) }
-        // Các thanh khác của cùng âm tiết `ha` cũng không phải "hạ".
-        listOf("hà kính lái", "há kính lái", "hã kính lái", "hà cốp", "há cốp").forEach(::noWrite)
-    }
-
-    @Test
-    fun `ha that van la lenh nhu cu`() {
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 1)), p("hạ kính lái"))
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 1)), p("HẠ KÍNH TRƯỚC TRÁI".lowercase()))   // chuỗi mô hình in [ĐO 09-16]
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 1)), p("hạ kính lái xuống"))
-        assertEquals(listOf(VoiceIntent.Control("trunk", 0)), p("hạ cốp"))
-        assertEquals(listOf(VoiceIntent.Control("trunk", 0)), p("hạ cái cốp sau"))
-        // NFD (dấu tổ hợp) — cùng chữ.
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 1)), p(Normalizer.normalize("hạ kính lái", Normalizer.Form.NFD)))
-    }
-
-    /** Gõ KHÔNG dấu (bàn phím xe, kịch bản test, nhật ký cũ): không dữ liệu để tách đồng hình ⇒ hành vi cũ từng byte. */
-    @Test
-    fun `ha khong dau giu hanh vi cu`() {
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 1)), p("ha kinh lai"))
-        assertEquals(listOf(VoiceIntent.Control("trunk", 0)), p("ha cop"))
-    }
-
-    @Test
-    fun `ha that trong cau ghep van tach`() {
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 1), VoiceIntent.Control("readl", 1)), p("hạ kính lái rồi bật đèn đọc"))
-    }
-
-    // ── R2 ──────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-    @Test
-    fun `xong noi hai lenh - ve sau muon dong tu`() {
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 0), VoiceIntent.Control("readl", 0)), p("đóng kính lái xong đèn đọc"))
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 0), VoiceIntent.Control("readl", 0)), p("ĐÓNG KÍNH LÁI XONG ĐÈN ĐỌC".lowercase()))
+    fun `ha kinh ha cop khong thanh lenh khac`() {
+        listOf("hả kính lái", "hạ kính lái", "hạ cốp", "ha kinh lai").forEach { s ->
+            val got = p(s)
+            assertTrue(
+                got.none { it is VoiceIntent.OpenApp || it is VoiceIntent.Launcher || it is VoiceIntent.Media },
+                "«$s» không được thành lệnh khác: $got",
+            )
+        }
     }
 
     @Test
     fun `xong noi hai lenh day du`() {
-        assertEquals(listOf(VoiceIntent.Control("win_lf", 0), VoiceIntent.Control("readl", 1)), p("đóng kính lái xong bật đèn đọc"))
-        assertEquals(listOf(VoiceIntent.Control("readl", 1), VoiceIntent.Control("trunk", 1)), p("bật đèn đọc xong mở cốp"))
+        assertEquals(listOf(settings, VoiceIntent.OpenApp("YouTube")), p("mở cài đặt xong mở YouTube"))
+        assertEquals(listOf(VoiceIntent.OpenApp("YouTube"), settings), p("MỞ YOUTUBE XONG MỞ CÀI ĐẶT".lowercase()))
     }
 
-    /** Vế của câu ghép vẫn là câu MIX không liên từ ⇒ tách tiếp (khoá phép tách tiếp ở [VoiceIntentParser.parse]). */
     @Test
-    fun `xong trong cau mix nhieu lenh`() {
+    fun `xong cung voi va trong mot cau`() {
         assertEquals(
-            listOf(VoiceIntent.Macro("mac_win_close_all"), VoiceIntent.Control("sunroof", 1), VoiceIntent.Control("trunk", 1)),
-            p("đóng hết kính mở cửa sổ trời xong mở cốp"),
-        )
-        assertEquals(
-            listOf(VoiceIntent.Control("win_lf", 0), VoiceIntent.Control("readl", 0), VoiceIntent.Control("ac_auto", 1)),
-            p("đóng kính lái xong đèn đọc và bật điều hòa"),
+            listOf(settings, VoiceIntent.OpenApp("YouTube"), appList),
+            p("mở cài đặt xong mở YouTube và mở ứng dụng"),
         )
     }
 
@@ -102,8 +59,8 @@ class VoiceHaXong298Test {
     /** Vế sau không hiểu được ⇒ KHÔNG im lặng: phải có dòng *"đã bỏ qua"* (DROPPED_CLAUSE). */
     @Test
     fun `xong ve sau vo nghia thi bao da bo qua`() {
-        val got = p("đóng kính lái xong con mèo nhà bên")
-        assertEquals(VoiceIntent.Control("win_lf", 0), got.first(), "$got")
+        val got = p("mở cài đặt xong con mèo nhà bên")
+        assertEquals(settings, got.first(), "$got")
         assertTrue(got.any { it is VoiceIntent.Unknown && it.reason == VoiceUnknownReason.DROPPED_CLAUSE }, "phải báo đã bỏ qua: $got")
     }
 
@@ -115,12 +72,9 @@ class VoiceHaXong298Test {
         }
     }
 
-    /**
-     * "xong" đứng CUỐI câu không sinh vế rỗng — câu đi như một vế. (Đứng ĐẦU câu — *"xong bật đèn đọc"* — vẫn NO_VERB như mọi
-     * liên từ đầu câu (*"rồi bật đèn đọc"*): hành vi có sẵn, ngoài phạm vi R2.)
-     */
+    /** "xong" đứng CUỐI câu không sinh vế rỗng — câu đi như một vế. */
     @Test
     fun `xong cuoi cau khong lam hong lenh`() {
-        assertEquals(listOf(VoiceIntent.Control("readl", 1)), p("bật đèn đọc xong"))
+        assertEquals(listOf(settings), p("mở cài đặt xong"))
     }
 }

@@ -142,33 +142,7 @@ object KachiSpace {
      */
     const val TOUCH = 48
 
-    /**
-     * Bề cao **VẼ** của nút −/+ trong ô thanh nút (27dp) — CHỈ dùng ở nút đó.
-     *
-     * **Con số này được ĐO từ ràng buộc thật, không phải chọn cho đẹp.** Ô thanh nút ngang là
-     * [KachiBars.DOCK_TILE_W]×[KachiBars.DOCK_TILE_H], trừ lề trong hai bên còn một hộp mà bề ngang phải chứa
-     * `[−] [giá trị] [+]`; giá trị kiểu "22°" ăn phần giữa nên mỗi nút chỉ còn ~20dp bề ngang. Bề dọc phải chứa
-     * icon ([ICON_S]) + hàng nút ⇒ hàng nút là phần duy nhất còn nới/thu được.
-     *
-     * ⚠ **[ĐO] trên máy ảo — lần đầu tôi đặt 36dp và nó LÀM HỎNG ô**: 2×36 = 72 > 68dp dùng được của ô 84dp ⇒ chữ
-     * giá trị bị bóp, `"22°"` **xuống hai dòng** ("2" / "2°"). Ghi lại vì đây là bằng chứng rằng "nới đích chạm"
-     * không phải luôn an toàn: nới quá trần vật lý của ô thì đổi luôn bố cục bên trong nó.
-     *
-     * ## ⚠⚠ WP5 (2026-09-20) hạ **32 → 27** (85 %, R5.1 *"nội dung 85 %"*) — và vì sao đây KHÔNG phải một đích
-     * chạm nhỏ đi
-     * Hằng này chỉ còn là bề cao **vẽ** của cái nút. Vùng **NHẬN CHẠM** thật do [StepTouchTarget] cấp qua
-     * `TouchDelegate` và nó lấy [TOUCH] (48dp) — độc lập hoàn toàn với con số ở đây (xem KDoc `StepTouchTarget`:
-     * *"nới VÙNG NHẬN CHẠM, không nới view"*). Nên thu chữ số này làm nút mảnh hơn mà **không** làm đích chạm nhỏ
-     * hơn; đó cũng là lý do chọn thu ở đây thay vì thu [ICON_S] — icon là manh mối nhận ra nút, còn 5dp bề cao của
-     * một dấu `−` thì không mang thông tin nào.
-     *
-     * [ĐO số học] nó là hằng **bắt buộc** phải hạ, không phải tuỳ chọn: ô dọc sau WP5 rộng
-     * [KachiBars.DOCK_TILE_W_VERTICAL] và cao [KachiBars.DOCK_TILE_H_VERTICAL] = 60dp, mà nội dung cần
-     * `2×[KachiBars.DOCK_PAD] + ([ICON_S] + [XS]) + hằng này`; giữ 32 thì ra 64 > 60 ⇒ ô bị cắt im lặng. Ô ngang
-     * ([KachiBars.DOCK_TILE_W]×[KachiBars.DOCK_TILE_H] = 71×73) thì còn dư, nhưng hai vùng dùng CÙNG một bộ cỡ
-     * ([TileSize.DOCK]) nên chiều chật quyết định.
-     */
-    const val TOUCH_TIGHT = 27
+    // Android box B2 · W3: `TOUCH_TIGHT` (bề cao −/+ của ô STEP nút xe) gỡ cùng `StepTouchTarget`.
 
     // ── Cỡ icon ──────────────────────────────────────────────────────────────────────────────────────────
     //
@@ -211,23 +185,7 @@ object KachiSpace {
     // Đây là cỡ của những khối CỤ THỂ, không tái sử dụng. Khai ở đây (chứ không để số trần tại chỗ) để mọi
     // con số dp của launcher nằm đúng một tệp — đó mới là "một nguồn duy nhất".
 
-    /**
-     * **CHIỀU CAO MỘT DÒNG DỮ LIỆU ĐỌC** trong ô nhóm (72dp = 108px @1.5×).
-     *
-     * ## [ĐO] bệnh nó chữa — dòng dữ liệu phình 474px chứa 0.31% mực
-     * Trước con số này, dải ô con nhận `weight = 1` nên nó **ăn toàn bộ** phần còn lại của ô. [ĐO] ảnh máy ảo
-     * 2026-09-12, nhóm *Kính* ở khung to: hàng đọc **1162×474px** mà bên trong chỉ có 4 nhãn + 4 dấu gạch =
-     * **0.31% mực**, chiếm **64%** chiều cao ô; trong khi cùng loại "dòng dữ liệu đọc" ở chỗ khác cao **74px**
-     * (Kính ở khung nhỏ) và **107px** (ADAS) ⇒ ba chiều cao cho một loại nội dung.
-     *
-     * 72dp = 108px nằm trong khoảng kiểm toán đề nghị (96–120px) và vừa đủ cho `nhãn` + `số` xếp dọc ở cỡ chữ mới
-     * (nhãn 12sp + số 17sp + lề [XS] hai đầu ≈ 68dp). Phần dư của ô **không** vào đây nữa mà đi xuống hàng nút /
-     * khoảng thở — đó là ý của con số này.
-     *
-     * **Không thể là một bậc của thang**: đây là *chiều cao một khối bố cục* (cùng họ [LABEL_COL] / [DOCK_TILE_H]),
-     * không phải khoảng cách giữa hai vật; bậc lớn nhất của thang là [XXL] = 28dp, khác hẳn bậc độ lớn.
-     */
-    const val READ_ROW = 72
+    // Android box B2 · W3: `READ_ROW` (chiều cao một dòng dữ liệu xe trong ô nhóm) gỡ cùng ô nhóm/ô đọc.
 
     /**
      * **SÀN cỡ chữ NHÃN của ô vẽ Canvas** (13dp = 19.5px @1.5× ⇒ **nét cao ~15px**, mực đủ ~19px).
@@ -244,7 +202,7 @@ object KachiSpace {
      * Canvas có chuẩn đọc riêng, thấp hơn phần còn lại của cùng một màn.
      *
      * ⚠ Bảng đã đo ở trên (*sơ đồ hai bên xe*, nhóm ADAS) **đã xoá 2026-09-16** cùng toàn bộ ADAS/an toàn (owner).
-     * Phép đo giữ nguyên làm bằng chứng cho con số — sàn này nay áp cho [DoorBoardView] và [TyreBoardView].
+     * Phép đo giữ nguyên làm bằng chứng cho con số — sàn này nay áp cho [DoorBoardView] và `TyreBoardView`.
      *
      * Nên: cỡ = `max(tỉ lệ, sàn)`, và **số HÀNG** mới là thứ co theo chỗ. Đảo lại — bóp chữ để nhồi đủ hàng — là
      * chính cái bệnh đang chữa.
@@ -255,26 +213,13 @@ object KachiSpace {
      */
     const val BOARD_LABEL_MIN = 13
 
-    /**
-     * **SÀN cỡ chữ GIÁ TRỊ của ô vẽ Canvas** (16dp = 24px @1.5×).
-     *
-     * Lớn hơn [BOARD_LABEL_MIN] một bậc rõ rệt (1.23×) để giữ **thứ bậc** mà kiểm toán G1 đòi: *"giá trị là thứ to
-     * nhất trong ô con"*. Hai sàn bằng nhau sẽ đạt "đọc được" mà mất "đọc ra ngay đâu là số".
-     */
-    const val BOARD_VALUE_MIN = 16
+    // Android box B2 · W3: `BOARD_VALUE_MIN` (sàn chữ giá trị của ô vẽ Canvas lốp/cửa) gỡ cùng các bảng xe.
 
     // ⚠ 2026-09-16 — `BOARD_ROW_MIN` (sàn chiều cao một HÀNG của bảng sơ đồ hai bên) đã XOÁ cùng `SideBoardView`:
     // nó là hằng của **riêng** bảng đó và sau lượt gỡ ADAS/an toàn (owner) không còn một chỗ gọi nào. Nếu mai có
-    // bảng nhiều-hàng mới, suy lại từ [BOARD_VALUE_MIN] + [S] như cũ — đừng chép lại con số.
+    // bảng nhiều-hàng mới, suy lại từ sàn chữ giá trị + [S] như cũ — đừng chép lại con số.
 
-    /**
-     * Chiều cao **số chính** của thẻ CARD = 1.5 × [READ_ROW].
-     *
-     * Suy ra từ [READ_ROW] chứ không tự chọn: số chính là một dòng dữ liệu **được ưu tiên**, nên nó phải to hơn một
-     * dòng thường một cách có tỉ lệ. Viết dạng phép tính để đổi [READ_ROW] là nó tự theo — nếu gõ số riêng thì hai
-     * con số sẽ lệch nhau đúng lúc ai đó sửa một chỗ (bẫy hai-bản-sao).
-     */
-    const val LEAD_ROW = READ_ROW * 3 / 2
+    // Android box B2 · W3: `LEAD_ROW` (số chính của thẻ CARD dữ liệu xe) gỡ cùng ô đọc.
 
     /**
      * Độ hở phía trên cho nội dung widget, để không bị nút ⇄ **nổi** ở đầu ô đè lên.

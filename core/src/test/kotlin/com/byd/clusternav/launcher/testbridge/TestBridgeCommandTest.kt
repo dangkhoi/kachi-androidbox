@@ -206,8 +206,9 @@ class TestBridgeCommandTest {
                 TestBridgeCommands.ERR_UNKNOWN_CMD,
                 err(
                     TestBridgeCommands.EXTRA_CMD to name,
-                    TestBridgeCommands.EXTRA_ID to "win_lf",
-                    TestBridgeCommands.EXTRA_METHOD to "getWindowState",
+                    // Đối số cũ `id`/`method` (W3: không còn khai) đi như extra lạ ⇒ bị bỏ qua.
+                    "id" to "win_lf",
+                    "method" to "getWindowState",
                     TestBridgeCommands.EXTRA_ARG to "diag",
                     TestBridgeCommands.EXTRA_AUTO_CONFIRM to true,
                 ),

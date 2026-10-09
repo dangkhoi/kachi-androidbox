@@ -32,70 +32,9 @@ enum class VoiceRisk { SAFE, NORMAL, CONFIRM }
  */
 object VoiceRiskTable {
 
-    /**
-     * Nút cần hỏi lại, kèm **điều kiện giá trị** và lý do.
-     *
-     * `value == null` ⇒ mọi giá trị đều hỏi (nút BẤM một chiều).
-     */
-    data class Rule(
-        val controlId: String,
-        val value: Int?,
-        val whyVi: String,
-        val whyEn: String,
-        /**
-         * FIX286 · SR5 — dòng này nằm trong tập hỏi **mặc định** ([defaultIds]). `false` cho mọi dòng trừ khi owner chốt
-         * riêng — quyết định 2026-09-16 *"mặc định không hỏi gì"* vẫn là luật chung; đây là ngoại lệ có tên.
-         */
-        val askByDefault: Boolean = false,
-    ) {
-        /**
-         * Lý do theo [lang] — nó HIỆN trong hộp xác nhận, nên phải dịch như mọi chữ khác. Màn Cài đặt
-         * ([VoiceRiskTable.askableLabel]) để mặc định = tiếng giao diện; hộp hỏi của phiên nói truyền tiếng GIỌNG NÓI.
-         */
-        fun why(lang: Lang = Strings.current): String = Strings.t(whyVi, whyEn, lang)
-
-        /**
-         * ═══ FIX286 · SR5(a) — lệnh có rơi vào **vế** mà dòng này hỏi không ═══════════════════════════════════
-         *
-         * `value` của dòng là **vế** (> 0 = mở/bật), không phải một con số phải khớp từng chữ số: `windows_all` khai 1
-         * nhưng mức 2 (*"mở nửa"*) cũng hạ cả bốn kính — `HalWriteArgs.writeArgs` đổi mọi `primary > 0` về cùng một
-         * hướng — nên mức 2 cũng phải hỏi. Ba ca:
-         *  • dòng không khai vế (`null`) ⇒ mọi lệnh đều hỏi (nút bấm một chiều);
-         *  • lệnh không nói vế (`intent.value == null`) ⇒ **hỏi** — không biết hướng thì nghiêng về phía an toàn;
-         *  • còn lại ⇒ hỏi khi cùng vế.
-         *
-         * Tới 2.85 [VoiceRiskTable.of] **bỏ qua** trường `value` (chỉ tra mã) trong khi [VoiceRiskTable.reason] lại xét
-         * nó ⇒ tích *"Cửa sổ trời"* thì câu *"đóng cửa sổ trời"* cũng bị hỏi lại, mà hộp hỏi không có lý do nào
-         * [ĐO mã, đọc lại 02/10]. Một hàm cho cả hai chỗ ⇒ hai chỗ không thể lệch nhau nữa.
-         */
-        fun matches(intentValue: Int?): Boolean =
-            value == null || intentValue == null || (value > 0) == (intentValue > 0)
-    }
-
-    val CONTROL_RULES: List<Rule> = listOf(
-        Rule("windows_all", 1,
-            "hạ HẾT 4 kính — mưa, bụi, hoặc đồ để trên ghế; đóng lại mất nhiều giây",
-            "lowers ALL four windows — rain, dust, or belongings on the seats; closing takes seconds"),
-        // ⚠ 1.90 · dòng `cast` (*"dừng chiếu cụm giữa đường"*) gỡ cùng nút — owner 2026-09-21. Chiếu cụm nay chỉ
-        // bật/tắt bằng nút nổi + Cài đặt › Chiếu màn lên cụm, không còn là lệnh giọng nói nên không còn gì để hỏi.
-        // V3 · R7 — hai dòng THÊM 2026-09-16: owner liệt kê chúng trong bảng B (B5 cốp · B7 cửa sổ trời) như
-        // những việc *có thể* muốn hỏi. Chúng vào đây để **hiện ra trong danh sách chọn**, không phải để bật —
-        // mặc định vẫn là KHÔNG hỏi gì (xem [of]).
-        Rule("trunk", 1,
-            "mở cốp khi xe đang đỗ nơi công cộng — đồ trong cốp phơi ra cho tới khi có người đóng lại",
-            "opens the boot in a public car park — whatever is inside stays exposed until someone closes it"),
-        // FIX286 · SR5 (owner 03/10 *"1 ok, nên xác nhận"*): 2.86 làm nút nóc CHẠY THẬT (100/0 thay 1/2), nên một
-        // lần nghe nhầm thành *"mở cửa sổ trời"* nay mở nóc thật — kể cả lúc đang chạy (nóc cố ý không bị chặn theo tốc
-        // độ, `CtlSafetyPolicy.REQUIRES_STATIONARY`). ⇒ MỞ nóc hỏi **mặc định**; ĐÓNG không hỏi (vế 1, [Rule.matches]).
-        // Người dùng vẫn bỏ tích được ở Cài đặt › Giọng nói › Hỏi xác nhận.
-        Rule("sunroof", 1,
-            "mở cửa sổ trời — mưa và bụi vào thẳng khoang, đóng lại mất nhiều giây",
-            "opens the sunroof — rain and dust go straight in, and closing takes seconds",
-            askByDefault = true),
-    )
-
-    /** Gói lệnh cần hỏi lại — gói *"mở hết kính"* có đúng hậu quả với nút `windows_all`. */
-    val MACRO_IDS: Set<String> = setOf("mac_win_open_all")
+    // Android box B2 · W3 (2026-10-09): bảng `Rule`/`CONTROL_RULES` (hạ hết kính · mở cốp · mở cửa sổ trời — hỏi mặc định
+    // từ 2.86) và `MACRO_IDS` (gói *"mở hết kính"*) gỡ cùng nút / gói lệnh xe. Mã `control:` / `macro:` đã lưu trong
+    // `voice_confirm_ids` vẫn đọc lên được và bị bỏ qua ([of] không còn ý định nào ra chúng).
 
     // ── V3 · R7 — mã của MỘT VIỆC CÓ THỂ HỎI, và tập đang được bật ───────────────────────────────
 
@@ -108,7 +47,7 @@ object VoiceRiskTable {
     /** Mã của việc *"mở bài/nghệ sĩ do nhận dạng tự do đọc ra"*. */
     const val ID_MEDIA_QUERY = "media_query"
 
-    /** Tiền tố mã cho một NÚT · một GÓI LỆNH. Tách tiền tố vì `trunk` có thể vừa là nút vừa là tên gói lệnh. */
+    /** Tiền tố mã của nút / gói lệnh xe trong tập ĐÃ LƯU ≤ 2.98 — chỉ còn để [launcherAskableIds] lọc chúng khỏi màn chọn. */
     const val PREFIX_CONTROL = "control:"
     const val PREFIX_MACRO = "macro:"
 
@@ -121,9 +60,6 @@ object VoiceRiskTable {
      */
     fun confirmId(intent: VoiceIntent): String? = when (intent) {
         is VoiceIntent.Profile -> ID_PROFILE
-        is VoiceIntent.Control ->
-            if (CONTROL_RULES.any { it.controlId == intent.id }) PREFIX_CONTROL + intent.id else null
-        is VoiceIntent.Macro -> if (intent.id in MACRO_IDS) PREFIX_MACRO + intent.id else null
         // owner 2026-09-24: Nav KHÔNG hỏi xác nhận (cổng nav_query "lòng vòng khó đoán, khỏi đi"). Dẫn THẲNG —
         // geocode được thì đi, không được thì mở app + nói chưa tra được. `ID_NAV_QUERY` giữ để tương thích chuỗi
         // `voice_confirm_ids` cũ đã lưu (đọc lên không lỗi) nhưng KHÔNG còn là mã hỏi-được.
@@ -134,9 +70,7 @@ object VoiceRiskTable {
 
     /** Mọi mã có thể bật trong Cài đặt, theo thứ tự hiện ra. Sinh từ hai bảng trên — không chép tay. */
     fun askableIds(): List<String> =
-        CONTROL_RULES.map { PREFIX_CONTROL + it.controlId } +
-            MACRO_IDS.sorted().map { PREFIX_MACRO + it } +
-            listOf(ID_PROFILE, ID_MEDIA_QUERY)   // owner 2026-09-24: bỏ ID_NAV_QUERY (nav không hỏi nữa)
+        listOf(ID_PROFILE, ID_MEDIA_QUERY)   // owner 2026-09-24: bỏ ID_NAV_QUERY (nav không hỏi nữa)
 
     /**
      * Android box B2 · W1 — mã HIỆN ở mục Cài đặt *"Hỏi xác nhận trước khi chạy"*: [askableIds] trừ nút xe ([PREFIX_CONTROL])
@@ -168,29 +102,21 @@ object VoiceRiskTable {
      * @param confirmIds tập mã đang bật = [effectiveIds] của prefs `voice_confirm_ids` (device-level).
      */
     fun of(intent: VoiceIntent, confirmIds: Set<String> = emptySet()): VoiceRisk = when (intent) {
-        is VoiceIntent.Read -> VoiceRisk.SAFE
         is VoiceIntent.Unknown -> VoiceRisk.SAFE
         // Sổ địa chỉ (spec `kachi-voice-addresses.html` §4.2) — **KHÔNG** hỏi lại, và đó là một quyết định, không
         // phải một chỗ bỏ sót: nhãn đến từ một tập ĐÓNG mà chính người dùng đã gõ trong Cài đặt, địa chỉ thì họ
         // đã đọc lại lúc lưu, và đi nhầm đường thì quay đầu được.
         is VoiceIntent.NavigateSaved -> VoiceRisk.NORMAL
-        // FIX286 · SR5(a): nút có dòng luật thì còn phải ĐÚNG VẾ ([Rule.matches]) — tích "Cửa sổ trời" là hỏi lúc MỞ,
-        // không hỏi lúc ĐÓNG. Mã (`control:sunroof`) vẫn một, đúng KDoc [confirmId]: một ô tích cho một nút.
-        is VoiceIntent.Control ->
-            if (confirmId(intent)?.let { it in confirmIds } == true && ruleFor(intent) != null) VoiceRisk.CONFIRM
-            else VoiceRisk.NORMAL
         else -> if (confirmId(intent)?.let { it in confirmIds } == true) VoiceRisk.CONFIRM else VoiceRisk.NORMAL
     }
 
-    /** Dòng luật của [intent] ở đúng vế của nó, hoặc `null` — MỘT phép tra cho [of] và [reason] (xem [Rule.matches]). */
-    private fun ruleFor(intent: VoiceIntent.Control): Rule? =
-        CONTROL_RULES.firstOrNull { it.controlId == intent.id && it.matches(intent.value) }
-
     // ── FIX286 · SR5(b) — tập hỏi **hiệu lực** (mặc định + lựa chọn của người dùng) ─────────────────────────
 
-    /** Mã hỏi-được nằm trong tập mặc định — sinh từ [Rule.askByDefault], không chép tay. */
-    fun defaultIds(): Set<String> =
-        CONTROL_RULES.filter { it.askByDefault }.map { PREFIX_CONTROL + it.controlId }.toSet()
+    /**
+     * Mã hỏi-được nằm trong tập mặc định. ≤ 2.98 BYD = *"mở cửa sổ trời"* (FIX286 · SR5); Android box B2 · W3 gỡ nút xe ⇒
+     * rỗng — quyết định 2026-09-16 *"mặc định không hỏi gì"* áp nguyên vẹn.
+     */
+    fun defaultIds(): Set<String> = emptySet()
 
     /**
      * ═══ Tập hỏi HIỆU LỰC từ hai thứ lưu bền: tập đã lưu và mốc *"người dùng đã chọn từ 2.86"* ═══════════════
@@ -238,22 +164,9 @@ object VoiceRiskTable {
     /**
      * Nhãn + lý do của MỘT mã hỏi-được, cho màn Cài đặt bày ra. `null` = mã lạ (pref cũ) ⇒ chỗ gọi bỏ qua.
      *
-     * Nhãn lấy từ chính bộ đăng ký ([ControlRegistry] / [ActionMacros]) — thêm một nút vào [CONTROL_RULES] là
-     * màn chọn tự có dòng mới với đúng chữ đang hiện trên nút, không phải sửa hai chỗ (CLAUDE.md §7).
+     * (≤ 2.98 BYD còn nhãn nút / gói lệnh xe — mã `control:` / `macro:` đã lưu nay ra `null`, chỗ gọi bỏ qua.)
      */
     fun askableLabel(id: String): Pair<String, String>? = when {
-        id.startsWith(PREFIX_CONTROL) -> {
-            val cid = id.removePrefix(PREFIX_CONTROL)
-            val rule = CONTROL_RULES.firstOrNull { it.controlId == cid } ?: return null
-            val label = com.byd.clusternav.launcher.ControlRegistry.byId(cid)?.displayLabel ?: cid
-            label to rule.why()
-        }
-        id.startsWith(PREFIX_MACRO) -> {
-            val mid = id.removePrefix(PREFIX_MACRO)
-            if (mid !in MACRO_IDS) return null
-            val label = com.byd.clusternav.launcher.ActionMacros.ALL.firstOrNull { it.id == mid }?.displayLabel ?: mid
-            label to Strings.t("hạ hết kính", "lowers every window")
-        }
         id == ID_PROFILE -> Strings.t("Đổi hồ sơ", "Switch profile") to Strings.t(
             "đổi hồ sơ thay toàn bộ bố cục và cấu hình đang dùng",
             "switching profile replaces the whole layout and current settings",
@@ -273,12 +186,6 @@ object VoiceRiskTable {
             "switching profile replaces the whole layout and current settings",
             lang,
         )
-        is VoiceIntent.Control -> ruleFor(intent)?.why(lang)
-        is VoiceIntent.Macro -> if (intent.id in MACRO_IDS) {
-            Strings.t("hạ hết kính", "lowers every window", lang)
-        } else {
-            null
-        }
         is VoiceIntent.Nav -> openVocabReason(intent.query, lang)
         is VoiceIntent.Media -> if (intent.op == VoiceMediaOp.QUERY) openVocabReason(intent.query, lang) else null
         else -> null

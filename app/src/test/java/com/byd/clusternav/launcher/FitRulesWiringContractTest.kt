@@ -80,8 +80,8 @@ class FitRulesWiringContractTest {
     fun `P2 - do tai cho bao luoi khop, chi xin do khi den luot`() {
         val refresh = SourceRoots.body(widgets, "fun refreshRead(")
         val calls = Regex("FitGridLayout\\.contentChanged\\(v\\)").findAll(refresh).count()
-        assertEquals(2, calls, "cả ô ĐỌC (refresh) lẫn ô HÀNH ĐỘNG (refreshAction) đều đổ chữ tại chỗ")
-        assertTrue(refresh.contains("if (WidgetRefreshers.refreshAction(v, data.car)) FitGridLayout.contentChanged(v)"))
+        // Android box B2 · W3: ô HÀNH ĐỘNG (nút xe, `refreshAction`) gỡ ⇒ còn MỘT lượt đổ tại chỗ (ô widget).
+        assertEquals(1, calls, "ô widget đổ chữ tại chỗ")
         // ĐỔI GHIM (soát vòng 2, P1): nhịp đo dò lại (stale/grow/stuck/probedAt) dời vào [FitRules.Cell] ở `:core` để
         // test thuần cả TRÌNH TỰ đổ tại chỗ → lượt đo → lượt khớp (`FitRulesRound2Test`); [FitRules.reprobe] nay được gọi
         // TRONG `Cell.check`. Bản vòng 1 ghim `if (due(child)) requestLayout()` + `FitRules.reprobe(` ở `due` + `it.grow`
@@ -102,10 +102,9 @@ class FitRulesWiringContractTest {
     fun `P3 - icon chon bien the va tint theo co da khop`() {
         val params = SourceRoots.body(scale, "private fun params(")
         assertTrue(params.contains("KachiIcons.refit(b.v, minOf(t.width, t.height))"), "đổi cỡ icon ⇒ chọn lại biến thể")
-        assertTrue(SourceRoots.body(icons, "fun byLevel(").contains("sized(img, sizeDp)"))
         assertTrue(SourceRoots.body(icons, "fun tint(").contains("sized(img, sizeDp)"))
         val refit = SourceRoots.body(icons, "fun refit(")
-        assertTrue(refit.contains("byLevel(img, it, d.level, dp)") && refit.contains("tint(img, dp, d.selected, d.ink)"))
+        assertTrue(refit.contains("tint(img, dp, d.selected, d.ink)"))   // W3: nhánh `byLevel` (icon mức ghế) gỡ
         // Bảng yếu không được giữ view trong giá trị (bài học WidgetRefreshers: giá trị trỏ về khoá ⇒ không dọn được).
         val drawn = icons.substringAfter("private class Drawn").substringBefore("private val drawnBy")
         assertFalse(drawn.contains("View") || drawn.contains("ImageView"))

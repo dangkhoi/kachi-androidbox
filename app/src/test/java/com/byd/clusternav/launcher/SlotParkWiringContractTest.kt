@@ -296,7 +296,7 @@ class SlotParkWiringContractTest {
     fun `R5 - doi ho so giu man ao app con hien, ca hai nhanh dung lai`() {
         val render = SourceRoots.body(code("KachiHomeRender.kt"), "internal fun KachiHomeActivity.render(state: HomeUiState) {")
         assertTrue("profileSwitch = prev != null && prev.activeProfile != state.activeProfile)" in render, render)
-        assertTrue("renderInternal(s, status, embedChanged = false, swap = swap, profileSwitch = profileSwitch)" in workspace)
+        assertTrue("renderInternal(s, embedChanged = false, swap = swap, profileSwitch = profileSwitch)" in workspace)   // W3: `status` gỡ
         // Soát R5 Pass 1 [P1]: chỉ đỗ app của ô SẼ ĐƯỢC DỰNG (`take(n)`, n = số ô bố cục mới) — đỗ app ô ngoài bố cục là nằm ẩn vô chủ.
         order(SourceRoots.body(workspace, "private fun rebuild()"), "val n = EffectiveLayout.slotCount(displayed.preset, customLayout)",
             "parkStillShown(displayed.slots.take(n))", "releaseAppHosts()", "for (i in 0 until n)", "makeSlot(i, content)")

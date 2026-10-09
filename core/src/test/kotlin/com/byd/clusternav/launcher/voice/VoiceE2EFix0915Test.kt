@@ -47,8 +47,6 @@ class VoiceE2EFix0915Test {
 
     @Test
     fun `nhung thu dang chay tot voi dong tu DONG giu nguyen`() {
-        assertEquals(VoiceIntent.Macro("mac_win_close_all"), one("đóng hết kính"))
-        assertEquals(VoiceIntent.Control("win_lf", 0), one("đóng kính trước trái"))
         assertEquals(VoiceIntent.OpenApp("YouTube"), one("mở YouTube"))
         assertEquals(VoiceIntent.Media(VoiceMediaOp.PAUSE), one("dừng nhạc"))
     }
@@ -57,15 +55,16 @@ class VoiceE2EFix0915Test {
 
     @Test
     fun `ve cau ghep bi bo thi noi ra, khong im lang`() {
-        val got = VoiceIntentParser.parse("mở cửa và đèn đọc", apps = apps)
+        // Android box B2 · W3: câu mẫu cũ ("mở cửa và đèn đọc") là câu xe ⇒ đổi sang vế launcher + vế vô nghĩa.
+        val got = VoiceIntentParser.parse("mở cài đặt và xyzw qpqp", apps = apps)
         assertEquals(2, got.size, "phải có thêm một dòng nói về vế bị bỏ; nhận được: $got")
-        assertEquals(VoiceIntent.Control("readl", 1), got[0])
+        assertEquals(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), got[0])
         val note = got[1]
         assertTrue(
             note is VoiceIntent.Unknown && note.reason == VoiceUnknownReason.DROPPED_CLAUSE,
             "dòng thứ hai phải là dòng *đã bỏ qua*; nhận được: $note",
         )
-        assertTrue((note as VoiceIntent.Unknown).text.contains("mở cửa"), "phải nói RÕ vế nào bị bỏ: ${note.text}")
+        assertTrue((note as VoiceIntent.Unknown).text.contains("xyzw"), "phải nói RÕ vế nào bị bỏ: ${note.text}")
     }
 
     @Test
@@ -78,9 +77,11 @@ class VoiceE2EFix0915Test {
 
     @Test
     fun `cau ghep hieu duoc ca hai ve van ra dung hai y dinh`() {
-        // t61 của `voice-cases.tsv`.
-        val got = VoiceIntentParser.parse("bật đèn đọc và tắt lọc bụi", apps = apps)
-        assertEquals(listOf(VoiceIntent.Control("readl", 1), VoiceIntent.Control("pm25", 0)), got)
+        // Android box B2 · W3: t61 cũ ("bật đèn đọc và tắt lọc bụi") là câu xe ⇒ hai vế launcher/app.
+        val got = VoiceIntentParser.parse("mở cài đặt và mở YouTube", apps = apps)
+        assertEquals(
+            listOf(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), VoiceIntent.OpenApp("YouTube")), got,
+        )
     }
 
     @Test
@@ -125,8 +126,10 @@ class VoiceE2EFix0915Test {
     fun `cach hieu CO NGHIA van thang cach goi app`() {
         // *"mở nhạc"* là lệnh NHẠC (từ khoá `nhac` trong từ vựng), không phải *"mở một app tên nhạc"*.
         assertEquals(VoiceIntent.Media(VoiceMediaOp.PLAY), one("mở nhạc", apps = emptyList()))
-        // Và nhãn registry vẫn thắng: *"mở kính bên lái"* là nút, dù câu bắt đầu bằng cùng động từ.
-        assertEquals(VoiceIntent.Control("win_lf", 1), one("mở kính bên lái", apps = emptyList()))
+        // Android box B2 · W3: *"mở kính bên lái"* là câu xe ⇒ "đã gỡ", KHÔNG thành mở một app tên "kính".
+        assertEquals(
+            VoiceUnknownReason.FEATURE_GONE, (one("mở kính bên lái", apps = emptyList()) as? VoiceIntent.Unknown)?.reason,
+        )
     }
 
     @Test

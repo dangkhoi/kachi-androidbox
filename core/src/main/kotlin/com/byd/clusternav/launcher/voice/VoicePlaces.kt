@@ -76,8 +76,14 @@ object VoicePlaces {
      */
     val PLACE_VERBS: List<String> = listOf("đi đến", "đi tới", "về tới", "về", "đi", "đến", "tới")
 
-    /** [PLACE_VERBS] ở dạng dãy từ đã bỏ dấu, **dài trước ngắn** (cùng luật *"dãy dài nhất thắng"*). */
-    val PLACE_VERB_WORDS: List<List<String>> = PLACE_VERBS.map { norm(it) }.sortedByDescending { it.size }
+    /**
+     * [PLACE_VERBS] ở dạng dãy từ đã bỏ dấu, **dài trước ngắn** (cùng luật *"dãy dài nhất thắng"*), kèm CÁCH VIẾT có dấu của từng từ (luật đồng hình [VoiceHomograph]): chữ MANG dấu chỉ là động từ
+     * dẫn đường khi viết đúng *"đến"* · *"tới"* · *"về"* · *"đi"*. Android box B2 · W3 (2026-10-09): ≤ 2.98 BYD *"đèn …"* do
+     * nhãn nút xe giành trước ([VoiceIntentParser.headMatch]); nút xe gỡ ⇒ *"đèn đọc"* với mục sổ tên *"Đọc"* từng
+     * thành dẫn đường tới *"Đọc"* (bỏ dấu "đèn" = "đến") — hồi quy, khoá ở `VoicePlacesParseTest`.
+     */
+    val PLACE_VERB_SPELLED: List<Pair<List<String>, List<String>>> =
+        PLACE_VERBS.map { norm(it) to it.split(' ').map(VoiceHomograph::spelling) }.sortedByDescending { it.first.size }
 
     /**
      * Nhãn HIỆN cho người đọc: hai nhãn chuẩn có bản tiếng Anh, nhãn người dùng tự đặt thì trả **nguyên văn**.

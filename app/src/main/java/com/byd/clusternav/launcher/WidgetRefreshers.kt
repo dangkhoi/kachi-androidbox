@@ -9,22 +9,14 @@ import com.byd.clusternav.R
 // mà [WidgetData] lại cần `MediaSnapshot` (:app) nên không xuống được :core. Thân giữ nguyên byte.
 
 /**
- * Gói dữ liệu render cho widget: trạng thái xe [car] (nguồn sự thật state) + nhạc [media] (đọc live) + transport
- * [onMedia] + cổng ra lệnh [control].
+ * Gói dữ liệu render cho widget: nhạc [media] (đọc live) + transport [onMedia] + ảnh trình chiếu.
  *
- * [control] có mặt từ RW0: ô giữa màn nay nhận được **cả hành động** (R2), và hành động thì phải có đường ra xe.
- * Mặc định [NoCar] ⇒ off-car/emulator bấm không làm gì, không sập.
+ * Android box B2 · W3 (2026-10-09): `car` (trạng thái xe) · `control` (cổng nút xe) · `units` (đơn vị datum xe) gỡ cùng lõi
+ * HAL BYDAuto.
  */
 class WidgetData(
-    val car: CarStatus = CarStatus(),
     val media: MediaSnapshot? = null,
     val onMedia: (String) -> Unit = {},
-    val control: CarControlPort = NoCar,
-    /**
-     * Lựa chọn ĐƠN VỊ của người dùng (R11–R13). Mặc định = [UnitPrefs.DEFAULT] ⇒ mọi chỗ gọi cũ và test cũ giữ
-     * nguyên hành vi (R12: không đổi gì thì không thấy khác biệt).
-     */
-    val units: UnitPrefs = UnitPrefs.DEFAULT,
     /**
      * U4(b) — nguồn ảnh cho widget trình chiếu. Chỗ gọi đọc thư mục MỘT LẦN rồi truyền vào; để mỗi ô tự đọc thư mục
      * là I/O lặp lại trên thread chính mỗi lần dựng ô.
@@ -38,15 +30,15 @@ class WidgetData(
  * ═══ SỔ ĐĂNG KÝ "ĐỔ GIÁ TRỊ TẠI CHỖ" CHO Ô GIỮA MÀN ═════════════════════════════════════════════════════════
  *
  * Hai đường `view → hàm đổ`, giữ **trên chính view** của ô con:
- *  • [live]/[refresh] — ô **ĐỌC** (widget dựng tay + telemetry), hàm đổ nhận cả gói [WidgetData] (trạng thái xe ·
- *    nhạc · đơn vị · ảnh) vì một ô có thể cần nhiều nguồn cùng lúc (bảng tổng hợp đọc xe **và** nhạc);
- *  • [liveAction]/[refreshAction] — ô **HÀNH ĐỘNG**, chỉ cần [CarStatus] (nó đọc lại giá trị thật của nút).
+ *  • [live]/[refresh] — ô **ĐỌC** (widget dựng tay), hàm đổ nhận cả gói [WidgetData];
+ *  • [liveTick]/[tickAll] — ô theo GIỜ (đồng hồ), đổ theo nhịp đồng hồ.
+ * (≤ 2.98 BYD còn `liveAction`/`refreshAction`/`resyncActions` của ô nút xe — gỡ ở Android box B2 · W3.)
  *
  * ## ⚠⚠ Vì sao sổ này tồn tại — owner 2026-09-21
  * Nguyên văn: *"widget curated như Áp suất lốp refresh lấy số mới bị GIẬT"*. [WidgetViews.refreshRead] trước đây làm
  * mới một ô ĐỌC bằng cách **dựng lại view rồi thay vào chỗ cũ** (`removeViewAt` + `addView`). Trên xe trạng thái đổi
- * **1 nhịp/giây**, nên mỗi giây một ô curated bị tháo khỏi cây view và gắn lại: khung mới phải đo–đặt–vẽ từ đầu, ô vẽ
- * Canvas mất ảnh xe đang nạp ([CarImageLayer] nạp lại), và mắt thấy đúng một cú **giật**.
+ * **1 nhịp/giây**, nên mỗi giây một ô curated bị tháo khỏi cây view và gắn lại: khung mới phải đo–đặt–vẽ từ đầu, và mắt
+ * thấy đúng một cú **giật**.
  *
  * Ô **HÀNH ĐỘNG** và ô **NHÓM** đã tránh được chuyện này từ trước (chúng đổ chữ tại chỗ qua bảng riêng / `binders`);
  * sổ này mang cùng cách làm sang ô ĐỌC — tức là nó không phát minh cơ chế mới, nó **trải rộng cơ chế đã đúng**.
@@ -84,8 +76,6 @@ internal object WidgetRefreshers {
      */
     private class ValueFill(val fn: (WidgetData) -> Unit)
 
-    private class ActionFill(val fn: (CarStatus) -> Unit)
-
     private class TickFill(val fn: () -> Unit)
 
     /**
@@ -104,18 +94,6 @@ internal object WidgetRefreshers {
     fun refresh(view: View, data: WidgetData): Boolean {
         val fill = view.getTag(R.id.kachi_widget_fill) as? ValueFill ?: return false
         fill.fn(data)
-        return true
-    }
-
-    /** Như [live] nhưng cho ô HÀNH ĐỘNG: nó chỉ cần đọc lại trạng thái nút, không cần cả gói dữ liệu render. */
-    fun liveAction(view: View, fill: (CarStatus) -> Unit) {
-        view.setTag(R.id.kachi_widget_action_fill, ActionFill(fill))
-    }
-
-    /** Đọc lại giá trị thật của ô HÀNH ĐỘNG [view]. `false` = ô không có đường đọc (vd gói lệnh: không có số nào). */
-    fun refreshAction(view: View, car: CarStatus): Boolean {
-        val fill = view.getTag(R.id.kachi_widget_action_fill) as? ActionFill ?: return false
-        fill.fn(car)
         return true
     }
 
@@ -140,19 +118,6 @@ internal object WidgetRefreshers {
         if (root !is ViewGroup) return 0
         var n = 0
         for (i in 0 until root.childCount) n += tickAll(root.getChildAt(i))
-        return n
-    }
-
-    /**
-     * Soát vòng 2 [P3] — đổ lại MỌI ô HÀNH ĐỘNG dưới [root] với [car] KHÔNG đổi: bảng lệnh cuối (`ControlLastSent`) vừa đổi
-     * bởi tiến trình `:wake` (cầu `ControlSentRelay`) ⇒ hàm đổ của ô so hình với bảng (`TileResync.stale`) và vẽ lại ô lệch.
-     * Không dựng view nào (bất biến 1), không chạm ô ĐỌC/NHÓM. Trả số ô đã đổ. Luồng chính.
-     */
-    fun resyncActions(root: View, car: CarStatus): Int {
-        if (refreshAction(root, car)) { FitGridLayout.contentChanged(root); return 1 }
-        if (root !is ViewGroup) return 0
-        var n = 0
-        for (i in 0 until root.childCount) n += resyncActions(root.getChildAt(i), car)
         return n
     }
 }

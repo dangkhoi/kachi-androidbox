@@ -57,7 +57,7 @@ internal fun AppDrawer.addPickGrid(parent: LinearLayout, picks: List<CapabilityP
  * (một nguồn ở `:core`), màu quyết ở đây (màu là chuyện trình bày). Cỡ nhỏ, chỉ icon+chữ ngắn — không tốn chỗ.
  */
 internal fun AppDrawer.kindPill(pick: CapabilityPick): View {
-    val group = pick.group || pick.curated
+    val group = pick.curated   // B2 · W3: nhóm khả năng xe gỡ — chỉ còn thẻ dựng tay
     val read = pick.kind == CapabilityKind.READ
     val fill = when {
         group -> KachiTheme.MUT2
@@ -93,9 +93,8 @@ internal fun AppDrawer.pickTile(pick: CapabilityPick): View {
         // hàng, nếu căn giữa dọc thì ô có dòng phụ đẩy icon/nhãn xuống ~10px lệch với ô cùng hàng.
         orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
         setPadding(dpi(context, Sp.S), dpi(context, Sp.M), dpi(context, Sp.S), dpi(context, Sp.M))
-        // R1 (owner 2026-09-22): icon một-nguồn — datum-trạng-thái dùng icon của control ⇒ picker khớp header/ô.
-        val iconName = CapabilityDots.iconOverride(pick.id) ?: pick.icon
-        addView(PickerBadge.icon(context, KachiIcons.res(iconName, Sp.ICON_XL), pick.needsBadge, Sp.ICON_XL))
+        // (≤ 2.98 BYD: icon một-nguồn cho datum-trạng-thái xe + chấm "chưa kiểm" — gỡ ở Android box B2 · W3.)
+        addView(PickerBadge.icon(context, KachiIcons.res(pick.icon, Sp.ICON_XL), false, Sp.ICON_XL))
         // 1.95 (owner): huy hiệu LOẠI nhỏ có màu — phân biệt ngay Xem / Bấm / Nhóm / Thẻ mà không tốn chỗ.
         addView(kindPill(pick))
         addView(TextView(context).apply {

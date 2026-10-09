@@ -201,29 +201,6 @@ class SurfaceContrastContractTest {
     }
 
     /**
-     * Sắc lĩnh vực phải vượt ngưỡng **nhìn ra được**, không chỉ khác `CLEAR`.
-     *
-     * [ĐO] bản P1 dùng 7 % (tối) / 4.7 % (sáng) ⇒ bước sáng so với thẻ trơ chỉ **1.07–1.15×**, tức là bằng hoặc
-     * dưới chính cái ngưỡng 1.15× mà bài `the chat lieu tach duoc khoi nen` dùng để nói *"mắt đọc ra được"*. Một
-     * sắc tồn tại trong bảng màu mà không tồn tại trên màn thì nó chỉ là vài byte APK.
-     *
-     * Sàn 1.10× (không phải 1.15×) vì tint là lớp **thứ hai** chồng lên một bề mặt đã có bậc và có mép sáng: nó
-     * chỉ cần đủ để trả lời *"ô nào là Khí hậu"* trong một lưới, không cần tự mình tách một mặt phẳng.
-     */
-    @Test
-    fun `sac linh vuc dat nguong nhin ra duoc`() {
-        val bad = mutableListOf<String>()
-        forEachPalette { name, p ->
-            val plain = over(p.surfFrom, p.bg)
-            TINT_DOMAINS.forEach { d ->
-                val step = ratio(over(p.domainTint(d), plain), plain)
-                if (step < 1.10) bad += "$name $d = ${fmt(step)}×"
-            }
-        }
-        assertEquals(emptyList<String>(), bad, "sắc lĩnh vực dưới ngưỡng nhìn ra được (cần ≥ 1.10×): $bad")
-    }
-
-    /**
      * **Nguồn sáng của cả hệ ở TRÊN** ⇒ đỉnh chuyển sắc không bao giờ được TỐI hơn đáy.
      *
      * [SOÁT Pass 5] Bài cũ (`mep sang khong bao gio toi hon dinh gradient`) canh đúng tính chất này nhưng canh
@@ -251,57 +228,6 @@ class SurfaceContrastContractTest {
                 "$name: surfFrom TỐI hơn surfTo ⇒ chuyển sắc đổ ngược chiều sáng (nguồn sáng của cả hệ ở TRÊN)",
             )
         }
-    }
-
-    /**
-     * Sắc lĩnh vực **không được** đẩy mực nào xuống dưới sàn, ở **cả hai** đầu gradient.
-     *
-     * [ĐO] đây là chỗ bản sáng suýt hỏng: ở 7 % (đúng mức của bản tối) thì `mut2`/`accentInk`/`slate` tụt xuống
-     * 4.25–4.35:1. Chiều tác dụng của tint **ngược nhau** giữa hai bảng — trên nền tối nó làm sáng lên, trên thẻ
-     * trắng nó làm tối đi và ăn thẳng vào tương phản của chữ. Vì thế bản sáng dùng 4.7 %.
-     */
-    @Test
-    fun `sac linh vuc khong lam tut tuong phan o ca hai bang`() {
-        val bad = mutableListOf<String>()
-        forEachPalette { name, p ->
-            TINT_DOMAINS.forEach { d ->
-                val tint = p.domainTint(d)
-                listOf("surfFrom", "surfTo").forEach { s ->
-                    val ground = over(tint, over(role(p, s), p.bg))
-                    ALL_INKS.forEach { ink ->
-                        val r = ratio(role(p, ink), ground)
-                        if (r < 4.5) bad += "$name $ink trên $s+$d = ${fmt(r)}"
-                    }
-                }
-            }
-        }
-        assertEquals(emptyList<String>(), bad, "sắc lĩnh vực đẩy mực xuống dưới 4.5:1: $bad")
-    }
-
-    /** Sắc lĩnh vực phải **nhìn ra được** — không thì nó chỉ là vài byte APK và một lời hứa suông. */
-    @Test
-    fun `sac linh vuc nhin ra duoc va khong trung nhau`() {
-        forEachPalette { name, p ->
-            val plain = over(p.surfFrom, p.bg)
-            val seen = HashMap<String, String>()
-            TINT_DOMAINS.forEach { d ->
-                val tinted = over(p.domainTint(d), plain)
-                assertTrue(
-                    tinted != plain,
-                    "$name: lĩnh vực $d không có sắc riêng — tra ra CLEAR nghĩa là thiếu một dòng ở domainTints",
-                )
-                val dup = seen.put(tinted, d)
-                assertTrue(dup == null, "$name: $d và $dup cho ra CÙNG một nền ⇒ mắt không phân biệt được")
-            }
-        }
-        assertEquals(
-            TINT_DOMAINS.sorted(), KachiPalette.DARK.domainTints.keys.sorted(),
-            "bảng sắc lĩnh vực phải phủ đúng danh sách Domain đang dùng",
-        )
-        assertEquals(
-            KachiPalette.DARK.domainTints.keys.sorted(), KachiPalette.LIGHT.domainTints.keys.sorted(),
-            "hai bảng phải phủ CÙNG tập lĩnh vực — thiếu một khoá ở một bảng là một vùng mất sắc ở đúng chủ đề đó",
-        )
     }
 
     /**
@@ -447,15 +373,7 @@ class SurfaceContrastContractTest {
                 row("INK trên surfFromOverArt ($why)", "P1b · chữ chính trên ảnh", 4.5, ratio(p.ink, over(p.surfFromOverArt, art)))
                 row("MUT trên surfFromOverArt ($why)", "P1b · nhãn phụ — CẦN scrim ở P1b", 4.5, ratio(p.mut, over(p.surfFromOverArt, art)))
             }
-            out.append("\n### Sắc lĩnh vực $name — mực TỆ NHẤT trên thẻ đã tint\n\n")
-            out.append("| Lĩnh vực | Mã tint | Nền đỉnh | Nền đáy | Mực tệ nhất | Bước sáng |\n|---|---|---|---|---|---|\n")
-            TINT_DOMAINS.forEach { d ->
-                val t = p.domainTint(d)
-                val tf = over(t, top)
-                val tt = over(t, bot)
-                val worst = ALL_INKS.minOf { minOf(ratio(role(p, it), tf), ratio(role(p, it), tt)) }
-                out.append("| $d | `$t` | `$tf` | `$tt` | **${fmt(worst)}** | ${fmt(ratio(tf, top))}× |\n")
-            }
+            // Android box B2 · W3: bảng "Sắc lĩnh vực" (tint theo lĩnh vực xe — `KachiPalette.domainTints`) gỡ cùng `Domain`.
             out.append("\n")
         }
         // Gốc kho tìm bằng cách đi NGƯỢC từ tệp bảng màu cho tới thư mục có `docs/` — không giả định working
@@ -478,11 +396,5 @@ class SurfaceContrastContractTest {
     private fun role(p: KachiPalette, name: String): String =
         KachiPalette::class.java.getDeclaredField(name).apply { isAccessible = true }.get(p) as String
 
-    private companion object {
-        /** Vai MỰC được đo — giữ đồng bộ với `ThemePaletteContractTest.ALL_INKS`. */
-        val ALL_INKS = listOf("ink", "ink2", "mut", "mut2", "icon", "accentInk", "green", "amber", "red", "cyan", "orange", "slate")
-
-        /** Tám lĩnh vực có sắc riêng — khoá của [KachiPalette.domainTints]. Thứ tự = thứ tự khai của `Domain`. */
-        val TINT_DOMAINS = listOf("ENERGY", "DRIVETRAIN", "CLIMATE", "TYRES", "BODY", "LIGHTS", "IDENTITY", "INFOTAINMENT")
-    }
+    // Android box B2 · W3: `ALL_INKS` / `TINT_DOMAINS` (đo sắc lĩnh vực xe) gỡ cùng `KachiPalette.domainTints`.
 }

@@ -20,8 +20,8 @@ internal object SettingsCatalogRetired {
     private const val NAV_HUD = "dẫn đường lên cụm/HUD BYD — Android box B2 · W1 gỡ mục Cài đặt; khoá còn theo hồ sơ tới W4"
     private const val BADGE = "biển báo tốc độ trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt, W2c gỡ mã; khoá còn theo hồ sơ tới W4"
     private const val VM_BUBBLE = "bong bóng VietMap trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt, W2c gỡ mã; khoá còn theo hồ sơ tới W4"
-    private const val STRIP = "chip thanh trạng thái = chip dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt; W3 gỡ khối chip"
-    private const val UNITS = "đơn vị chỉ dùng cho dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt; W3 gỡ cùng dữ liệu xe"
+    private const val STRIP = "chip thanh trạng thái = chip dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt, W3 gỡ mã; khoá còn theo hồ sơ tới W4"
+    private const val UNITS = "đơn vị chỉ dùng cho dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt, W3 gỡ mã; khoá còn theo hồ sơ tới W4"
 
     /** Khoá → lý do. Phía ClusterNav (tệp ở [SettingsCatalog.CLUSTERNAV_KEYS]) và phía launcher (`kachi_workspace`). */
     val KEYS: Map<String, String> = buildMap {
@@ -45,4 +45,10 @@ internal object SettingsCatalogRetired {
 
     /** Khoá phía LAUNCHER trong [KEYS] (tệp `kachi_workspace`, tiền tố hồ sơ) — phần còn lại phải nằm ở `CLUSTERNAV_KEYS`. */
     val LAUNCHER_KEYS: Set<String> = setOf("top_strip", "top_strip_labels", "unit_prefs")
+
+    /**
+     * Android box B2 · W3 — hậu tố phía launcher mà mã đọc/ghi đã gỡ (chip thanh trên · đơn vị · dấu di trú chip UX5b), khoá
+     * vẫn khai kiểu ở `ProfileScopeLauncher` để tệp hồ sơ cũ nhập/xuất không sai kiểu tới khi W4 dọn.
+     */
+    val LAUNCHER_CODE_REMOVED: Set<String> = LAUNCHER_KEYS + "top_strip_migrated_ux5b"
 }

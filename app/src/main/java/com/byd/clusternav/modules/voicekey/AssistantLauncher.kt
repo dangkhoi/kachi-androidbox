@@ -17,7 +17,6 @@ import com.byd.clusternav.carexec.LocalDeviceShell
 import com.byd.clusternav.carexec.LocalShellFailure
 import com.byd.clusternav.carexec.LocalShellResult
 import com.byd.clusternav.carexec.LocalShellRetry
-import com.byd.clusternav.launcher.KeyCtlTargets
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -79,13 +78,20 @@ object AssistantLauncher {
     /** Tiền tố đích camera 2.93 (`cam:`) — chỉ để NHẬN RA dòng gán cũ và bỏ qua (Android box B2 · W2b). */
     private const val LEGACY_CAMERA_PREFIX = "cam:"
 
+    /** Tiền tố đích nút xe FIX286 (`ctl:`) — chỉ để NHẬN RA dòng gán cũ và bỏ qua (Android box B2 · W3). */
+    internal const val LEGACY_CTL_PREFIX = "ctl:"
+
+    /**
+     * Đích của dòng gán cũ mà tính năng đã gỡ — nút xe (`ctl:<nút>:<việc>`, FIX286 · R-KC; gỡ ở Android box B2 · W3) và
+     * camera BYD (`cam:<camera>` · `cam:off`, 2.93; gỡ ở W2b). Hàm thuần (test off-device): tên gói không chứa `:` nên
+     * không bao giờ đoán nhầm thành app. Người dùng xoá dòng ở Cài đặt › Phím vô-lăng.
+     */
+    internal fun isRetiredTarget(spec: String): Boolean =
+        spec.startsWith(LEGACY_CTL_PREFIX) || spec.startsWith(LEGACY_CAMERA_PREFIX)
+
     fun launch(ctx: Context, spec: String): Boolean {
-        // FIX286 · R-KC — đích là một NÚT XE (`ctl:<nút>:<việc>`): không mở app nào; giao đường thi hành của nút
-        // (KeyCtlDispatch — chống dồn, làn nền, cùng cổng an toàn với giọng nói). Tên gói không chứa `:` ⇒ không trùng.
-        if (KeyCtlTargets.isCtl(spec)) return KeyCtlDispatch.fire(ctx, spec)
-        // Android box B2 · W2b — đích camera cũ (`cam:<camera>` · `cam:off`, 2.93) của dòng gán đã lưu: camera BYD gỡ ⇒ không
-        // làm gì (không đoán thành tên gói — tên gói không chứa `:`). Người dùng xoá dòng ở Cài đặt › Phím vô-lăng.
-        if (spec.startsWith(LEGACY_CAMERA_PREFIX)) return false
+        // Dòng gán cũ (nút xe / camera BYD đã gỡ) ⇒ không làm gì, không chạm `ctx`.
+        if (isRetiredTarget(spec)) return false
         // V1 pha NGHE: đích của CHÍNH Kachi — không mở app nào, mở một phiên nghe. Xem [launchKachiVoice].
         if (spec == TARGET_KACHI_VOICE) return launchKachiVoice(ctx)
         // Gemini/Google chỉ có nghĩa dạng ASSISTANT (voice). Mở app home = vô dụng (bug 1.19). → route keyevent 231.

@@ -40,7 +40,7 @@ data class SavedPlace(
 /**
  * ═══ SỔ ĐỊA CHỈ — MÔ HÌNH + MÃ HOÁ, **NGUỒN DUY NHẤT** ════════════════════════════════════════════════════════
  *
- * Spec `docs/specs/kachi-voice-addresses.html` §4.3. Cùng vai [SlotCodec]/[TopStripConfig]: dạng chuỗi của một
+ * Spec `docs/specs/kachi-voice-addresses.html` §4.3. Cùng vai [SlotCodec]: dạng chuỗi của một
  * thứ lưu bền được khai **đúng một chỗ**, ở `:core`, nơi bài kiểm chạm tới được. `WorkspacePrefs` (`:app`) chỉ
  * gọi [encode]/[decode] — nó không biết một dấu phân cách nào.
  *

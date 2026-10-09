@@ -56,31 +56,6 @@ class GridFitWindowWidgetTest {
 
     // ── 1 · bóng hình ───────────────────────────────────────────────────────────────────────────────────────
 
-    @Test
-    fun `bon nut kinh khong phan biet duoc khi bo nhan - luoi kinh khong co chi-icon`() {
-        val windows = listOf("win_lf", "win_rf", "win_lr", "win_rr", "mac_win_open_all", "mac_win_close_all")
-        // Tên tệp khác nhau (bản cũ cho chỉ-icon vì đếm theo tên) …
-        val names = windows.mapNotNull { CapabilityCatalog.pick(it)?.icon }
-        assertEquals(6, names.size, "đủ hình cho 6 nút: $names")
-        assertTrue(IconRepeat.distinguishable(names), "theo TÊN thì 4 tệp kính khác nhau: $names")
-        // … nhưng cùng một bóng xe ⇒ cổng chỉ-icon phải đóng.
-        assertFalse(IconRepeat.ofIds(windows), "bốn bóng xe chỉ khác một dấu kính 1–2px — bỏ nhãn là bấm nhầm kính")
-        assertEquals("ic-car-top-window", IconRepeat.silhouette("ic-car-top-window-rr"))
-        assertEquals("ic-car-top-door-shut", IconRepeat.silhouette("ic-car-top-door-lf-shut"))
-        // Hình THẬT SỰ khác nhau vẫn được bỏ nhãn (đèn đọc · lọc bụi · nhiệt độ · gió · sấy kính · mát ghế).
-        val distinct = listOf("readl", "pm25", "temp", "fan", "defrost", "seatc")
-        assertEquals(6, distinct.mapNotNull { CapabilityCatalog.pick(it)?.icon }.size, "bài không được rỗng nghĩa")
-        assertTrue(IconRepeat.ofIds(distinct))
-        // ĐỔI GHIM (soát vòng 4 P3, quyết định điều phối J1): bản H1 ghim "một CẶP trái/phải vẫn là cặp — CAP = 3" cho
-        // cổng KHÔNG NHÃN. Lý do của CAP 3 ("cặp đọc được NHỜ NHÃN") không tồn tại khi nhãn bị ẩn: cặp kính lái/phụ chỉ
-        // khác một hình chữ nhật ≈ 1×2px ⇒ bỏ nhãn là bấm nhầm kính. Nay HAI ô cùng bóng hình cũng chặn chỉ-icon (cặp
-        // ghế sưởi trái/phải mất đường chỉ-icon — vẫn có nhãn). Ô nhóm (nhãn luôn hiện) giữ CAP = 3.
-        assertFalse(IconRepeat.distinguishableWithoutLabels(listOf("ic-seat-heat-left", "ic-seat-heat-right", "ic-fan")))
-        assertFalse(IconRepeat.ofIds(listOf("win_lf", "win_rf", "readl", "fan", "temp", "pm25")), "cặp kính lái/phụ — ca soát vòng 4")
-        assertTrue(IconRepeat.distinguishable(listOf("ic-seat-heat-left", "ic-seat-heat-right", "ic-fan")), "ô nhóm: CAP 3 giữ nguyên")
-        assertTrue(IconRepeat.distinguishable(listOf("a", "a", "b")) && !IconRepeat.distinguishable(listOf("a", "a", "a")))
-    }
-
     // ── 2 · gần đích chạm ───────────────────────────────────────────────────────────────────────────────────
 
     @Test
@@ -154,14 +129,8 @@ class GridFitWindowWidgetTest {
         val owner = fit(615, 123, msAfter)
         assertEquals(3 to 2, owner.cols to owner.rows, label(owner))
         assertEquals(Form.HORIZONTAL, owner.shape!!.form, "ngang 1 dòng như tiếng Thái cùng khung — ${label(owner)}")
-        // Hộp `msAfter` dựng từ ĐÚNG các chữ này — bản dịch đổi ⇒ phải đo lại hộp (đỏ ở đây là nhắc việc đó).
-        val shown = I18nPairs.inLang(Lang.MS) {
-            listOf("win_lf", "win_rf", "win_lr", "win_rr").map { ControlRegistry.byId(it)!!.displayLabel } +
-                listOf("mac_win_open_all", "mac_win_close_all").map { ActionMacros.byId(it)!!.displayLabel }
-        }
-        assertEquals(
-            listOf("Kaca pemandu", "Kaca penumpang", "Kaca blkg kiri", "Kaca blkg kanan", "Buka semua", "Tutup semua"), shown,
-        )
+        // Android box B2 · W3: bài đối chiếu hộp với nhãn MS thật của 6 nút kính gỡ cùng `ControlRegistry` — hộp
+        // `msAfter` nay chỉ là dữ liệu đo cố định cho bộ giải `GridFit` (bộ giải còn dùng cho lưới widget/lối tắt).
     }
 
     @Test

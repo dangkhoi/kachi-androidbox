@@ -20,14 +20,15 @@ class VoiceCourtesyLaiTest {
         assertEquals(listOf("mo", "mot", "nua", "kinh", "lai"), strip("mở một nửa kính lái"))
         assertEquals(listOf("mo", "mot", "nua", "kinh", "lai"), strip("MỞ MỘT NỬA KÍNH LÁI"), "chữ HOA mô hình in")
         assertEquals(listOf("dong", "cua", "kinh", "ben", "lai"), strip("đóng cửa kính bên lái"))
-        assertEquals(listOf(VoiceIntent.Control("win_half_lf", 1)), VoiceIntentParser.parse("mở một nửa kính lái"))
+        // Android box B2 · W3: câu xe không còn lệnh ⇒ báo "đã gỡ", không thành lệnh khác.
+        assertEquals(VoiceUnknownReason.FEATURE_GONE, (VoiceIntentParser.parseOne("mở một nửa kính lái") as? VoiceIntent.Unknown)?.reason)
     }
 
     @Test
     fun `dem lai van cat nhu cu`() {
         assertEquals(listOf("dong", "cua", "so", "troi"), strip("đóng cửa sổ trời lại"), "«lại» đúng cách viết ⇒ đệm")
         assertEquals(listOf("mo", "mot", "nua", "kinh"), strip("mo mot nua kinh lai"), "không dấu ⇒ không dữ liệu ⇒ như cũ")
-        assertEquals(listOf(VoiceIntent.Control("sunroof", 0)), VoiceIntentParser.parse("đóng cửa sổ trời lại"))
+        assertEquals(VoiceUnknownReason.FEATURE_GONE, (VoiceIntentParser.parseOne("đóng cửa sổ trời lại") as? VoiceIntent.Unknown)?.reason)
     }
 
     @Test

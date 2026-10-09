@@ -1,8 +1,5 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlKind
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.Localized
 
@@ -10,7 +7,8 @@ import com.byd.clusternav.launcher.Localized
 enum class VoiceVerb { ON, OFF, OPEN, CLOSE, UP, DOWN, SET, READ, SWITCH, NAV, PLAY, PAUSE, NEXT, PREV }
 
 /** Loại đích của một cụm từ trong từ vựng — quyết định ý định nào được dựng ra. */
-enum class VoiceTermKind { CONTROL, TELEMETRY, MACRO, LAUNCHER, PROFILE, APP, MEDIA, NAV }
+/** Android box B2 · W3: `CONTROL` · `TELEMETRY` · `MACRO` (nút / datum / gói lệnh xe) gỡ cùng bộ đăng ký xe. */
+enum class VoiceTermKind { LAUNCHER, PROFILE, APP, MEDIA, NAV }
 
 /**
  * Một cụm từ **đã chuẩn hoá** trỏ tới một đích.
@@ -176,21 +174,8 @@ object VoiceGrammar {
      * số) · *"chế độ lái thể thao"* (SELECT tra nhãn) · *"ứng dụng VTV Go"* (LAUNCHER tra tên app). Siết rộng
      * hơn thì ba họ câu ấy chết theo; siết hẹp hơn thì ba câu đo được ở trên vẫn bắn lệnh.
      */
-    fun readsTail(term: VoiceTerm): Boolean = when (term.kind) {
-        // *"Mở ứng dụng VTV Go"* — đuôi quyết định app nào (nhánh LAUNCHER của `build`). (≤ 2.98 BYD: việc có trạng thái —
-        // camera theo yêu cầu — không đọc đuôi; Android box B2 · W2b gỡ camera ⇒ mọi việc launcher đọc đuôi.)
-        VoiceTermKind.LAUNCHER -> true
-        VoiceTermKind.CONTROL -> when (ControlRegistry.byId(term.id)?.kind) {
-            // SELECT tra nhãn lựa chọn trong đuôi; STEP tra con số. Cả hai tự trả MISMATCH khi đuôi không cho
-            // gì dùng được, nên chúng không bao giờ lặng lẽ bắn một hành động.
-            ControlKind.SELECT, ControlKind.STEP -> true
-            // TOGGLE · COVER · BUTTON: `control()` trả thẳng `Control(id, 1)` / `Control(id, null)` — `after`
-            // không xuất hiện một lần nào. Đây đúng là họ nút đụng THÂN XE (cốp · kính · khoá · nắp ca-pô).
-            else -> false
-        }
-        // MACRO: `build` trả thẳng `Macro(id)`, không nhìn `after`.
-        else -> false
-    }
+    fun readsTail(term: VoiceTerm): Boolean = term.kind == VoiceTermKind.LAUNCHER
+    // Android box B2 · W3: nhánh CONTROL (SELECT/STEP đọc đuôi) gỡ cùng `ControlRegistry`.
 
     /**
      * TOÀN BỘ từ vựng đối tượng, **sinh ra** từ 4 bộ đăng ký + [VoiceSynonyms] + danh sách động (hồ sơ, app).
@@ -247,15 +232,6 @@ object VoiceGrammar {
             extraShort.filterNotNull().forEach { add(it, kind, id) }
         }
 
-        ControlRegistry.ALL.forEach { c ->
-            addLocalized(c, c.id, VoiceTermKind.CONTROL, listOf(c.short, c.shortEn))
-            VoiceSynonyms.CONTROL[c.id]?.forEach { add(it, VoiceTermKind.CONTROL, c.id) }
-        }
-        VoiceTelemetry.SPOKEN.forEach { t ->   // 2.88: trừ 13 mã lốp thô — KDoc [VoiceTelemetry]
-            addLocalized(t, t.id, VoiceTermKind.TELEMETRY, listOf(t.short, t.shortEn))
-            VoiceSynonyms.TELEMETRY[t.id]?.forEach { add(it, VoiceTermKind.TELEMETRY, t.id) }
-        }
-        ActionMacros.ALL.forEach { m -> addLocalized(m, m.id, VoiceTermKind.MACRO) }
         LauncherActions.ALL.forEach { a -> addLocalized(a, a.id, VoiceTermKind.LAUNCHER) }
         out
     }
@@ -287,27 +263,15 @@ object VoiceGrammar {
     fun matchAt(t: List<VoiceLexicon.Token>, i: Int, terms: List<VoiceTerm>): List<VoiceTerm> =
         terms.filter { VoiceLexicon.phraseAt(t, i, it.words) && VoiceHomograph.spelledOk(t[i], it.spelled) }   // 2.93 wave 2A — OQ2
 
-    /** Động từ (hoặc từ mở đầu một cụm lệnh) đi cùng multi-command split — xem [ACTION_VERB_HEADS]. */
+    /** Động từ (hoặc từ mở đầu một cụm lệnh) đi cùng multi-command split. */
     private val ACTION_VERBS = setOf(
         VoiceVerb.ON, VoiceVerb.OFF, VoiceVerb.OPEN, VoiceVerb.CLOSE, VoiceVerb.UP, VoiceVerb.DOWN, VoiceVerb.SET,
     )
 
     /**
-     * Từ MỞ ĐẦU một cụm lệnh mà [VERBS] không khai (chúng resolve qua luật scoped / synonym): "hạ"/"kéo"/"nâng"
-     * (hướng kính) · "lấy" ("lấy gió ngoài/trong"). Dùng cho [actionVerbAt] để tách câu MIX không liên từ.
-     *
-     * 2.93 senior review wave 2 — khai bằng cách viết CÓ DẤU ([ACTION_HEAD_WORDS], nguồn duy nhất; tập bỏ dấu suy ra, KHÔNG đổi
-     * ⇒ [actionVerbAt] y nguyên) để [VoiceVerbSpelling] đọc luật dấu [VoiceHomograph]: bỏ dấu thì *"hả"* (hả?) · *"Hà"* (Hà Nội) ·
-     * *"nắng"* (rèm che nắng) trùng *"hạ"* · *"nâng"* — [ĐO off-car 07/10] trả lời *"hả"* cho câu hỏi *"Mở hay đóng Kính lái?"* từng
-     * ghép thành *"hả kính lái"* = MỞ kính.
-     */
-    internal val ACTION_HEAD_WORDS = VoiceHomograph.Words("hạ", "kéo", "nâng", "lấy", "chuyển")
-    private val ACTION_VERB_HEADS: Set<String> = ACTION_HEAD_WORDS.norms
-
-    /**
      * Vị trí [i] có phải ĐẦU một cụm lệnh HÀNH ĐỘNG không — cho `VoiceIntentParser.multiVerbSplit` tách câu MIX
      * không liên từ ("hạ kính lấy gió ngoài tắt máy lạnh"). Nhận [VERBS] có [VoiceVerb] hành động (không NAV/READ/
-     * PLAY — những cái ấy hiếm ghép kiểu này và dễ cắt nhầm tên bài/điểm đến), cộng [ACTION_VERB_HEADS].
+     * PLAY — những cái ấy hiếm ghép kiểu này và dễ cắt nhầm tên bài/điểm đến).
      *
      * ⚠ An toàn nằm ở CHỖ GỌI (mọi vế phải parse hiểu được), nên ở đây được phép rộng tay.
      */
@@ -315,32 +279,10 @@ object VoiceGrammar {
         // ⚠ "tất cả" bỏ dấu = "tat ca" — "tat" TRÙNG "tắt" (OFF). "mở TẤT CẢ kính" không được coi "tất" là ranh
         // giới lệnh, nếu không "mở tất cả kính" bị cắt thành "mở" + "tất cả kính" (vế "mở" rỗng nghĩa ⇒ hỏng).
         if (t.getOrNull(i)?.norm == "tat" && t.getOrNull(i + 1)?.norm == "ca") return false
-        // ACTION_VERB_HEADS xét TRƯỚC: "chuyen" cũng là VERB SWITCH ("chuyển hồ sơ") nên nếu hỏi VERBS trước thì
-        // "chuyển gió ngoài" không bao giờ thành ranh giới. An toàn nhờ cổng chỗ gọi (mọi vế phải hiểu được).
-        if (t.getOrNull(i)?.norm in ACTION_VERB_HEADS) return true
+        // Android box B2 · W3: từ mở đầu lệnh hướng kính (hạ · kéo · nâng · lấy · chuyển) gỡ cùng nút xe.
         VERBS.firstOrNull { VoiceLexicon.phraseAt(t, i, it.first) }?.let { return it.second in ACTION_VERBS }
         return false
     }
-
-    /**
-     * H4 — [terms] cộng thêm các cụm **nghe nhầm** mà câu [tokens] đủ NGỮ CẢNH để bật ([VoiceSynonyms.MISHEARD]).
-     *
-     * Điều kiện đọc trên **cả câu**, không đọc trên từng vị trí: nó trả lời câu hỏi *"câu này đang nói về lọc bụi
-     * chứ?"*, mà câu hỏi ấy không thể trả lời bằng một cửa sổ hai từ. Câu không có từ ngữ cảnh nào thì trả về
-     * **đúng** danh sách cũ (không cấp phát, không sắp xếp lại) — tức mọi câu đang chạy tốt không đụng tới.
-     */
-    fun plusMisheard(terms: List<VoiceTerm>, tokens: List<VoiceLexicon.Token>): List<VoiceTerm> {
-        val norms = tokens.mapTo(HashSet(tokens.size)) { it.norm }
-        val extra = VoiceSynonyms.MISHEARD
-            .filter { m -> m.context.any { it in norms } }
-            .map { VoiceTerm(it.words, kindOf(it.id), it.id) }
-        if (extra.isEmpty()) return terms
-        return (terms + extra).distinct().sortedByDescending { it.words.size }
-    }
-
-    /** Mã của [VoiceSynonyms.MISHEARD] là mã nút hay mã datum — hỏi thẳng bộ đăng ký, không khai loại hai lần. */
-    private fun kindOf(id: String): VoiceTermKind =
-        if (ControlRegistry.byId(id) != null) VoiceTermKind.CONTROL else VoiceTermKind.TELEMETRY
 
     /**
      * ═══ PHA NGHE · cùng danh mục này, nhưng viết cho **bộ nhận dạng** ════════════════════════════════════════

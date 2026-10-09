@@ -9,8 +9,8 @@ package com.byd.clusternav.launcher
  * ## Phạm vi — cái KHÔNG thuộc tệp này, để chỗ trống không bị đọc thành sơ suất
  *  • **Vị trí của chính THANH** không đổi: thanh trên vẫn ở trên, thanh nút vẫn chọn 1 trong 4 viền
  *    ([DockConfig.edge]) và cờ ẩn/hiện ([DockConfig.visible]). WP4 chỉ nói về **thứ tự các vật bên trong**.
- *  • **Chọn item nào** (chip nào lên thanh trên, nút nào vào thanh nút) đã có sẵn: [TopStripConfig.ids] và
- *    [DockConfig.enabled]. WP4 thêm đúng một thứ còn thiếu: **sắp lại chỗ đứng**.
+ *  • **Chọn item nào** (nút nào vào thanh nút) đã có sẵn: [DockConfig.enabled] (Android box B2 · W3: bộ chọn chip
+ *    thanh trên `TopStripConfig` gỡ cùng chip xe). WP4 thêm đúng một thứ còn thiếu: **sắp lại chỗ đứng**.
  *
  * ## Vì sao MỘT phép sắp lại dùng cho CẢ HAI thanh ([BarOrder.move])
  * Thanh trên sắp một danh sách [HeaderItem]; thanh nút sắp một danh sách **mã khả năng** (`String`). Hai loại dữ
@@ -57,9 +57,7 @@ object BarOrder {
  * giữa hàng chip và đồng hồ ở cuối thanh — một trạng thái không ai muốn nhưng bộ chọn lại mời làm. Số lựa chọn
  * ít hơn mà **không** mất khả năng nào có ích.
  *
- * ## Vì sao hàng chip là MỘT vật ([CHIPS])
- * Thứ tự **giữa các chip** đã do [TopStripConfig.ids] quyết (và bộ chọn chip đã bày ra). Đưa từng chip vào đây
- * là hai bề mặt cùng quyết một thứ — đúng bẫy hai-bản-sao. Ở đây hàng chip đứng như một khối.
+ * (≤ 2.98 BYD: hàng chip trạng thái xe là MỘT vật `CHIPS` — gỡ ở Android box B2 · W3 cùng chip xe.)
  *
  * @property info Vật **THÔNG TIN** (chỉ đọc) hay **NÚT** (bấm được). Dùng ở hai chỗ: WP5 giữ nguyên cỡ chữ của
  *   vật thông tin trong khi hạ cỡ nút còn 70 %, và bộ chọn nhóm hai loại cho dễ hiểu. Là **dữ liệu** ở `:core`
@@ -71,7 +69,8 @@ enum class HeaderItem(
     val info: Boolean,
 ) : Localized {
     CLOCK("Đồng hồ và ngày", "Clock and date", info = true),
-    CHIPS("Chip trạng thái xe", "Car status chips", info = true),
+    // Android box B2 · W3: `CHIPS` (hàng chip trạng thái xe) gỡ cùng chip xe — chuỗi `header_order` cũ có "CHIPS" đọc lên bỏ
+    // tên lạ ([HeaderLayout.decode] ca 2).
     VOICE("Nút nói", "Talk button", info = false),
     APPS("Nút ứng dụng", "Apps button", info = false),
     SETTINGS("Nút cài đặt", "Settings button", info = false),
@@ -81,7 +80,7 @@ enum class HeaderItem(
 /**
  * THỨ TỰ các vật trên thanh trạng thái trên — cấu hình bền, **theo HỒ SƠ** (khoá `header_order`).
  *
- * Theo hồ sơ vì cùng lẽ với [TopStripConfig.ids] và [DockConfig.enabled] (S4 *"hồ sơ là tất cả"*): hai tài xế
+ * Theo hồ sơ vì cùng lẽ với [DockConfig.enabled] (S4 *"hồ sơ là tất cả"*): hai tài xế
  * quen tay hai kiểu là chuyện thường, và mọi lựa chọn bố cục của launcher đã theo hồ sơ.
  *
  * ## Bất biến: [order] là một PHÉP HOÁN VỊ ĐỦ của [HeaderItem]
@@ -106,33 +105,20 @@ data class HeaderLayout(val order: List<HeaderItem> = DEFAULT_ORDER) {
 
     fun canMove(item: HeaderItem, delta: Int): Boolean = BarOrder.canMove(order, item, delta)
 
-    /**
-     * Hàng chip có căn về **mép CUỐI** của khoảng co giãn hay không.
-     *
-     * Hàng chip là phần **co giãn** của thanh (`0dp + weight 1`, xem `KachiTopStrip.fitChips`), nên khoảng trống
-     * của thanh nằm *bên trong* nó. Căn END ⇒ trống ở **trước** chip; căn START ⇒ trống ở **sau** chip. Luật:
-     * khoảng trống nên nằm **giữa** thanh, tức về phía có nhiều vật hơn… và [ĐO số học] với 6 vật thì tính chất
-     * đó quy về một câu đơn giản hơn: chip **không** phải vật đầu tiên ⇒ căn END (trống lùi về giữa, mặc định
-     * giữ y nguyên hình dạng 1.85). Chip đứng đầu ⇒ căn START, nếu không thì thanh mở đầu bằng một quãng trống.
-     *
-     * Ở `:core` vì nó là một LUẬT kiểm được off-car, không phải một con số của tầng vẽ.
-     */
-    val chipsAlignEnd: Boolean get() = order.firstOrNull() != HeaderItem.CHIPS
-
     companion object {
         /**
-         * Thứ tự MẶC ĐỊNH = **đúng hình dạng 1.85** (đồng hồ · ngày → chip → nói → ứng dụng → cài đặt → hồ sơ).
+         * Thứ tự MẶC ĐỊNH = hình dạng 1.85 bỏ hàng chip (đồng hồ · ngày → nói → ứng dụng → cài đặt → hồ sơ).
          * Ai không sửa gì thì không thấy gì khác — có bài canh khoá cả thứ tự này.
          */
         val DEFAULT_ORDER: List<HeaderItem> = listOf(
-            HeaderItem.CLOCK, HeaderItem.CHIPS, HeaderItem.VOICE,
+            HeaderItem.CLOCK, HeaderItem.VOICE,
             HeaderItem.APPS, HeaderItem.SETTINGS, HeaderItem.PROFILE,
         )
 
         val DEFAULT = HeaderLayout(DEFAULT_ORDER)
 
         /**
-         * `"CLOCK,CHIPS,…"` → thứ tự. **Chữa** dữ liệu hỏng, không từ chối nó.
+         * `"CLOCK,VOICE,…"` → thứ tự (mục lạ như `CHIPS` của bản BYD bị bỏ khi đọc). **Chữa** dữ liệu hỏng, không từ chối nó.
          *
          * Ba ca thật, và cả ba phải ra một thanh dùng được:
          *  1. **rỗng / null** (máy chưa từng sắp) ⇒ [DEFAULT].

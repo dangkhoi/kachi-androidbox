@@ -52,53 +52,12 @@ class LangCoverageTest {
     // ── 1 · ĐẾM TUYỆT ĐỐI: không mã nào thiếu nhãn EN ────────────────────────────────────────────
 
     @Test
-    fun `moi datum co nhan EN, dung 73 dong`() {
-        // 106 (2026-09-16 owner gỡ ADAS/an toàn — trước đó 123).
-        // 100 ((V) FEATURE-FILTER 2026-09-17 owner gỡ 12 datum NO — trước đó 112).
-        // 1.85: +1 `ac_wind_auto` (đã có nhãn + nhãn ngắn ở CẢ hai thứ tiếng — chính bài này ép điều đó).
-        // WP8 2026-09-20: 102 → 73 (purge 29 datum BỎ) → 1.90: 71 (gỡ `op_mode` + `energy_mode`, xe thuần điện).
-        // 2026-09-25: 71 → 64 (owner gỡ 7 datum CHẾT — nhật ký ở TelemetryRegistry).
-        // UX5b (2026-09-27): 64 → 66 (+2 datum ghế PHỤ — `seat_vent_state_r` · `seat_heat_state_r`; cả hai có nhãn
-        // + nhãn ngắn ở CẢ hai thứ tiếng, chính bài này ép điều đó).
-        // 2.88 (04/10): 66 → 79 (+13 mã trạng thái THÔ của lốp — nhãn VI/EN + bản dịch zh/th/ms đủ cả 13).
-        assertEquals(79, TelemetryRegistry.ALL.size, "số datum đổi ⇒ xem lại bản dịch trước khi ghim số mới")
-        val missing = TelemetryRegistry.ALL.filter { it.labelEn.isNullOrBlank() }.map { it.id }
-        assertTrue(missing.isEmpty(), "datum thiếu nhãn tiếng Anh: $missing")
-    }
-
-    @Test
-    fun `moi nut co nhan EN, dung 39 nut`() {
-        // 39 (UX-OVERHAUL WP8 2026-09-20 owner purge 8 nút BỎ: gạt mưa · 4 đèn viền · mức tái tạo · 2 HUD).
-        // 38 (gỡ `seat_memory`) → 29 (1.90: 9 nút xe-thuần-điện; danh sách ở `WorkspaceStateTest`).
-        // Android box B2 · W2b (2026-10-09): 33 → **32** (gỡ `cam` Camera 360 cùng camera BYD).
-        assertEquals(32, ControlRegistry.ALL.size, "số nút đổi ⇒ xem lại bản dịch trước khi ghim số mới")
-        val missing = ControlRegistry.ALL.filter { it.labelEn.isNullOrBlank() }.map { it.id }
-        assertTrue(missing.isEmpty(), "nút thiếu nhãn tiếng Anh: $missing")
-    }
-
-    @Test
-    fun `moi nhom co nhan va dong phu EN, dung 8 nhom`() {
-        // 9 (2026-09-16 owner gỡ ADAS/an toàn — trước đó 12 — bỏ g_adas · g_occupants · g_parking).
-        // 8 (WP8 2026-09-20 gỡ g_ambient — hết thành viên sau khi purge 5 datum + 4 nút đèn viền).
-        assertEquals(8, CapabilityGroups.ALL.size)
-        val missing = CapabilityGroups.ALL
-            .filter { it.labelEn.isNullOrBlank() || it.subEn.isNullOrBlank() }.map { it.id }
-        assertTrue(missing.isEmpty(), "nhóm thiếu labelEn/subEn: $missing")
-    }
-
-    @Test
-    fun `moi widget co nhan EN, dung 10 widget`() {
+    fun `moi widget co nhan EN, dung 4 widget`() {
         // F1 (2026-10-02): 9 → 10 = `w_apps` (lưới lối tắt ứng dụng, spec shortcuts-autostart R1.3).
-        assertEquals(10, WidgetRegistry.ALL.size)
+        // Android box B2 · W3 (2026-10-09): 10 → 4 = sáu widget xe gỡ cùng lõi HAL BYDAuto.
+        assertEquals(4, WidgetRegistry.ALL.size)
         val missing = WidgetRegistry.ALL.filter { it.labelEn.isNullOrBlank() }.map { it.id }
         assertTrue(missing.isEmpty(), "widget thiếu nhãn tiếng Anh: $missing")
-    }
-
-    @Test
-    fun `moi goi lenh co nhan EN, dung 4 goi`() {
-        assertEquals(2, ActionMacros.ALL.size)
-        val missing = ActionMacros.ALL.filter { it.labelEn.isNullOrBlank() }.map { it.id }
-        assertTrue(missing.isEmpty(), "gói lệnh thiếu nhãn tiếng Anh: $missing")
     }
 
     @Test
@@ -162,30 +121,6 @@ class LangCoverageTest {
         assertTrue(badEntries.isEmpty(), "mục cài đặt thiếu nhãn tiếng Anh: $badEntries")
     }
 
-    @Test
-    fun `cac enum mang nhan cung co ban EN`() {
-        // 8 (2026-09-16 owner gỡ ADAS/an toàn — trước đó 9 — bỏ Domain.SAFETY).
-        assertEquals(8, Domain.values().size)
-        assertEquals(7, Quantity.values().size)
-        assertEquals(4, TyreCorner.values().size)
-        // V1 pha NGHE: +1 — `microphone` (quyền micro, tự cấp bằng `pm grant`).
-        // AUTOMATION #2 (1.85): +1 — `location` (quyền ĐỌC định vị cho cổng "đã ra khỏi hầm chưa", cùng đường
-        // `pm grant`; CHỈ đọc — xem `DeadReckonRetirementTest.the app never writes or subscribes to location`).
-        assertEquals(8, LauncherRequirements.ALL.size)
-        Domain.values().forEach { assertTrue(it.labelEn.isNotBlank(), "Domain.${it.name} thiếu nhãn EN") }
-        Quantity.values().forEach { assertTrue(it.labelEn.isNotBlank(), "Quantity.${it.name} thiếu nhãn EN") }
-        TyreCorner.values().forEach {
-            assertTrue(it.labelEn.isNotBlank(), "TyreCorner.${it.name} thiếu nhãn EN")
-            assertTrue(it.shortLabelEn.isNotBlank(), "TyreCorner.${it.name} thiếu viết tắt EN")
-        }
-        LauncherRequirements.ALL.forEach {
-            assertNotNull(it.labelEn, "điều kiện ${it.id} thiếu nhãn EN")
-            assertNotNull(it.losesWhatIfMissingEn, "điều kiện ${it.id} thiếu câu 'mất gì' bằng EN")
-            // Chỉ ca cần người dùng mới có việc-cần-làm; ca đó thì bản EN là bắt buộc.
-            if (it.userAction != null) assertNotNull(it.userActionEn, "điều kiện ${it.id} thiếu việc-cần-làm EN")
-        }
-    }
-
     /**
      * Phép quét GỘP: mọi thứ mang [Localized] phải có nhãn EN, và **tổng số phải khớp**.
      *
@@ -193,11 +128,8 @@ class LangCoverageTest {
      * `Localized` khỏi một lớp sẽ làm lớp đó không còn ở đây mà **không bài nào đỏ** nếu không ghim tổng.
      */
     @Test
-    fun `tong so nhan co ban EN dung 227`() {
-        val all: List<Localized> = TelemetryRegistry.ALL + ControlRegistry.ALL + CapabilityGroups.ALL +
-            WidgetRegistry.ALL + ActionMacros.ALL + SettingsCatalog.GROUPS + SettingsCatalog.ENTRIES +
-            Domain.values().toList() + Quantity.values().toList() + TyreCorner.values().toList() +
-            LauncherRequirements.ALL + LauncherActions.ALL + LauncherActions.BLOCKS + HeaderItem.values().toList()
+    fun `tong so nhan co ban EN dung 80`() {
+        val all: List<Localized> = localizedRows()
         // 302 = 265 + 3 nhóm mới (nav · cast · keys — `bars` bù cho `clusternav` bị bỏ) + 36 mục mới của IA v2,
         // trừ 1 mục `system_advanced_screen` gỡ cùng màn ClusterNav cũ (S3 · 2026-09-13), rồi S4 · R1/R6 −3 mục
         // cảnh +2 mục hồ sơ.
@@ -266,7 +198,9 @@ class LangCoverageTest {
         // (`LauncherActions`), EN tại chỗ khai + dòng zh/th/ms trong `i18n/*.tsv`.
         // Android box B2 · W1 (2026-10-09): **269 → 233 (−36)** = −34 mục Cài đặt chỉ-BYD − 2 nhóm (CAST · CAR).
         // Android box B2 · W2b (2026-10-09): **233 → 227 (−6)** = năm việc camera theo yêu cầu (`launcher_cam_*`) + nút `cam`.
-        assertEquals(227, all.size, "số nhãn đổi — thêm mã mới thì phải dịch, rồi mới ghim số mới")
+        // Android box B2 · W3 (2026-10-09): **227 → 80** = datum · nút · nhóm · gói lệnh · lĩnh vực · đại lượng ·
+        // góc bánh gỡ cùng lõi HAL BYDAuto, −6 widget xe, −1 vật thanh trên (`CHIPS`).
+        assertEquals(80, all.size, "số nhãn đổi — thêm mã mới thì phải dịch, rồi mới ghim số mới")
         val missing = all.filter { it.labelEn.isNullOrBlank() }.map { it.label }
         assertTrue(missing.isEmpty(), "còn nhãn chưa có bản EN: $missing")
     }
@@ -291,9 +225,7 @@ class LangCoverageTest {
             assertTrue(why.isNotBlank(), "'$term' được phép trùng thì phải nói LÝ DO, không thì đây là chỗ làm im bài")
         }
         // Danh sách cho phép mà không còn ai dùng = rác tích lại, và nó nới lỏng bài canh cho lần sau.
-        val everyString = localizedRows().flatMap { listOf(it.label, it.labelEn ?: "") } +
-            ControlRegistry.ALL.flatMap { it.args + it.argsEn } +
-            TelemetryRegistry.ALL.flatMap { listOfNotNull(it.short, it.shortEn) }
+        val everyString = localizedRows().flatMap { listOf(it.label, it.labelEn ?: "") }
         val unused = SAME_ON_PURPOSE.keys.filterNot { it in everyString }
         assertTrue(unused.isEmpty(), "mục cho phép trùng không còn ai dùng ⇒ xoá đi: $unused")
     }
@@ -304,59 +236,14 @@ class LangCoverageTest {
         localizedRows().forEach { row ->
             row.labelEn?.let { if (hasVietnameseMark(it)) dirty.add("${row.label} → $it") }
         }
-        CapabilityGroups.ALL.forEach { g ->
-            g.subEn?.let { if (hasVietnameseMark(it)) dirty.add("${g.id}.subEn → $it") }
-        }
         SettingsCatalog.GROUPS.forEach { g ->
             if (hasVietnameseMark(g.subEn)) dirty.add("${g.id}.subEn → ${g.subEn}")
-        }
-        TelemetryRegistry.ALL.forEach { s ->
-            s.shortEn?.let { if (hasVietnameseMark(it)) dirty.add("${s.id}.shortEn → $it") }
-        }
-        ControlRegistry.ALL.forEach { c ->
-            c.argsEn.filter { hasVietnameseMark(it) }.forEach { dirty.add("${c.id}.argsEn → $it") }
         }
         LauncherRequirements.ALL.forEach { r ->
             listOfNotNull(r.losesWhatIfMissingEn, r.userActionEn)
                 .filter { hasVietnameseMark(it) }.forEach { dirty.add("${r.id} → $it") }
         }
-        TyreCorner.values().forEach {
-            if (hasVietnameseMark(it.labelEn) || hasVietnameseMark(it.shortLabelEn)) dirty.add("TyreCorner.${it.name}")
-        }
         assertTrue(dirty.isEmpty(), "bản EN còn dấu tiếng Việt (dịch nửa vời): $dirty")
-    }
-
-    @Test
-    fun `lua chon cua nut co ban EN dung so phan tu`() {
-        val withArgs = ControlRegistry.ALL.filter { it.args.isNotEmpty() }
-        // 13 = 5 nút COVER kính/rèm (mỗi cái "Đóng"/"Mở") + 8 nút SELECT. ⚠ [ĐO] con số tôi ĐOÁN lúc viết bài này là
-        // 11 và bài đỏ ngay — đúng việc nó sinh ra để làm, và là lời nhắc rằng đếm bằng mắt qua một tệp 355 dòng thì
-        // sai. Giữ số đo, không giữ số đoán. 13 (2026-09-16 owner gỡ ADAS/an toàn — trước đó 14 — nút SELECT `adas_lane` đã xoá).
-        // 12 ((V) 2026-09-17: nút SELECT `drive_mode` đã xoá — trước đó 13).
-        // 12 (WP8 2026-09-20: hai nút SELECT `ambient_color` + `regen_level` đã purge — trước đó 14).
-        // 8 (1.90: 4 SELECT headlight_mode/powertrain_mode/screen_rotation/camera_view xoá)
-        assertEquals(5, withArgs.size, "số nút có lựa chọn đổi ⇒ xem lại bản dịch")
-        val bad = withArgs.filter { it.argsEn.size != it.args.size }.map { "${it.id}(${it.args.size}≠${it.argsEn.size})" }
-        assertTrue(bad.isEmpty(), "lựa chọn EN thiếu/lệch số phần tử — sẽ lùi về CẢ danh sách tiếng Việt: $bad")
-    }
-
-    @Test
-    fun `nhan ngan EN phai that ngan`() {
-        val tooLong = ArrayList<String>()
-        TelemetryRegistry.ALL.forEach { s ->
-            // (a) `shortEn` đã khai thì phải ngắn.
-            s.shortEn?.let { if (it.length > SHORT_CAP) tooLong.add("${s.id}.shortEn='$it'(${it.length})") }
-            // (b) Datum nào cần viết tắt ở tiếng Việt thì bản EN **thực dùng** (kể cả khi lùi về `labelEn`) cũng phải
-            //     ngắn — không thì chip tiếng Anh bị cắt đúng chỗ chip tiếng Việt vừa được chữa.
-            if (s.short != null) {
-                val en = s.shortLabelIn(Lang.EN)
-                if (en.length > SHORT_CAP) tooLong.add("${s.id} EN short='$en'(${en.length})")
-            }
-        }
-        TyreCorner.values().forEach {
-            if (it.shortLabelEn.length > 3) tooLong.add("TyreCorner.${it.name}='${it.shortLabelEn}'")
-        }
-        assertTrue(tooLong.isEmpty(), "nhãn ngắn EN dài quá $SHORT_CAP ký tự (chip ~24dp sẽ cắt chữ): $tooLong")
     }
 
     /**
@@ -377,11 +264,7 @@ class LangCoverageTest {
      */
     @Test
     fun `ban dich khong sinh ra nhan trung MOI`() {
-        val rows = CapabilityGroups.ALL.map { it.id to (it.label to it.labelEn) } +
-            WidgetRegistry.ALL.map { it.id to (it.label to it.labelEn) } +
-            TelemetryRegistry.ALL.map { it.id to (it.label to it.labelEn) } +
-            ControlRegistry.ALL.map { it.id to (it.label to it.labelEn) } +
-            ActionMacros.ALL.map { it.id to (it.label to it.labelEn) } +
+        val rows = WidgetRegistry.ALL.map { it.id to (it.label to it.labelEn) } +
             LauncherActions.placeable.map { it.id to (it.label to it.labelEn) }
         val newlyColliding = rows
             .groupBy { it.second.second ?: it.second.first }         // gom theo nhãn EN thực dùng
@@ -414,7 +297,7 @@ class LangCoverageTest {
         assertEquals("gốc", Strings.pick("gốc", "   "))
         assertEquals("root", Strings.pick("gốc", "root"))
         // Một dòng chưa dịch thì hiện tiếng Việt — KHÔNG ném, vì launcher trên xe không được sập vì một nhãn.
-        val undone = TelemetrySpec("x", "Nhãn Việt", "", Domain.BODY, WidgetShape.VALUE, EvidenceTier.PROVEN, "k")
+        val undone = WidgetPick("x", "Nhãn Việt", "ic-sun", labelEn = null)
         assertEquals("Nhãn Việt", undone.displayLabel)
     }
 
@@ -429,69 +312,4 @@ class LangCoverageTest {
         assertEquals(before, snapshot(), "đổi ngôn ngữ để lại vết ⇒ bài chạy sau sẽ đỏ ở tệp không liên quan")
     }
 
-    @Test
-    fun `nhan ngan tu lui theo bac shortEn roi labelEn`() {
-        val full = TelemetryRegistry.byId("tyre_p_fl")!!
-        assertEquals("Tyre FL", full.shortLabelIn(Lang.EN))
-        assertEquals("Lốp TT", full.shortLabelIn(Lang.VI))
-        // Có `labelEn` nhưng KHÔNG có `shortEn` ⇒ lùi về nhãn đầy tiếng Anh, chứ không rơi về tiếng Việt: một chip
-        // hơi dài vẫn hơn một chip đột ngột đổi thứ tiếng.
-        val noShortEn = TelemetryRegistry.byId("ev_range_km")!!
-        assertEquals(null, noShortEn.shortEn)
-        assertEquals("EV range", noShortEn.shortLabelIn(Lang.EN))
-        // Không có gì tiếng Anh ⇒ lùi hẳn về nhãn ngắn tiếng Việt.
-        val nothing = TelemetrySpec("x", "Nhãn", "", Domain.BODY, WidgetShape.VALUE, EvidenceTier.PROVEN, "k", short = "N")
-        assertEquals("N", nothing.shortLabelIn(Lang.EN))
-    }
-
-    // ── 4 · Bề mặt THẬT đổi theo ngôn ngữ (không chỉ trường dữ liệu) ─────────────────────────────
-
-    @Test
-    fun `o nhom, chip, ket luan lop va goi lenh deu doi theo ngon ngu`() {
-        // 2.88: "non" là lời phán của xe (TPMS `getTyrePressureState` = UNDER), không còn suy từ con số.
-        val status = CarStatus(tyres = CarStatus.Tyres(pFlKpa = 150.0, psFl = TyreJudge.PRESSURE_UNDER))
-
-        Strings.current = Lang.VI
-        assertEquals("Lốp", GroupBoard.of("g_tyres", status)!!.label)
-        assertEquals("Lốp TT", GroupBoard.of("g_tyres", status)!!.cells.first().label)
-        assertTrue(TyreBoard.verdict(TyreBoard.readings(status.tyres)).contains("bánh non"))
-        assertEquals("Bật", TelemetryReadout.of("light_low_beam", CarStatus(lights = CarStatus.Lights(lowBeam = true)))!!.display)
-
-        Strings.current = Lang.EN
-        assertEquals("Tyres", GroupBoard.of("g_tyres", status)!!.label)
-        assertEquals("Tyre FL", GroupBoard.of("g_tyres", status)!!.cells.first().label)
-        assertTrue(TyreBoard.verdict(TyreBoard.readings(status.tyres)).contains("low"))
-        assertEquals("On", TelemetryReadout.of("light_low_beam", CarStatus(lights = CarStatus.Lights(lowBeam = true)))!!.display)
-        // Gói lệnh: câu báo cho người dùng gọi tên bước hỏng bằng nhãn EN.
-        val res = MacroResult("mac_win_close_all", listOf(MacroStepResult("win_lf", false)))
-        assertEquals("Close all: the car took no command", res.notice(ActionMacros.byId("mac_win_close_all")!!.displayLabel))
-        // Lựa chọn của nút SELECT cũng theo ngôn ngữ.
-        // ⚠ Mốc đổi 3 lần theo 3 lượt xoá nút: `drive_mode`→`regen_level`→`headlight_mode` ⇒ nay `seatc` ("Level 2").
-        assertEquals("Level 2", ControlTileLogic.selectLabel(ControlRegistry.byId("seatc")!!, 2))
-    }
-
-    @Test
-    fun `chip thanh tren doi theo ngon ngu`() {
-        val status = CarStatus(climate = CarStatus.Climate(pm25Level = 1))
-        val cfg = TopStripConfig(listOf(TopStripConfig.PM25, "tyre_p_fl"))
-
-        Strings.current = Lang.VI
-        val vi = TopStripChips.render(cfg, status)
-        assertEquals("PM2.5 · Tốt", vi[0].text)
-        assertTrue(vi[1].text.startsWith("Lốp TT · "))
-
-        Strings.current = Lang.EN
-        val en = TopStripChips.render(cfg, status)
-        assertEquals("PM2.5 · Good", en[0].text)
-        assertTrue(en[1].text.startsWith("Tyre FL · "), "chip phải dùng nhãn NGẮN tiếng Anh, thấy: ${en[1].text}")
-    }
-
-    @Test
-    fun `dong phu cua nhom giu so dem tu du lieu o ca hai thu tieng`() {
-        val g = CapabilityGroups.WINDOWS
-        Strings.current = Lang.VI
-        assertEquals("4 mục · 11 nút · mở/đóng và mở nửa từng kính · đóng cả cụm", g.contentLine)
-        Strings.current = Lang.EN
-        assertEquals("4 items · 11 buttons · open/close and half-open each window · close all", g.contentLine)
-    }
 }

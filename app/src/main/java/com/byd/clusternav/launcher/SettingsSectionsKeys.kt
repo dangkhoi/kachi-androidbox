@@ -269,14 +269,11 @@ class SettingsKeysSection(
 
     /**
      * [targets] truyền VÀO (không tự gọi `bridge.targetOptions()`): xem KDoc [rebuildBindings].
-     * FIX286 · R-KC — đích nút xe (`ctl:…`) ⇒ nhãn sinh từ registry (*"Gió +1"*); mã hỏng/nút không còn ⇒ nguyên chuỗi
-     * (vẫn nhận ra dòng để xoá).
+     * Android box B2 · W2b/W3: đích camera cũ (`cam:…`, 2.93) và nút xe cũ (`ctl:…`, FIX286) không còn bộ đọc nhãn ⇒ nguyên
+     * chuỗi (vẫn nhận ra dòng để xoá).
      */
-    private fun targetLabel(spec: String, targets: List<TargetOption>): String = when {
-        KeyCtlTargets.isCtl(spec) -> KeyCtlTargets.displayLabelOf(spec)
-        // Android box B2 · W2b: đích camera cũ (`cam:…`, 2.93) không còn bộ đọc nhãn ⇒ nguyên chuỗi (vẫn nhận ra dòng để xoá).
-        else -> targets.firstOrNull { it.spec == spec }?.let { targetOptionLabel(it, targets) } ?: spec
-    }
+    private fun targetLabel(spec: String, targets: List<TargetOption>): String =
+        targets.firstOrNull { it.spec == spec }?.let { targetOptionLabel(it, targets) } ?: spec
 
     /**
      * Tên các mục đặc biệt (ba mục cũ + *"Kachi nghe"* của V1 pha NGHE), tra theo **THỨ TỰ KHAI** của `ClusterNavBridge.targetOptions()` chứ không so chuỗi

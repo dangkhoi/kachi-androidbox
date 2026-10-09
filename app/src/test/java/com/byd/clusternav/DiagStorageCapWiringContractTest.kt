@@ -1,7 +1,6 @@
 package com.byd.clusternav
 
 import com.byd.clusternav.core.DiagFiles
-import com.byd.clusternav.launcher.CarImageStore
 import com.byd.clusternav.launcher.PhotoStore
 import com.byd.clusternav.launcher.WallArtBuilder
 import com.byd.clusternav.launcher.WallpaperStore
@@ -76,9 +75,6 @@ class DiagStorageCapWiringContractTest {
         "com/byd/clusternav/launcher/WallpaperStore.kt" to Writer(
             Kind.USER, listOf("File(base, FOLDER)"),
             listOf("${WallpaperStore.FOLDER}/beach.jpg", "${WallpaperStore.FOLDER}/${WallArtBuilder.CACHE_DIR}/beach-1.png"),
-        ),
-        "com/byd/clusternav/launcher/CarImageStore.kt" to Writer(
-            Kind.USER, listOf("File(base, FOLDER)"), listOf("${CarImageStore.FOLDER}/my-car.png"),
         ),
         "com/byd/clusternav/launcher/ProfileIoStore.kt" to Writer(
             Kind.USER, listOf("""DIR = "profiles"""", "File(it, DIR)"), listOf("profiles/Gia dinh-20261006-0930.kachi"),

@@ -481,19 +481,7 @@ internal class FitScale(private val root: View) {
          */
         fun markFree(tv: TextView): TextView = tv.apply { setTag(R.id.kachi_fit_free_text, true) }
 
-        /**
-         * J1 — bộ dựng KHAI chữ TÊN [tv] có hai bản: [full] (nhãn đầy) và [short] (nhãn NGẮN đã dịch — `null`/rỗng/trùng
-         * ⇒ không có bản ngắn). Ghi cả hai lên chính `TextView` (phép khớp chụp một lần lúc dựng, chữ đổ lại mỗi nhịp
-         * cũng đi qua đây) rồi hiện đúng bản phép khớp đang chọn ([variant] — cờ `kachi_fit_use_short`). Dấu chữ của ô
-         * tính trên bản ĐẦY ([fullText]) ⇒ đổi bản hiện không làm ô đo dò lại.
-         */
-        fun named(tv: TextView, full: CharSequence, short: CharSequence?, name: Boolean = true): TextView = tv.apply {
-            // [name] = false: chữ này lượt này KHÔNG phải tên (chú thích đổi sang đơn vị) ⇒ gỡ khai báo, hiện [full].
-            val alt = short?.takeIf { name && it.isNotBlank() && it.toString() != full.toString() }
-            setTag(R.id.kachi_fit_full_text, if (name) full else null)
-            setTag(R.id.kachi_fit_short_text, alt)
-            val want = if (alt != null && getTag(R.id.kachi_fit_use_short) == true) alt else full
-            if (text.toString() != want.toString()) text = want
-        }
+        // Android box B2 · W3: `named()` (J1 — chữ TÊN hai bản đầy/ngắn của ô nút/datum xe) gỡ cùng các ô ấy — 0 chỗ gọi.
+        // Phép khớp vẫn đọc cờ `kachi_fit_*_text` (không ai ghi ⇒ mọi chữ đi bản đầy, như ô widget trước J1).
     }
 }

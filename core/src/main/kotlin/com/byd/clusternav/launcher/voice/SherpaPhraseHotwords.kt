@@ -1,8 +1,5 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlKind
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.LauncherActions
 
 /**
@@ -35,19 +32,6 @@ import com.byd.clusternav.launcher.LauncherActions
 object SherpaPhraseHotwords {
 
     /**
-     * Động từ được phép theo loại nút — **cùng bảng** với nhánh `control()` của [VoiceIntentParser]: TOGGLE/COVER
-     * nhận bật/tắt/mở/đóng, STEP nhận tăng/giảm/đặt, BUTTON nhận bật/mở (mọi động từ đều là "bấm"), SELECT nhận
-     * đổi/chuyển/đặt (+ tên lựa chọn).
-     */
-    val CONTROL_VERBS: Map<ControlKind, List<VoiceVerb>> = mapOf(
-        ControlKind.TOGGLE to listOf(VoiceVerb.ON, VoiceVerb.OFF, VoiceVerb.OPEN, VoiceVerb.CLOSE),
-        ControlKind.COVER to listOf(VoiceVerb.OPEN, VoiceVerb.CLOSE, VoiceVerb.ON, VoiceVerb.OFF),
-        ControlKind.STEP to listOf(VoiceVerb.UP, VoiceVerb.DOWN, VoiceVerb.SET),
-        ControlKind.BUTTON to listOf(VoiceVerb.ON, VoiceVerb.OPEN),
-        ControlKind.SELECT to listOf(VoiceVerb.SWITCH, VoiceVerb.SET),
-    )
-
-    /**
      * Mọi cụm **có dấu** đáng bias, theo thứ tự ổn định (để `diff` hai lượt đo). Chưa lọc/chuẩn hoá — việc đó của
      * [SherpaHotwords.phraseFile], nơi dòng **một từ** ([SherpaHotwords.isPhrase]) và dòng là **tiền tố theo từ**
      * của dòng khác ([SherpaHotwords.dropPrefixes]) bị loại.
@@ -64,29 +48,7 @@ object SherpaPhraseHotwords {
      */
     fun phrases(places: List<String> = emptyList(), profiles: List<String> = emptyList()): List<String> {
         val out = ArrayList<String>(2048)
-        ControlRegistry.ALL.forEach { c ->
-            val nouns = nounsOf(c.label, c.short, VoiceSynonyms.CONTROL[c.id])
-            val verbs = CONTROL_VERBS[c.kind].orEmpty().flatMap { forms(it) }
-            nouns.forEach { n ->
-                // Nhãn nhiều từ đứng một mình cũng là cụm (*"kính trước trái"*); cách nói đã mang sẵn động từ
-                // (*"mở khoá cửa"*, *"sấy kính trước"*) thì KHÔNG chồng thêm động từ (*"mở mở khoá cửa"* là rác).
-                out.add(n)
-                if (!startsWithVerb(n)) verbs.forEach { v -> out.add("$v $n") }
-            }
-            if (c.kind == ControlKind.SELECT) {
-                // *"chế độ lái thể thao"* · *"đổi sang thể thao"* — tên lựa chọn đi cùng nhãn hoặc động từ đổi.
-                c.args.forEach { a -> out.add("${c.label} $a"); forms(VoiceVerb.SWITCH).forEach { out.add("$it $a") } }
-            }
-        }
-        val read = forms(VoiceVerb.READ)
-        VoiceTelemetry.SPOKEN.forEach { t ->   // 2.88: trừ 13 mã lốp thô — KDoc [VoiceTelemetry]
-            nounsOf(t.label, t.short, VoiceSynonyms.TELEMETRY[t.id]).forEach { n ->
-                out.add(n)   // *"pin còn bao nhiêu"* / *"áp suất lốp trước trái"* — nhãn nhiều từ tự đứng được
-                if (!startsWithVerb(n)) read.forEach { out.add("$it $n") }
-            }
-        }
-        // Gói lệnh: nhãn đã là một câu lệnh (*"Mở hết kính"*, *"Mở cửa + đèn đọc"* → hai cụm ở tầng chuẩn hoá).
-        ActionMacros.ALL.forEach { out.add(it.label) }
+        // Android box B2 · W3: cụm nút xe · datum xe · gói lệnh xe gỡ cùng bộ đăng ký xe.
         // Hành động launcher: *"mở ứng dụng"* · *"mở cài đặt"* — nhãn rời (*"Ứng dụng"*) là một từ, sẽ rụng.
         LauncherActions.ALL.forEach { a -> out.add(a.label); forms(VoiceVerb.OPEN).forEach { out.add("$it ${a.label}") } }
         // Nhạc: *"phát nhạc"* · *"dừng nhạc"* · *"bài tiếp theo"*; động từ NEXT/PREV đã là cụm, từ rời (*"tiếp"*) rụng.
@@ -217,10 +179,6 @@ object SherpaPhraseHotwords {
         VoiceSynonyms.APP_TARGETS.entries.firstOrNull { (_, aliases) ->
             aliases.any { SherpaSpokenWords.ACCENTED[it] == accentedName }
         }?.key
-
-    /** Nhãn + nhãn ngắn + cách nói đời thường **có dấu** ([SherpaSpokenWords.ACCENTED]) của một nút/datum. */
-    private fun nounsOf(label: String, short: String?, synonyms: List<String>?): List<String> =
-        (listOf(label) + listOfNotNull(short) + accented(synonyms.orEmpty())).distinct()
 
     /** Dạng có dấu của các cụm không dấu; cụm khai `NO_VI_FORM` (tiếng Anh/chữ số) không có dạng ⇒ bỏ. */
     private fun accented(unaccented: List<String>): List<String> =

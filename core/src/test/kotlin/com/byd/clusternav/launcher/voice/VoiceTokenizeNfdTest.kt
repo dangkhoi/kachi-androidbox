@@ -29,13 +29,18 @@ class VoiceTokenizeNfdTest {
     @Test
     fun `bo phan tich va tu noi dong hinh cho cung ket qua voi hai dang ma`() {
         listOf(
-            "bật đèn đọc",
+            // Android box B2 · W3: câu mẫu xe gỡ ⇒ câu launcher / nhạc.
+            "mở cài đặt",
             "phát bài mưa rơi bằng spotify",          // VOICE-ROI-CONNECTOR: «rơi» mang dấu không phải liên từ
-            "Đóng hết kính rồi bật đèn đọc",          // «rồi» viết đúng ⇒ hai lệnh
-            "đặt nhiệt độ hai mươi tư",
+            "Mở cài đặt rồi mở ứng dụng",             // «rồi» viết đúng ⇒ hai lệnh
         ).forEach { s ->
             assertEquals(VoiceIntentParser.parse(s), VoiceIntentParser.parse(nfd(s)), "«$s»")
         }
-        assertTrue(VoiceIntentParser.parse(nfd("Đóng hết kính rồi bật đèn đọc")).size == 2, "liên từ NFD vẫn tách câu")
+        assertTrue(VoiceIntentParser.parse(nfd("Mở cài đặt rồi mở ứng dụng")).size == 2, "liên từ NFD vẫn tách câu")
+        // Câu xe ⇒ cùng LÝ DO ở hai dạng mã (chữ gốc trong `text` giữ nguyên dạng mã đầu vào).
+        assertEquals(
+            VoiceIntentParser.parse("bật đèn đọc").map { (it as VoiceIntent.Unknown).reason },
+            VoiceIntentParser.parse(nfd("bật đèn đọc")).map { (it as VoiceIntent.Unknown).reason },
+        )
     }
 }

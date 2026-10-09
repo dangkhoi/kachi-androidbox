@@ -1,7 +1,5 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.CtlSafetyPolicy
 import com.byd.clusternav.launcher.Lang
 
 /**
@@ -14,7 +12,7 @@ import com.byd.clusternav.launcher.Lang
  * và `merge` nhận nguyên văn câu đã mang lời dẫn.
  *
  * ## Ba mức, theo đúng thứ code BIẾT (không hứa hơn)
- *  • [confirmed] = lượt đọc lại xe KHỚP ⇒ *"Đã …"*.
+ *  • (≤ 2.98 BYD: lượt đọc lại xe KHỚP ⇒ *"Đã …"*; bộ phận mô-tơ ⇒ *"Đang …"* — gỡ cùng nút xe ở Android box B2 · W3.)
  *  • chưa xác nhận + bộ phận chạy bằng mô-tơ ([CtlSafetyPolicy.MOVES_SLOWLY]: kính · cốp · cửa sổ trời · rèm) ⇒
  *    *"Đang đóng kính lái"* — xe đã nhận lệnh, bộ phận đang chạy; nói *"Đã đóng"* là hứa một thứ chưa xảy ra.
  *  • chưa xác nhận, bộ phận đổi mức tức thì ⇒ *"Đã …"* như 2.95 (đuôi *"chưa kiểm trên xe"* vẫn do
@@ -29,16 +27,10 @@ internal object VoiceReplyDone {
     private const val DOING = "Đang "
 
     /** Thân câu (không dấu ✓) cho việc [i] vừa làm. */
-    fun body(i: VoiceIntent, lang: Lang, confirmed: Boolean): String {
+    fun body(i: VoiceIntent, lang: Lang): String {
         val preview = VoiceReply.preview(i, lang)
         if (lang != Lang.VI) return preview
         return when (i) {
-            is VoiceIntent.Control ->
-                if (!confirmed && i.relative == 0 && CtlSafetyPolicy.movesSlowly(i.id)) DOING + VoiceFeedbackPhrase.decap(preview)
-                else past(preview, lang)
-            // *"Mở hết kính"* đã là một câu lệnh ⇒ *"Đã mở hết kính"*, không phải *"Đã chạy gói Mở hết kính"*.
-            is VoiceIntent.Macro -> ActionMacros.byId(i.id)?.labelIn(lang)?.takeIf { verbLed(it) }
-                ?.let { past(it, lang) } ?: past(preview, lang)
             // Tên app là chữ người dùng nhìn thấy — giữ nguyên hoa/thường; bỏ chữ thừa *"ứng dụng"*.
             is VoiceIntent.OpenApp -> DONE + "mở " + i.appName + VoiceReplyPreview.inSlot(i.slot, lang)
             is VoiceIntent.Nav, is VoiceIntent.NavigateSaved -> DONE + "bắt đầu " + VoiceFeedbackPhrase.decap(preview)

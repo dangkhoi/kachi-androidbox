@@ -97,28 +97,6 @@ class TestBridgeSafetyContractTest {
         )
     }
 
-    /**
-     * Hai đường GHI thô của lệnh `hal` (`set` và `setev` — generic `AbsBYDAutoDevice.set`) đều phải đứng sau cổng
-     * `auto_confirm` và để lại dấu `AUTO-CONFIRM` trong nhật ký — cùng cổng với `ctl`/`say`. Bài canh cũ chỉ quét
-     * `KachiTestBridge.kt`; cổng của `hal` nằm ở `TestBridgeHal.kt` nên một lượt tách tệp có thể làm rơi nó im
-     * lặng (CLAUDE.md §8). Đề nghị của lượt scan bảo mật 2026-09-16.
-     */
-    @Test
-    fun `hal set va setev deu qua cong auto_confirm va ghi dau AUTO-CONFIRM`() {
-        val src = code("TestBridgeHal.kt")
-        val setEvStart = src.indexOf("private fun runSetEv(")
-        assertTrue(setEvStart > 0, "không còn `runSetEv` — đổi tên thì sửa bài canh CÓ CHỦ Ý")
-        val setPart = src.substring(0, setEvStart)
-        val setEvPart = src.substring(setEvStart)
-        for ((label, part) in listOf("hal set" to setPart, "hal setev" to setEvPart)) {
-            val gate = part.indexOf("!cmd.autoConfirm")
-            val log = part.indexOf("AUTO-CONFIRM: $label")
-            assertTrue(gate > 0, "$label: mất cổng `!cmd.autoConfirm` ⇒ ghi thân xe không cần xác nhận")
-            assertTrue(log > gate, "$label: dấu `AUTO-CONFIRM` phải đứng SAU cổng (ghi rồi mới log là log cho lệnh đã chạy)")
-            assertTrue(part.substring(gate, log).contains("ERR_NEEDS_CONFIRM"), "$label: thiếu lối từ chối `ERR_NEEDS_CONFIRM` giữa cổng và dấu")
-        }
-    }
-
     /** Không có đường BẬT nào ngoài màn Cài đặt: không lệnh `enable`, và receiver không gọi `TestBridgeStore.enable`. */
     @Test
     fun `khong co duong bat che do kiem thu tu xa`() {
@@ -266,46 +244,6 @@ class TestBridgeSafetyContractTest {
     }
 
     // ── (5) Lệnh `ctl` — bắn control qua ĐÚNG applier + cổng CONFIRM ─────────────────────────────
-
-    /** `ctl` đi qua cổng port [hooks.control] (applier), KHÔNG dựng adapter thứ hai / không tự gọi HAL. */
-    @Test
-    fun `ctl ban control qua dung applier port`() {
-        val src = code("TestBridgeCtl.kt")
-        assertTrue(src.contains("hooks.control("), "ctl phải bắn qua `hooks.control` = cổng CarControlAdapter.actByKind")
-        // Không được import/gọi thẳng gateway/BydHal (đường thứ hai xuống xe).
-        listOf("BydHalGateway", "BydHal.", "CarControlAdapter(").forEach { token ->
-            assertTrue(!src.contains(token), "TestBridgeCtl KHÔNG được chạm `$token` — phải đi qua port đã tiêm")
-        }
-    }
-
-    /** Câu chữ HAL đọc TRONG tiến trình (HalWriteProbe), KHÔNG spawn `logcat`/tiến trình con. */
-    @Test
-    fun `ctl doc ket qua HAL trong tien trinh khong spawn logcat`() {
-        val src = code("TestBridgeCtl.kt")
-        assertTrue(src.contains("HalWriteProbe.clear()"), "phải xoá sổ TRƯỚC khi bắn")
-        assertTrue(src.contains("HalWriteProbe.last"), "phải đọc kết quả ghi từ sổ trong tiến trình")
-        listOf("logcat", "ProcessBuilder", "Runtime.getRuntime").forEach { token ->
-            assertTrue(!src.contains(token), "TestBridgeCtl KHÔNG được spawn tiến trình (`$token`) — đọc trong tiến trình")
-        }
-    }
-
-    /** Control mở/khoá thân xe bị cổng CONFIRM chặn (auto_confirm), có dấu AUTO-CONFIRM. */
-    @Test
-    fun `ctl co cong CONFIRM cho control mo khoa than xe`() {
-        val src = code("TestBridgeCtl.kt")
-        assertTrue(src.contains("CtlSafetyPolicy.needsConfirm("), "ctl phải hỏi CtlSafetyPolicy trước khi bắn")
-        val at = src.indexOf("CtlSafetyPolicy.needsConfirm(")
-        val branch = src.substring(at, (at + 500).coerceAtMost(src.length))
-        assertTrue(branch.contains("autoConfirm"), "phải TỪ CHỐI khi thiếu auto_confirm")
-        assertTrue(branch.contains("AUTO-CONFIRM"), "việc mức CONFIRM phải để dấu grep được trong logcat")
-    }
-
-    /** Sổ ghi HAL chỉ được điền ở tầng gateway (một chỗ), không rải rác. */
-    @Test
-    fun `HalWriteProbe chi ghi tu BydHalGateway`() {
-        val gw = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/BydHalGateway.kt")
-        assertTrue(gw.contains("HalWriteProbe.record("), "gateway phải ghi kết quả mỗi lượt write control")
-    }
 
     // ── (6) Script sweep HAL — Android box B2 · W2a ─────────────────────────────────────────────────
     // `scripts/vehicle/kachi/71-hal-sweep.sh` (quét HAL trên xe, DENYLIST khớp `CtlSafetyPolicy`) gỡ cùng bộ script xe BYD;

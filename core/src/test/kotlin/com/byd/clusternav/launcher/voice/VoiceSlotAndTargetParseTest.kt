@@ -215,10 +215,10 @@ class VoiceSlotAndTargetParseTest {
      */
     @Test
     fun `cau lenh xe khong doi nghia`() {
-        assertEquals(VoiceIntent.Control("readl", 1), one("bật đèn đọc"))
-        assertEquals(VoiceIntent.Control("temp", 24), one("đặt nhiệt độ hai mươi tư"))
-        assertEquals(VoiceIntent.Control("fan", null, 1), one("tăng gió"))
-        assertEquals(VoiceIntent.Read("soc"), one("xem pin"))
+        // Android box B2 · W3: lệnh xe gỡ ⇒ hai bảng mới (ô · "bằng/trên") không được biến chúng thành lệnh khác.
+        listOf("bật đèn đọc", "đặt nhiệt độ hai mươi tư", "tăng gió", "xem pin").forEach {
+            assertEquals(VoiceUnknownReason.FEATURE_GONE, (one(it) as? VoiceIntent.Unknown)?.reason, "«$it» ra: ${one(it)}")
+        }
         assertEquals(VoiceIntent.Media(VoiceMediaOp.NEXT), one("bài tiếp theo"))
         assertEquals(VoiceIntent.Media(VoiceMediaOp.PAUSE), one("tạm dừng"))
     }

@@ -1,12 +1,8 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlRegistry
-import com.byd.clusternav.launcher.Domain
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.launcher.TelemetryRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -104,7 +100,6 @@ class VoiceCommandCatalogTest {
                     // Điểm đến là chỗ giữ chỗ (từ vựng mở) ⇒ cột "làm gì" dịch chỗ giữ chỗ, không so chuỗi.
                     if (g.id != "nav") assertEquals(VoiceReply.preview(got, lang), e.does, "$lang · ${g.id} · \"${e.phrase}\"")
                 }
-                g.domain?.let { assertEquals(it.labelIn(lang), g.title, "$lang · tiêu đề nhóm ${g.id} phải theo tiếng màn") }
             }
             assertTrue(misses.isEmpty(), "$lang: câu bày ra mà bộ phân tích không hiểu — ${misses.size}:\n" + misses.joinToString("\n"))
             // Cột "làm gì" của câu dẫn đường: chỗ giữ chỗ theo tiếng màn (VI y nguyên câu cũ).
@@ -113,30 +108,13 @@ class VoiceCommandCatalogTest {
         }
     }
 
-    /** Câu nằm đúng nhóm: ý định phân tích ra phải thuộc chính miền xe mà tiêu đề nhóm đang nói. */
-    @Test
-    fun `cau cua nhom mien xe deu thuoc dung mien do`() {
-        val misses = ArrayList<String>()
-        groups().filter { it.domain != null }.forEach { g ->
-            g.examples.forEach { e ->
-                val got = VoiceIntentParser.parseOne(e.phrase, profiles, apps, places)
-                if (domainOf(got) != g.domain) misses.add("${g.id} · \"${e.phrase}\" → ${domainOf(got)}")
-            }
-        }
-        assertTrue(misses.isEmpty(), "câu đứng sai nhóm ⇒ người dùng mở nhóm Lốp mà thấy câu về đèn:\n" + misses.joinToString("\n"))
-    }
-
     // ══ 2 · Sinh từ bộ đăng ký: thêm một dòng là tự có câu ══════════════════════════════════════════════
 
     @Test
-    fun `moi nut, datum, goi lenh va hanh dong launcher deu co it nhat mot cau`() {
+    fun `moi hanh dong launcher deu co it nhat mot cau`() {
         val ids = groups().flatMap { g -> g.examples.map { it.intent } }.mapNotNull { keyOf(it) }.toSet()
-        listOf(
-            ControlRegistry.ALL.map { it.id },
-            VoiceTelemetry.SPOKEN.map { it.id },   // 2.88: trừ 13 mã lốp thô — [VoiceTelemetry]
-            ActionMacros.ALL.map { it.id },
-            LauncherActions.ALL.map { it.id },
-        ).flatten().let { want ->
+        // Android box B2 · W3: nút · datum · gói lệnh gỡ cùng lõi HAL BYDAuto ⇒ còn hành động launcher.
+        LauncherActions.ALL.map { it.id }.let { want ->
             assertEquals(emptyList<String>(), (want - ids).sorted(), "mã trong bộ đăng ký mà KHÔNG có câu nào gọi được")
         }
     }
@@ -162,7 +140,8 @@ class VoiceCommandCatalogTest {
         // Danh sách ĐỘNG rỗng ⇒ nhóm tương ứng tự vắng (không quảng cáo thứ máy này chưa có).
         val bare = VoiceCommandCatalog.groups().map { it.id }
         assertTrue("profile" !in bare, "chưa có hồ sơ nào mà vẫn bày nhóm hồ sơ")
-        assertTrue(bare.any { it.startsWith("dom_") }, "nhóm miền xe phải có mặt kể cả khi chưa nạp hồ sơ/app")
+        // Android box B2 · W3: nhóm miền xe (`dom_*`) gỡ ⇒ nhóm tĩnh còn lại (launcher) phải có mặt kể cả khi chưa nạp.
+        assertTrue(bare.isNotEmpty() && bare.none { it.startsWith("dom_") }, "nhóm tĩnh: $bare")
     }
 
     @Test
@@ -268,10 +247,6 @@ class VoiceCommandCatalogTest {
         // (*"tắt X"* gửi 1) vẫn xanh ở đây — chỉ bài `cot Kachi lam gi…` bắt được, tức bài mang tên *"parse ra
         // đúng ý định đã hứa"* lại KHÔNG canh phần "đúng". [ĐO] lật `val on` ở `VoiceCommandCatalog` thì bài này
         // đỏ ngay sau khi thêm hai phép so dưới.
-        got is VoiceIntent.Control && want is VoiceIntent.Control ->
-            (got.value == want.value && got.relative == want.relative) &&
-                (got.id == want.id ||
-                    ControlRegistry.byId(got.id)?.label == ControlRegistry.byId(want.id)?.label)
         // Hai ca mà [VoiceCommandCatalog.keyOf] cố ý gộp cả họ (xem KDoc ở đó) nhưng bài canh thì soi CHẶT hơn:
         // bố cục so đúng preset, còn điểm đến là từ vựng mở nên chỉ so LOẠI.
         got is VoiceIntent.Layout && want is VoiceIntent.Layout -> got.preset == want.preset
@@ -280,11 +255,4 @@ class VoiceCommandCatalogTest {
     }
 
     private fun keyOf(i: VoiceIntent): String? = VoiceCommandCatalog.keyOf(i)
-
-    private fun domainOf(i: VoiceIntent): Domain? = when (i) {
-        is VoiceIntent.Control -> ControlRegistry.byId(i.id)?.domain
-        is VoiceIntent.Read -> TelemetryRegistry.byId(i.datumId)?.domain
-        is VoiceIntent.Macro -> ActionMacros.byId(i.id)?.domain
-        else -> null
-    }
 }

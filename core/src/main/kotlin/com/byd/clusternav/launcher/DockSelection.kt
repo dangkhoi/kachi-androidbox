@@ -45,7 +45,7 @@ object DockSelection {
     /**
      * ═══ LỌC MÃ ĐÃ XOÁ khỏi cấu hình thanh nút ĐÃ LƯU ══════════════════════════════════════════════════════════
      *
-     * Bug 2026-09-22 ("đặt 10 hiện 6"): khi GỠ một control khỏi [ControlRegistry] (lock/door/window/steer_heat +
+     * Bug 2026-09-22 ("đặt 10 hiện 6"): khi GỠ một control khỏi `ControlRegistry` (lock/door/window/steer_heat +
      * macro mac_leave/mac_door_light ở 1.94/1.95), cấu hình thanh nút người dùng đã lưu VẪN giữ mã đó.
      * `ControlDockView.rebuild` gặp mã không resolve thì bỏ qua IM LẶNG (`null -> Unit`) ⇒ "Áp dụng (10)" mà chỉ
      * 6 nút hiện = un-consistency.

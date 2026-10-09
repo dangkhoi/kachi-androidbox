@@ -1,29 +1,25 @@
 package com.byd.clusternav.launcher
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class WidgetRegistryTest {
 
-    @Test fun `co 10 widget id duy nhat`() {
-        // Chốt số lượng để ai thêm widget phải nghĩ. 8 cái đầu = bộ prototype owner đã duyệt; cái thứ 9
-        // (trình chiếu ảnh) thêm ở U4 theo yêu cầu owner — xem spec kachi-wallpaper.html; cái thứ 10 (lưới lối tắt
-        // ứng dụng `w_apps`) theo owner 01/10 — spec kachi-launcher-shortcuts-autostart.html R1.3.
-        assertEquals(10, WidgetRegistry.ALL.size)
-        val ids = WidgetRegistry.ALL.map { it.id }
-        assertEquals(ids.size, ids.toSet().size)
+    @Test fun `co 4 widget id duy nhat`() {
+        // Chốt số lượng để ai thêm widget phải nghĩ. Android box B2 · W3 (2026-10-09): sáu widget đọc dữ liệu xe
+        // (Năng lượng · Lốp · Tốc độ · Bảng tổng hợp · PM2.5 · Xe) gỡ cùng lõi HAL BYDAuto ⇒ còn đồng hồ · nhạc ·
+        // trình chiếu ảnh (U4) · lưới lối tắt (`w_apps`, spec kachi-launcher-shortcuts-autostart.html R1.3).
+        assertEquals(listOf("w_clock", "w_media", "w_photos", "w_apps"), WidgetRegistry.ALL.map { it.id })
     }
 
-    @Test fun `phan loai LOCAL vs CAR vs BOARD`() {
-        assertEquals(WidgetKind.LOCAL, WidgetRegistry.byId("w_clock")!!.kind)
-        assertEquals(WidgetKind.LOCAL, WidgetRegistry.byId("w_media")!!.kind)
-        assertEquals(WidgetKind.CAR, WidgetRegistry.byId("w_energy")!!.kind)
-        assertEquals(WidgetKind.CAR, WidgetRegistry.byId("w_tire")!!.kind)
-        assertEquals(WidgetKind.CAR, WidgetRegistry.byId("w_speed")!!.kind)
-        assertEquals(WidgetKind.BOARD, WidgetRegistry.byId("w_board")!!.kind)
-        // Trình chiếu ảnh đọc tệp trên máy, KHÔNG phải dữ liệu xe ⇒ off-car vẫn chạy đầy đủ.
-        assertEquals(WidgetKind.LOCAL, WidgetRegistry.byId("w_photos")!!.kind)
-        // Lưới lối tắt: icon app trên máy, KHÔNG đọc xe.
-        assertEquals(WidgetKind.LOCAL, WidgetRegistry.byId("w_apps")!!.kind)
+    @Test fun `moi widget con lai la LOCAL`() {
+        WidgetRegistry.ALL.forEach { assertEquals(WidgetKind.LOCAL, it.kind, it.id) }
+    }
+
+    @Test fun `ma widget xe cu khong con tra duoc`() {
+        listOf("w_energy", "w_tire", "w_speed", "w_board", "w_pm25", "w_car").forEach {
+            assertNull(WidgetRegistry.byId(it), "$it phải đã gỡ")
+        }
     }
 }

@@ -36,8 +36,8 @@ class I18nTemplateIdentityTest {
     private fun <T> at(l: Lang, block: () -> T): T = I18nPairs.inLang(l, block)
 
     @Test
-    fun `ma la, chu ky trinh chieu, ket luan lop`() = both.forEach { l ->
-        for (code in listOf(0, 7, 255)) assertEquals(old(l, "mã $code", "code $code"), TelemetryEnums.unknown(code, l))
+    fun `chu ky trinh chieu`() = both.forEach { l ->
+        // Android box B2 · W3: "mã N" (bảng mã datum) và kết luận lốp gỡ cùng lõi HAL BYDAuto.
         for (sec in listOf(15, 59, 60, 300, 3599, 3600, 7200)) {
             val exp = when {
                 sec < 60 -> old(l, "$sec giây", "$sec s")
@@ -46,127 +46,15 @@ class I18nTemplateIdentityTest {
             }
             assertEquals(exp, at(l) { Slideshow.intervalLabel(sec) })
         }
-        val low = old(l, "non", "low")
-        // 2.88: "non" = TPMS báo UNDER (mã 2) — không còn ngưỡng số; 0 = bình thường.
-        fun tyres(vararg ps: Int) = CarStatus.Tyres(
-            psFl = ps[0], psFr = ps[1], psRl = ps[2], psRr = ps[3], lkFl = 0, lkFr = 0, lkRl = 0, lkRr = 0, sys = 0,
-        )
-        for ((n, t) in listOf(1 to tyres(2, 0, 0, 0), 2 to tyres(2, 2, 0, 0))) {
-            // 2.88 soát ui-2: mẫu EN dạng liệt kê "{0} wheel: {1}" (lý do 2.88 là danh từ); khoá VI giữ nguyên.
-            val exp = old(l, "$n bánh $low", "$n ${if (n == 1) "wheel" else "wheels"}: $low")
-            assertEquals(exp, at(l) { TyreBoard.verdict(TyreBoard.readings(t)) })
-        }
     }
 
     @Test
-    fun `ket luan bang cua va tom tat nhom`() = both.forEach { l ->
-        val shut = CarStatus(
-            body = CarStatus.Body(
-                doorLfOpen = false, doorRfOpen = false, doorLrOpen = false, doorRrOpen = false,
-                sunroofOpen = false, sunshadePct = 0,
-            ),
-        )
-        fun footer(s: CarStatus) = at(l) { GroupBoard.doorPlan(GroupBoard.of(CapabilityGroups.DOORS, s)).footer }
-        val n = GroupBoard.doorPlan(GroupBoard.of(CapabilityGroups.DOORS, CarStatus())).parts.size
-        assertEquals(old(l, "$n bộ phận · chưa đọc được", "$n parts · not read yet"), footer(CarStatus()))
-        val roofUnread = shut.body.copy(sunroofOpen = null)
-        assertEquals(old(l, "Đã đóng · 1 chưa đọc được", "Closed · 1 not read yet"), footer(shut.copy(body = roofUnread)))
-        assertEquals(old(l, "1 cửa mở", "1 door open"), footer(shut.copy(body = shut.body.copy(doorLfOpen = true))))
-        val two = roofUnread.copy(doorLfOpen = true, doorRrOpen = true)
-        assertEquals(old(l, "2 cửa mở   1 chưa đọc được", "2 doors open   1 not read yet"), footer(shut.copy(body = two)))
-
-        // Tóm tắt ô nén — đếm sắc thái từ chính ô rồi dựng câu theo mã cũ; phải chạm đủ ba nhánh (1 · nhiều · lưu ý).
-        val seen = HashSet<String>()
-        listOf(
-            CapabilityGroups.DOORS to shut.copy(body = shut.body.copy(doorLfOpen = true)),
-            CapabilityGroups.DOORS to shut.copy(body = two),
-            // 2.88: lưu ý = xe báo lốp VÀNG (xì chậm) — không còn ngưỡng "lệch".
-            CapabilityGroups.TYRES to CarStatus(tyres = CarStatus.Tyres(250.0, 250.0, 250.0, 210.0, lkRr = TyreJudge.LEAK_SLOW)),
-        ).forEach { (g, s) ->
-            val m = at(l) { GroupBoard.of(g, s) }
-            val alerts = m.cells.count { it.tone == GroupTone.ALERT }
-            val warns = m.cells.count { it.tone == GroupTone.WARN }
-            val exp = when {
-                alerts > 0 -> old(l, "$alerts cảnh báo", "$alerts ${if (alerts == 1) "alert" else "alerts"}")
-                    .also { seen += if (alerts == 1) "alert1" else "alertN" }
-                warns > 0 -> old(l, "$warns lưu ý", "$warns to note").also { seen += "warn" }
-                else -> return@forEach
-            }
-            assertEquals(exp, at(l) { m.summary() })
-        }
-        assertEquals(setOf("alert1", "alertN", "warn"), seen, "phép thử không chạm đủ nhánh")
-    }
-
-    @Test
-    fun `goi lenh, muc ghe, ho so, dong noi dung nhom`() = both.forEach { l ->
-        fun r(vararg ok: Pair<String, Boolean>) = MacroResult("m", ok.map { MacroStepResult(it.first, it.second) })
-        assertEquals(old(l, "đủ 2 bước", "all 2 steps"), at(l) { r("a" to true, "b" to true).summary() })
-        assertEquals(old(l, "không bước nào ăn (2 bước)", "no step took (2 steps)"), at(l) { r("a" to false, "b" to false).summary() })
-        assertEquals(
-            old(l, "1/3 bước ăn; hỏng: win_lf, win_rf", "1/3 steps took; failed: win_lf, win_rf"),
-            at(l) { r("a" to true, "win_lf" to false, "win_rf" to false).summary() },
-        )
-        val vent = { raw: Int -> at(l) { TelemetryReadout.of("seat_vent_state", CarStatus(climate = CarStatus.Climate(seatVentRaw = raw)))!!.display } }
-        assertEquals(old(l, "Mức 2", "Level 2"), vent(3))
-        assertEquals(old(l, "Tắt", "Off"), vent(1))
-
+    fun `ho so`() = both.forEach { l ->
+        // Android box B2 · W3: gói lệnh, mức ghế, dòng nội dung nhóm gỡ cùng lõi HAL BYDAuto.
         for ((preset, slots) in listOf(LayoutPreset.TWO_COL to 1, LayoutPreset.ONE to 2, null to 3)) {
             val layout = at(l) { preset?.label } ?: old(l, "Tự vẽ", "Custom")
             val en = if (slots == 1) "1 slot filled" else "$slots slots filled"
             assertEquals(old(l, "$layout · $slots ô có nội dung", "$layout · $en"), at(l) { ProfileNames.summary(preset, slots) })
-        }
-        CapabilityGroups.ALL.forEach { g ->
-            val reads = g.visibleReadCount
-            val exp = buildString {
-                append("$reads " + old(l, "mục", if (reads == 1) "item" else "items"))
-                if (g.writes.isNotEmpty()) append(" · ${g.writes.size} " + old(l, "nút", if (g.writes.size == 1) "button" else "buttons"))
-                val s = at(l) { g.displaySub }
-                if (s.isNotEmpty()) append(" · $s")
-            }
-            assertEquals(exp, at(l) { g.contentLine }, g.id)
-        }
-    }
-
-    @Test
-    fun `phim gan nut xe va chip thanh tren`() = both.forEach { l ->
-        for (id in listOf("trunk", "readl", "seatc")) {
-            val def = ControlRegistry.byId(id)!!
-            val n = def.labelIn(l)
-            if (def.kind != ControlKind.SELECT) {
-                val flip = if (def.kind == ControlKind.COVER) old(l, "Mở/đóng $n (đảo)", "Open/close $n (toggle)")
-                else old(l, "Bật/tắt $n (đảo)", "Toggle $n")
-                assertEquals(flip, KeyCtlTargets.displayLabel(KeyCtlTarget(id, KeyCtlAction.FLIP), l))
-            }
-            // 2.87 · R-FL2: câu *"Không đọc được {0} — gán … riêng"* (`KeyCtlPlan.unreadableReply`) đã GỠ cùng ca
-            // `Unreadable` — Đảo/Kế tiếp đọc không được nay lùi về lệnh cuối Kachi đã gửi (`ControlLastSent`), không
-            // còn câu nào để so đồng nhất mẫu; bốn dòng dịch của nó (mỗi tiếng zh/th/ms) gỡ cùng lượt (bài mồ côi
-            // `I18nCoverageTest` canh).
-        }
-        val spec = "ctl:zzz:on"
-        assertEquals(
-            old(
-                l,
-                "Phím gán nút xe không còn hợp lệ ($spec) — gán lại ở Cài đặt › Nút vật lý",
-                "This key binding is no longer valid ($spec) — rebind it in Settings › Physical buttons",
-            ),
-            KeyCtlPlan.invalidReply(spec, l),
-        )
-
-        fun chip(id: String, s: CarStatus) = at(l) { TopStripChips.render(TopStripConfig(listOf(id), showLabels = false), s).single() }
-        for (level in listOf(1, null)) {
-            val pm = level?.let { old(l, "Tốt", "Good") } ?: TelemetryView.PLACEHOLDER
-            val c = chip(TopStripConfig.PM25, CarStatus(climate = CarStatus.Climate(pm25Level = level)))
-            assertEquals(old(l, "Bụi mịn trong xe: $pm", "Fine dust in the car: $pm"), c.desc)
-        }
-        val temp = chip(TopStripConfig.TEMP, CarStatus(climate = CarStatus.Climate(outsideTempC = 31)))
-        assertEquals(old(l, "Nhiệt độ ngoài xe ${temp.text}", "Outside temperature ${temp.text}"), temp.desc)
-        for (soc in listOf(80, null)) {
-            val e = chip(TopStripConfig.ENERGY, CarStatus(energy = CarStatus.Energy(soc = soc, evRangeKm = 300)))
-            val ru = e.text.substringAfter("% · ")
-            assertEquals(
-                old(l, "Pin ${soc ?: "chưa đọc được"} phần trăm, đi thêm $ru", "Battery ${soc ?: "not read yet"} per cent, $ru to go"),
-                e.desc,
-            )
         }
     }
 
@@ -203,17 +91,8 @@ class I18nTemplateIdentityTest {
         val label = target.label
         val i = VoiceIntent.OpenApp(label)
         at(l) {
-            val def = ControlRegistry.byId("readl")!!
-            assertEquals(
-                // 2.96 R12 — nhãn đứng sau động từ hạ chữ đầu ("Tăng đèn đọc"), phần còn lại y từng byte.
-                old(l, "Tăng ", "Increase ") + VoiceFeedbackPhrase.decap(def.displayLabel) + " " + old(l, "2 nấc", "by 2"),
-                VoiceReply.preview(VoiceIntent.Control("readl", relative = 2)),
-            )
+            // Android box B2 · W3: câu xem trước / "đã gửi" của nút xe gỡ cùng `VoiceIntent.Control`.
             assertTrue(VoiceReply.preview(VoiceIntent.OpenApp(label, slot = 3)).contains(old(l, " vào ô 3", " in slot 3")))
-            assertTrue(
-                VoiceReply.doneActual(VoiceIntent.Control("readl", value = 1), 0)
-                    .startsWith("✓ " + old(l, "Đã gửi ${def.displayLabel} 1 — xe báo 0", "Sent ${def.displayLabel} 1 — the car reports 0")),
-            )
             assertTrue(VoiceReply.slotOutOfRange(i, 4).contains(old(l, "bố cục hiện chỉ có 4 ô", "the current layout only has 4 slot(s)")))
             assertTrue(VoiceReply.appNotInstalled(i, target.key).contains(old(l, "chưa cài $label trên xe", "$label is not installed")))
             assertTrue(
@@ -281,21 +160,13 @@ class I18nTemplateIdentityTest {
             assertEquals(exp, at(l) { VoiceFeatureGone.reply(g) })
         }
         at(l) {
-            val ok = VoiceReply.done(VoiceIntent.Control("readl", value = 1))
+            val ok = VoiceReply.done(VoiceIntent.Launcher(LauncherActions.SETTINGS))
             // Vế hỏng NGẮN: câu gộp dài quá 12 từ thì bị cắt đuôi (clampWords) — đúng phần đuôi đang cần soi.
             assertEquals(old(l, "Chưa x, 2 việc khác đã xong", "Could not x, 2 other(s) done"), VoiceFeedbackPhrase.merge(listOf("✗ X", ok, ok)))
             assertEquals(old(l, "Đã xong 6 việc", "6 things done"), VoiceFeedbackPhrase.merge(List(6) { ok }))
 
             assertEquals(old(l, "Bật gì?", "Bật what?"), VoiceClarify.ask(VoiceIntent.Unknown(VoiceUnknownReason.NO_OBJECT, "bật"), 0)!!.question)
-            val loc = VoiceClarify.ask(VoiceIntentParser.parseOne("lọc") as VoiceIntent.Unknown, 0)!!.question
-            val (a, b) = listOf("pm25", "pm25_clean_now").map { ControlRegistry.byId(it)!!.displayLabel }
-            assertEquals(old(l, "Lọc nào — $a hay $b?", "Which lọc — $a or $b?"), loc)
-            val kinh = VoiceClarify.ask(VoiceIntent.Unknown(VoiceUnknownReason.NO_OBJECT, "mở kính"), 0)!!.question
-            val list = if (l == Lang.EN) kinh.removePrefix("Which kính — ") else kinh.removePrefix("Kính nào — ")
-            assertTrue(list != kinh && list.endsWith("?"), kinh)
-            val items = list.removeSuffix("?").split(", ")
-            assertTrue(items.size >= 3, "ca ≥ 3 lựa chọn: $kinh")
-            assertTrue(items.last().startsWith(old(l, "hay ", "or ")), "vế cuối «, hay »/«, or »: $kinh")
+            // Android box B2 · W3: câu hỏi "Lọc nào / Kính nào — …" (danh sách nút xe) gỡ cùng `ControlRegistry`.
         }
     }
 }

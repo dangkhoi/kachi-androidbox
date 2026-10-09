@@ -31,12 +31,18 @@ class DockPickerContractTest {
     }
 
     // ══ (1) PHẦN THUẦN — chạy thật ════════════════════════════════════════════════════════════════════════
+    // Android box B2 · W3: mã mẫu cũ (readl · win_lf · trunk · fan — nút xe) gỡ ⇒ dùng bốn hành động launcher.
+
+    private val a = LauncherActions.APPS
+    private val st = LauncherActions.SETTINGS
+    private val v = LauncherActions.VOICE
+    private val sh = LauncherActions.SHORTCUTS
 
     @Test
     fun `tap chon tra ve dung tap do`() {
-        val base = DockConfig(enabled = listOf("readl", "win_lf", "trunk"))
-        val out = DockSelection.apply(base, setOf("readl", "trunk", "fan"))
-        assertEquals(setOf("readl", "trunk", "fan"), out.enabled.toSet(), "cấu hình sau khi áp = đúng tập đã chọn")
+        val base = DockConfig(enabled = listOf(a, st, sh))
+        val out = DockSelection.apply(base, setOf(a, sh, v))
+        assertEquals(setOf(a, sh, v), out.enabled.toSet(), "cấu hình sau khi áp = đúng tập đã chọn")
     }
 
     /**
@@ -47,32 +53,32 @@ class DockPickerContractTest {
      */
     @Test
     fun `bo tich mot o thi o do RA KHOI thanh`() {
-        val base = DockConfig(enabled = listOf("readl", "win_lf", "trunk"))
-        val out = DockSelection.apply(base, setOf("readl", "trunk"))
-        assertFalse("win_lf" in out.enabled, "mã bị bỏ tích phải rời thanh — chỉ gửi chiều BẬT là bỏ qua im lặng")
-        assertEquals(listOf("readl", "trunk"), out.enabled)
+        val base = DockConfig(enabled = listOf(a, st, sh))
+        val out = DockSelection.apply(base, setOf(a, sh))
+        assertFalse(st in out.enabled, "mã bị bỏ tích phải rời thanh — chỉ gửi chiều BẬT là bỏ qua im lặng")
+        assertEquals(listOf(a, sh), out.enabled)
     }
 
     /** Bẫy số 2: áp một tập KHÔNG đổi gì thì thứ tự nút trên thanh phải y nguyên (không sắp lại theo catalog). */
     @Test
     fun `ap lai dung tap cu KHONG xao thu tu`() {
-        val base = DockConfig(enabled = listOf("trunk", "readl", "win_lf"))
+        val base = DockConfig(enabled = listOf(sh, a, st))
         assertEquals(base.enabled, DockSelection.apply(base, base.enabled.toSet()).enabled)
     }
 
     /** Mã mới nối vào CUỐI (không chen vào giữa), theo thứ tự khai của catalog — cùng thứ tự bộ chọn đang bày. */
     @Test
     fun `ma moi noi vao cuoi theo thu tu catalog`() {
-        val base = DockConfig(enabled = listOf("trunk"))
-        val added = CapabilityCatalog.all().map { it.id }.filter { it != "trunk" }.take(2)
-        val out = DockSelection.apply(base, (listOf("trunk") + added).toSet())
-        assertEquals(listOf("trunk") + added, out.enabled, "phần cũ giữ chỗ, phần mới nối cuối theo thứ tự catalog")
+        val base = DockConfig(enabled = listOf(sh))
+        val added = CapabilityCatalog.all().map { it.id }.filter { it != sh && CapabilityCatalog.kindOf(it) == CapabilityKind.LAUNCHER }.take(2)
+        val out = DockSelection.apply(base, (listOf(sh) + added).toSet())
+        assertEquals(listOf(sh) + added, out.enabled, "phần cũ giữ chỗ, phần mới nối cuối theo thứ tự catalog")
     }
 
     /** Tập rỗng = "bỏ hết nút khỏi thanh" — một lựa chọn HỢP LỆ, không phải ca phải chặn. */
     @Test
     fun `tap rong bo het nut khoi thanh`() {
-        assertEquals(emptyList<String>(), DockSelection.apply(DockConfig(enabled = listOf("readl")), emptySet()).enabled)
+        assertEquals(emptyList<String>(), DockSelection.apply(DockConfig(enabled = listOf(a)), emptySet()).enabled)
     }
 
     /**
@@ -86,14 +92,13 @@ class DockPickerContractTest {
      */
     @Test
     fun `thanh nut nhan hanh dong cua launcher`() {
-        val base = DockConfig(enabled = listOf("readl"))
-        val out = DockSelection.apply(base, setOf("readl", LauncherActions.APPS, LauncherActions.SETTINGS))
-        assertEquals(
-            listOf("readl", LauncherActions.APPS, LauncherActions.SETTINGS), out.enabled,
-            "hai mã launcher phải vào được thanh, nối vào CUỐI theo thứ tự catalog",
-        )
+        val base = DockConfig(enabled = listOf(sh))
+        val out = DockSelection.apply(base, setOf(sh, a, st))
+        assertEquals(listOf(sh, a, st), out.enabled, "hai mã launcher phải vào được thanh, nối vào CUỐI theo thứ tự catalog")
         // Và bỏ tích vẫn gỡ được (chiều TẮT không được quên loại mới).
-        assertEquals(listOf("readl"), DockSelection.apply(out, setOf("readl")).enabled)
+        assertEquals(listOf(sh), DockSelection.apply(out, setOf(sh)).enabled)
+        // W3: mã widget / nút xe cũ KHÔNG vào được thanh (ô thanh chỉ dựng hành động launcher).
+        assertEquals(listOf(sh), DockSelection.apply(base, setOf(sh, "w_clock", "readl")).enabled)
     }
 
     /** Mã lạ vẫn bị `DockConfig.setEnabled` từ chối — [DockSelection] KHÔNG được nhân bản phép kiểm đó. */
@@ -158,49 +163,6 @@ class DockPickerContractTest {
             Regex("""WidgetRegistry\.ALL,\s*selected\.toList\(\)""").containsMatchIn(fn),
             "tập đang bật phải được truyền làm lựa chọn ban đầu của bảng",
         )
-    }
-
-    /**
-     * ⚠⚠ NGUỒN DỮ LIỆU — chế độ dock phải bày **ĐÚNG** tập ô mà màn Cài đặt bày, qua CÙNG hàm của `:core`.
-     *
-     * Đây là lý do tồn tại của R-UI (m): hai bề mặt tự liệt kê thì chúng lệch nhau (đã lệch thật ba lần). Bài canh
-     * đòi cả hai gọi `CapabilityPicker.groupPicks()` + `CapabilityPicker.singlesOf(...)` trên
-     * `CapabilityCatalog.byDomain()` — và **cấm** ngăn kéo có một danh sách mã viết tay.
-     */
-    @Test
-    fun `nguon du lieu lay tu core, khong chep danh sach`() {
-        // T4 · IA v2 R-UI (m): lưới 123 ô đã RỜI khỏi màn Cài đặt — nhóm "Thanh trạng thái & thanh nút" nay
-        // mở CHÍNH bộ chọn của ngăn kéo (`AppDrawer.Mode.PICK_DOCK`). Một bộ chọn, một nguồn ⇒ phép so "hai
-        // màn phải giống nhau" không còn đối tượng, và `CapabilityGridSection` đã bị xoá.
-        // Nên danh sách này còn ĐÚNG MỘT bề mặt — và đó chính là điều R-UI (m) muốn đạt được.
-        listOf("AppDrawer.kt" to drawer)
-            .forEach { (name, src) ->
-                assertTrue(src.contains("CapabilityPicker.groupPicks()"), "$name phải lấy ô NHÓM từ :core")
-                assertTrue(src.contains("CapabilityPicker.singlesOf("), "$name phải lọc mục lẻ bằng hàm của :core")
-                assertTrue(src.contains("CapabilityCatalog.byDomain()"), "$name phải duyệt lĩnh vực từ :core")
-            }
-    }
-
-    /**
-     * Thân bảng chế độ dock đi qua **cùng** hai hàm mục mà chế độ gán-ô dùng.
-     *
-     * Nếu nó dựng riêng thì R-UI (m) mới chỉ dời được lưới, chưa gộp được bộ chọn — và hai thân bảng sẽ lệch đúng
-     * lúc ai đó thêm một lĩnh vực mới.
-     */
-    @Test
-    fun `che do dock dung chung than bang voi che do gan o`() {
-        val init = SourceRoots.body(drawer, "    init {")
-        assertTrue(
-            Regex("""if \(dock\) \{[\s\S]{0,600}?groupSection\(body\); singlesSection\(body\)""")
-                .containsMatchIn(init),
-            "chế độ dock phải dùng lại groupSection/singlesSection, không dựng thân bảng thứ hai",
-        )
-        listOf("groupSection(body)", "singlesSection(body)").forEach {
-            assertEquals(
-                2, Regex(Regex.escape(it)).findAll(init).count(),
-                "$it phải được gọi ở đúng HAI chế độ (gán ô + dock) — nhiều hơn là có bản sao",
-            )
-        }
     }
 
     /**

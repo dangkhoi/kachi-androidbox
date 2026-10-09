@@ -1,9 +1,6 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.LauncherActions
-import com.byd.clusternav.launcher.TelemetryRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -101,17 +98,7 @@ class VoiceGrammarPhrasesTest {
             val want = VoiceLexicon.tokenize(l).map { it.norm }
             want.isNotEmpty() && entryWords.any { it == want }
         }
-        ControlRegistry.ALL.forEach { c ->
-            val labels = listOfNotNull(c.label, c.labelEn, c.short, c.shortEn) + VoiceSynonyms.CONTROL[c.id].orEmpty()
-            assertTrue(sayable(labels), "nút `${c.id}` (${c.label}) không có cụm nào nói được")
-        }
-        VoiceTelemetry.SPOKEN.forEach { t ->   // 2.88: trừ 13 mã lốp thô — [VoiceTelemetry]
-            val labels = listOfNotNull(t.label, t.labelEn, t.short, t.shortEn) + VoiceSynonyms.TELEMETRY[t.id].orEmpty()
-            assertTrue(sayable(labels), "datum `${t.id}` (${t.label}) không có cụm nào nói được")
-        }
-        ActionMacros.ALL.forEach { m ->
-            assertTrue(sayable(listOfNotNull(m.label, m.labelEn)), "gói `${m.id}` không có cụm nào nói được")
-        }
+        // Android box B2 · W3: nút · datum · gói lệnh gỡ cùng lõi HAL BYDAuto ⇒ còn hành động launcher.
         LauncherActions.ALL.forEach { a ->
             assertTrue(sayable(listOfNotNull(a.label, a.labelEn)), "hành động `${a.id}` không có cụm nào nói được")
         }
@@ -330,7 +317,8 @@ class VoiceGrammarPhrasesTest {
         // ([VoiceTelemetry.NOT_SPOKEN], soát 2.88 regress-3) ⇒ con số này KHÔNG đổi (lượt trước từng đo 400 → 413).
         // [ĐO 2.93] 400 → 406 (+6 nhãn camera theo yêu cầu) · [ĐO 2026-10-09 · Android box W2b] 406 → **397** (−9: sáu nhãn ấy +
         // ba cụm nhiều từ của nút Camera 360 `cam`, gỡ cùng camera BYD). In bằng máy, không chép tay.
-        const val EXPECTED_PHRASES_KEPT = 397
+        // [ĐO 2026-10-09 · Android box W3] 397 → **16**: nút · datum · gói lệnh xe gỡ cùng lõi HAL BYDAuto.
+        const val EXPECTED_PHRASES_KEPT = 16
         // [ĐO off-car 2026-09-18 · log xe 53 phiên] **359 → 361 (+2)** = hai cách nói NHIỀU TỪ mới cho nhiên liệu
         // (`fuel_pct ← "nhien lieu"` · `"muc nhien lieu"`). Cách nói thứ ba (`"xang"`) là MỘT từ nên không vào con
         // số này — nó chỉ nở thêm ở [EXPECTED_ENTRIES]. Thêm để «chỉ số xăng» / «xăng còn bao nhiêu» (cả hai ra
@@ -400,7 +388,8 @@ class VoiceGrammarPhrasesTest {
         // 2.88 LỐP THEO XE: không đổi — 13 mã lốp thô ngoài ngữ pháp ([VoiceTelemetry.NOT_SPOKEN]; từng đo 194 → 207).
         // [ĐO 2.93] 194 → 196 (+2 *"Front/Left camera"*) · [ĐO 2026-10-09 · Android box W2b] 196 → **191** (−5: hai cụm ấy + ba
         // cụm bị loại của nút Camera 360 `cam`). Đọc từ **actual** (`set.phrasesDropped`).
-        const val EXPECTED_PHRASES_DROPPED = 191
+        // [ĐO 2026-10-09 · Android box W3] 191 → **2** (cụm xe gỡ).
+        const val EXPECTED_PHRASES_DROPPED = 2
 
         /**
          * [ĐO] tổng mục ngữ pháp = 330 cụm + từ đơn (mọi cách viết thanh điệu) + `[unk]`.
@@ -490,7 +479,8 @@ class VoiceGrammarPhrasesTest {
         // [ĐO off-car 2026-10-08 · 2.98 R2 VOICE-XONG-CONNECTOR] **2034 → 2040 (+6)** = liên từ mới `xong` nở họ thanh điệu từ
         // đơn của từ điển Vosk: `xong` · `xòng` · `xông` · `xống` · `xồng` · `xổng` (0 cụm mới). Đọc từ **actual**.
         // [ĐO 2026-10-09 · Android box W2b] 2040 → **2027** (−13: −9 cụm GIỮ camera + từ đơn chỉ nhãn camera/`cam` nở). Actual.
-        const val EXPECTED_ENTRIES = 2027
+        // [ĐO 2026-10-09 · Android box W3] 2027 → **801** (cụm + từ rời của nút/datum xe gỡ).
+        const val EXPECTED_ENTRIES = 801
         // [ĐO off-car 2026-09-18 · log xe 53 phiên] **2099 → 2109 (+10)** = 2 cụm nhiều từ của nhiên liệu
         // ([EXPECTED_PHRASES_KEPT] 359 → 361) **cộng** các từ ĐƠN lần đầu xuất hiện, nở theo họ thanh điệu:
         // `xăng` đứng một mình (cách nói mới của `fuel_pct`) và `nhiên` · `liệu`. Số đọc từ **actual** của chính

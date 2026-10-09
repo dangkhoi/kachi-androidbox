@@ -24,13 +24,14 @@ class WidgetMargin292ContractTest {
         assertTrue(col.contains("val p = dpi(ctx, Sp.S); setPadding(p, p, p, p)"), "lề khối dọc widget = Sp.S (8 dp), không Sp.L")
         assertEquals(KachiSpace.S, KachiBars.SHORTCUT_GRID_GAP, "cùng mép với lưới lối tắt")
         // Mọi widget một cột đi qua CÙNG hàm (đồng hồ · tốc độ · xe ở WidgetViews; vòng/thẻ ở WidgetTelemetry; nhạc).
-        val telemetry = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/WidgetTelemetry.kt")
+        // Android box B2 · W3: `WidgetTelemetry.kt` (ô dữ liệu xe) gỡ ⇒ thẻ chữ dựng sẵn ở `WidgetCards.kt`.
+        val telemetry = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/WidgetCards.kt")
         val media = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/MediaWidgetView.kt")
         // 2.93 WIDGET-CAR-STRIP-LAYOUT (đổi ghim có lý do): trạng thái xe nay dựng bằng `CarStateLayout` (hình trên/cạnh chú
         // thích theo `:core CarStripFit`) với CÙNG lề trong Sp.S — không còn đi qua `col`.
-        assertTrue(Regex("""\bcol\(ctx\)""").findAll(views).count() >= 2, "đồng hồ · tốc độ")
-        assertTrue("CarStateLayout(ctx, art, doorLine, pad = dpi(ctx, Sp.S)" in views, "trạng thái xe: cùng lề 8 dp")
-        assertTrue(Regex("""WidgetViews\.col\(ctx\)""").findAll(telemetry).count() >= 5, "vòng · số · huy hiệu · dải · thẻ chữ")
+        // W3: tốc độ · trạng thái xe · vòng · số · huy hiệu · dải gỡ cùng widget xe ⇒ còn đồng hồ + thẻ chữ.
+        assertTrue(Regex("""\bcol\(ctx\)""").findAll(views).count() >= 1, "đồng hồ")
+        assertTrue(Regex("""WidgetViews\.col\(ctx\)""").findAll(telemetry).count() >= 1, "thẻ chữ")
         // 2.93 WF-MEDIA-SMALL (đổi ghim có lý do): widget nhạc tự xếp bằng `MediaFitLayout` (bỏ phần phụ trước, giữ nút) với
         // CÙNG lề trong Sp.S — lề nằm ở `MediaFitLayout.box` (pad = dp(KachiSpace.S)).
         assertTrue(media.contains("MediaFitLayout(ctx, art, title, artist, prog, prev, play, next, MediaFitLayout.box("), "widget nhạc")

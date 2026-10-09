@@ -1,14 +1,8 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlDef
-import com.byd.clusternav.launcher.ControlKind
-import com.byd.clusternav.launcher.ControlRegistry
-import com.byd.clusternav.launcher.EvidenceTier
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.launcher.TelemetryRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -25,7 +19,8 @@ import org.junit.jupiter.api.Test
  * `ControlRegistry` mà từ vựng không phủ ⇒ bài này **đỏ ngay**, không phải chờ ai đó nhớ ra để thêm ca test. Đây
  * là cùng cơ chế `LangCoverageTest` dùng cho bản dịch, và cùng lý do.
  *
- * Số ca sinh ra hôm nay: **33 nút + 64 datum + 2 gói lệnh + 3 hành động launcher = 102**, cộng phần tiếng Anh.
+ * Số ca sinh ra hôm nay: **3 hành động launcher** (Android box B2 · W3: 33 nút + 64 datum + 2 gói lệnh gỡ cùng lõi HAL
+ * BYDAuto; trước đó 102), cộng phần tiếng Anh.
  * (Bản trước ghi *"65 nút + 123 datum + 4 gói + 2 launcher = 194"* — con số của trước lượt owner gỡ ADAS
  * 2026-09-16 và các lượt purge sau đó. Một KDoc nói sai con số nó đang canh là chỗ người sau đọc rồi tin nhầm.)
  *
@@ -36,108 +31,16 @@ import org.junit.jupiter.api.Test
  */
 class VoiceGrammarCoverageTest {
 
-    /**
-     * Câu mẫu cho một nút — **một** hàm, dùng chung với màn Cài đặt và dump danh mục.
-     *
-     * Nút BẤM không có động từ nào tự nhiên trong tiếng Việt (*"bấm Lọc ngay"* không ai nói) ⇒ dùng chính cái tên
-     * làm câu lệnh, đúng luật *"cả câu là TÊN của việc"* mà `VoiceIntentParser.headMatch` cài — luật ấy nay khai ở
-     * [VoiceCommandCatalog.coverageSentence].
-     */
-    private fun sentenceFor(def: ControlDef): String = VoiceCommandCatalog.coverageSentence(def, Lang.VI)
+    // ══ 1–2 · Nút + datum — Android box B2 · W3: gỡ cùng lõi HAL BYDAuto ═══════════════════════════════════════
 
-    // ══ 1 · MỌI NÚT gọi được bằng lời ══════════════════════════════════════════════════════════════════
-
-    @Test
-    fun `moi nut trong ControlRegistry deu co it nhat mot cau nhan dung`() {
-        val misses = ArrayList<String>()
-        ControlRegistry.ALL.forEach { def ->
-            val s = sentenceFor(def)
-            val got = VoiceIntentParser.parseOne(s)
-            // So theo **nhãn**, không theo mã: hai nút trùng nhãn (vd nhãn ngắn dùng chung) thì câu dựng từ nhãn
-            // KHÔNG phân biệt nổi chúng — đó là giới hạn của chính cái nhãn, không phải lỗi của bộ phân tích.
-            val okId = (got as? VoiceIntent.Control)?.id
-            val okLabel = okId?.let { ControlRegistry.byId(it)?.label }
-            if (okLabel != def.label) misses.add("${def.id} · \"$s\" → $got")
-        }
-        assertTrue(misses.isEmpty(), "nút KHÔNG gọi được bằng lời (${misses.size}/${ControlRegistry.ALL.size}):\n" +
-            misses.joinToString("\n"))
-    }
-
-    @Test
-    fun `moi nut deu co dung gia tri mong doi theo ControlKind`() {
-        ControlRegistry.ALL.forEach { def ->
-            val got = VoiceIntentParser.parseOne(sentenceFor(def)) as? VoiceIntent.Control
-            assertNotNull(got, "${def.id}: không ra Control")
-            val want = when (def.kind) {
-                ControlKind.TOGGLE, ControlKind.COVER -> 1
-                ControlKind.BUTTON -> null
-                ControlKind.SELECT -> 0
-                ControlKind.STEP -> def.clamp(def.value)
-            }
-            // Chỉ so khi câu khớp ĐÚNG nút đó (nhãn trùng thì bài trên đã nói rõ giới hạn).
-            if (got!!.id == def.id) assertEquals(want, got.value, "${def.id} · \"${sentenceFor(def)}\"")
-        }
-    }
-
-    // ══ 2 · MỌI DATUM đọc được bằng lời ════════════════════════════════════════════════════════════════
-
-    @Test
-    fun `moi datum trong TelemetryRegistry deu doc duoc bang mot cau xem`() {
-        val misses = ArrayList<String>()
-        // 2.88: 13 mã lốp THÔ cố ý không nói được — [VoiceTelemetry.NOT_SPOKEN] (bài `VoiceTelemetryTest` khoá).
-        VoiceTelemetry.SPOKEN.forEach { spec ->
-            val s = VoiceCommandCatalog.coverageSentence(spec, Lang.VI)
-            val got = VoiceIntentParser.parseOne(s)
-            val gotLabel = (got as? VoiceIntent.Read)?.datumId?.let { TelemetryRegistry.byId(it)?.label }
-            if (gotLabel != spec.label) misses.add("${spec.id} · \"$s\" → $got")
-        }
-        assertTrue(misses.isEmpty(), "datum KHÔNG đọc được bằng lời (${misses.size}/${VoiceTelemetry.SPOKEN.size}):\n" +
-            misses.joinToString("\n"))
-    }
-
-    // ══ 3 · GÓI LỆNH + HÀNH ĐỘNG LAUNCHER ══════════════════════════════════════════════════════════════
-
-    @Test
-    fun `moi goi lenh goi duoc bang chinh ten no`() = ActionMacros.ALL.forEach { m ->
-        assertEquals(VoiceIntent.Macro(m.id), VoiceIntentParser.parseOne(m.label), "gói \"${m.label}\"")
-    }
+    // ══ 3 · HÀNH ĐỘNG LAUNCHER ═══════════════════════════════════════════════════════════════════════════════
 
     @Test
     fun `moi hanh dong launcher goi duoc bang loi`() = LauncherActions.ALL.forEach { a ->
         assertEquals(VoiceIntent.Launcher(a.id), VoiceIntentParser.parseOne("mở ${a.label}"), "\"mở ${a.label}\"")
     }
 
-    // ══ 4 · TIẾNG ANH CƠ BẢN ═══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Nhãn Anh là **dữ liệu nằm cạnh** nhãn Việt (`Localized.labelEn`), nên từ vựng sinh ra đã có sẵn cả hai thứ
-     * tiếng. Bài này chứng minh điều đó thật sự chảy tới bộ phân tích, không phải chỉ có mặt trong danh sách.
-     */
-    @Test
-    fun `nut co nhan tieng Anh deu goi duoc bang cau tieng Anh`() {
-        val misses = ArrayList<String>()
-        ControlRegistry.ALL.filter { !it.labelEn.isNullOrBlank() }.forEach { def ->
-            val s = VoiceCommandCatalog.coverageSentence(def, Lang.EN)
-            val got = VoiceIntentParser.parseOne(s)
-            if (!hitsControl(got, def.labelEn) && !hitsMacroNamed(got, s)) misses.add("${def.id} · \"$s\" → $got")
-        }
-        assertTrue(misses.isEmpty(), "nhãn Anh không gọi được (${misses.size}):\n" + misses.joinToString("\n"))
-    }
-
-    private fun hitsControl(got: VoiceIntent, labelEn: String?): Boolean =
-        ControlRegistry.byId((got as? VoiceIntent.Control)?.id ?: "")?.labelEn == labelEn
-
-    /**
-     * Ca hợp lệ DUY NHẤT mà câu dựng từ nhãn nút lại ra một GÓI LỆNH: nhãn Anh `"All windows"` (`windows_all`) đứng
-     * sau `"open"` tạo thành đúng tên gói `"Open all"` — và gói đó **đúng hơn**: nó gồm 4 nút **đã chạy thật trên
-     * xe**, còn `windows_all` ở mức CHƯA KIỂM (xem KDoc `ActionMacros`). Luật *"cả câu là TÊN của việc"* chọn cái
-     * tên dài hơn, tức chọn cái chắc ăn hơn. Chấp nhận, nhưng chỉ khi tên gói thật sự nằm ở đầu câu.
-     */
-    private fun hitsMacroNamed(got: VoiceIntent, sentence: String): Boolean {
-        val m = ActionMacros.byId((got as? VoiceIntent.Macro)?.id ?: "") ?: return false
-        val head = VoiceLexicon.deaccent(sentence).startsWith(VoiceLexicon.deaccent(m.labelEn ?: m.label))
-        return head
-    }
+    // ══ 4 · TIẾNG ANH CƠ BẢN — Android box B2 · W3: câu Anh của nút xe gỡ cùng lõi HAL BYDAuto ═══════════════
 
     // ══ 5 · CHỐT AN TOÀN CỦA CHÍNH TỪ VỰNG ═════════════════════════════════════════════════════════════
 
@@ -168,14 +71,11 @@ class VoiceGrammarCoverageTest {
     @Test
     fun `tu vung phu du bon bo dang ky`() {
         val terms = VoiceGrammar.terms()
-        listOf(
-            VoiceTermKind.CONTROL to ControlRegistry.ALL.size,
-            VoiceTermKind.TELEMETRY to VoiceTelemetry.SPOKEN.size,   // 2.88: trừ 13 mã lốp thô
-            VoiceTermKind.MACRO to ActionMacros.ALL.size,
-            VoiceTermKind.LAUNCHER to LauncherActions.ALL.size,
-        ).forEach { (kind, n) ->
-            assertEquals(n, terms.filter { it.kind == kind }.map { it.id }.distinct().size, "thiếu mã loại $kind")
-        }
+        // Android box B2 · W3: nút · datum · gói lệnh gỡ cùng lõi HAL BYDAuto ⇒ phần tĩnh chỉ còn hành động launcher.
+        assertEquals(
+            LauncherActions.ALL.size, terms.filter { it.kind == VoiceTermKind.LAUNCHER }.map { it.id }.distinct().size,
+        )
+        assertEquals(setOf(VoiceTermKind.LAUNCHER, VoiceTermKind.MEDIA, VoiceTermKind.NAV), terms.map { it.kind }.toSet() - setOf(VoiceTermKind.PROFILE, VoiceTermKind.APP))
     }
 
     // ══ 6 · SỐ BẰNG CHỮ ════════════════════════════════════════════════════════════════════════════════
@@ -235,45 +135,40 @@ class VoiceGrammarCoverageTest {
     @Test
     fun `mac dinh KHONG hoi gi ca — tap rong thi moi viec la NORMAL`() {
         listOf(
-            VoiceIntent.Control("windows_all", 1),
-            // ⚠ 1.90 · `cast` rời hai danh sách này cùng nút (owner 2026-09-21) — nó là mục duy nhất của
-            // `VoiceRisk` rụng theo, nên bảng lý do vẫn phủ đủ các việc CÒN hỏi được.
-            VoiceIntent.Control("trunk", 1),
-            VoiceIntent.Control("sunroof", 1),
-            VoiceIntent.Macro("mac_win_open_all"),
             VoiceIntent.Profile("Vợ"),
             VoiceIntent.Nav("Bitexco"),
             VoiceIntent.Media(VoiceMediaOp.QUERY, "Diễm Xưa"),
         ).forEach { i ->
             assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(i), "mặc định phải CHẠY LUÔN: $i")
         }
-        // Đọc vẫn là SAFE (không đổi gì ngoài màn hình) — cổng an toàn không liên quan tới nó.
-        assertEquals(VoiceRisk.SAFE, VoiceRiskTable.of(VoiceIntent.Read("soc")))
+        assertEquals(emptySet<String>(), VoiceRiskTable.defaultIds(), "W3: mặc định cửa sổ trời (nút xe) đã gỡ")
+        assertEquals(VoiceRisk.SAFE, VoiceRiskTable.of(VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, "mở kính")))
     }
 
     @Test
     fun `bat mot ma thi DUNG ma do hoi lai, cac ma khac khong`() {
-        val only = setOf(VoiceRiskTable.PREFIX_CONTROL + "trunk")
-        assertEquals(VoiceRisk.CONFIRM, VoiceRiskTable.of(VoiceIntent.Control("trunk", 1), only))
-        assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(VoiceIntent.Control("sunroof", 1), only))
-        assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(VoiceIntent.Profile("Vợ"), only))
-        // Giá trị KHÔNG vào mã: một ô tích cho một nút (xem KDoc [VoiceRiskTable.confirmId]).
-        // ⚠⚠ 2.86 · FIX286 SR5(a) — vế ĐÓNG ĐẢO có chủ ý (owner 03/10: *"MỞ nóc phải hỏi xác nhận"*; spec OQ3):
-        // tới 2.85 dòng dưới khoá `Control(sunroof, 0)` ⇒ CONFIRM, tức tích "Cửa sổ trời" là câu *"đóng cửa sổ
-        // trời"* cũng bị hỏi lại — mà hộp hỏi không có lý do nào, vì `reason()` đã xét vế còn `of()` thì không
-        // [ĐO mã, đọc lại 02/10]. Nay MỘT hàm `Rule.matches` cho cả hai. Chặt hơn bài cũ: khoá cả vế hỏi (mở),
-        // vế không hỏi (đóng), lệnh không nói vế (hỏi — nghiêng về an toàn) và lý do khớp đúng vế.
-        val sunroof = setOf(VoiceRiskTable.PREFIX_CONTROL + "sunroof")
-        assertEquals(VoiceRisk.CONFIRM, VoiceRiskTable.of(VoiceIntent.Control("sunroof", 1), sunroof))
-        assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(VoiceIntent.Control("sunroof", 0), sunroof))
-        assertEquals(VoiceRisk.CONFIRM, VoiceRiskTable.of(VoiceIntent.Control("sunroof", null), sunroof))
-        assertEquals(null, VoiceRiskTable.reason(VoiceIntent.Control("sunroof", 0)))
-        assertTrue(VoiceRiskTable.reason(VoiceIntent.Control("sunroof", 1))!!.isNotBlank())
-        // Nút KHÔNG nằm trong bảng lý do thì không có mã ⇒ không bao giờ hỏi được, kể cả khi ai đó nhét mã lạ.
-        assertEquals(null, VoiceRiskTable.confirmId(VoiceIntent.Control("readl", 1)))
-        assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(VoiceIntent.Control("readl", 1), setOf("control:readl")))
+        val only = setOf(VoiceRiskTable.ID_PROFILE)
+        assertEquals(VoiceRisk.CONFIRM, VoiceRiskTable.of(VoiceIntent.Profile("Vợ"), only))
+        assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(VoiceIntent.Media(VoiceMediaOp.QUERY, "Diễm Xưa"), only))
         // Sổ địa chỉ: tập ĐÓNG người dùng tự gõ ⇒ không có mã, không bật được (spec `kachi-voice-addresses` §4.2).
         assertEquals(null, VoiceRiskTable.confirmId(VoiceIntent.NavigateSaved("Nhà")))
+    }
+
+    /**
+     * Android box B2 · W3 — `voice_confirm_ids` lưu từ Kachi BYD còn mã `control:sunroof` / `macro:…` (nút xe đã
+     * gỡ): nạp được, không ném, không làm việc nào khác thành CONFIRM, và không còn là ô tích nào trong Cài đặt.
+     */
+    @Test
+    fun `tap da luu co ma nut xe cu van dung duoc va bi bo qua`() {
+        val legacy = setOf(VoiceRiskTable.PREFIX_CONTROL + "sunroof", VoiceRiskTable.PREFIX_MACRO + "mac_win_open_all", "control:trunk")
+        val eff = VoiceRiskTable.effectiveIds(legacy, chosenSinceDefaults = true)
+        listOf(
+            VoiceIntent.Profile("Vợ"), VoiceIntent.Media(VoiceMediaOp.QUERY, "Diễm Xưa"), VoiceIntent.OpenApp("YouTube"),
+            VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), VoiceIntent.Nav("Bitexco"),
+        ).forEach { assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(it, eff), "$it") }
+        assertTrue(VoiceRiskTable.askableIds().none { it in legacy }, "mã nút xe cũ không còn là ô tích")
+        assertTrue(VoiceRiskTable.askableIds().none { it.startsWith(VoiceRiskTable.PREFIX_CONTROL) || it.startsWith(VoiceRiskTable.PREFIX_MACRO) })
+        assertEquals(legacy, VoiceRiskTable.effectiveIds(legacy, chosenSinceDefaults = false), "chưa chọn lại ⇒ cộng mặc định RỖNG")
     }
 
     /** Mỗi mã bày ra trong Cài đặt phải có NHÃN + LÝ DO đọc được — một ô tích trống nghĩa là một ô không ai tích. */
@@ -293,9 +188,8 @@ class VoiceGrammarCoverageTest {
     @Test
     fun `moi viec CONFIRM deu co ly do doc duoc`() {
         listOf(
-            VoiceIntent.Control("windows_all", 1),
-            VoiceIntent.Macro("mac_win_open_all"),
             VoiceIntent.Profile("Vợ"),
+            VoiceIntent.Media(VoiceMediaOp.QUERY, "Diễm Xưa"),
         ).forEach { i ->
             assertTrue(!VoiceRiskTable.reason(i).isNullOrBlank(), "thiếu lý do cho $i")
         }
@@ -333,29 +227,11 @@ class VoiceGrammarCoverageTest {
 
     // ══ 9 · CÂU TRẢ LỜI (R5) ══════════════════════════════════════════════════════════════════════════
 
-    /**
-     * ⚠ 2026-09-21 · OWNER BỎ HẲN CHẤM + ĐUÔI "chưa kiểm trên xe". `CarCapabilities.needsBadge`/`ActionMacro.needsBadge`
-     * nay luôn false ⇒ `VoiceReply.unverified` trả rỗng. Câu trả lời giọng nói KHÔNG còn nói "chưa kiểm" cho MỌI mục.
-     */
-    @Test
-    fun `cau tra loi khong con noi chua kiem tren xe 2026-09-21`() {
-        Strings.current = Lang.VI
-        val unproven = ControlRegistry.ALL.first { it.tier != EvidenceTier.PROVEN }
-        val proven = ControlRegistry.ALL.first { it.tier == EvidenceTier.PROVEN }
-        assertTrue(!VoiceReply.done(VoiceIntent.Control(unproven.id, 1)).contains("chưa kiểm"), unproven.id)
-        assertTrue(!VoiceReply.done(VoiceIntent.Control(proven.id, 1)).contains("chưa kiểm"), proven.id)
-        assertTrue(!VoiceReply.confirmQuestion(VoiceIntent.Control("windows_all", 1)).contains("chưa kiểm"))
-        assertTrue(!VoiceReply.done(VoiceIntent.Read("soc")).contains("chưa kiểm"))
-        Strings.current = Lang.EN
-        assertTrue(!VoiceReply.done(VoiceIntent.Control(unproven.id, 1)).contains("not yet checked"))
-        Strings.current = Lang.VI
-    }
-
     /** Huỷ ở hộp hỏi lại phải nói ra còn mấy vế không chạy — im lặng là để người ta tưởng nửa sau đã chạy. */
     @Test
     fun `cau huy noi ro con may viec khong chay`() {
         Strings.current = Lang.VI
-        val i = VoiceIntent.Control("door", null)
+        val i = VoiceIntent.OpenApp("YouTube")
         assertTrue(VoiceReply.cancelled(i, 0).contains("đã huỷ"))
         assertTrue(!VoiceReply.cancelled(i, 0).contains("không chạy"), "không có vế sau thì đừng doạ")
         assertTrue(VoiceReply.cancelled(i, 2).contains("2"))
@@ -364,14 +240,4 @@ class VoiceGrammarCoverageTest {
         Strings.current = Lang.VI
     }
 
-    /** Mọi mã nút/gói trong bảng an toàn phải TỒN TẠI — chống mục rữa khi ai đó đổi/xoá mã. */
-    @Test
-    fun `bang an toan khong tro toi ma da chet`() {
-        VoiceRiskTable.CONTROL_RULES.forEach {
-            assertNotNull(ControlRegistry.byId(it.controlId), "mã nút lạ trong bảng an toàn: ${it.controlId}")
-        }
-        VoiceRiskTable.MACRO_IDS.forEach {
-            assertNotNull(ActionMacros.byId(it), "mã gói lạ trong bảng an toàn: $it")
-        }
-    }
 }

@@ -100,7 +100,6 @@ class VoiceNavClearTaskFlagTest {
         val sent = ArrayList<VoiceAppIntents.Handoff>()
         val yes = ArrayList<() -> Unit>()
         val d = VoiceDispatcher(
-            control = { error("bài này không chạm nút xe") },
             state = { HomeUiState() },
             media = { error("bài này không chạm transport nhạc") },
             appsByLabel = { mapOf("Bản đồ" to GMAPS) },

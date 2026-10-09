@@ -268,12 +268,9 @@ class WorkspacePrefs(context: Context) {
         sp.edit().putString(K_RECENT, RecentApps.encode(RecentApps.touch(recentApps(), pkg))).apply()
     }
 
-    // ── Đơn vị hiển thị (S4 · R3a — nay THEO HỒ SƠ) — RW0/R11 ──
-    // Owner 2026-09-14 "profile cover ... tất cả mọi thứ": đơn vị là lựa chọn của MỘT người lái, nên nó đi theo hồ
-    // sơ như chủ đề/hình nền. Đường lùi khoá chung cũ ở [profileString]. Chuỗi rỗng/rác ⇒ mặc định.
-    fun unitPrefs(): UnitPrefs = UnitPrefs.decode(profileString(K_UNITS))
-
-    fun setUnitPrefs(prefs: UnitPrefs) { sp.edit().putString(key(K_UNITS), prefs.encode()).apply() }
+    // Android box B2 · W3: đơn vị hiển thị (`unit_prefs` — chỉ cho datum xe) và chip thanh trên (`top_strip` ·
+    // `top_strip_labels` · mốc `top_strip_migrated_ux5b` — mọi chip là chip xe) gỡ cùng lõi HAL. Khoá còn trên đĩa của hồ sơ
+    // cũ vẫn được xếp phạm vi (`ProfileScope`) nên xuất/nhập/nhân bản hồ sơ không đổi; không ai đọc chúng nữa.
 
     /**
      * U4 — hình nền + trình chiếu. S4 · R3a: **theo HỒ SƠ** (cùng lối với chủ đề, đơn vị, ngôn ngữ) — đường lùi
@@ -288,34 +285,6 @@ class WorkspacePrefs(context: Context) {
      * sàn), và việc đếm ô trống chạy hàng tỉ nhịp làm treo giao diện. Màn hình thì đã có lưới an toàn (lùi về bố cục
      * sẵn), nhưng trình vẽ là nơi người dùng vào để **sửa** nên phải chặn ở đây.
      */
-    /**
-     * Cấu hình chip thanh trên (RW0 vùng thứ ba). Theo **hồ sơ** như thanh nút — hai tài xế thích hai bộ chip khác
-     * nhau là chuyện thường. Chuỗi lưu là danh sách mã trần, đọc được bằng mắt để cứu tay khi cần.
-     *
-     * ⚠ [P1 · SOÁT Opus 2026-09-27] Di trú UX5b chạy **ĐÚNG MỘT LẦN** mỗi hồ sơ, canh bằng [K_STRIP_MIGRATED]; vì sao
-     * một cái MỐC chứ không phải *"ghi lại danh sách"* (thứ KHÔNG chữa được): KDoc `applyMigration` của
-     * [TopStripConfig.decode]. Hồ sơ **chưa từng lưu** danh sách thì đang ăn mặc định MỚI ⇒ đóng mốc luôn.
-     */
-    fun topStrip(): TopStripConfig {
-        val labels = sp.booleanOrNull(key("top_strip_labels")) ?: true
-        val saved = sp.stringOrNull(key("top_strip"))
-        val done = sp.booleanOrNull(key(K_STRIP_MIGRATED)) ?: false
-        if (saved == null && !done) sp.edit().putBoolean(key(K_STRIP_MIGRATED), true).apply()
-        if (saved == null || done) return TopStripConfig.decode(saved, labels, applyMigration = false)
-        val cfg = TopStripConfig.decode(saved, labels)   // lượt DUY NHẤT được di trú
-        sp.edit().putString(key("top_strip"), TopStripConfig.encode(cfg))
-            .putBoolean(key(K_STRIP_MIGRATED), true).apply()
-        return cfg
-    }
-
-    /** Ghi cấu hình chip — **hai khoá, một lượt ghi**: không đường nào ghi được một nửa cấu hình. */
-    fun setTopStrip(config: TopStripConfig) {
-        sp.edit()
-            .putString(key("top_strip"), TopStripConfig.encode(config))
-            .putBoolean(key("top_strip_labels"), config.showLabels)
-            .apply()
-    }
-
     /**
      * UX-OVERHAUL · WP4 — **thứ tự các vật trên thanh trên**, theo hồ sơ (khoá `header_order`).
      *
@@ -444,12 +413,10 @@ class WorkspacePrefs(context: Context) {
         private const val K_RECENT = "recent_apps"
 
         // ── Hậu tố theo HỒ SƠ (R3) — luôn đi qua [key]/[keyOf] ──────────────────────────────────
-        internal const val K_STRIP_MIGRATED = "top_strip_migrated_ux5b"   // mốc di trú chip UX5b — xem [topStrip]
         private const val K_THEME = "theme_mode"
         /** P1b · R8 — `ColorChoice.encode()`; nằm trong [ProfileScope.LAUNCHER_PERSONAL_SUFFIXES]. */
         private const val K_COLOR = "color_choice"
         private const val K_AUTOSTART = "launcher_autostart"
-        private const val K_UNITS = "unit_prefs"
         private const val K_WALL = "wallpaper_prefs"
         /** `internal` vì ba hàm ngôn ngữ nay ở `WorkspacePrefsLang.kt` (trần 500 dòng) — vẫn MỘT khoá, một chỗ khai. */
         internal const val K_LANG = "lang"

@@ -202,7 +202,7 @@ class PhotoWidgetView(context: Context) : View(context) {
         canvas.drawText(sub, w / 2f, base + lineGap, hint)
     }
 
-    /** Cỡ chữ đã co cho [text] vừa [room]; sàn [floor] chỉ chặn phần CO (xem cùng lẽ ở [RingView]). */
+    /** Cỡ chữ đã co cho [text] vừa [room]; sàn [floor] chỉ chặn phần CO (xem cùng lẽ ở `RingView`). */
     private fun fitSize(text: String, nominal: Float, room: Float, floor: Float): Float {
         hint.textSize = nominal
         val scale = CellTextLayout.fitScale(hint.measureText(text), room)

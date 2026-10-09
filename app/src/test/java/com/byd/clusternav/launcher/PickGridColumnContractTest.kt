@@ -35,7 +35,7 @@ class PickGridColumnContractTest {
      * Settings (mở bộ chọn của ngăn kéo thay thế) nên `SettingsSectionsHome` không còn lưới nào để canh — nhưng
      * bộ chọn chip thì có, và nó vừa được đưa qua `CapabilityTileGrid` nên phải nằm trong bài này.
      */
-    private val home by lazy { SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/TopStripPicker.kt") }
+    // Android box B2 · W3: bộ chọn chip (`TopStripPicker.kt` — lưới cuối của Cài đặt) gỡ cùng chip xe.
 
     /** Mọi token truyền vào `cols = …` trong [src] (định danh HOẶC số trần). */
     private fun colsArgs(src: String): List<String> =
@@ -45,7 +45,7 @@ class PickGridColumnContractTest {
 
     @Test
     fun `so cot khong duoc la so tran o ca hai man chon`() {
-        val offenders = listOf("AppDrawer.kt" to drawer, "TopStripPicker.kt" to home)
+        val offenders = listOf("AppDrawer.kt" to drawer)
             .flatMap { (name, src) -> colsArgs(src).filter { it.all(Char::isDigit) }.map { "$name: cols = $it" } }
         assertEquals(
             emptyList<String>(), offenders,
@@ -70,14 +70,6 @@ class PickGridColumnContractTest {
         assertTrue(
             Regex("""const val COLS_TILE = CapabilityPicker\.COLS""").containsMatchIn(drawer),
             "COLS_TILE phải LẤY từ `:core`, không được là một con số thứ hai — màn Cài đặt bày CHÍNH những ô đó",
-        )
-    }
-
-    @Test
-    fun `man Cai dat lay so cot tu cung mot nguon voi ngan keo`() {
-        assertEquals(
-            setOf("CapabilityPicker.COLS"), colsArgs(home).toSet(),
-            "mọi lưới ô khả năng ở màn Cài đặt phải đi qua CapabilityPicker.COLS (trước 2026-09-12 mục lẻ để 5 cột)",
         )
     }
 

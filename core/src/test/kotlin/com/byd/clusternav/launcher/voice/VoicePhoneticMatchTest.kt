@@ -26,51 +26,7 @@ class VoicePhoneticMatchTest {
 
     private fun one(text: String): VoiceIntent = VoiceIntentParser.parseOne(text)
 
-    private fun control(text: String): VoiceIntent.Control {
-        val got = one(text)
-        assertTrue(got is VoiceIntent.Control, "«$text» phải là Control, ra: $got")
-        return got as VoiceIntent.Control
-    }
-
-    private fun read(text: String): VoiceIntent.Read {
-        val got = one(text)
-        assertTrue(got is VoiceIntent.Read, "«$text» phải là Read, ra: $got")
-        return got as VoiceIntent.Read
-    }
-
-    // ── (1) Cặp ĐÃ ĐO trên giọng thật ────────────────────────────────────────────────────────────
-
-    @Test
-    fun `cap nghe nham tren giong THAT tro ve dung nut`() {
-        // cột trái = chuỗi mô hình in ra · cột phải = mã phải trỏ tới · chú thích = tệp thu + số đoạn.
-        listOf(
-            "mở cấp sau" to "trunk",            // miennam-a #39 · miennam-b #26 — cốp → cấp (owner nêu tên)
-            "ở cấp sau" to "trunk",             // miennam-c #31 — mất luôn cả phụ âm đầu của động từ
-            "mở góc sau" to "trunk",            // owner #59
-            "bằng ghế sưởi" to "seath",         // owner #58 — bật → bằng
-            "bật ghế sửi" to "seath",           // host §5 — sưởi → sửi
-            "mở kim trước trái" to "win_lf",    // bé #51 — kính → kim
-            "mở kín trước trái" to "win_lf",    // host, e2e 09-15 §3 L3
-            // ⚠ (V) FEATURE-FILTER 2026-09-17: hai cặp ĐÃ ĐO «chế độ đá/gái thể thao» (bé #38 · owner #45)
-            // trỏ tới nút `drive_mode` — nút đó đã gỡ theo lệnh owner nên không còn đích để trỏ. Giữ lại ghi chép
-            // ở đây (luật dự án: không xoá lịch sử đo) nhưng không assert nữa.
-            "bật lọt bụi" to "pm25",            // quy luật phụ âm cuối t↔c, không phải cặp chép tay
-            "bật đèn đang đọc" to "readl",      // host §5 — đèn đọc sách → đang đọc sách
-        ).forEach { (text, id) -> assertEquals(id, control(text).id, "«$text» phải ra nút $id") }
-    }
-
-    @Test
-    fun `cap nghe nham tren giong THAT tro ve dung thong tin doc`() {
-        listOf(
-            "xem bên" to "soc",                     // miennam-c #24
-            "biên còn bao nhiêu" to "soc",          // owner #39 · #57
-            "bin còn bao nhiêu" to "soc",           // bé #14
-            "xem phim" to "soc",                    // owner #38
-            "xem tin" to "soc",                     // host — e2e 09-15 §3 L3, và §5 «tin còn bao nhiêu» ×4
-            "xe áp suất lốp trước trái" to "tyre_p_fl",  // bé #36 · #53 — xem → xe
-            "sẽ áp suất lốp trước trái" to "tyre_p_fl",  // owner #40 — xem → sẽ
-        ).forEach { (text, id) -> assertEquals(id, read(text).datumId, "«$text» phải đọc $id") }
-    }
+    // ── (1) Cặp ĐÃ ĐO trên giọng thật — Android box B2 · W3: cặp trỏ về nút/datum xe gỡ cùng lõi HAL BYDAuto ──────
 
     @Test
     fun `dong tu nghe nham van ra dung viec`() {
@@ -78,8 +34,6 @@ class VoicePhoneticMatchTest {
         // [ĐO ×2] `w09` của bộ 25 WAV: *"dừng nhạc"* → *"rừng nhạc"* ở lượt máy ảo 09-15 (§3 L3) và **đo lại**
         // tối 09-16 sau khi VAD cắt đuôi làm lệch nhẹ tệp ấy. Chữ vẫn sai, nhưng lệnh của người lái phải chạy.
         assertEquals(VoiceIntent.Media(VoiceMediaOp.PAUSE), one("rừng nhạc"))
-        // owner #51 «TÁM MẬT ĐỘ HAI MƯƠI HAI ĐỘ»: cả cụm tên nút nghe trượt, con số vẫn phải đi tới nơi.
-        assertEquals(VoiceIntent.Control("temp", 22), one("mật độ hai mươi hai độ"))
     }
 
     // ── (2) Bài QUAN TRỌNG NHẤT: câu đời thường vẫn phải là "không hiểu" ─────────────────────────
@@ -105,12 +59,11 @@ class VoicePhoneticMatchTest {
         // Chữa chính tả chỉ được phép **thay** một câu không hiểu bằng một ý định CÓ NGHĨA. Không sửa được thì
         // câu báo cũ phải còn nguyên — kể cả lý do, vì tầng hỏi lại ([VoiceClarify]) rẽ nhánh theo đúng nó.
         listOf(
-            "tắt hết đèn" to VoiceUnknownReason.NO_OBJECT,
+            // Android box B2 · W3: câu về đèn xe nay ra "đã gỡ" (không phải NO_OBJECT/MISMATCH như khi còn nút đèn).
+            "tắt hết đèn" to VoiceUnknownReason.FEATURE_GONE,
             "về chỗ nào đó" to VoiceUnknownReason.NO_VERB,
             "bật cái đó" to VoiceUnknownReason.NO_OBJECT,
-            // *"tăng đèn đọc"*: cụm *"đèn đọc"* khớp CHÍNH XÁC ⇒ vùng cấm ⇒ không ai được "sửa" nó thành
-            // một câu bật đèn. Không có luật vùng cấm thì đây là ca máy **làm một việc** mà câu không bảo.
-            "tăng đèn đọc" to VoiceUnknownReason.MISMATCH,
+            "tăng đèn đọc" to VoiceUnknownReason.FEATURE_GONE,
         ).forEach { (text, reason) ->
             val got = one(text)
             assertTrue(got is VoiceIntent.Unknown && got.reason == reason, "«$text» phải là $reason, ra: $got")
@@ -136,11 +89,10 @@ class VoicePhoneticMatchTest {
 
     @Test
     fun `cau dang chay tot khong doi mot chu`() {
-        assertEquals(VoiceIntent.Control("readl", 1), one("bật đèn đọc"))
-        assertEquals(VoiceIntent.Control("win_lf", 1), one("mở kính trước trái"))
-        assertEquals(VoiceIntent.Control("temp", 24), one("nhiệt độ hai mươi bốn độ"))
-        assertEquals(VoiceIntent.Macro("mac_win_open_all"), one("mở hết kính"))
-        assertEquals("soc", read("xem pin").datumId)
+        // Android box B2 · W3: câu mẫu xe gỡ ⇒ câu launcher/nhạc.
+        assertEquals(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), one("mở cài đặt"))
+        assertEquals(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.APPS), one("mở ứng dụng"))
+        assertEquals(VoiceIntent.Media(VoiceMediaOp.NEXT), one("bài tiếp theo"))
     }
 
     // ── (4) Nhập nhằng thì HỎI, không đoán ───────────────────────────────────────────────────────
@@ -151,8 +103,8 @@ class VoicePhoneticMatchTest {
         // được, mà danh mục thật thì đổi theo từng dòng registry ⇒ dựng riêng mới khoá được đúng cái luật.
         // `cốp` cách `cấp` và `góc` đúng một cặp ĐÃ ĐO ⇒ hoà ⇒ không được chọn bừa.
         val terms = listOf(
-            VoiceTerm(listOf("cap"), VoiceTermKind.CONTROL, "x"),
-            VoiceTerm(listOf("goc"), VoiceTermKind.CONTROL, "y"),
+            VoiceTerm(listOf("cap"), VoiceTermKind.LAUNCHER, "x"),
+            VoiceTerm(listOf("goc"), VoiceTermKind.LAUNCHER, "y"),
         )
         assertNull(
             VoicePhoneticMatch.repair(VoiceLexicon.tokenize("mở cốp"), terms),
@@ -167,7 +119,7 @@ class VoicePhoneticMatchTest {
     fun `mot cum ngang gia duy nhat thi van duoc chon`() {
         // Đối chứng của bài trên: bỏ cụm thứ hai đi thì chính chuỗi ấy được sửa. Không có bài đối chứng này
         // thì `repair` trả `null` vì **bất kỳ** lý do gì cũng làm bài trên xanh — tức một bài mù.
-        val terms = listOf(VoiceTerm(listOf("cap"), VoiceTermKind.CONTROL, "x"))
+        val terms = listOf(VoiceTerm(listOf("cap"), VoiceTermKind.LAUNCHER, "x"))
         val fixed = VoicePhoneticMatch.repair(VoiceLexicon.tokenize("mở cốp"), terms)
         assertEquals(listOf("mo", "cap"), fixed?.map { it.norm }, "một ứng viên duy nhất ⇒ phải sửa")
     }

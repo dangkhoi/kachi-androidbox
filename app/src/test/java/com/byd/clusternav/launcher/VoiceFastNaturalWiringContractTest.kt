@@ -193,17 +193,6 @@ class VoiceFastNaturalWiringContractTest {
 
     // ══ R11 — HAL theo TÊN HẰNG ══════════════════════════════════════════════════════════════════════════
 
-    @Test
-    fun `gateway that noi day hai phep tra moi, va cau co lenh featmap`() {
-        assertTrue(gateway.contains("BydFeatureIds.idByName("), "tra tên hằng phải đi qua gateway thật")
-        assertTrue(gateway.contains("BydFeatureIds.deviceFqnForFeature("), "và tra device theo bảng của framework")
-        // Android box B2 · W1 — lệnh `featmap` (bảng feature-id BYDAuto) rời cầu kiểm thử.
-        assertTrue(!bridge.contains("TestBridgeFeatMap.run(app, reply)"), "lệnh `featmap` đã gỡ khỏi cầu")
-        val hal = code("src/main/java/com/byd/clusternav/launcher/testbridge/TestBridgeHal.kt")
-        assertTrue(hal.contains("OP_SETEV"), "đầu dò `setev` (khoá/cốp) phải tồn tại cho lượt xe sau")
-        assertTrue(hal.contains("cmd.autoConfirm"), "và nó vẫn đi qua cổng CONFIRM như mọi lượt GHI")
-    }
-
     // ══ R13/R15 — hồ sơ · ô ══════════════════════════════════════════════════════════════════════════════
 
     @Test
@@ -305,8 +294,8 @@ class VoiceFastNaturalWiringContractTest {
             "lệnh `prefs_set` phải có chỗ gọi THẬT (CLAUDE.md §8)")
         val exec = code("src/main/java/com/byd/clusternav/launcher/testbridge/TestBridgePrefsSet.kt")
         assertTrue(exec.contains("Prefs.setVoiceConfirmIds("), "phải ghi qua ĐÚNG hàm mà màn Cài đặt ghi")
-        assertTrue(exec.contains("h.setTopStripLabels(on)"),
-            "nhãn chip theo HỒ SƠ ⇒ phải đi qua màn chính, không ghi thẳng prefs dưới chân màn hình")
+        // Android box B2 · W3: nhánh `top_strip_labels` (nhãn chip xe, qua màn chính) gỡ cùng khối chip.
+        assertTrue(!exec.contains("setTopStripLabels"), "không còn nhánh nhãn chip")
         assertTrue(exec.contains("readBack("), "lời đáp phải nói giá trị THẬT sau lượt ghi, không phải giá trị vừa nhận")
         // Bộ ca E2E phải THẬT SỰ dùng cột mới — không thì lệnh có mà lớp canh vẫn trống.
         val cases = repoText("scripts/emulator/voice-cases.tsv")

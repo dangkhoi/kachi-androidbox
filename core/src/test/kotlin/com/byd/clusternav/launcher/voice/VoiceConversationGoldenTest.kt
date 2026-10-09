@@ -25,22 +25,6 @@ class VoiceConversationGoldenTest {
     private fun parse(text: String): VoiceIntent =
         VoiceIntentParser.parse(text, emptyList(), emptyList(), emptyList()).first()
 
-    /** "mở kính" (mơ hồ) → hỏi lại → "kính lái" → ghép → ra Control đúng cửa lái. */
-    @Test
-    fun `mo kinh mo ho thi hoi lai roi ghep ra dung`() {
-        val first = parse("mở kính")
-        // Câu mơ hồ ⇒ Unknown (một cửa nào?) — parser giữ NO_OBJECT/ambiguous, không tự đoán.
-        if (first is VoiceIntent.Unknown) {
-            val ask = VoiceClarify.ask(first, round = 0)
-            assertNotNull(ask, "câu mơ hồ phải hỏi lại")
-            // Trả lời "kính lái" → ghép với carry → parse lại.
-            val joined = VoiceClarify.combine(ask!!.carry, "kính lái")
-            val second = parse(joined)
-            assertTrue(second !is VoiceIntent.Unknown, "sau khi ghép câu trả lời phải hiểu được: $joined → $second")
-        }
-        // Nếu parser đã tự hiểu "mở kính" = kính lái (tiền lệ 1.80) thì cũng đạt — không loop, ra Control.
-    }
-
     /** Trần hỏi lại: lượt ≥ MAX_ROUNDS ⇒ ask null (đóng, không loop vô hạn). */
     @Test
     fun `het tran hoi lai thi dong khong loop`() {

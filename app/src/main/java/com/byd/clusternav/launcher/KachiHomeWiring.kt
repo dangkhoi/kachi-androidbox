@@ -90,7 +90,7 @@ internal fun bridgeMsgRes(msg: BridgeMsg): Int = when (msg) {
  *
  * Mọi tham số ở đây đều là thứ mà Activity **không thể** tự suy ra: hai đường đổi bố cục đi kèm tác dụng phụ
  * ([onApplyLayout]/[onPreset] phải bỏ bố cục còn lại), hai đường phải áp lại NGAY lên view đang hiện
- * ([onWallpaperChanged]/[onUnitsChanged]), và bộ chọn nút thanh xe nằm ở [DrawerController]. Phần còn lại chỉ là
+ * ([onWallpaperChanged]), và bộ chọn nút thanh xe nằm ở [DrawerController]. Phần còn lại chỉ là
  * `viewModel.<intent>` nên nó ở đây, không ở Activity.
  */
 @Suppress("LongParameterList")
@@ -105,7 +105,6 @@ internal fun homePanels(
     onApplyLayout: (GridLayout?) -> Unit,
     onPreset: (LayoutPreset) -> Unit,
     onWallpaperChanged: (WallpaperPrefs) -> Unit,
-    onUnitsChanged: (UnitPrefs) -> Unit,
     shellUsable: () -> Boolean,
     /** F4 — hệ thống đang hỏi *"Cho phép gỡ lỗi USB?"* (lý do ĐÃ phân loại, xem [ShellChannelGate]). */
     shellAwaiting: () -> Boolean,
@@ -117,9 +116,6 @@ internal fun homePanels(
     openAppByPackage: (String) -> Boolean,
     /** V1.1 — gắn app vào một ô; CÙNG lambda mà ngăn kéo dùng. */
     assignAppToSlot: (Int, String) -> Boolean,
-    /** Kiểm tra từng nút (owner 2026-09-15): chạy một hành động xe · đọc một datum. */
-    runAction: (String, Int) -> Boolean,
-    readInfo: (String) -> String?,
 ): HomePanels = HomePanels(
     activity = activity,
     rootFrame = rootFrame,
@@ -132,17 +128,12 @@ internal fun homePanels(
     // T6 · R-UI (m): tập người dùng vừa chốt đã được `DockSelection.apply` gấp thành cấu hình ở tầng Cài đặt;
     // ở đây chỉ còn một intent — **không** ghi bền trực tiếp (`GridSeamGuardTest.chi ViewModel duoc ghi ben`).
     onDockConfig = { config -> viewModel.setDockConfig(config) },
-    runAction = runAction,
-    readInfo = readInfo,
     onApplyLayout = onApplyLayout,
     onPreset = onPreset,                         // CÙNG đường với 5 nút bố cục ở thanh trên (§4.5)
     onDockEdge = { e -> viewModel.setDockEdge(e) },
-    onTopStrip = { id, on -> viewModel.toggleTopStrip(id, on) },
-    onTopStripConfig = { cfg -> viewModel.setTopStrip(cfg) },
     // WP4 — intent thuần; đường ghi bền duy nhất là `HomeViewModel.setHeaderLayout` (state + prefs một lượt).
     onHeaderLayout = { layout -> viewModel.setHeaderLayout(layout) },
     onWallpaper = onWallpaperChanged,
-    onUnitPrefs = onUnitsChanged,
     // Sổ địa chỉ (spec `kachi-voice-addresses.html` R1) — intent thuần, KHÔNG ghi bền trực tiếp; đường đọc là
     // `HomeUiState.savedPlaces` mà `load()` đã nạp (không mở cửa `WorkspacePrefs` thứ hai ở tầng UI).
     onSavedPlaces = { places -> viewModel.setSavedPlaces(places) },
@@ -196,13 +187,11 @@ internal fun homePanels(
  * Mã lạ ⇒ **không làm gì**: mã launcher tương lai mà bản này chưa biết thì im lặng còn hơn mở nhầm một màn.
  */
 internal fun Activity.controlDock(
-    control: CarControlPort,
     openAppList: () -> Unit,
     openSettings: () -> Unit,
     /** V1 pha NGHE — ô *Nói với xe*. CÙNG lambda mà nút mic trên thanh trên dùng, không đường thứ hai. */
     onVoice: () -> Unit,
 ): ControlDockView = ControlDockView(this).apply {
-    this.control = control
     onLauncherAction = { id ->
         when (id) {
             LauncherActions.APPS -> openAppList()
@@ -364,8 +353,8 @@ internal fun Activity.goImmersiveWindow() {
  *     thì không làm gì; có dòng tới lúc màn khuất thì vẽ một lần khi hiện lại.
  *
  * Cả hai bọc trong `repeatOnLifecycle(STARTED)` nên tự huỷ khi màn xuống dưới STARTED — đó là tính chất phải giữ
- * khi đọc lại khối này: `carStatusRepository` poll 2 nhịp, chạy tiếp lúc màn khuất là poll HAL suốt chuyến mà
- * không ai thấy. `finally { stop() }` là chỗ giữ lời hứa ấy, kể cả khi vòng thu bị huỷ giữa chừng.
+ * khi đọc lại khối này. (Android box B2 · W3: vòng thu trạng thái xe `carStatusRepository` + nhu cầu đọc HAL + cầu bảng
+ * lệnh cuối `ControlLastSent` gỡ cùng lõi HAL BYDAuto.)
  *
  * Không phải hàm mở rộng của `Activity`: nó chỉ cần một [LifecycleOwner] (và màn chính tự quản một
  * `LifecycleRegistry` riêng vì kế thừa `android.app.Activity`), nên khai đúng thứ nó cần.
@@ -373,40 +362,11 @@ internal fun Activity.goImmersiveWindow() {
 internal fun collectHome(
     owner: LifecycleOwner,
     viewModel: HomeViewModel,
-    container: AppContainer,
-    resyncTiles: () -> Unit,
     render: (HomeUiState) -> Unit,
 ) {
-    var seen = ControlLastSent.shared.relayed.value
     owner.lifecycleScope.launch {
         owner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            ControlLastSent.shared.relayed.collect { v -> if (v != seen) { seen = v; resyncTiles() } }
-        }
-    }
-    owner.lifecycleScope.launch {
-        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.uiState.collect {
-                // H1 (PERF 2026-09-16) — công bố NHU CẦU trước khi vẽ: vòng poll HAL chạy trên coroutine khác và
-                // chỉ đọc hộp này, nên đặt ở đây là *mọi* đường đổi state (đổi hồ sơ · gắn widget · đổi chip · đổi
-                // bố cục) tự động cập nhật nhu cầu — không có đường thứ hai nào phải nhớ gọi.
-                container.carDemand.set(CarDataDemand.of(it))
-                container.carDemand.setControls(CarDataDemand.controlsOf(it))
-                render(it)
-            }
-        }
-    }
-    owner.lifecycleScope.launch {
-        owner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            container.carStatusRepository.start()
-            // 2.98 · R6-C — vòng đọc HAL ngủ khi màn tắt; sáng lại ⇒ đọc NGAY. Không cờ RECEIVER_*: SCREEN_ON là protected-broadcast (AOSP core/res/AndroidManifest.xml:50) ⇒ miễn luật targetSdk ≥ 34. Đăng ký hỏng ⇒ không chết, còn lưới `idleMs`.
-            val unwatch = (owner as? android.content.Context)?.let { com.byd.clusternav.system.ScreenLit.watch(it) { container.carStatusRepository.wake() } }
-            try {
-                // 2.88 kênh 2: dòng `TYRE raw …` chỉ khi ĐỔI (`TyreRawLog`) — bằng chứng lốp từ đời xe khác không cần adb.
-                container.carStatusRepository.status.collect { TyreRawLog.note(it.tyres); viewModel.setCarStatus(it) }
-            } finally {
-                unwatch?.invoke()
-                container.carStatusRepository.stop()
-            }
+            viewModel.uiState.collect { render(it) }
         }
     }
 }
@@ -456,7 +416,6 @@ internal fun Activity.bringUpShellChannel(
             registerVd = dispatcher::registerLauncherVirtualDisplay,   // VD ô thuộc LAUNCHER → ownership cho phép
             unregisterVd = dispatcher::unregisterLauncherVirtualDisplay,
             state = viewModel.uiState.value.effectiveWorkspace,   // bố cục đang HIỆN (gồm lớp đặt tạm)
-            status = viewModel.uiState.value.carStatus,
         )
         viewModel.setEmbedded(true)   // dadb nối được → nhúng (giữ embedded khớp getter)
     }

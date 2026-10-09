@@ -26,32 +26,6 @@ class VoiceVerbSpellingTest {
         assertFalse(VoiceVerbSpelling.isVerb(tok("tắt"), 0))
     }
 
-    @Test
-    fun `dong tu hanh dong o dau ve`() {
-        assertEquals(1, VoiceVerbSpelling.actionSpan(tok("hạ kính")), "từ mở đầu lệnh hướng kính")
-        assertEquals(1, VoiceVerbSpelling.actionSpan(tok("tắt đèn đọc")))
-        assertEquals(0, VoiceVerbSpelling.actionSpan(tok("tất cả kính")))
-        assertEquals(0, VoiceVerbSpelling.actionSpan(tok("xem pin")), "động từ ĐỌC không phải hành động")
-        assertEquals(0, VoiceVerbSpelling.actionSpan(tok("đèn đọc")), "«đọc» là động từ ĐỌC trong tên nút — không tính")
-        assertEquals(0, VoiceVerbSpelling.actionSpan(tok("kính trước trái")), "«trước» trong tên nút — không tính")
-    }
-
-    /**
-     * Senior review wave 2 [P1] — từ mở đầu lệnh KHÔNG thuộc bảng động từ (hạ · kéo · nâng · lấy) cũng qua luật dấu. [ĐO off-car
-     * 07/10] trước bản vá: trả lời *"hả"* cho *"Mở hay đóng Kính lái?"* ⇒ *"hả kính lái"* = MỞ kính (`VoiceBareCoverTest` khoá
-     * đường ấy); *"nắng"* của *"rèm che nắng"* thành động từ *"nâng"* của mạch câu ghép (`VoiceClauseEllipsisTest`).
-     */
-    @Test
-    fun `tu mo dau lenh huong kinh cung doc theo dau`() {
-        listOf("hạ kính lái", "HẠ KÍNH", "kéo kính lên", "nâng kính lên", "lấy gió trong").forEach { s ->
-            assertEquals(1, VoiceVerbSpelling.actionSpan(tok(s)), "«$s» — viết đúng ⇒ động từ")
-        }
-        listOf("hả", "hà nội", "há", "nắng", "nàng", "kẹo", "lây").forEach { s ->
-            assertEquals(0, VoiceVerbSpelling.actionSpan(tok(s)), "«$s» mang dấu khác ⇒ không phải động từ")
-        }
-        assertEquals(1, VoiceVerbSpelling.actionSpan(tok("ha kinh")), "không dấu ⇒ không dữ liệu ⇒ như cũ")
-    }
-
     /** Senior review wave 2 [P3] — cụm của bảng động từ CHƯA khai cách viết có dấu ⇒ không dữ liệu ⇒ như cũ (là động từ). */
     @Test
     fun `cum dong tu chua khai cach viet co dau thi nhu cu`() {
@@ -61,17 +35,4 @@ class VoiceVerbSpellingTest {
         assertFalse(VoiceVerbSpelling.isVerb(tok("đừng mở"), 1), "«dừng» ĐÃ khai ⇒ «đừng» không phải động từ")
     }
 
-    @Test
-    fun `cau hoi lai khong mang tat sang luot sau`() {
-        val u = VoiceIntent.Unknown(VoiceUnknownReason.NO_VERB, "tất cả kính lên")
-        val ask = requireNotNull(VoiceClarify.ask(u, 0, lang = Lang.VI))
-        assertTrue(ask.carry.none { VoiceLexicon.deaccent(it) == "tat" }, "carry = ${ask.carry}")
-        assertEquals(listOf(VoiceIntent.Control("trunk", 1)), VoiceIntentParser.parse(VoiceClarify.combine(ask.carry, "mở cốp")))
-        val noObject = VoiceIntent.Unknown(VoiceUnknownReason.NO_OBJECT, "tất cả kính lên")
-        assertTrue(VoiceClarify.ask(noObject, 0, lang = Lang.VI)?.carry.orEmpty().isEmpty())
-        // Không dấu ⇒ không dữ liệu ⇒ như cũ (mang theo); động từ thật vẫn mang theo như mọi bản trước.
-        val typed = VoiceIntent.Unknown(VoiceUnknownReason.NO_OBJECT, "tat ca kinh len")
-        assertEquals(listOf("tat"), VoiceClarify.ask(typed, 0, lang = Lang.VI)?.carry)
-        assertEquals(listOf("mở"), VoiceClarify.ask(VoiceIntent.Unknown(VoiceUnknownReason.NO_OBJECT, "mở"), 0, lang = Lang.VI)?.carry)
-    }
 }

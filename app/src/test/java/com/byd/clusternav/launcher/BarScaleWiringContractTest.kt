@@ -26,12 +26,11 @@ class BarScaleWiringContractTest {
     @Test
     fun `thanh nut dung MOT Context co gian cho ca cay view, 100 phan tram la context goc`() {
         assertTrue("private var ui: Context = context" in dock, "mặc định (100 %) ui LÀ context")
-        assertTrue("ControlTileFactory(ui, control = { control }, size = TileSize.DOCK, state = tileState)" in
-            SourceRoots.body(dock, "private fun factory()"), "bộ dựng ô dựng trên ui")
+        assertTrue("launcherTileOf(ui, TileSize.DOCK, pick)" in SourceRoots.body(dock, "private fun rebuild()"), "bộ dựng ô dựng trên ui")
         val set = SourceRoots.body(dock, "fun setConfig(cfg: DockConfig)")
         assertTrue("if (BarScale.snap(cfg.scalePct) != uiPct) rescale() else rebuild()" in set)
         val rescale = SourceRoots.body(dock, "private fun rescale()")
-        listOf("ui = DockScaleContext.wrap(context, uiPct)", "tiles = factory()", "restyle()").forEach {
+        listOf("ui = DockScaleContext.wrap(context, uiPct)", "restyle()").forEach {
             assertTrue(it in rescale, "rescale thiếu '$it'")
         }
         assertTrue("cornerRadius = dpi(ui, Sp.RADIUS_XL)" in SourceRoots.body(dock, "fun restyle("), "bo góc theo cỡ")
@@ -39,8 +38,8 @@ class BarScaleWiringContractTest {
             SourceRoots.body(dock, "private fun place("), "100 % ⇒ sized() y như 2.88")
         val rebuild = SourceRoots.body(dock, "private fun rebuild()")
         assertFalse("sized(" in rebuild, "mọi ô phải qua place() — sized() trực tiếp là bỏ qua khung chạm")
-        assertEquals(4, Regex("""addView\(place\(""").findAll(rebuild).count(), "nút · gói lệnh · ô đọc · ô Launcher")
-        assertTrue("def.kind == ControlKind.STEP && !config.isVertical()) 2 else 1" in rebuild, "ô STEP ngang = 2 đích")
+        // Android box B2 · W3: nút · gói lệnh · ô đọc gỡ ⇒ còn MỘT đường đặt ô (ô Launcher).
+        assertEquals(1, Regex("""addView\(place\(""").findAll(rebuild).count(), "ô Launcher")
         assertTrue("setPadding(p, p, p, p)" in SourceRoots.body(dock, "private fun applyPad()"), "100 % giữ lề cũ")
         val strip = SourceRoots.body(dock, "private fun shortcutStrip()")
         assertTrue("fillAcross = fill" in strip && "val fill = !BarScale.isIdentity(uiPct)" in strip)
@@ -58,17 +57,14 @@ class BarScaleWiringContractTest {
         assertTrue("BarScale.clampInto(x - tile.left, tile.width)" in hit && "BarScale.clampInto(y - tile.top, tile.height)" in hit)
         assertTrue("getTouchDelegateInfo" in hit, "TalkBack phải biết vùng nới")
         assertTrue("MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> active = false" in hit, "cử chỉ dính tới hết")
-        // −/+ của ô STEP: sàn 48 dp THẬT khi ô dựng trên Context co/giãn (ở 100 % hai số bằng nhau).
-        assertTrue("val min = dpi(host.context, Sp.TOUCH).coerceAtLeast(DockScaleContext.touchFloorPx(host.context))" in
-            code("StepTouchTarget.kt"))
+        // Android box B2 · W3: −/+ của ô STEP (`StepTouchTarget`) gỡ cùng nút xe.
         assertTrue("fun touchFloorPx(ctx: Context): Int = dpi(unscaled(ctx), Sp.TOUCH)" in ctxSrc)
         // Khối lối tắt: khe = max(52 dp co/giãn, 48 dp thật), cùng hàm cho khe và bề dài.
         val icons = code("ShortcutIconsView.kt")
         assertEquals(2, Regex("""shortcutSlotPx\((ctx|context)\)""").findAll(icons).count(), "cellPx + shortcutStripLength")
         assertTrue("!fillAcross -> LayoutParams(cellPx(), cellPx())" in SourceRoots.body(icons, "private fun cellLp()"),
             "100 % / lưới widget giữ khe vuông như 2.88")
-        // K7 — thông báo của ô gói lệnh hiện cỡ THẬT (không co theo thanh 50 %).
-        assertTrue("Toast.makeText(DockScaleContext.unscaled(ctx), notice" in code("ControlTileFactory.kt"))
+        // Android box B2 · W3: K7 (thông báo ô gói lệnh, `ControlTileFactory`) gỡ cùng gói lệnh.
     }
 
     @Test
@@ -123,12 +119,10 @@ class BarScaleWiringContractTest {
         val show = SourceRoots.body(section, "fun show(pct: Int)")
         assertFalse("deps" in show || "onDockConfig" in show, "kéo KHÔNG ghi gì")
         assertTrue("frame.removeCallbacks(apply)" in show && "frame.postOnAnimation(apply)" in show, "gộp theo khung hình")
-        // Dải mẫu = CHÍNH ControlDockView (K4: một đường dựng), trơ: bảng trạng thái riêng, cổng xe mặc định NoCar, khung nuốt chạm.
-        // Review 2.89 Pass 3 · vietmap-dock-r2-4 — ĐỔI GHIM có lý do: bảng lệnh-cuối RIÊNG (`ControlLastSent()`), không bảng dùng chung
-        // mà phím Đảo đọc (`refresh` ⇒ `setOn`/`setSel` mỗi lượt kéo ghi ảnh chụp cũ vào đó).
-        assertTrue("ControlDockView(ctx, ControlTileState(ControlLastSent()))" in section)
-        assertFalse("ControlTileState()" in section || "ControlLastSent.shared" in section, "dải mẫu không chạm bảng dùng chung")
-        assertFalse(Regex("""\.control\s*=""").containsMatchIn(section), "không nối cổng xe thật vào dải mẫu")
+        // Dải mẫu = CHÍNH ControlDockView (K4: một đường dựng), trơ: khung nuốt chạm. Android box B2 · W3: bảng trạng thái
+        // ô nút xe + cổng xe gỡ ⇒ dải mẫu dựng thẳng `ControlDockView(ctx)`.
+        assertTrue("ControlDockView(ctx)" in section)
+        assertFalse("ControlTileState" in section || "ControlLastSent" in section, "không còn bảng trạng thái ô nút xe")
         assertFalse("Bars.DOCK_TILE" in section, "K4: không phép cỡ ô thứ hai ở Cài đặt")
         assertTrue("override fun onInterceptTouchEvent(ev: MotionEvent): Boolean = true" in section)
         assertTrue("IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS" in section)
@@ -156,8 +150,7 @@ class BarScaleWiringContractTest {
     fun `moi ham moi deu co call site`() {
         val sites = mapOf(
             "DockScaleContext.wrap(" to listOf("ControlDockView.kt"),
-            "DockScaleContext.touchFloorPx(" to listOf("ControlDockView.kt", "ShortcutIconsView.kt", "StepTouchTarget.kt"),
-            "DockScaleContext.unscaled(" to listOf("ControlTileFactory.kt"),
+            "DockScaleContext.touchFloorPx(" to listOf("ControlDockView.kt", "ShortcutIconsView.kt"),
             "DockScaleContext.baseDpiOf(" to listOf("ControlDockView.kt"),
             "BarScale.scaledDensity(" to listOf("DockAreaLayout.kt"),
             "BarScale.cellAlongPx(" to listOf("ControlDockView.kt"),

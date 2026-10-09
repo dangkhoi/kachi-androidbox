@@ -62,39 +62,15 @@ internal object I18nPairs {
             out.add(Row(vi, en, kind, where, cap))
         }
         LangCoverageFixtures.localizedRows().forEach { add(it.label, it.labelEn, Kind.LABEL, idOf(it)) }
-        // Nhãn NGẮN thực dùng — cùng bậc lùi với `shortLabelIn` (khoá theo cặp đang HIỆN trên chip).
-        TelemetryRegistry.ALL.filter { it.short != null || it.shortEn != null }.forEach {
-            add(it.shortLabel, it.shortEn?.takeIf(String::isNotBlank) ?: it.labelEn, Kind.SHORT, "telemetry:${it.id}.short", SHORT_CAPS)
-        }
-        ControlRegistry.ALL.filter { it.short != null || it.shortEn != null }.forEach {
-            add(it.shortLabel, it.shortEn?.takeIf(String::isNotBlank) ?: it.labelEn, Kind.SHORT, "control:${it.id}.short", SHORT_CAPS)
-        }
-        // 2.93 ACTIONMACRO-SHORT-LABEL — nhãn ngắn của gói lệnh: cùng bậc lùi + cùng trần với nút.
-        ActionMacros.ALL.filter { it.short != null || it.shortEn != null }.forEach {
-            add(it.shortLabel, it.shortEn?.takeIf(String::isNotBlank) ?: it.labelEn, Kind.SHORT, "macro:${it.id}.short", SHORT_CAPS)
-        }
-        TyreCorner.values().forEach { add(it.shortLabel, it.shortLabelEn, Kind.SHORT, "TyreCorner.${it.name}.short", TYRE_CAPS) }
-        ControlRegistry.ALL.filter { it.argsEn.size == it.args.size }.forEach { c ->
-            c.args.indices.forEach { add(c.args[it], c.argsEn[it], Kind.ARGS, "control:${c.id}.args[$it]") }
-        }
-        CapabilityGroups.ALL.forEach { add(it.sub, it.subEn, Kind.SUB, "group:${it.id}.sub") }
+        // Android box B2 · W3: nhãn ngắn / đối số của datum · nút · gói lệnh, góc bánh, dòng phụ của nhóm gỡ cùng lõi
+        // HAL BYDAuto.
         SettingsCatalog.GROUPS.forEach { add(it.sub, it.subEn, Kind.SUB, "settings-group:${it.id}.sub") }
         LauncherRequirements.ALL.forEach { r ->
             add(r.losesWhatIfMissing, r.losesWhatIfMissingEn, Kind.DATA, "req:${r.id}.loses")
             add(r.userAction, r.userActionEn, Kind.DATA, "req:${r.id}.action")
         }
-        CapabilityTestPlan.items().forEach {
-            add(it.label, it.labelEn, Kind.LABEL, "captest:${it.id}")
-            add(it.descVi, it.descEn, Kind.DESC, "captest:${it.id}.desc")
-        }
-        TelemetryEnums.ALL.forEach { t ->
-            t.entries.forEach { (code, p) -> add(p.first, p.second, Kind.DATA, "enum-table:${t.id}#$code") }
-        }
-        TopStripConfig.choices().forEach { add(it.label, it.labelEn, Kind.LABEL, "pick:${it.id}") }
-        CapabilityCatalog.allIncludingHidden().forEach { add(it.label, it.labelEn, Kind.LABEL, "pick:${it.id}") }
+        CapabilityCatalog.all().forEach { add(it.label, it.labelEn, Kind.LABEL, "pick:${it.id}") }
         WidgetCatalog.CURATED.forEach { add(it.label, it.labelEn, Kind.LABEL, "widget-pick:${it.id}") }
-        KeyCtlTargets.groups().forEach { add(it.label, it.labelEn, Kind.LABEL, "keyctl-group:${it.id}") }
-        VoiceRiskTable.CONTROL_RULES.forEach { add(it.whyVi, it.whyEn, Kind.DATA, "risk:${it.controlId}") }
         VoiceFeatureGone.ALL.forEach { add(it.label, it.labelEn, Kind.VOICE, "gone:${it.words.joinToString(" ")}") }
         // Ba chỗ mà chữ VIỆT là một hằng (lời gọi có đối số không-phải-chữ ⇒ quét nguồn không lấy được cặp): đọc
         // chính hàm hiển thị ở hai thứ tiếng, không chép lại chữ (đổi chữ ở mã ⇒ bài này tự theo).
@@ -121,11 +97,7 @@ internal object I18nPairs {
     }
 
     private fun idOf(x: Localized): String = when (x) {
-        is TelemetrySpec -> "telemetry:${x.id}"
-        is ControlDef -> "control:${x.id}"
-        is CapabilityGroup -> "group:${x.id}"
         is WidgetDef -> "widget:${x.id}"
-        is ActionMacro -> "macro:${x.id}"
         is SettingsGroup -> "settings-group:${x.id}"
         is SettingsEntry -> "settings:${x.id}"
         is LauncherRequirement -> "req:${x.id}"
@@ -182,11 +154,8 @@ internal object I18nPairs {
      * dòng ms nào trùng chữ Anh ấy) làm `I18nCoverageTest` đỏ.
      */
     val MS_SAME_AS_EN: Map<String, String> = mapOf(
-        "{0} item" to "\"item\" là từ mượn chuẩn của tiếng Mã Lai (DBP); số nhiều không biến hình",
+        // Android box B2 · W3: "{0} item" (dòng nội dung nhóm) · "Manual" · "Odometer" · "Gear" (datum xe) gỡ cùng lõi HAL.
         "Neutral" to "số N của hộp số — xe bán ở Malaysia ghi \"Neutral\"; \"neutral\" cũng là từ mượn chuẩn",
-        "Manual" to "\"manual\" là từ mượn chuẩn (chế độ chỉnh tay); dịch \"Manual\" → \"Manual\"",
-        "Odometer" to "\"odometer\" là từ mượn chuẩn, cùng chính tả",
-        "Gear" to "\"gear\" là từ mượn chuẩn (hộp số) trong tiếng Mã Lai ô tô",
     )
 
     const val HEADER = "vi\ten\tkind\twhere\tcap"

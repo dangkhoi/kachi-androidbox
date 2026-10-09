@@ -48,50 +48,8 @@ class GroupPickerWiringContractTest {
 
     // ── 1 · Cả hai màn chọn đều BÀY NHÓM ─────────────────────────────────────────────────────────
 
-    @Test
-    fun `ngan keo bay muc NHOM`() {
-        val fn = drawerPicker()
-        assertTrue(fn.contains("CapabilityPicker.groupPicks()"), "ngăn kéo phải bày 12 ô nhóm")
-        assertTrue(fn.contains("CapabilityPicker.GROUPS_TITLE"), "và có tiêu đề mục nói rõ 'xem cả cụm cùng lúc'")
-        assertTrue(fn.contains("CapabilityPicker.SINGLES_TITLE"), "và tiêu đề phần 'Từng mục riêng' cho phần sau")
-    }
-
 
     // ── 2 · NHÓM ĐỨNG TRƯỚC (đây là bất biến chính của T4) ───────────────────────────────────────
-
-    /**
-     * ⚠ T6 — thứ tự nay đọc ở **lời gọi trong `init`** (`groupSection` → `singlesSection` → danh sách app), rồi mới
-     * xác nhận từng hàm đúng là mục nó mang tên. Đây là bằng chứng MẠNH HƠN bản cũ (so hai chỉ số trong một thân
-     * hàm dài): nó chốt cả thứ tự LẪN việc hai mục không bị hoán nội dung cho nhau.
-     */
-    @Test
-    fun `ngan keo dat muc NHOM TRUOC moi linh vuc`() {
-        val init = SourceRoots.body(drawer, "init {")
-        // ⚠⚠ Cắt đúng NHÁNH gán-ô, không đọc cả `init`: từ T6 `init` có hai nhánh cùng gọi hai hàm mục (nhánh dock
-        // đứng trước), nên `indexOf` trên cả thân sẽ luôn tìm thấy lời gọi của nhánh KIA và bài không thể đỏ.
-        // [ĐO] thử phá: đổi lời gọi đầu nhánh gán-ô thành `singlesSection` ⇒ bản đọc-cả-init vẫn XANH.
-        val marker = "} else if (assign) {"
-        assertTrue(marker in init, "không còn nhánh gán-ô trong init — bài đang quét vùng KHÔNG tồn tại")
-        val branch = init.substringAfter(marker)
-        val groupAt = branch.indexOf("groupSection(body)")
-        val singlesAt = branch.indexOf("singlesSection(body)")
-        val appsAt = branch.indexOf("apps.load()")
-        assertTrue(groupAt >= 0 && singlesAt >= 0 && appsAt >= 0, "phải có cả ba phần")
-        assertTrue(
-            groupAt < singlesAt,
-            "mục Nhóm phải dựng TRƯỚC vòng lặp lĩnh vực — nằm sau là người dùng phải cuộn qua hàng chục ô rời mới thấy",
-        )
-        // #7 (owner 2026-09-21): App đứng ĐẦU (App → Widget app → Thông tin khác: nhóm/thẻ dựng tay/mục lẻ).
-        assertTrue(appsAt < groupAt, "App phải đứng TRƯỚC khối Thông tin khác (nhóm/mục lẻ)")
-        assertTrue(
-            SourceRoots.body(drawer, "private fun groupSection(").contains("CapabilityPicker.groupPicks()"),
-            "và `groupSection` đúng là mục NHÓM",
-        )
-        assertTrue(
-            SourceRoots.body(drawer, "private fun singlesSection(").contains("CapabilityCatalog.byDomain()"),
-            "còn `singlesSection` đúng là vòng lặp LĨNH VỰC",
-        )
-    }
 
     /**
      * ⚠ T4 · IA v2 R-UI (m) — bài `man Cai dat dat muc NHOM TRUOC moi linh vuc` đã **XOÁ**, không phải làm yếu đi:
@@ -107,40 +65,7 @@ class GroupPickerWiringContractTest {
         assertFalse(bars.contains("CapabilityCatalog.byDomain()"), "cũng không tự duyệt lĩnh vực lần nữa")
     }
 
-    @Test
-    fun `tieu de phan muc roi nam GIUA nhom va linh vuc dau tien`() {
-        // Không có nó thì 12 ô nhóm và lĩnh vực đầu tiên dán liền nhau và người dùng không biết đã sang phần khác.
-        // ⚠ T6: ở ngăn kéo, "Từng mục riêng" và vòng lặp lĩnh vực nay cùng nằm trong `singlesSection`, còn mục Nhóm
-        // ở `groupSection` được gọi TRƯỚC (bài `ngan keo dat muc NHOM TRUOC moi linh vuc`). Nên chỉ còn phải chốt
-        // rằng TIÊU ĐỀ đứng trước vòng lặp bên trong hàm đó.
-        // T4 · R-UI (m): chỉ còn ngăn kéo dựng lưới này (xem bài ngay trên).
-        listOf(
-            "ngăn kéo" to SourceRoots.body(drawer, "private fun singlesSection("),
-        ).forEach { (who, fn) ->
-            val singlesAt = fn.indexOf("CapabilityPicker.SINGLES_TITLE")
-            val domainsAt = fn.indexOf("CapabilityCatalog.byDomain()")
-            assertTrue(singlesAt >= 0 && domainsAt >= 0, "$who: phải có cả tiêu đề lẫn vòng lặp lĩnh vực")
-            assertTrue(singlesAt < domainsAt, "$who: thứ tự phải là 'Từng mục riêng' → lĩnh vực")
-        }
-    }
-
     // ── 3 · Không màn nào bày nhóm HAI LẦN ───────────────────────────────────────────────────────
-
-    @Test
-    fun `hai man chon deu LOC nhom khoi linh vuc`() {
-        // ⚠ Bày nhóm ở mục riêng RỒI vẫn để nó trong lĩnh vực = **hai ô cùng một mã** ⇒ `widgetTiles[id]` /
-        // `tiles[id]` bị ghi đè ⇒ chỉ ô sau được tô sáng, ô trước nói SAI cấu hình. Đúng ba lỗi cùng lúc của RW0.
-        val dr = drawerPicker()
-        assertTrue(
-            dr.contains("CapabilityPicker.singlesOf(picks)"),
-            "ngăn kéo phải lọc nhóm khỏi lĩnh vực, không thì cùng một mã có hai ô",
-        )
-        assertFalse(
-            Regex("""addPickGrid\(body,\s*picks\s*,""").containsMatchIn(dr),
-            "ngăn kéo không được dựng lưới từ danh sách CHƯA lọc",
-        )
-        // T4 · R-UI (m): nhánh "màn Cài đặt" đã bỏ — nó không còn lưới nào để bày nhóm hai lần.
-    }
 
     // ── 4 · Ô nhóm nói nó GỒM GÌ ─────────────────────────────────────────────────────────────────
 
@@ -162,40 +87,6 @@ class GroupPickerWiringContractTest {
         }
     }
 
-    @Test
-    fun `goi y nhom hien o dau tung linh vuc, KHONG hien trong tung o`() {
-        // T4 · R-UI (m): chỉ còn ngăn kéo bày lưới ô nhóm; nhánh "Cài đặt" (`SettingsSectionsHome.dock`) đã bỏ.
-        listOf("ngăn kéo" to drawerPicker()).forEach { (who, fn) ->
-            assertTrue(fn.contains("CapabilityPicker.groupHint(picks)"), "$who phải gợi ý nhóm chứa mục rời")
-        }
-        // Trong Ô thì KHÔNG: [ĐO] 88/123 datum thuộc nhóm ⇒ thêm một dòng vào từng ô là 88 dòng chữ trong lưới ô nhỏ.
-        listOf("drawer" to drawer).forEach { (who, src) ->
-            assertFalse(
-                src.contains("groupsContaining"),
-                "$who không được tra nhóm cho TỪNG ô — gợi ý đặt ở tiêu đề lĩnh vực để không làm ô chật thêm",
-            )
-        }
-    }
-
     // ── 5 · Bày ra thì phải DÙNG ĐƯỢC (chống "lựa chọn chết") ────────────────────────────────────
 
-    @Test
-    fun `nhom dat len thanh nut thi o hien TOM TAT, khong hien dau gach mai mai`() {
-        // ⚠⚠ Lưới của màn Cài đặt bật/tắt **thanh nút xe**. Mã nhóm không có trong TelemetryRegistry, nên nếu thanh
-        // nút chỉ hỏi `TelemetryReadout.of` thì ô hiện "—" MÃI MÃI ⇒ T4 vừa bày ra một lựa chọn chết. Đây là chiều
-        // ngược của bài học RW0: lần này đặt được, nhưng thứ đặt ra thì vô dụng.
-        val fn = SourceRoots.body(dock, "private fun readout(")
-        assertTrue(fn.contains("GroupBoard.summaryView("), "thanh nút phải hiểu mã nhóm")
-        assertTrue(fn.contains("TelemetryReadout.of("), "và đường telemetry cũ phải còn nguyên")
-        assertTrue(
-            fn.indexOf("GroupBoard.summaryView(") < fn.indexOf("TelemetryReadout.of("),
-            "nhóm xét TRƯỚC — cùng thứ tự với CapabilityCatalog.kindOf, không dựa vào việc mã tình cờ không trùng",
-        )
-        // Và tóm tắt phải do `:core` quyết; tầng vẽ không được tự nghĩ ra câu chữ thứ hai.
-        assertFalse(dock.contains("cảnh báo"), "câu tóm tắt thuộc :core (GroupBoardModel.summary), không viết ở đây")
-        assertEquals(
-            1, Regex("""GroupBoard\.""").findAll(dock).count(),
-            "thanh nút chỉ được hỏi :core ĐÚNG một chỗ",
-        )
-    }
 }

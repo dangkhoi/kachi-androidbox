@@ -39,7 +39,7 @@ class TypeScaleContractTest {
      */
     private val SURFACES = listOf(
         "SettingsSections.kt", "SettingsSectionsHome.kt",
-        "SettingsPanel.kt", "TopStripPicker.kt", "SettingsRows.kt",
+        "SettingsPanel.kt", "SettingsRows.kt",   // W3: `TopStripPicker.kt` gỡ cùng chip xe
         "AppDrawer.kt", "KachiTopStrip.kt", "OverlayHeads.kt", "WorkspaceView.kt", "LayoutEditorPanel.kt",
         // [SOÁT Pass 1 · 2026-09-16] Năm hàm dựng thẻ trong ô tách khỏi `WorkspaceView.kt` (trần 500 dòng).
         // Vào bài canh NGAY, cùng lý do `AppDrawerApps.kt`: một bề mặt đã áp design system không được rơi

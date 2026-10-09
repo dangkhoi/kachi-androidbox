@@ -24,18 +24,6 @@ class ShortcutPlacementTest {
         assertNotNull(LauncherActions.byId(id))
         assertTrue(id in CapabilityPicker.launcherPicks().map { it.id }, "bộ chọn nút thanh xe phải bày khối này")
         assertTrue(id in DockSelection.apply(DockConfig(), setOf(id)).enabled, "Áp dụng ở bộ chọn ⇒ mã vào được thanh")
-        assertFalse(CapabilityCatalog.isWrite(id), "không phải lệnh xuống xe")
-        assertFalse(TopStripConfig.isChippable(id), "chip 24dp không vẽ được một hàng icon")
-        // Khối trên thanh + widget trong ô KHÔNG kéo theo datum nào — `null` = "đọc hết" = cổng H1 tắt im lặng.
-        val d = CarDataDemand.of(
-            HomeUiState(
-                workspace = WorkspaceState(slots = List(WorkspaceState.SLOT_CAP) { if (it == 0) SlotContent.Widget(listOf("w_apps")) else SlotContent.Empty }),
-                dock = DockConfig(enabled = listOf(id)),
-                topStrip = TopStripConfig(ids = emptyList()),
-            ),
-        )
-        assertNotNull(d, "nhu cầu về null ⇒ đọc lại cả bảng datum mỗi nhịp")
-        assertTrue(d!!.isEmpty(), "lối tắt không bày một số nào của xe")
     }
 
     /** Khối Launcher đứng TRƯỚC 187 ô trong bộ chọn — nó phải còn là MỘT hàng (lý do con số ghim của bài cũ). */
@@ -58,16 +46,13 @@ class ShortcutPlacementTest {
         val w = WidgetRegistry.byId("w_apps")
         assertNotNull(w)
         assertEquals(WidgetKind.LOCAL, w!!.kind)
-        assertTrue(WorkspaceRenderPlanner.selfDriven("w_apps"), "nhịp trạng thái xe 1 Hz không được dựng lại lưới icon (R1.3)")
-        assertEquals(emptySet<String>(), CarDataDemand.CURATED["w_apps"], "nhu cầu dữ liệu xe RỖNG")
+        assertTrue(WorkspaceRenderPlanner.selfDriven("w_apps"), "nhịp làm mới không được dựng lại lưới icon (R1.3)")
     }
 
     @Test
-    fun `widget w_apps KHONG lot vao bo chon chip thanh tren va bo chon nut thanh xe`() {
-        assertFalse(TopStripConfig.choices().any { it.id == "w_apps" }, "bộ chọn chip")
-        val dockPicker = CapabilityPicker.launcherPicks() + CapabilityPicker.groupPicks() +
-            CapabilityCatalog.byDomain().flatMap { CapabilityPicker.singlesOf(it.second) }
-        assertFalse(dockPicker.any { it.id == "w_apps" }, "bộ chọn nút thanh xe")
+    fun `widget w_apps KHONG lot vao bo chon nut thanh`() {
+        assertFalse(CapabilityPicker.launcherPicks().any { it.id == "w_apps" }, "bộ chọn nút thanh")
+        assertFalse("w_apps" in DockConfig().setEnabled("w_apps", true).enabled, "widget không vào được thanh nút")
     }
 
     @Test

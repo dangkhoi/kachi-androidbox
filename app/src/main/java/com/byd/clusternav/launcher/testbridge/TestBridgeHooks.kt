@@ -5,10 +5,8 @@ import android.app.Application
 import android.os.Bundle
 import android.util.Log
 import com.byd.clusternav.launcher.AppOpener
-import com.byd.clusternav.launcher.CarControlPort
 import com.byd.clusternav.launcher.ClusterNavBridge
 import com.byd.clusternav.launcher.DrawerController
-import com.byd.clusternav.launcher.actByKind
 import com.byd.clusternav.launcher.HomePanels
 import com.byd.clusternav.launcher.HomeUiState
 import com.byd.clusternav.launcher.HomeViewModel
@@ -63,20 +61,8 @@ internal class TestBridgeHooks(
     val clearSlot: (Int) -> Unit,
     /** Mở app TOÀN MÀN (`KachiHomeSlots.openAppFullscreen`) — không ghi vào ô, không đổi bố cục. */
     val openApp: (String) -> Unit,
-    /**
-     * Bắn MỘT control qua ĐÚNG cổng [CarControlPort] mà một cú chạm ô nút đi (`CarControlAdapter.actByKind`) —
-     * KHÔNG dựng adapter thứ hai. Trả `true` nếu port báo nhận (rc hợp lệ, khác sentinel). Câu chữ HAL thật đọc
-     * riêng ở [com.byd.clusternav.launcher.HalWriteProbe] (cầu chụp quanh lượt gọi này).
-     */
-    val control: (id: String, primary: Int) -> Boolean,
     val switchProfile: (String) -> Unit,
     val setPreset: (LayoutPreset) -> Unit,
-    /**
-     * V3 · R14 — bật/tắt **nhãn chip** thanh trên, qua ĐÚNG lambda mà ô tích trong Cài đặt đi
-     * (`HomeViewModel.setTopStrip`). Không ghi thẳng `WorkspacePrefs`: khoá này theo **hồ sơ** và đang nằm trong
-     * `HomeUiState` mà màn hình vẽ ⇒ ghi dưới chân màn hình là một phép đo nói một đằng, màn hiện một nẻo.
-     */
-    val setTopStripLabels: (Boolean) -> Unit,
     /** Mở một phiên nghe thật — CÙNG đường mà nút mic trên thanh trên dùng. */
     val listen: () -> Unit,
     /** Kênh shell (dadb) đã dò được chưa — chỉ ĐỌC, cầu này không tự chạy lệnh shell nào. */
@@ -148,8 +134,6 @@ internal fun Activity.attachTestBridge(
     drawer: () -> DrawerController,
     panels: () -> HomePanels,
     shell: () -> ((String) -> String)?,
-    /** Cổng điều khiển xe của [com.byd.clusternav.AppContainer] — CÙNG cổng mà thanh nút bắn. */
-    carControl: CarControlPort,
 ) {
     val hooks =
         TestBridgeHooks(
@@ -185,12 +169,8 @@ internal fun Activity.attachTestBridge(
             assignAppToSlot = { index, pkg -> slots().assignApp(index, pkg); true },
             clearSlot = { index -> slots().clearSlot(index) },
             openApp = { pkg -> slots().openAppFullscreen(pkg) },
-            control = { id, primary -> carControl.actByKind(id, primary) },
             switchProfile = { name -> viewModel.switchProfile(name) },
             setPreset = { preset -> viewModel.setPreset(preset) },
-            setTopStripLabels = { on ->
-                viewModel.setTopStrip(viewModel.uiState.value.topStrip.copy(showLabels = on))
-            },
             listen = { voice().start() },
             shellUsable = { shell() != null },
             bridge = { clusterNavBridge() },

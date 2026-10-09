@@ -24,25 +24,8 @@ sealed interface VoiceIntent {
     /** owner 2026-09-24 — câu KẾT THÚC phiên ("bye/tạm biệt/xong rồi/thôi/cảm ơn") ⇒ đóng voice ngay. */
     data object EndSession : VoiceIntent
 
-    /**
-     * Bấm một nút trong [com.byd.clusternav.launcher.ControlRegistry].
-     *
-     * @property id mã nút (`lock`, `fan`, `win_lf`…).
-     * @property value giá trị TUYỆT ĐỐI đã tính xong theo [com.byd.clusternav.launcher.ControlKind]: TOGGLE/COVER
-     *   1 hoặc 0 · SELECT chỉ số 0-based · STEP giá trị đích. `null` = câu không nêu đích (xem [relative]).
-     * @property relative số BƯỚC tương đối khi câu nói *"tăng/giảm"* mà không nêu số (±1, hoặc ±n với *"tăng 2 nấc"*).
-     *   0 = không phải lệnh tương đối.
-     *
-     * ## Vì sao phải có [relative] chứ không quy về [value] ngay tại đây
-     * *"Tăng gió"* chỉ có nghĩa khi biết gió **đang** ở mức nào — mà mức đang dùng nằm ở `ControlTileState.shared`
-     * (`:app`), không ở `:core`. Bộ phân tích tự bịa một mốc (vd lấy `ControlDef.value` mặc định) sẽ cho ra *"đặt
-     * gió = 5"* trong khi xe đang ở 7, tức **giảm** đúng lúc người ta bảo tăng. Giữ nguyên ý *"đi lên một nấc"* và
-     * để tầng biết-trạng-thái cộng vào là cách duy nhất không nói dối.
-     */
-    data class Control(val id: String, val value: Int? = null, val relative: Int = 0) : VoiceIntent
-
-    /** Chạy một gói lệnh của [com.byd.clusternav.launcher.ActionMacros]. */
-    data class Macro(val id: String) : VoiceIntent
+    // Android box B2 · W3 (2026-10-09): `Control` (bấm nút xe) và `Macro` (gói lệnh xe) gỡ cùng `ControlRegistry` /
+    // `ActionMacros` — câu nói về xe nay ra [Unknown] với [VoiceUnknownReason.FEATURE_GONE] (xem [VoiceFeatureGone]).
 
     /**
      * Hành động của chính launcher ([com.byd.clusternav.launcher.LauncherActions]) — ngăn kéo / Cài đặt / phiên nghe.
@@ -53,14 +36,7 @@ sealed interface VoiceIntent {
     /** Đổi hồ sơ tài xế. [name] là tên GỐC (khoá lưu bền), không phải nhãn đã dịch — xem `ProfileNames`. */
     data class Profile(val name: String) : VoiceIntent
 
-    /**
-     * Đọc một datum của [com.byd.clusternav.launcher.TelemetryRegistry].
-     *
-     * @property aloud `true` khi người dùng nói *"đọc"* (chờ nghe), `false` khi nói *"xem/hiện"* (chờ nhìn).
-     *   Hôm nay cả hai đều ra **chữ** (chưa có TTS — R8), nhưng ý định thì khác nhau và phải giữ lại: ngày TTS bật
-     *   lên, thông tin này đã có sẵn thay vì phải phân tích lại câu.
-     */
-    data class Read(val datumId: String, val aloud: Boolean = false) : VoiceIntent
+    // Android box B2 · W3: `Read` (đọc một datum xe) gỡ cùng `TelemetryRegistry`.
 
     /**
      * Dẫn đường tới [query] — **từ vựng MỞ**, không nằm trong tập đóng của Kachi.

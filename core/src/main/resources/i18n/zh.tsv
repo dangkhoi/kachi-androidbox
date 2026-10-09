@@ -60,29 +60,8 @@ Cổng gỡ lỗi 5555 chưa bật trên xe — trợ lý giọng nói không ch
 Không nối được vào xe để mở trợ lý. Thử lại sau.	Could not reach the head unit to open the assistant. Try again later.	无法连接车机以打开助手。请稍后重试。
 Chưa được cấp quyền gỡ lỗi USB. Mở màn chính Kachi để cấp (nhớ tích "luôn cho phép") rồi thử lại.	USB debugging not authorised yet. Open the Kachi home screen to grant it (tick "always allow") then try again.	尚未授权USB调试。请打开Kachi主屏幕进行授权（勾选“一律允许”）后重试。
 Công thức trợ lý mới chạy được một phần — bật lại công tắc để chạy đủ.	The assistant recipe was only partly applied — toggle it again to finish.	助手配置仅部分生效——请重新切换开关以完成。
-xe không nhận lệnh nào	the car took no command	车辆未接受任何指令
-chưa làm được — 	not done — 	未完成——
-gói rỗng	empty pack	空组合
-đủ {0} bước	all {0} steps	全部{0}步
-không bước nào ăn ({0} bước)	no step took ({0} steps)	没有步骤成功（共{0}步）
-{0}/{1} bước ăn; hỏng: {2}	{0}/{1} steps took; failed: {2}	{0}/{1}步成功；失败：{2}
-{0} mục	{0} item	{0}项
-{0} mục	{0} items	{0}项
-{0} nút	{0} button	{0}个按钮
-{0} nút	{0} buttons	{0}个按钮
-Nhóm — xem cả cụm cùng lúc	Groups — see a whole set at once	分组——一次查看整组
-Một ô cho cả bộ: cả bộ lốp, cả bộ kính, cả dải đèn. Đặt một ô thay vì đặt từng cái.	One tile for a whole set: all the tyres, all the windows, the whole light strip. Place one tile instead of placing each one.	一个图块显示整组：全部轮胎、全部车窗、整排灯光。放一个图块，无需逐个放置。
-Từng mục riêng	Individual items	单个项目
 Launcher — việc của chính màn hình này	Launcher — this screen's own actions	启动器——本屏幕自身的操作
 Không gửi lệnh nào xuống xe: mở danh sách ứng dụng, mở Cài đặt, nói với xe, khối lối tắt ứng dụng.	These send nothing to the car: open the app list, open Settings, talk to the car, the app-shortcut block.	这些不会向车辆发送任何指令：打开应用列表、打开设置、与车对话、应用快捷方式区块。
-Đã có trong nhóm: 	Already in a group: 	已在分组中：
-KIỂM TRA TỪNG NÚT — Kachi	CAR FUNCTION CHECK — Kachi	车辆功能检查——Kachi
-OK 	OK 	正常 
- · Không OK 	 · Not OK 	 · 异常 
- · Chưa soát 	 · Not checked 	 · 未检查 
-(tin)	(info)	（信息）
-(nút)	(action)	（操作）
-  · ghi chú: 	  · note: 	  · 备注：
 Xanh Kachi	Kachi blue	Kachi蓝
 Tím	Violet	紫罗兰
 Lục ngọc	Teal	青绿
@@ -99,26 +78,8 @@ Dưới	Bottom	底部
 Trái	Left	左侧
 Phải	Right	右侧
 Trên	Top	顶部
-{0} bộ phận · chưa đọc được	{0} parts · not read yet	{0}个部件 · 未读取
-Tất cả đã đóng	All closed	均已关闭
-Đã đóng · {0} chưa đọc được	Closed · {0} not read yet	已关闭 · {0}个未读取
-{0} cửa mở	{0} door open	{0}扇门未关
-{0} cửa mở	{0} doors open	{0}扇门未关
-{0} chưa đọc được	{0} not read yet	{0}个未读取
-{0} cảnh báo	{0} alert	{0}个警告
-{0} cảnh báo	{0} alerts	{0}个警告
-{0} lưu ý	{0} to note	{0}项需留意
-Phím gán nút xe không còn hợp lệ ({0}) — gán lại ở Cài đặt › Nút vật lý	This key binding is no longer valid ({0}) — rebind it in Settings › Physical buttons	此按键绑定已失效（{0}）——请在设置 › 实体按键中重新绑定
-Bật 	Turn on 	开启
-Tắt 	Turn off 	关闭
-Mở/đóng {0} (đảo)	Open/close {0} (toggle)	打开/关闭{0}（切换）
-Bật/tắt {0} (đảo)	Toggle {0}	开启/关闭{0}（切换）
 Mở 	Open 	打开
-Đóng 	Close 	关闭
-: mức kế tiếp	: next	：下一挡
-Bấm 	Press 	按下
 Theo xe	By car	跟随车机
-nhóm	group	分组
 thẻ	card	卡片
 xem	view	查看
 bấm	press	点按
@@ -131,89 +92,10 @@ Vừa khung	Fit	适应
 {0} giây	{0} s	{0}秒
 {0} phút	{0} min	{0}分钟
 {0} giờ	{0} h	{0}小时
-mã {0}	code {0}	代码{0}
-Trong	Recirc	内循环
-Ngoài	Fresh	外循环
-Chỉnh tay	Manual	手动
-Có	Yes	是
-Không	No	否
-Bật	On	开启
-Tắt	Off	关闭
-Mở	Open	打开
-Đóng	Closed	关闭
-Mức {0}	Level {0}	{0}挡
 Sáng	Light	浅色
 Tối	Dark	深色
 Tự động	Auto	自动
-Tốt	Good	良
-TB	Fair	一般
-Kém	Poor	差
-Bụi mịn trong xe: {0}	Fine dust in the car: {0}	车内PM2.5：{0}
-ngoài	outside	车外
-Nhiệt độ ngoài xe {0}{1}	Outside temperature {0}{1}	车外温度{0}{1}
-Pin {0} phần trăm, đi thêm {1} {2}	Battery {0} per cent, {1} {2} to go	电量百分之{0}，还可行驶{1}{2}
-chưa đọc được	not read yet	未读取
-Ghế lái	Driver seat	主驾座椅
-Ghế phụ	Passenger seat	副驾座椅
-non	low	偏低
-căng	high	偏高
-chưa đọc được áp suất	pressure not read yet	胎压未读取
-lốp ổn	tyres OK	轮胎正常
-{0} bánh {1}	{0} wheel: {1}	{0}个轮胎：{1}
-{0} bánh {1}	{0} wheels: {1}	{0}个轮胎：{1}
 # 2.88 — lốp theo phán xét của xe (spec docs/specs/kachi-288-tyre-car-state.html): chip · lý do · nhãn/diễn giải 13 mã thô · bảng mã.
-Áp suất lốp: {0}	Tyre pressure: {0}	胎压：{0}
-{0} {1}, bình thường	{0} {1}, normal	{0} {1}，正常
-{0} {1}, chưa rõ	{0} {1}, unknown	{0} {1}，状态未知
-{0} {1}, chú ý: {2}	{0} {1}, caution: {2}	{0} {1}，注意：{2}
-{0} {1}, cảnh báo: {2}	{0} {1}, alert: {2}	{0} {1}，警告：{2}
-nổ lốp	burst	爆胎
-bất thường	abnormal	异常
-xì nhanh	fast leak	快速漏气
-báo đỏ	red alert	红色警告
-xì chậm	slow leak	缓慢漏气
-lỗi cảm biến	sensor fault	传感器故障
-chú ý	caution	注意
-mã lạ	unknown code	未知代码
-chưa đọc được trạng thái lốp từ xe	tyre status not read from the car	未从车辆读取到轮胎状态
-Màu cảnh báo lốp trước-trái	Tyre warning colour front-left	左前轮胎警示颜色
-Màu cảnh báo lốp trước-phải	Tyre warning colour front-right	右前轮胎警示颜色
-Màu cảnh báo lốp sau-trái	Tyre warning colour rear-left	左后轮胎警示颜色
-Màu cảnh báo lốp sau-phải	Tyre warning colour rear-right	右后轮胎警示颜色
-Trạng thái áp lốp trước-trái	Tyre pressure state front-left	左前胎压状态
-Trạng thái áp lốp trước-phải	Tyre pressure state front-right	右前胎压状态
-Trạng thái áp lốp sau-trái	Tyre pressure state rear-left	左后胎压状态
-Trạng thái áp lốp sau-phải	Tyre pressure state rear-right	右后胎压状态
-Rò khí lốp trước-trái	Tyre air leak front-left	左前轮胎漏气
-Rò khí lốp trước-phải	Tyre air leak front-right	右前轮胎漏气
-Rò khí lốp sau-trái	Tyre air leak rear-left	左后轮胎漏气
-Rò khí lốp sau-phải	Tyre air leak rear-right	右后轮胎漏气
-Hệ thống giám sát lốp	Tyre monitoring system	胎压监测系统
-Màu cụm đồng hồ tô cho lốp trước bên trái	Colour the instrument cluster gives the front-left tyre	仪表盘为左前轮胎显示的颜色
-Màu cụm đồng hồ tô cho lốp trước bên phải	Colour the instrument cluster gives the front-right tyre	仪表盘为右前轮胎显示的颜色
-Màu cụm đồng hồ tô cho lốp sau bên trái	Colour the instrument cluster gives the rear-left tyre	仪表盘为左后轮胎显示的颜色
-Màu cụm đồng hồ tô cho lốp sau bên phải	Colour the instrument cluster gives the rear-right tyre	仪表盘为右后轮胎显示的颜色
-Xe đánh giá áp lốp trước bên trái: bình thường, căng hay non	Car's pressure verdict for the front-left tyre: normal, over or under	车辆对左前轮胎气压的判断：正常、过高或过低
-Xe đánh giá áp lốp trước bên phải: bình thường, căng hay non	Car's pressure verdict for the front-right tyre: normal, over or under	车辆对右前轮胎气压的判断：正常、过高或过低
-Xe đánh giá áp lốp sau bên trái: bình thường, căng hay non	Car's pressure verdict for the rear-left tyre: normal, over or under	车辆对左后轮胎气压的判断：正常、过高或过低
-Xe đánh giá áp lốp sau bên phải: bình thường, căng hay non	Car's pressure verdict for the rear-right tyre: normal, over or under	车辆对右后轮胎气压的判断：正常、过高或过低
-Lốp trước bên trái có đang xì hơi không	Whether the front-left tyre is leaking air	左前轮胎是否漏气
-Lốp trước bên phải có đang xì hơi không	Whether the front-right tyre is leaking air	右前轮胎是否漏气
-Lốp sau bên trái có đang xì hơi không	Whether the rear-left tyre is leaking air	左后轮胎是否漏气
-Lốp sau bên phải có đang xì hơi không	Whether the rear-right tyre is leaking air	右后轮胎是否漏气
-Tình trạng hệ thống giám sát áp suất lốp	Status of the tyre pressure monitoring system	胎压监测系统的状态
-Bình thường	Normal	正常
-Vàng	Yellow	黄色
-Đỏ	Red	红色
-Quá căng	Over-inflated	气压过高
-Non hơi	Under-inflated	气压过低
-Không rò	No leak	无漏气
-Xì nhanh	Fast leak	快速漏气
-Xì chậm	Slow leak	缓慢漏气
-Đang tự kiểm	Self-checking	自检中
-Tín hiệu bất thường	Signal abnormal	信号异常
-Hỏng	Failed	故障
-Bị che	Masked	已屏蔽
 bố cục rỗng: chưa vẽ khung nào	empty layout: no frame drawn yet	布局为空：尚未绘制任何框
 khung {0} nhỏ quá ({1}×{2}), tối thiểu {3}×{4}	frame {0} is too small ({1}×{2}), minimum {3}×{4}	框{0}太小（{1}×{2}），最小为{3}×{4}
 khung {0} ra ngoài lưới {1}×{2}	frame {0} falls outside the {1}×{2} grid	框{0}超出了{1}×{2}网格
@@ -232,7 +114,6 @@ Vẫn chưa rõ — thử nói "{0}"	Still not sure — try saying "{0}" in Viet
 {0} hay {1}	{0} or {1}	{0}还是{1}
 {0}, hay {1}	{0}, or {1}	{0}，还是{1}
 {0} nào — {1}?	Which {2} — {1}?	哪个{2}——{1}？
-Mở hay đóng {0}?	Open or close {0}?	打开还是关闭{0}？
 Nhạc	Music	音乐
 Dẫn đường	Navigation	导航
 Ứng dụng · ô · bố cục	Apps · slots · layout	应用 · 格位 · 布局
@@ -244,20 +125,13 @@ Kachi chưa điều khiển được {0} — dùng nút trên xe	Kachi cannot co
 Đã xong {0} việc	{0} things done	已完成{0}项操作
 Chưa 	Could not 	未能
 , {0} việc khác đã xong	, {0} other(s) done	，另有{0}项已完成
-Chạy gói 	Run pack 	运行组合：
 Đổi sang hồ sơ 	Switch to profile 	切换到档案：
-Xem 	Show 	查看
 Dẫn đường tới 	Navigate to 	导航到
 Mở ứng dụng 	Open app 	打开应用
 Bố cục 	Layout 	切换布局：
 Tạm biệt, hẹn gặp lại	Bye, see you	再见，回头见
-chỉ mở được khi xe đang dừng	only while the car is stopped	仅可在停车时操作
-Đã gửi {0} {1} — xe báo {2}	Sent {0} {1} — the car reports {2}	已发送{0} {1}——车辆反馈{2}
-chưa kiểm trên xe	not yet checked on this car	尚未在本车验证
 xe không nhận lệnh	the car refused	车辆拒绝执行
 việc trước còn đang chạy	the previous run is still going	上一个操作仍在执行
-chưa đọc được	no reading	暂无读数
-chưa điều khiển được trên xe này	not controllable on this car	本车暂不支持控制
 chưa có app dẫn đường nào trên xe	no navigation app on this car	车上没有导航应用
 đã mở app dẫn đường; nhập lại điểm đến trong app (đường chuyển giao chưa đo trên xe)	navigation app opened; enter the destination there (hand-over not measured on-car yet)	已打开导航应用；请在应用内重新输入目的地（交接功能尚未实车测试）
 chưa có phiên nhạc nào — mở app nhạc rồi nói lại	no active music session — open a music app first	没有正在播放的音乐会话——请先打开音乐应用
@@ -282,12 +156,6 @@ chưa lưu địa chỉ «{0}» — thêm ở Cài đặt › Dẫn đường �
 đã huỷ	cancelled	已取消
 , {0} việc sau không chạy	, {0} later step(s) not run	，后续{0}步未执行
 xe này không có bộ phận này (xe tự báo)	this car reports it doesn't have this part	本车没有此部件（车辆自报）
-Tăng 	Increase 	调高
-Giảm 	Decrease 	调低
-{0} nấc	by {0}	{0}级
-Đặt {0} mức {1}	Set {0} to level {1}	将{0}设为{1}档
-Đặt {0} {1}	Set {0} to {1}	将{0}设为{1}
-Đã để {0} ở {1}	{0}: {1}	{0}已设为{1}
 Phát nhạc	Play	播放音乐
 Dừng nhạc	Pause	暂停音乐
 Chuyển bài tiếp theo	Skip to the next track	切换到下一首
@@ -305,122 +173,14 @@ Chưa đóng được app bằng giọng — bấm phím Home, hoặc mở app k
 Tính năng này Kachi không làm	Kachi does not do this	Kachi不支持此功能
 Không nghe rõ	Didn't catch that	没听清
 đoạn trong ngoặc do nhận dạng tự do đọc ra — kém chính xác hơn phần còn lại của câu	the quoted part came from free-form recognition — less accurate than the rest	引号内的内容来自自由识别——准确度低于其余部分
-hạ hết kính	lowers every window	降下所有车窗
 Đổi hồ sơ	Switch profile	切换档案
 đổi hồ sơ thay toàn bộ bố cục và cấu hình đang dùng	switching profile replaces the whole layout and current settings	切换档案会替换整个布局和当前设置
 Dẫn đường tới nơi vừa đọc	Navigate to a spoken place	导航到语音说出的地点
 Mở bài vừa đọc	Play a spoken track	播放语音说出的歌曲
-Pin (SOC)	Battery (SOC)	电量（SOC）
-Tầm hoạt động EV	EV range	纯电续航
-Tầm hoạt động xăng	Fuel range	燃油续航
-Mức xăng	Fuel level	油量
-Odo tổng	Odometer	总里程
-Quãng đường chuyến	Trip distance	行程里程
-Thời gian chuyến	Trip time	行程时间
-Tiêu thụ 50km	Consumption last 50 km	近50km能耗
-Công suất mô-tơ	Motor power	电机功率
-Sức khỏe pin (SOH)	Battery health (SOH)	电池健康度（SOH）
-Tốc độ	Speed	车速
-Số	Gear	挡位
-Mức bụi mịn	Dust level	PM2.5等级
-Bụi mịn PM2.5	Fine dust PM2.5	PM2.5浓度
-Cảm biến bụi mịn	Fine dust sensor	PM2.5传感器
-Bụi mịn ngoài xe	Outside fine dust	车外PM2.5
-Nhiệt trong cabin	Cabin temp	车内温度
-Nhiệt cài đặt	Set temp	设定温度
-Nhiệt ngoài xe	Outside temp	车外温度
-Điều hòa	Air conditioning	空调
-Mức quạt gió	Fan level	风量挡位
-Chế độ lấy gió	Recirculation mode	循环模式
-Đơn vị nhiệt	Temperature unit	温度单位
-Ion âm	Negative ions	负离子
-Mức ghế mát	Seat ventilation level	座椅通风挡位
-Mức ghế sưởi	Seat heating level	座椅加热挡位
-Mức ghế mát phụ	Passenger seat ventilation level	副驾座椅通风挡位
-Mức ghế sưởi phụ	Passenger seat heating level	副驾座椅加热挡位
-Trạng thái sấy trước	Front defrost state	前除霜状态
-Trạng thái sấy sau	Rear defrost state	后除霜状态
-Chế độ điều hòa	A/C control mode	空调控制模式
-Chế độ gió	Fan mode	风量模式
-Áp lốp trước-trái	Tyre pressure front-left	左前胎压
-Áp lốp trước-phải	Tyre pressure front-right	右前胎压
-Áp lốp sau-trái	Tyre pressure rear-left	左后胎压
-Áp lốp sau-phải	Tyre pressure rear-right	右后胎压
-Nhiệt lốp trước-trái	Tyre temp front-left	左前胎温
-Nhiệt lốp trước-phải	Tyre temp front-right	右前胎温
-Nhiệt lốp sau-trái	Tyre temp rear-left	左后胎温
-Nhiệt lốp sau-phải	Tyre temp rear-right	右后胎温
-Kính lái	Driver window	主驾车窗
-Kính phụ	Passenger window	副驾车窗
-Kính sau trái	Rear-left window	左后车窗
-Kính sau phải	Rear-right window	右后车窗
-Cửa trước-trái	Door front-left	左前门
-Cửa trước-phải	Door front-right	右前门
-Cửa sau-trái	Door rear-left	左后门
-Cửa sau-phải	Door rear-right	右后门
-Cửa sổ trời	Sunroof	天窗
-Rèm che nắng	Sunshade	遮阳帘
-Nguồn xe	Vehicle power	整车电源
-Mẫu xe	Vehicle model	车型
-Cảnh báo khẩn	Emergency alarm	危险警示
-Đèn cốt	Low beam	近光灯
-Đèn pha	High beam	远光灯
-Đèn sương mù trước	Front fog lights	前雾灯
-Đèn sương mù sau	Rear fog lights	后雾灯
-Xi-nhan trái	Left indicator	左转向灯
-Xi-nhan phải	Right indicator	右转向灯
-Đèn hông	Side lights	示廓灯
-Đèn ban ngày	Daytime lights (DRL)	日行灯（DRL）
-Chế độ đèn pha	Headlight mode	大灯模式
-Ắc-quy 12V	12V battery	12V蓄电池
-Số VIN	VIN	VIN码
-Mức dầu	Oil level	机油液位
-Âm lượng giải trí	Media volume	媒体音量
-Cốp sau	Tailgate	后备箱
-Đèn đọc	Reading light	阅读灯
-Lọc bụi	Air purifier	空气净化
-Mát ghế lái	Driver seat ventilation	主驾座椅通风
-Nhiệt độ	Temperature	温度
-Gió	Fan	风量
-Sấy kính trước	Front defrost	前除霜
-Đèn pha	Headlights	大灯
-Sưởi ghế lái	Driver seat heating	主驾座椅加热
-Lấy gió trong	Recirculation	内循环
-Gió tự động	Auto fan	自动风量
-Sấy kính sau	Rear defrost	后除霜
-Lọc ngay	Clean now	立即净化
-4 kính	All windows	全部车窗
-50% kính lái	50% driver window	主驾车窗50%
-50% kính phụ	50% passenger window	副驾车窗50%
-50% kính sau trái	50% rear-left window	左后车窗50%
-50% kính sau phải	50% rear-right window	右后车窗50%
-50% 4 kính	50% all windows	全部车窗50%
-Đóng tất cả kính	Close all windows	关闭全部车窗
-Khóa trẻ em trái	Child lock left	左侧儿童锁
-Khóa trẻ em phải	Child lock right	右侧儿童锁
-Sạc không dây	Wireless charging	无线充电
-Mát ghế phụ	Passenger seat ventilation	副驾座椅通风
-Sưởi ghế phụ	Passenger seat heating	副驾座椅加热
-Lốp	Tyres	轮胎
-Kính	Windows	车窗
-Cửa & khoang	Doors & openings	车门与天窗
-Đèn	Lights	灯光
-Khí hậu & không khí	Climate & air	空调与空气
-Năng lượng	Energy	能源
-Sức khỏe pin	Battery health	电池健康度
-Chuyến đi	Trip	行程
-Áp suất lốp	Tyre pressure	胎压
-Không khí	Air quality	空气质量
-Đồng hồ + thời tiết	Clock + weather	时钟 + 天气
+Đồng hồ	Clock	时钟
 Đang phát	Now playing	正在播放
-Trạng thái xe	Car status	车辆状态
-Bảng tổng hợp	Overview board	总览面板
 Trình chiếu ảnh	Photo slideshow	照片轮播
 Lưới lối tắt app	App shortcut grid	应用快捷方式网格
-Mở hết	Open all	全开
-Đóng hết	Close all	全关
-Mở hết kính	Open all	全部打开
-Đóng hết kính	Close all	全部关闭
 Màn hình chính	Home screen	主屏幕
 Thanh trạng thái & thanh nút	Status bar & button bar	顶栏与车控栏
 Phím vô-lăng	Steering-wheel keys	方向盘按键
@@ -474,20 +234,6 @@ Kiểm tra cập nhật	Check for updates	检查更新
 Chế độ kiểm thử qua adb	ADB test mode	ADB测试模式
 Phiên bản và giấy phép	Version and licence	版本与许可证
 Miễn trừ trách nhiệm	Disclaimer	免责声明
-Năng lượng & sạc	Energy & charging	能源与充电
-Động lực & tốc độ	Drivetrain & speed	动力与车速
-Thân xe · cửa · kính	Body · doors · windows	车身 · 车门 · 车窗
-Danh tính · khoá	Identity · keys	身份 · 钥匙
-Giải trí · cụm · HUD	Media · cluster · HUD	娱乐 · 仪表 · HUD
-Áp suất	Pressure	压力
-Khoảng cách	Distance	距离
-Tiêu thụ điện	Energy use	能耗
-Mô-men xoắn	Torque	扭矩
-Chiều dài	Length	长度
-Trước trái	Front left	左前
-Trước phải	Front right	右前
-Sau trái	Rear left	左后
-Sau phải	Rear right	右后
 Kênh điều khiển cửa sổ	Window control channel	窗口控制通道
 Cho phép cửa sổ tự do	Freeform windows enabled	已启用自由窗口
 Là màn hình chính	Set as home screen	设为主屏幕
@@ -500,78 +246,10 @@ Micro	Microphone	麦克风
 Cài đặt	Settings	设置
 Nói với xe	Talk to car	与车对话
 Đồng hồ và ngày	Clock and date	时钟和日期
-Chip trạng thái xe	Car status chips	车辆状态标签
 Nút nói	Talk button	语音按钮
 Nút ứng dụng	Apps button	应用按钮
 Nút cài đặt	Settings button	设置按钮
 Chip hồ sơ	Profile chip	档案标签
-Tầm điện	EV range	纯电续航
-Tầm xăng	Fuel range	燃油续航
-Quãng chuyến	Trip dist.	行程里程
-Tiêu thụ 50km	Use 50 km	50km能耗
-SOH pin	SOH	电池SOH
-PM2.5	PM2.5	PM2.5
-Cảm biến	Sensor	传感器
-Bụi ngoài	Outside dust	车外粉尘
-Trong xe	In car	车内
-Điều hòa	A/C	空调
-Chế độ lấy gió	Air intake	循环模式
-Đơn vị nhiệt	Temp unit	温度单位
-Ghế mát	Seat vent	座椅通风
-Ghế sưởi	Seat heat	座椅加热
-Ghế mát phụ	Pass. vent	副驾通风
-Ghế sưởi phụ	Pass. heat	副驾加热
-Sấy trước	Front defrost	前除霜
-Sấy sau	Rear defrost	后除霜
-Chế độ ĐH	A/C mode	空调模式
-Gió auto	Fan auto	自动风量
-Lốp TT	Tyre FL	左前胎压
-Lốp TP	Tyre FR	右前胎压
-Lốp ST	Tyre RL	左后胎压
-Lốp SP	Tyre RR	右后胎压
-Nhiệt TT	Temp FL	左前胎温
-Nhiệt TP	Temp FR	右前胎温
-Nhiệt ST	Temp RL	左后胎温
-Nhiệt SP	Temp RR	右后胎温
-Kính lái	Driver win	主驾车窗
-Kính phụ	Pass. win	副驾车窗
-Kính ST	Win RL	左后车窗
-Kính SP	Win RR	右后车窗
-Cửa trước-trái	Door FL	左前门
-Cửa trước-phải	Door FR	右前门
-Cửa sau-trái	Door RL	左后门
-Cửa sau-phải	Door RR	右后门
-Đèn sương mù trước	Fog front	前雾灯
-Đèn sương mù sau	Fog rear	后雾灯
-Đèn ban ngày	DRL	日行灯
-Âm lượng	Volume	音量
-Đèn ban ngày	Daytime (DRL)	日行灯
-Gió auto	Auto fan	自动风量
-4 kính	All win	全部车窗
-50% lái	50% drv	主驾50%
-50% phụ	50% pass	副驾50%
-50% ST	50% RL	左后50%
-50% SP	50% RR	右后50%
-50% 4 kính	50% all	全部50%
-Đóng cả cụm	Close all win	车窗全关
-Khóa trẻ T	Child lock L	左儿童锁
-Khóa trẻ P	Child lock R	右儿童锁
-TT	FL	左前
-TP	FR	右前
-ST	RL	左后
-SP	RR	右后
-Mức 1	Level 1	1挡
-Mức 2	Level 2	2挡
-Đóng	Close	关闭
-Nửa	Half	半开
-áp suất + nhiệt độ từng bánh	pressure and temperature of each wheel	各轮胎的气压和温度
-mở/đóng và mở nửa từng kính · đóng cả cụm	open/close and half-open each window · close all	各车窗开/关和半开 · 全部关闭
-cửa, nóc, rèm	doors, sunroof, sunshade	车门、天窗、遮阳帘
-đèn ngoài, đèn pha, đèn đọc trong xe	exterior lights, headlights, interior reading light	外部灯光、大灯、车内阅读灯
-nhiệt trong/ngoài, điều hoà, bụi mịn	inside/outside temperature, air conditioning, fine dust	车内/车外温度、空调、PM2.5
-pin, tầm chạy, mức tiêu thụ	battery, range, consumption	电量、续航、能耗
-sức khoẻ pin, điện áp ắc-quy	battery health, auxiliary battery voltage	电池健康度、蓄电池电压
-quãng đường, thời gian, điện tiêu thụ, odo	distance, time, energy used, odometer	里程、时间、电耗、总里程
 Bố cục và hình nền	Layout and wallpaper	布局和壁纸
 Chip trên đỉnh và thanh nút xe	Top chips and the car button bar	顶栏标签和车控栏
 Mỗi hồ sơ giữ bố cục riêng	Each profile keeps its own layout	每个档案保存各自的布局
@@ -587,119 +265,6 @@ dẫn đường trên cụm mất nguồn dữ liệu	cluster navigation loses i
 gán phím vô-lăng và đọc màn hình dẫn đường không chạy	steering-wheel key mapping and navigation screen reading stop working	方向盘按键映射和导航屏幕读取将无法工作
 không nói được với xe (ô "Nói với xe" và nút mic)	you cannot talk to the car (the "Talk to car" tile and the mic button)	无法与车对话（“与车对话”图块和麦克风按钮）
 tự dẫn đường theo lịch không biết đã ra khỏi hầm chưa nên sẽ không dẫn	scheduled navigation cannot tell whether you have left the car park, so it never starts	定时导航无法判断你是否已驶出停车场，因此不会启动
-Phần trăm pin cao áp còn lại	High-voltage battery charge remaining (%)	高压电池剩余电量（%）
-Quãng đường ước tính còn chạy bằng điện	Estimated remaining driving range on electric power (km)	纯电预计剩余续航里程（km）
-Quãng đường ước tính còn chạy bằng xăng	Estimated remaining driving range on petrol (km)	燃油预计剩余续航里程（km）
-Phần trăm nhiên liệu xăng còn lại	Petrol fuel level remaining (%)	剩余燃油量（%）
-Tổng quãng đường xe đã đi	Total lifetime distance driven (km)	车辆累计行驶总里程（km）
-Quãng đường của chuyến đi hiện tại	Distance covered on the current trip (km)	本次行程已行驶里程（km）
-Thời gian đã đi của chuyến hiện tại	Elapsed time of the current trip (h)	本次行程已用时间（h）
-Mức tiêu thụ điện trung bình 50km gần nhất	Average power consumption over the last 50km	最近50km平均电耗
-Công suất mô-tơ điện đang phát ra	Electric motor power output (kW)	电机输出功率（kW）
-Tình trạng sức khoẻ pin so với lúc mới	Battery health versus original capacity (%)	电池健康度，相对出厂容量（%）
-Điện áp ắc-quy 12V hiện tại	Current 12V auxiliary battery voltage (V)	当前12V蓄电池电压（V）
-Bật/tắt sạc không dây cho điện thoại	Turn the wireless phone charger on/off	开启/关闭手机无线充电
-Tốc độ di chuyển hiện tại của xe	Current vehicle road speed (km/h)	当前车速（km/h）
-Số hiện tại đang cài đặt (P/R/N/D)	Currently selected gear (P/R/N/D)	当前挡位（P/R/N/D）
-Mức đánh giá chất lượng không khí trong xe	Cabin air-quality rating based on fine dust	基于PM2.5的车内空气质量等级
-Nồng độ bụi mịn PM2.5 trong cabin	PM2.5 fine dust concentration in the cabin (µg/m³)	车内PM2.5浓度（µg/m³）
-Cảm biến bụi mịn có đang hoạt động không	Whether the PM2.5 sensor is online	PM2.5传感器是否在线
-Nồng độ bụi mịn PM2.5 NGOÀI xe — cùng getter với ô trong cabin, lấy ô thứ hai của mảng (chờ xác nhận trên xe)	Outside-cabin PM2.5 — same getter as the in-cabin value, second array slot (pending on-car confirmation)	车外PM2.5——与车内数值使用同一getter，取数组第二项（待实车确认）
-Nhiệt độ thực tế đo trong khoang cabin	Actual measured cabin air temperature (°C)	车内实测气温（°C）
-Nhiệt độ điều hoà đã cài đặt	A/C target temperature currently set (°C)	当前设定的空调目标温度（°C）
-Nhiệt độ không khí bên ngoài xe	Outside ambient air temperature (°C)	车外环境温度（°C）
-Điều hoà có đang bật hay không	Whether the air conditioning is currently on	空调当前是否开启
-Mức quạt gió điều hoà đang chạy	Current A/C fan speed level	当前空调风量挡位
-Chế độ lấy gió trong/ngoài đang dùng	Current air recirculation mode (fresh/recirculated)	当前空气循环模式（外循环/内循环）
-Đơn vị hiển thị nhiệt độ đang dùng (°C/°F)	Temperature display unit in use (°C/°F)	当前温度显示单位（°C/°F）
-Chức năng ion âm có đang bật không	Whether the anion (ioniser) function is active	负离子（离子发生器）功能是否开启
-Ghế lái đang thổi mát ở mức mấy	Driver seat ventilation level in use	主驾座椅当前通风挡位
-Ghế lái đang sưởi ở mức mấy	Driver seat heating level in use	主驾座椅当前加热挡位
-Ghế phụ đang thổi mát ở mức mấy	Passenger seat ventilation level in use	副驾座椅当前通风挡位
-Ghế phụ đang sưởi ở mức mấy	Passenger seat heating level in use	副驾座椅当前加热挡位
-Sấy kính trước có đang bật không	Whether front windscreen defrost is on	前挡风玻璃除霜是否开启
-Sấy kính sau có đang bật không	Whether rear windscreen defrost is on	后挡风玻璃除霜是否开启
-Điều hòa đang ở chế độ AUTO hay chỉnh tay	Whether the A/C is in AUTO or manual mode	空调处于AUTO还是手动模式
-Quạt gió đang tự động hay do người lái chỉnh tay (chỉ báo của nút Gió tự động)	Whether the fan is on auto or set by hand (indicator behind the Auto-fan button)	风量为自动还是手动调节（“自动风量”按钮的指示）
-Bật/tắt chế độ lọc bụi mịn tự động	Turn automatic air purification on/off	开启/关闭自动空气净化
-Bật/tắt quạt làm mát ghế	Turn seat ventilation on/off	开启/关闭座椅通风
-Tăng/giảm nhiệt độ điều hoà	Raise/lower the A/C temperature	调高/调低空调温度
-Tăng/giảm mức quạt gió điều hoà	Raise/lower the A/C fan speed	调高/调低空调风量
-Bật/tắt sấy kính chắn gió trước	Turn the front windscreen defroster on/off	开启/关闭前挡风玻璃除霜
-Bật/tắt sưởi ghế	Turn seat heating on/off	开启/关闭座椅加热
-Bật/tắt chế độ lấy gió trong xe	Turn cabin air recirculation on/off	开启/关闭车内空气内循环
-Bật/tắt quạt gió TỰ ĐỘNG (xe tự chọn mức gió). Không đụng nhiệt độ — xe này không có chế độ nhiệt tự động	Turn the AUTO fan on/off (the car picks the fan level). Does not touch temperature — this car has no auto-temp mode	开启/关闭AUTO风量（由车辆自动选择风量挡位）。不调整温度——本车没有自动温度模式
-Bật/tắt sấy kính chắn gió sau	Turn the rear windscreen defroster on/off	开启/关闭后挡风玻璃除霜
-Chạy lọc không khí một lần ngay	Run a one-shot air purification now	立即执行一次空气净化
-Bật/tắt quạt làm mát ghế phụ	Turn passenger seat ventilation on/off	开启/关闭副驾座椅通风
-Bật/tắt sưởi ghế phụ	Turn passenger seat heating on/off	开启/关闭副驾座椅加热
-Áp suất lốp trước bên trái	Front-left tyre pressure (kPa)	左前轮胎压（kPa）
-Áp suất lốp trước bên phải	Front-right tyre pressure (kPa)	右前轮胎压（kPa）
-Áp suất lốp sau bên trái	Rear-left tyre pressure (kPa)	左后轮胎压（kPa）
-Áp suất lốp sau bên phải	Rear-right tyre pressure (kPa)	右后轮胎压（kPa）
-Nhiệt độ lốp trước bên trái	Front-left tyre temperature (°C)	左前轮胎温（°C）
-Nhiệt độ lốp trước bên phải	Front-right tyre temperature (°C)	右前轮胎温（°C）
-Nhiệt độ lốp sau bên trái	Rear-left tyre temperature (°C)	左后轮胎温（°C）
-Nhiệt độ lốp sau bên phải	Rear-right tyre temperature (°C)	右后轮胎温（°C）
-Độ mở kính cửa trước bên trái	Front-left window open percentage (%)	左前车窗开度（%）
-Độ mở kính cửa trước bên phải	Front-right window open percentage (%)	右前车窗开度（%）
-Độ mở kính cửa sau bên trái	Rear-left window open percentage (%)	左后车窗开度（%）
-Độ mở kính cửa sau bên phải	Rear-right window open percentage (%)	右后车窗开度（%）
-Trạng thái đóng/mở cửa trước bên trái	Front-left door open/closed state	左前门开关状态
-Trạng thái đóng/mở cửa trước bên phải	Front-right door open/closed state	右前门开关状态
-Trạng thái đóng/mở cửa sau bên trái	Rear-left door open/closed state	左后门开关状态
-Trạng thái đóng/mở cửa sau bên phải	Rear-right door open/closed state	右后门开关状态
-Trạng thái đóng/mở cửa sổ trời	Sunroof open/closed state	天窗开关状态
-Vị trí mở hiện tại của rèm che nắng	Current sunshade open position (%)	遮阳帘当前开启位置（%）
-Cấp nguồn hiện tại của xe (tắt/ACC/bật máy)	Current vehicle power level (off/ACC/on)	当前整车电源状态（OFF/ACC/ON）
-Mã model của xe	Vehicle model identifier	车型代码
-Đèn cảnh báo khẩn cấp có đang bật không	Whether the hazard warning alarm is active	危险警示是否开启
-Bật/tắt mở cốp sau, dịch chuyển cốp vật lý	Turn the boot/tailgate release on/off (moves the boot)	开启/关闭后备箱（后备箱会实际移动）
-Bật/tắt điều khiển cửa sổ trời, dịch chuyển tấm kính	Turn sunroof control on/off (moves the glass panel)	开启/关闭天窗控制（玻璃会实际移动）
-Mở/đóng kính cửa trước bên trái	Open/close the front-left window	打开/关闭左前车窗
-Mở/đóng kính cửa trước bên phải	Open/close the front-right window	打开/关闭右前车窗
-Mở/đóng kính cửa sau bên trái	Open/close the rear-left window	打开/关闭左后车窗
-Mở/đóng kính cửa sau bên phải	Open/close the rear-right window	打开/关闭右后车窗
-Mở/đóng đồng thời toàn bộ kính cửa xe	Open/close all windows at once	同时打开/关闭全部车窗
-Mở kính cửa lái tới 50% (chạm lại để đóng)	Half-open the driver window (tap again to close)	主驾车窗打开一半（再次点按关闭）
-Mở kính cửa phụ tới 50% (chạm lại để đóng)	Half-open the passenger window (tap again to close)	副驾车窗打开一半（再次点按关闭）
-Mở kính sau bên trái tới 50% (chạm lại để đóng)	Half-open the rear-left window (tap again to close)	左后车窗打开一半（再次点按关闭）
-Mở kính sau bên phải tới 50% (chạm lại để đóng)	Half-open the rear-right window (tap again to close)	右后车窗打开一半（再次点按关闭）
-Mở toàn bộ kính tới 50% (chạm lại để đóng)	Half-open all windows (tap again to close)	全部车窗打开一半（再次点按关闭）
-Đóng toàn bộ kính cửa (nút dự phòng)	Close all windows (backup button)	关闭全部车窗（备用按钮）
-Mở/đóng rèm che nắng cửa sổ trời	Open/close the sunroof sunshade	打开/关闭天窗遮阳帘
-Bật/tắt khoá trẻ em cửa sau BÊN TRÁI (chốt trong cửa — trẻ ngồi sau không mở được cửa đó)	Turn the LEFT rear child-safety lock on/off (that door can't be opened from inside)	开启/关闭左后儿童安全锁（该车门无法从车内打开）
-Bật/tắt khoá trẻ em cửa sau BÊN PHẢI — nút riêng, vì xe phơi hai lệnh tách nhau cho hai bên	Turn the RIGHT rear child-safety lock on/off — a separate button, the car exposes one command per side	开启/关闭右后儿童安全锁——独立按钮，因为车辆为每一侧提供单独的指令
-Đèn cốt có đang bật hay không	Whether the low-beam headlights are on	近光灯是否开启
-Đèn pha (chiếu xa) có đang bật hay không	Whether the high-beam headlights are on	远光灯是否开启
-Đèn sương mù trước có đang bật hay không	Whether the front fog lights are on	前雾灯是否开启
-Đèn sương mù sau có đang bật hay không	Whether the rear fog light is on	后雾灯是否开启
-Xi-nhan trái có đang nháy hay không	Whether the left turn signal is flashing	左转向灯是否在闪烁
-Xi-nhan phải có đang nháy hay không	Whether the right turn signal is flashing	右转向灯是否在闪烁
-Đèn hông (đèn định vị) có đang bật không	Whether the side marker lights are on	示廓灯是否开启
-Đèn chạy ban ngày (DRL) có đang bật không	Whether the daytime running lights are on	日行灯是否开启
-Chế độ đèn pha hiện tại (auto/thủ công…)	Current headlight mode feedback (auto/manual/…)	当前大灯模式反馈（自动/手动/…）
-Bật/tắt đèn đọc sách trong cabin	Turn the cabin reading light on/off	开启/关闭车内阅读灯
-Bật/tắt đèn pha	Turn the headlights on/off	开启/关闭大灯
-Bật/tắt đèn chạy ban ngày	Turn the daytime running lights on/off	开启/关闭日行灯
-Số khung nhận dạng xe (VIN)	Vehicle identification number (VIN)	车辆识别代号（VIN）
-Phần trăm dầu động cơ còn lại	Engine oil level remaining (%)	剩余机油量（%）
-Âm lượng nhạc/giải trí đang đặt ở mức mấy	Current media (music) volume level	当前媒体（音乐）音量
-ACC	ACC	ACC
-Sẵn sàng	Ready	就绪
-Sẵn sàng (giả)	Ready (fake)	就绪（模拟）
-Không xác định	Invalid	无效
-Auto	Auto	自动
-Đèn hông	Position	示廓灯
-Cốt	Low beam	近光灯
-Không khí trong xe	Cabin air quality	车内空气质量
-Nhiệt độ ngoài	Outside temperature	车外温度
-Pin và tầm chạy	Battery and range	电量和续航
-Ghế lái (sưởi/mát)	Driver seat (heat/vent)	主驾座椅（加热/通风）
-Ghế phụ (sưởi/mát)	Passenger seat (heat/vent)	副驾座椅（加热/通风）
-hạ HẾT 4 kính — mưa, bụi, hoặc đồ để trên ghế; đóng lại mất nhiều giây	lowers ALL four windows — rain, dust, or belongings on the seats; closing takes seconds	降下全部四扇车窗——注意雨水、灰尘或座椅上的物品；关闭需要数秒
-mở cốp khi xe đang đỗ nơi công cộng — đồ trong cốp phơi ra cho tới khi có người đóng lại	opens the boot in a public car park — whatever is inside stays exposed until someone closes it	在公共停车场打开后备箱——箱内物品会一直暴露，直到有人关上
-mở cửa sổ trời — mưa và bụi vào thẳng khoang, đóng lại mất nhiều giây	opens the sunroof — rain and dust go straight in, and closing takes seconds	打开天窗——雨水和灰尘会直接进入车内，关闭需要数秒
 đèn khẩn cấp	the hazard lights	危险警示灯
 dây an toàn	the seat belts	安全带
 cảm biến đỗ	the parking sensors	倒车雷达

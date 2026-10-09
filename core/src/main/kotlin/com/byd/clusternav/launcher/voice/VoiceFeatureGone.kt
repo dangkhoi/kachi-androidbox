@@ -44,15 +44,6 @@ internal object VoiceFeatureGone {
         val label: String,
         val labelEn: String,
         val removed: Boolean,
-        /**
-         * `true` = cụm này CHỈ chặn câu **LỆNH**, không chặn câu **HỎI**: nút đã gỡ nhưng datum ĐỌC còn sống.
-         *
-         * [SOÁT 2.68 · ĐO] `media_vol` (*"Âm lượng giải trí"*, `AudioManager.getStreamVolume`, mức PROVEN) vẫn là
-         * datum đọc được, mà [match] còn được hỏi ở đường câu-hỏi ([VoiceIntentParser.objectOnlyRead]) **trước** lượt
-         * tra datum ⇒ thêm dòng `["am","luong"]` là biến *"âm lượng bao nhiêu"* từ `Read(media_vol)` thành *"đã bỏ
-         * khỏi Kachi"* — nói sai sự thật, đúng cái luật khai §2 của bảng này cấm. Cờ này giữ luật đó bằng MÁY.
-         */
-        val readAlive: Boolean = false,
     )
 
     /**
@@ -96,8 +87,8 @@ internal object VoiceFeatureGone {
         Gone(listOf("khoa", "xe"), "khoá xe", "locking the car", removed = true),
         Gone(listOf("mo", "khoa", "cua"), "mở khoá cửa", "unlocking the doors", removed = true),
         Gone(listOf("roi", "xe"), "gói rời xe", "the leave-car routine", removed = true),
-        // `readAlive` — nút `vol` đã gỡ (1.90) NHƯNG datum ĐỌC `media_vol` còn sống ⇒ chỉ chặn câu LỆNH (xem [Gone.readAlive]).
-        Gone(listOf("am", "luong"), "âm lượng", "the volume", removed = true, readAlive = true),
+        // (≤ 2.98 BYD dòng này chỉ chặn câu LỆNH vì datum đọc `media_vol` còn sống; Android box B2 · W3 gỡ mọi datum xe.)
+        Gone(listOf("am", "luong"), "âm lượng", "the volume", removed = true),
         Gone(listOf("do", "sang", "man"), "độ sáng màn", "the screen brightness", removed = true),
         // Android box B2 · W2b (2026-10-09) — camera BYD (xi-nhan · 360 · theo yêu cầu) gỡ hẳn: nút `cam` và năm việc
         // `launcher_cam_*` không còn ⇒ *"bật camera"* / *"mở camera sau"* không còn hiểu được ⇒ dòng này nói đúng tên.
@@ -124,14 +115,72 @@ internal object VoiceFeatureGone {
     /** Câu [t] có chứa một từ chặn cứng không — hỏi TRƯỚC mọi phép khớp (xem [HARD_BLOCK]). */
     fun blocked(t: List<Token>): Boolean = t.any { it.norm in HARD_BLOCK }
 
+    /** Tính năng mà câu [t] đang nói tới, hoặc `null`. Khớp ở BẤT KỲ vị trí — cụm dài xét trước. */
+    fun match(t: List<Token>): Gone? =
+        ALL.firstOrNull { g -> t.indices.any { VoiceLexicon.phraseAt(t, it, g.words) } }
+            ?: CAR.takeIf { carObject(t) }
+
     /**
-     * Tính năng mà câu [t] đang nói tới, hoặc `null`. Khớp ở BẤT KỲ vị trí — cụm dài xét trước.
+     * ═══ Android box B2 · W3 (2026-10-09) — câu nói về MỘT BỘ PHẬN XE ⇒ "điều khiển xe đã bỏ" ═══════════════════════
      *
-     * @param forRead `true` khi chỗ gọi đang xét một câu **HỎI** (đường [VoiceIntentParser] `objectOnlyRead`): các
-     *   dòng [Gone.readAlive] bị BỎ QUA để đường ĐỌC còn sống vẫn thắng (luật khai §2).
+     * Bộ đăng ký nút / datum xe (`ControlRegistry` · `TelemetryRegistry` · `ActionMacros`) gỡ hẳn ⇒ *"bật điều hoà"* · *"mở kính"*
+     * · *"pin bao nhiêu"* không còn khớp gì. Không có cổng này thì câu ấy rơi xuống các đường ĐOÁN của bộ phân tích (tên app bị
+     * ASR bóp méo · tiền tố tên app · chữa chính tả — [VoiceLastResort] · [VoicePhoneticMatch]) và có thể thành **mở một app tên
+     * gần giống** — làm một việc người nói không xin. Cổng chỉ được hỏi khi câu ĐÃ không hiểu được theo đường chính xác (nhãn app
+     * thật · hành động launcher · hồ sơ · nhạc · dẫn đường thắng trước), nên app đã cài tên trùng (*"Pin Tester"*) vẫn mở được.
+     *
+     * Từ đơn khai CÓ DẤU qua [VoiceHomograph.Words]: token mang dấu chỉ khớp đúng cách viết (*"của"* ≠ *"cửa"*, *"đến"* ≠
+     * *"đèn"*, *"giờ"* ≠ *"gió"*); token không dấu (gõ tay) khớp theo bản bỏ dấu như mọi bảng khác. Cụm nhiều từ khớp theo
+     * bản bỏ dấu ([CAR_PHRASES]).
+     *
+     * Cố ý KHÔNG có *"xăng"* · *"sạc"*: chúng là chữ của TÊN NƠI (*"tìm trạm xăng"* · *"trạm sạc"*) — bắt chúng là nói
+     * "đã gỡ" cho một câu tìm chỗ (`VoiceLogCases0919Test` · `VoiceFeatureGoneCarTest`). *"khoá/khóa"* có (câu hỏi
+     * *"xe đang khóa hay chưa"*).
      */
-    fun match(t: List<Token>, forRead: Boolean = false): Gone? =
-        ALL.firstOrNull { g -> !(forRead && g.readAlive) && t.indices.any { VoiceLexicon.phraseAt(t, it, g.words) } }
+    private val CAR_WORDS = VoiceHomograph.Words(
+        "kính", "cửa", "cốp", "ghế", "đèn", "gió", "quạt", "pin", "lốp", "gương", "sấy", "sưởi", "rèm", "nóc",
+        "bụi", "khoá", "khóa", "window", "windows", "door", "doors", "trunk", "seat", "seats", "fan", "battery",
+        "tyre", "tyres", "tire", "tires", "aircon", "defrost", "sunroof",
+    )
+
+    /** Cụm nhiều từ (đã bỏ dấu) của bộ phận / số liệu xe — xem [CAR_WORDS]. */
+    private val CAR_PHRASES: List<List<String>> = listOf(
+        listOf("dieu", "hoa"), listOf("may", "lanh"), listOf("nhiet", "do"), listOf("ap", "suat"),
+        listOf("toc", "do"), listOf("ac", "quy"), listOf("nhien", "lieu"), listOf("tam", "hoat", "dong"),
+        listOf("quang", "duong", "con"), listOf("air", "conditioner"), listOf("air", "con"),
+    )
+
+    /** Dòng trả lời chung cho [carObject] — *"điều khiển xe đã bỏ khỏi Kachi"*. */
+    val CAR = Gone(emptyList(), "điều khiển xe", "car control", removed = true)
+
+    /**
+     * Chỗ trên XE mà một câu nhạc nhắc tới (*"bật nhạc **trên cụm**"* · *"… **trên đồng hồ**"* — chiếu nhạc lên cụm đồng
+     * hồ, nút `cluster_music` của Kachi BYD). Đã bỏ dấu.
+     */
+    private val CAR_PLACES: List<List<String>> = listOf(
+        listOf("tren", "cum"), listOf("len", "cum"), listOf("tren", "dong", "ho"), listOf("len", "dong", "ho"),
+    )
+
+    /** *"cụm"* (cụm đồng hồ) — MANG dấu chỉ khớp đúng cách viết; chỉ hỏi ở đuôi câu nhạc ([carMedia]). */
+    private val CLUSTER_WORD = VoiceHomograph.Words("cụm")
+
+    /**
+     * Android box B2 · W3 — câu có chữ NHẠC mà việc thật là của XE ⇒ không được thành lệnh nhạc. [ĐO corpus 2026-10-09]
+     * `VoiceGoldenCoverageTest`: 26 câu đèn viền (*"bật đèn **nhảy theo** nhạc"*) và 25 câu nhạc trên cụm từng ra
+     * `Media` (phát/dừng/tìm bài *"trên cụm"*). Ba dấu hiệu, xét quanh cụm nhạc tại vị trí khớp:
+     *  1. trước cụm nhạc có một bộ phận xe ([carObject] — *"đèn"*);
+     *  2. từ đứng ngay trước cụm nhạc là *"theo"* (*"… nhảy theo nhạc"* = đèn theo nhịp; tên bài không đứng thế);
+     *  3. sau cụm nhạc là một chỗ trên xe ([CAR_PLACES] hoặc chữ *"cụm"*).
+     * Tên bài có chữ xe đứng SAU *"bài"* (*"phát bài Đèn Đỏ"*) không vướng: (1) chỉ soi phần TRƯỚC cụm nhạc.
+     */
+    fun carMedia(before: List<Token>, after: List<Token>): Boolean =
+        carObject(before) || before.lastOrNull()?.norm == "theo" ||
+            CAR_PLACES.any { p -> after.indices.any { VoiceLexicon.phraseAt(after, it, p) } } ||
+            after.any { CLUSTER_WORD.matches(it) }
+
+    /** Câu [t] có nhắc một bộ phận / số liệu XE không (xem KDoc [CAR_WORDS]). */
+    fun carObject(t: List<Token>): Boolean =
+        t.any { CAR_WORDS.matches(it) } || CAR_PHRASES.any { p -> t.indices.any { VoiceLexicon.phraseAt(t, it, p) } }
 
     /**
      * Câu trả lời cho [g] — hai câu cho hai việc khác nhau (xem luật khai §3).

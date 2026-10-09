@@ -1,19 +1,11 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.CarStatus
-import com.byd.clusternav.launcher.ControlKind
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.HomeUiState
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.LayoutPreset
-import com.byd.clusternav.launcher.MacroResult
-import com.byd.clusternav.launcher.MacroStepResult
 import com.byd.clusternav.launcher.ProfileNames
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.launcher.TelemetryReadout
-import com.byd.clusternav.launcher.TelemetryRegistry
 import com.byd.clusternav.launcher.voiceLangOf
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -52,15 +44,7 @@ class VoiceSpokenLangTest {
 
     private val intents: List<VoiceIntent> by lazy {
         buildList {
-            ControlRegistry.ALL.forEach { c ->
-                add(VoiceIntent.Control(c.id, 1))
-                add(VoiceIntent.Control(c.id, 0))
-                add(VoiceIntent.Control(c.id, null, 1))
-                add(VoiceIntent.Control(c.id, null, -2))
-                if (c.kind == ControlKind.COVER || c.kind == ControlKind.SELECT) add(VoiceIntent.Control(c.id, 2))
-            }
-            TelemetryRegistry.ALL.forEach { add(VoiceIntent.Read(it.id)) }
-            ActionMacros.ALL.forEach { add(VoiceIntent.Macro(it.id)) }
+            // Android box B2 · W3: Control/Read/Macro gỡ cùng lõi HAL BYDAuto.
             LauncherActions.ALL.forEach { add(VoiceIntent.Launcher(it.id)) }
             add(VoiceIntent.Profile(HomeUiState.DEFAULT_PROFILE))
             add(VoiceIntent.Profile("Vợ"))
@@ -82,13 +66,10 @@ class VoiceSpokenLangTest {
     private fun spoken(i: VoiceIntent, l: Lang): List<String> = buildList {
         add(VoiceReply.preview(i, l))
         add(VoiceReply.done(i, l))
-        add(VoiceReply.doneConfirmed(i, l))
         add(VoiceReply.failed(i, lang = l))
         add(VoiceReply.busy(i, l))
         add(VoiceReply.cancelled(i, 2, l))
         add(VoiceReply.confirmQuestion(i, l))
-        add(VoiceReply.notWhileMoving(i, l))
-        add(VoiceReply.notOnThisCar(i, l))
         add(VoiceReply.partNotOnThisCar(i, l))
         add(VoiceReply.noNavApp(i, l))
         add(VoiceReply.navOpenedWithoutDestination(i, l))
@@ -110,7 +91,6 @@ class VoiceSpokenLangTest {
         add(VoiceReply.placeNotSaved(i, VoicePlaces.displayLabel(VoicePlaces.HOME, l), l))
         add(VoiceReply.placeNeedsCoords(i, target, l))
         VoiceRiskTable.reason(i, l)?.let(::add)
-        if (i is VoiceIntent.Control) add(VoiceReply.doneActual(i, 17, l))
         if (i is VoiceIntent.Unknown) VoiceClarify.ask(i, 0, lang = l)?.let { add(it.question) }
     }
 
@@ -120,25 +100,16 @@ class VoiceSpokenLangTest {
         add(VoiceReply.nothingHeard(l))
         add(VoiceClarify.vague(l))
         add(VoiceClarify.giveUp(l))
-        add(VoiceReply.noReading(TelemetryRegistry.ALL.first().labelIn(l), l))
-        ControlRegistry.ALL.forEach { add(VoiceReply.autoLevel(it.id, l)) }
         VoiceFeatureGone.ALL.forEach { add(VoiceFeatureGone.reply(it, l)) }
         add(ProfileNames.display(HomeUiState.DEFAULT_PROFILE, l))
         LayoutPreset.entries.forEach { add(it.labelIn(l)) }
-        val macro = ActionMacros.ALL.first()
-        MacroResult(macro.id, macro.steps.map { MacroStepResult(it.controlId, false) }).notice(macro.labelIn(l), l)?.let(::add)
-        MacroResult(macro.id, macro.steps.mapIndexed { n, s -> MacroStepResult(s.controlId, n == 0) }).notice(macro.labelIn(l), l)?.let(::add)
-        val car = CarStatus(
-            lights = CarStatus.Lights(lowBeam = true),
-            body = CarStatus.Body(doorLfOpen = true, sunroofOpen = false),
-        )
-        TelemetryRegistry.ALL.forEach { spec -> TelemetryReadout.of(spec.id, car, l)?.let { add(it.label + ": " + it.displayWithUnit()) } }
         // Gộp câu đọc: CÙNG ngôn ngữ với các dòng (KDoc `VoiceFeedbackPhrase.merge`).
-        val done = VoiceReply.doneActual(VoiceIntent.Control("temp", 24), 23, l)
+        val done = VoiceReply.done(VoiceIntent.OpenApp("YouTube"), l)
+        val other = VoiceReply.done(VoiceIntent.Launcher(LauncherActions.SETTINGS), l)
         add(VoiceFeedbackPhrase.merge(listOf(done), l).orEmpty())
-        add(VoiceFeedbackPhrase.merge(listOf(done, VoiceReply.done(VoiceIntent.Control("readl", 1), l)), l).orEmpty())
-        add(VoiceFeedbackPhrase.merge(listOf(VoiceReply.failed(VoiceIntent.Control("trunk", 1), lang = l), done), l).orEmpty())
-        add(VoiceFeedbackPhrase.merge(List(14) { VoiceReply.done(VoiceIntent.Control("readl", 1), l) }, l).orEmpty())
+        add(VoiceFeedbackPhrase.merge(listOf(done, other), l).orEmpty())
+        add(VoiceFeedbackPhrase.merge(listOf(VoiceReply.failed(VoiceIntent.OpenApp("YouTube"), lang = l), done), l).orEmpty())
+        add(VoiceFeedbackPhrase.merge(List(14) { other }, l).orEmpty())
     }
 
     private fun all(l: Lang): List<String> = intents.flatMap { spoken(it, l) } + spokenMisc(l)
@@ -192,7 +163,7 @@ class VoiceSpokenLangTest {
     fun `gop cau doc khong lap loi dan o ca hai tieng`() {
         listOf(Lang.VI to "Đã đã", Lang.EN to "Done: Done:").forEach { (l, twice) ->
             Lang.entries.forEach { ui ->
-                val line = VoiceReply.doneActual(VoiceIntent.Control("temp", 24), 23, l)
+                val line = "✓ " + Strings.t("Đã mở YouTube", "Done: open YouTube", l)   // W3: `doneActual` (nút xe) gỡ
                 val merged = under(ui) { VoiceFeedbackPhrase.merge(listOf(line, line), l).orEmpty() }
                 assertTrue(!merged.contains(twice, ignoreCase = true), "màn=$ui lang=$l: «$merged»")
             }

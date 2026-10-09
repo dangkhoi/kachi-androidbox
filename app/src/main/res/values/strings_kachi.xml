@@ -127,11 +127,6 @@
     <string name="kachi_row_bar_scale">Cỡ</string>
     <string name="kachi_bar_scale_a11y">Cỡ thanh nút xe: %1$s</string>
     <string name="kachi_bar_scale_note">Kéo để thu nhỏ hoặc phóng to thanh nút xe — 100 % là như cũ. Dải ô phía trên là mẫu đúng cỡ (chỉ xem, không bấm). Thả tay là áp: vùng ô, widget và lối tắt tự khớp lại theo chỗ mới, app trong ô có thể vẽ lại một lần. Nút nhỏ đi nhưng vùng chạm vẫn đủ lớn để bấm khi lái.</string>
-    <string name="kachi_sec_car_image">Hình xe</string>
-    <string name="kachi_car_image_current">Đang dùng: %1$s</string>
-    <string name="kachi_car_image_title">Hình xe</string>
-    <string name="kachi_car_image_default">Đang dùng hình xe mặc định. Muốn thay bằng ảnh xe của bạn thì làm theo các bước dưới.</string>
-    <string name="kachi_car_image_steps">Cách thay ảnh xe (nhìn từ trên, nền trong suốt là đẹp nhất):\n1. Cắm USB vào xe, hoặc mở app Quản lý tệp.\n2. Chép ảnh vào thư mục: %1$s\n3. Ảnh mới nhất trong thư mục sẽ được dùng; mở lại màn hình chính là thấy.\nBấm nút dưới để sao chép đường dẫn thư mục.</string>
     <string name="kachi_copy_path">Sao chép đường dẫn thư mục</string>
     <string name="kachi_path_copied">Đã sao chép đường dẫn</string>
     <string name="kachi_color_note">Lưu theo hồ sơ đang dùng. "Theo ảnh nền" lấy màu trội của ảnh đầu tiên trong thư mục hình nền. Chữ luôn được giữ đọc được: màu nào quá sáng thì chữ trên nút tự đậm lại. Màu mới áp ngay tại chỗ, app trong ô vẫn chạy tiếp.</string>
@@ -246,36 +241,19 @@
     <string name="kachi_dock_warn">⚠ Nhóm An toàn/Động lực/Giải trí đổi hành vi lái — tự dùng tự chịu.</string>
 
     <!-- ── TopStripPicker — chọn chip thanh trạng thái ── -->
-    <string name="kachi_topstrip_title">Chip trên thanh trạng thái</string>
-    <string name="kachi_topstrip_hint">Tối đa %1$d thông tin hiện cạnh đồng hồ. Chạm ô để bật hoặc tắt.</string>
-    <string name="kachi_topstrip_full">Thanh trên chỉ chứa %1$d chip — bỏ một cái trước</string>
 
     <!-- ── WallpaperController / WallpaperStore — hình nền ── -->
     <string name="kachi_wall_no_photos">Chưa có ảnh. Bỏ ảnh vào:\n%1$s</string>
     <string name="kachi_wall_no_ext_storage">(bộ nhớ ngoài không dùng được)</string>
 
     <!-- ── WidgetViews — ô widget dựng tay ── -->
-    <string name="kachi_badge_unverified">chưa kiểm trên xe</string>
-    <string name="kachi_widget_board">Tổng hợp</string>
     <!-- [SOÁT ĐỘC LẬP 2026-09-12 · P1] Ba chuỗi này TRƯỚC ĐÓ viết cứng trong `WidgetViews` và **hiện ra trên màn
          tiếng Anh bằng tiếng Việt** — đã chụp ảnh máy ảo làm chứng ("Xe" ở ô trạng thái xe, "pin" trong vòng đo năng
          lượng). Cả hai bài canh cũ đều KHÔNG thấy: bài quét-theo-dấu bỏ qua chữ Việt KHÔNG DẤU ("Xe"/"pin"), còn bài
          "mọi chữ đi qua tài nguyên" chỉ soi ~9 dạng gọi (`text =`, `drawText(`…) nên bỏ qua chính kênh mà launcher
          dùng để vẽ chữ: các hàm dựng view của riêng nó (`miniCard(`/`ring(`/`label(`). `kachi_widget_board` ngay trên
          đã đi đúng đường từ đầu — ba dòng này là những đứa em bị bỏ lại. -->
-    <string name="kachi_widget_car">Xe</string>
-    <string name="kachi_widget_battery">pin</string>
     <string name="kachi_widget_none">WIDGET</string>
-    <string name="kachi_pm_good">Tốt</string>
-    <string name="kachi_pm_fair">TB</string>
-    <string name="kachi_pm_poor">Kém</string>
-    <string name="kachi_tyre_temp_unverified">%1$s · nhiệt chưa kiểm</string>
-    <string name="kachi_outside_temp">%1$s · ngoài xe</string>
-    <string name="kachi_speed_current">Tốc độ hiện tại</string>
-    <string name="kachi_doors_unknown">Trạng thái cửa —</string>
-    <string name="kachi_doors_open">Có cửa đang mở</string>
-    <string name="kachi_doors_closed">4 cửa đóng</string>
-    <string name="kachi_tyre_pressure_unit">Áp suất lốp (%1$s)</string>
 
     <!-- ── WorkspaceView — nút ⇄ của ô (FIX286 · ES4: mô tả trợ năng; ô trống trong suốt nên đây là chữ duy nhất nói "chỗ đặt app") ── -->
     <string name="kachi_slot_swap_empty">Chọn ứng dụng cho ô %1$d</string>
@@ -328,7 +306,6 @@
     <!-- ── IA v2 nhóm 2 — Thanh trạng thái & thanh nút (SettingsBarsSection · TopStripPicker) ── -->
     <!-- S4 · R11 (c): ba khoá kachi_topstrip_more/_on/_none đã xoá cùng hộp thoại "Thêm chip khác…" —
          màn chọn nay bày thẳng mọi mục đọc theo lĩnh vực (TopStripPicker). -->
-    <string name="kachi_topstrip_count">Đang bật · %1$d/%2$d</string>
     <string name="kachi_dock_pick_n">Chọn nút trên thanh… (%1$d đang bật)</string>
 
     <!-- ── IA v2 · R-UI (o) — chip thứ sáu của hàng bố cục: luôn có ĐÚNG một chip sáng ── -->
@@ -467,10 +444,6 @@
          [ĐO] chỉ 21/195 mã ở mức PROVEN ⇒ gần như MỌI ô mang một chấm hổ phách sáng ở góc icon: một dấu mà
          9/10 ô đều có thì nó thành hoa văn nền, mà lại mang màu CẢNH BÁO nên cả trang đọc như trang lỗi.
          Nay chấm hạ giọng (mực mờ nhất, 1/5 cạnh icon) và CON SỐ chuyển thành một dòng cho cả nhóm. -->
-    <plurals name="kachi_picker_unverified_n">
-        <!-- Tiếng Việt không phân biệt số ít/số nhiều ⇒ chỉ cần `other` (cùng lệ với kachi_drawer_place_n). -->
-        <item quantity="other">%1$d mục chưa kiểm trên xe</item>
-    </plurals>
 
     <!-- ══ V1 · đường thử lệnh bằng CHỮ (docs/specs/kachi-voice-command.html R6) ═════════════════════ -->
     <string name="kachi_voice_note">Gõ câu đúng như khi nói, để đo xem máy hiểu gì — ví dụ: “bật đèn đọc”, “đặt nhiệt độ 22”, “đóng hết kính”, “xem pin”, “mở Cài đặt”. Muốn NÓI thì dùng ô “Nói với xe” trên thanh nút hoặc nút mic ở thanh trên.</string>
@@ -589,36 +562,6 @@
     <!-- F1 · R1.5 dòng 9 (spec shortcuts-autostart): app của ô đang mở toàn màn (K7); về ô khi màn nhà hiện lại (K8). -->
     <string name="kachi_sc_full_card">Đang mở toàn màn — chạm để đưa về ô</string>
     <string name="kachi_sc_full_failed">Không mở toàn màn được %1$s</string>
-    <string name="kachi_captest_title">Kiểm tra từng nút xe</string>
-    <string name="kachi_captest_note">Đi hết mọi thông tin và hành động của xe. Với NÚT: bấm Chạy rồi tự chấm OK hoặc Không OK. Với THÔNG TIN: xem giá trị đọc được. Kết quả được ghi lại để soát cạn trên xe.</string>
-    <string name="kachi_captest_summary">Đã soát %1$d/%2$d · OK %3$d · Không OK %4$d</string>
-    <string name="kachi_captest_start">▶ Bắt đầu / Tiếp tục</string>
-    <string name="kachi_captest_export">Xuất báo cáo</string>
-    <string name="kachi_captest_clear">Xoá kết quả</string>
-    <string name="kachi_captest_clear_confirm">Xoá toàn bộ kết quả đã soát?</string>
-    <string name="kachi_captest_run">▶ Chạy</string>
-    <string name="kachi_captest_ok">✓ OK</string>
-    <string name="kachi_captest_notok">✗ Không OK</string>
-    <string name="kachi_captest_skip">Bỏ qua</string>
-    <string name="kachi_captest_running">Đang test: %s</string>
-    <string name="kachi_captest_sent">Đã gửi lệnh xuống xe.</string>
-    <string name="kachi_captest_notsent">Không gửi được (off-car hoặc nút chưa map).</string>
-    <string name="kachi_captest_reading">Đang đọc…</string>
-    <string name="kachi_captest_value">Giá trị đọc được: %s</string>
-    <string name="kachi_captest_value_none">Chưa đọc được (off-car hoặc chưa map).</string>
-    <string name="kachi_captest_warn_body">⚠ Nút này làm phần cứng thân xe chuyển động (kính/cửa/cốp). Đảm bảo an toàn trước khi Chạy.</string>
-    <string name="kachi_captest_done">Đã soát hết %d mục.</string>
-    <string name="kachi_captest_report_title">Báo cáo kiểm tra</string>
-    <string name="kachi_captest_kind_info">tin</string>
-    <string name="kachi_captest_kind_act">nút</string>
-    <string name="kachi_captest_badge_ok">OK</string>
-    <string name="kachi_captest_badge_notok">Không OK</string>
-    <string name="kachi_captest_badge_untested">chưa soát</string>
-    <string name="kachi_captest_unmapped">chưa map — chờ đo trên xe</string>
-    <string name="kachi_captest_snapshot">Chụp log ngay</string>
-    <string name="kachi_captest_logs_where">Log ghi ở thẻ nhớ: %1$s\nLấy về bằng: %2$s</string>
-    <string name="kachi_captest_snapshot_done">Đã chụp log: %s</string>
-    <string name="kachi_captest_report_saved">Đã lưu báo cáo ra thẻ: %s</string>
     <!-- F2/F3 — chuyến lên xe (spec shortcuts-autostart §4.14, nhóm C 02/10) -->
     <string name="kachi_drawer_title_trip">Chọn app mở khi nổ máy</string>
     <string name="kachi_drawer_hint_trip">Chạm để chọn hoặc bỏ một ứng dụng · bấm Áp dụng để lưu · kiểu mở chọn trong Cài đặt</string>

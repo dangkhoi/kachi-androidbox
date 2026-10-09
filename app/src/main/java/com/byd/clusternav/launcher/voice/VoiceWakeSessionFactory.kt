@@ -7,7 +7,7 @@ import android.content.Intent
  * §4.1) theo VAI *"bộ dây của phiên `:wake`"*; service chỉ còn vòng đời.
  *
  * Lambda dùng `applicationContext`:
- *  • điều khiển xe / đọc / nav-generic / nhạc — chạy thẳng, KHÔNG cần Activity.
+ *  • nav-generic / nhạc — chạy thẳng, KHÔNG cần Activity. (≤ 2.98 BYD còn điều khiển / đọc xe — gỡ ở Android box B2 · W3.)
  *  • mở app đích — `startActivity(NEW_TASK)` (launch app kia, không phải Kachi).
  *  • mở Cài đặt / ngăn kéo / quyền / đổi hồ sơ — đưa Kachi lên kèm **đúng việc** qua `EXTRA_VOICE_HOME_ACTION`
  *    ([VoiceHomeAction], fire-and-forget: [VoiceWakeHomeRelay.send]). Trước CLOSE-3 chỗ này gửi `EXTRA_START_VOICE` —
@@ -30,9 +30,6 @@ import android.content.Intent
  */
 internal fun VoiceWakeService.buildSession(): VoiceSession {
     val app = applicationContext
-    // 2.87 · SOÁT vòng 1 · P2 — mọi lượt ghi bảng "lệnh cuối" của phiên `:wake` (ba lối vào: phím vô-lăng · nút mic · Hey
-    // Kachi) chuyển sang tiến trình chính để ô + phím Đảo thấy (KDoc [ControlSentRelay]). Gọi lại mỗi phiên vô hại.
-    ControlSentRelay.forwardFromWake(app)
     val relay = VoiceWakeHomeRelay(app)
     val openHome = { action: VoiceHomeAction, arg: String? -> relay.send(action, arg) }
     val grammar = { VoiceGrammarSnapshotStore.read(app) }
@@ -68,9 +65,6 @@ internal fun VoiceWakeService.buildSession(): VoiceSession {
                 // đây là bố cục mặc định 3 ô): giao NGUYÊN lệnh, Activity kiểm bằng bố cục thật và trả số ô thật.
                 placeInSlot = { idx, pkg -> relay.performSlot(idx, pkg) },
                 onLayout = { preset -> relay.perform(VoiceHomeAction.SET_LAYOUT, VoiceHomeRelay.encodeLayout(preset)) },
-                // VOICE-WAKE-SLOTCOUNT (dữ liệu xe) — `:wake` không có màn, không vòng poll: `state().carStatus` ở đây là
-                // `CarStatus()` rỗng của `homeState()` ⇒ câu hỏi số liệu + cổng tốc độ cốp/ca-pô phải đọc TƯƠI.
-                screenless = true,
                 fresh = { VoiceWakeHold.prefs(app) },
                 lang = voiceLang(),
             )

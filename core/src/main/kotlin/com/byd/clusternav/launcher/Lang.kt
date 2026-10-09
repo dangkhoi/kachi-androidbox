@@ -7,10 +7,10 @@ package com.byd.clusternav.launcher
  *
  * ## Vì sao `:core` KHÔNG dùng `R.string` như phần còn lại của Android
  * [ĐO] spec §1: **644/989 chuỗi tiếng Việt của launcher nằm ở `:core`**, và chúng là **DỮ LIỆU** — nhãn gắn vào từng
- * mã khả năng ([TelemetrySpec] · [ControlDef] · [CapabilityGroup] · [SettingsEntry] · [WidgetDef] · [ActionMacro]),
+ * mã khả năng (`TelemetrySpec` · `ControlDef` · `CapabilityGroup` · [SettingsEntry] · [WidgetDef] · `ActionMacro`),
  * không phải chữ trang trí trên màn. Tra `R.string` đòi `Context`, tức phá tính thuần của `:core` và bắt **1300+ bài
  * test của `:core`** phải có Android. Nên tiếng Anh của chúng cũng là **dữ liệu nằm cạnh**, đúng khuôn
- * [TelemetrySpec.short] của RW0.
+ * `TelemetrySpec.short` của RW0.
  *
  * ## Hai cơ chế, mỗi cơ chế cho một loại chuỗi — cố ý, không phải bất nhất
  *  1. **Nhãn là DỮ LIỆU của một dòng registry** ⇒ tham số `labelEn`/`subEn`/`shortEn` **mặc định `null`** cạnh nhãn
@@ -134,8 +134,8 @@ enum class LangMode(val code: String) {
  * sẽ lệch nhau đúng lúc ai đó sửa một chỗ.
  *
  * ## Vì sao KHÔNG truyền ngôn ngữ qua tham số ở mọi chỗ
- * Vì nhãn nằm trong **dữ liệu**: muốn truyền tham số thì phải luồn nó qua [TelemetryRegistry] → [CapabilityCatalog] →
- * [GroupBoard] → [TopStripChips] → tầng vẽ, tức sửa hàng trăm chỗ gọi để nói một thứ **không đổi trong suốt một lần
+ * Vì nhãn nằm trong **dữ liệu**: muốn truyền tham số thì phải luồn nó qua `TelemetryRegistry` → [CapabilityCatalog] →
+ * `GroupBoard` → `TopStripChips` → tầng vẽ, tức sửa hàng trăm chỗ gọi để nói một thứ **không đổi trong suốt một lần
  * dựng màn**. Churn đó không mua thêm tính đúng nào.
  *
  * ## Nhưng vẫn KHÔNG bắt ai phải mutate toàn cục để kiểm
@@ -236,8 +236,8 @@ object Strings {
  * Hợp đồng chung cho **mọi dòng registry có nhãn**: nhãn Việt (gốc) + nhãn Anh (có thể thiếu).
  *
  * ## Vì sao là interface chứ không chép hai thuộc tính vào sáu lớp
- * Sáu bộ đăng ký ([TelemetrySpec] · [ControlDef] · [CapabilityGroup] · [SettingsEntry] · [WidgetDef] ·
- * [ActionMacro]) + ba enum ([Domain] · [Quantity] · [SettingsGroup]) cần **cùng một** phép "chọn nhãn theo ngôn
+ * Sáu bộ đăng ký (`TelemetrySpec` · `ControlDef` · `CapabilityGroup` · [SettingsEntry] · [WidgetDef] ·
+ * `ActionMacro`) + ba enum (`Domain` · `Quantity` · [SettingsGroup]) cần **cùng một** phép "chọn nhãn theo ngôn
  * ngữ". Chép chín bản là chín chỗ có thể lệch. Quan trọng hơn: nhờ có kiểu chung, `LangCoverageTest` **quét được cả
  * chín bộ bằng một vòng lặp** thay vì chín đoạn gần giống nhau — mà chín đoạn gần giống nhau chính là chỗ dễ bỏ sót
  * một bộ, tức đúng lỗ hổng bài canh sinh ra để bịt.

@@ -15,7 +15,7 @@ internal object LauncherI18nAllowlists {
      */
     val allowed: Map<String, String> = mapOf(
         // ── NHẬT KÝ — người dùng không bao giờ đọc; dịch nhật ký làm hỏng việc grep khi gỡ lỗi trên xe ──
-        "hỏng giữa lượt chạy" to "nhật ký (Log.w) khi một bước gói lệnh ném — không hiện trên màn",
+        // Android box B2 · W3: "hỏng giữa lượt chạy" (nhật ký bước gói lệnh) gỡ cùng ActionMacros.
         "bỏ việc nền vì màn đã huỷ" to "nhật ký (Log.w) của cửa nền — không hiện trên màn",
         "tiến trình chính sống" to "nhãn trong dòng nhật ký đo thời gian ack của VoiceWakeHomeRelay (Log.i) — không hiện trên màn",
         "tiến trình chính lạnh" to "nhãn trong dòng nhật ký đo thời gian ack của VoiceWakeHomeRelay (Log.i) — không hiện trên màn",
@@ -79,11 +79,10 @@ internal object LauncherI18nAllowlists {
         "m.label" to
             "`GroupCell`/`GroupActionCell` của `GroupBoard` — nhãn đã được `:core` điền từ `displayLabel`/" +
                 "`displayShortLabel` lúc dựng bảng (xem `GroupBoard`), nên tầng vẽ chỉ chép lại",
-        "cell.label" to "cùng lý do `m.label`: ô của `GroupBoard`, nhãn đã dịch từ trước khi tới tầng vẽ",
+        // Android box B2 · W3: "cell.label" (ô GroupBoard) · "v.label" (TelemetryView) · "def.args.size" (ô SELECT nút xe)
+        // gỡ cùng ô nhóm / ô đọc / ô nút xe.
         // ⚠ Hai mục `c.label` (bảng sơ đồ bên) và `it.label} ·` (dòng chân bảng BOARD) đã gỡ 2026-09-16 cùng
         // `SideBoardView`/`RadarBoardView` — owner gỡ toàn bộ ADAS/an toàn nên hai ô vẽ đó không còn.
-        "v.label" to
-            "`TelemetryView` — `TelemetryReadout.of` điền `spec.displayLabel` vào đó, nên nhãn đã theo ngôn ngữ",
         "item.label" to "tên ứng dụng từ `PackageManager` — do HỆ THỐNG dịch, không phải chuỗi của dự án",
         "it.label," to "tên ứng dụng từ `PackageManager` (dựng `GridItem`) — cùng lý do `item.label`",
         "model.label" to
@@ -107,9 +106,6 @@ internal object LauncherI18nAllowlists {
         // U6 đã bỏ mục `"pick.sub"`: ngăn kéo nay đọc `pick.displaySub` (gợi ý loại + câu "gồm gì"), tức nó KHÔNG
         // còn chạm vào trường gốc nữa nên không cần được tha. Danh sách này phải tự rữa — giữ một dòng không còn ai
         // khớp là để dành sẵn một lỗ hổng cho lần sau.
-        "def.args.size" to
-            "SỐ LƯỢNG lựa chọn, không phải chữ — `displayArgs` lùi về `args` khi lệch số phần tử nên đếm trên `args` " +
-                "là con số ổn định duy nhất; dùng `displayArgs.size` sẽ nói cùng con số nhưng che mất ý *đếm*",
     )
 
 
@@ -125,12 +121,10 @@ internal object LauncherI18nAllowlists {
         // S4 · R12 thêm `ic-apps`/`ic-settings`: hai pill của thanh trên nay CHỈ có icon, và tên hình được truyền
         // thẳng vào `pill(...)` (chữ đã chuyển sang `contentDescription` lấy từ `R.string`).
         // V1 pha NGHE thêm `ic-mic`: nút thứ ba của thanh trên, cùng khuôn chỉ-icon với hai nút kia.
-        *listOf("ic-sun", "ic-grid", "ic-bolt", "ic-leaf", "ic-speed", "ic-tire", "ic-music", "ic-lock",
-            "ic-apps", "ic-settings", "ic-mic")
+        // Android box B2 · W3: ic-grid/bolt/leaf/speed/tire/lock + các ký hiệu đơn vị (km/h · km · µg · PM2.5) gỡ cùng
+        // widget/chip dữ liệu xe.
+        *listOf("ic-sun", "ic-music", "ic-apps", "ic-settings", "ic-mic")
             .map { it to "mã icon tra trong `KachiTheme.iconRes`, không phải chữ" }.toTypedArray(),
-        // Ký hiệu đơn vị SI + tên chuẩn của chỉ số bụi — viết y hệt ở mọi ngôn ngữ, dịch là làm sai.
-        *listOf("km/h", " km/h", " km", "µg", "µg · ", "µg/m³", "PM2.5 · ", "PM2.5 ")
-            .map { it to "ký hiệu đơn vị / tên chuẩn quốc tế — không dịch" }.toTypedArray(),
     )
 
 }

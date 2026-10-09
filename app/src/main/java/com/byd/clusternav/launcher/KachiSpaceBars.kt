@@ -39,8 +39,8 @@ object KachiBars {
      * [HEADER_H] bên dưới — 33 thì bề cao thanh ra 41dp = 73.2 % chứ không phải 75 %).
      *
      * ## ⚠⚠ ĐÁNH ĐỔI AN TOÀN — owner cần biết, và nó KHÔNG phải chỗ quên
-     * 34dp **nhỏ hơn** mức tối thiểu 48dp mà chính dự án dùng làm lý do cấm chip thanh trên bắn lệnh xe (xem KDoc
-     * [TopStripConfig]). Giảm nhẹ ở ba điểm, và cả ba đều là sự thật đo được chứ không phải lời an ủi:
+     * 34dp **nhỏ hơn** mức tối thiểu 48dp mà chính dự án dùng làm lý do cấm chip thanh trên bắn lệnh xe (KDoc
+     * `TopStripConfig` của bản BYD — gỡ ở Android box B2 · W3). Giảm nhẹ ở ba điểm, và cả ba đều là sự thật đo được chứ không phải lời an ủi:
      *  1. **Không nút nào ở đây bắn lệnh xe.** Ba pill mở một bề mặt (phiên nghe · danh sách app · màn Cài đặt) và
      *     chip hồ sơ mở một bộ chọn. Bấm nhầm = mở sai một bảng rồi bấm Back — hoàn lại được ngay, khác hẳn *"mở
      *     khoá cửa"*.
@@ -93,41 +93,9 @@ object KachiBars {
      */
     const val HEADER_AVATAR = 22
 
-    /**
-     * **Khe ICON ↔ CHỮ bên trong MỘT chip dữ liệu** của thanh trên (UX6).
-     *
-     * ## [ĐO máy ảo 2026-09-27] khe này đang là **0**, và đó là một lỗi chứ không phải một lựa chọn
-     * `uiautomator dump` ở 1920×1080 · density 240 (1.5 px/dp): chip *"Bụi mịn trong xe"* rộng **52px**, chip
-     * chỉ-icon (sấy trước) rộng **36px**. Phép cộng của `TextView`: `lề trái + hộp icon + khe + chữ + lề phải`
-     * ⇒ chip chỉ-icon `6 + 24 + 0 + 0 + 6 = 36` ✓, còn chip có chữ `6 + 24 + khe + chữ + 6 = 52`. Chip không-icon
-     * *"—°C"* rộng 48px ⇒ chữ `"—°C"` = 36px ⇒ chữ `"—"` = 16px ⇒ **khe = 0**. Owner: *"khi có label, label nó
-     * sát icon quá"*.
-     *
-     * Nguyên nhân nằm ở **thứ tự**, không ở con số: `KachiTopStrip.applyChipFace` đọc `v.text` để quyết có đệm
-     * hay không, mà lượt làm mới đặt CHỮ **sau** đó ⇒ lượt đầu chữ còn rỗng ⇒ đệm 0, rồi khoá `tag` giữ nguyên
-     * mãi. Vì thế khe phải được truyền VÀO theo chữ sắp hiện (xem KDoc `applyChipFace`), không đọc lại từ view.
-     *
-     * Bằng [KachiSpace.S] là **trùng hợp có kiểm** (lệ [HEADER_BTN_PAD]): đây là vai *"khe trong một nhóm"*,
-     * đổi vai thì sửa ở đây chứ đừng sửa bậc thang.
-     */
-    const val CHIP_ICON_GAP = KachiSpace.S
+    // Android box B2 · W3: `CHIP_ICON_GAP` (khe icon–chữ của chip thanh trên) gỡ cùng khối chip.
 
-    /**
-     * **Khe giữa HAI chip** của thanh trên (UX6) — và là chủ DUY NHẤT của khe đó.
-     *
-     * ## Vì sao một hằng, trong khi trước đây là ba
-     * Chip dữ liệu **không có nền riêng** (không pill, không viền — xem `KachiTopStrip.chip`), nên lề TRONG của nó
-     * cộng thẳng vào khe mắt người nhìn thấy. [ĐO máy ảo 2026-09-27] khe thật = `lề ngoài 8dp + lề trong phải 4dp
-     * + lề trong trái 4dp` = **16dp** (18px đo được giữa hai hộp chip là phần lề ngoài; 24px là khe VẼ giữa hai
-     * mép mực). Ba hằng cho một khoảng cách ⇒ không ai đọc ra con số thật, và owner thấy *"vị trí các icon với
-     * nhau có vẻ hơi rộng"*. Nay lề trong = 0 và khe đi qua đúng hằng này.
-     *
-     * ## Ràng buộc KHÔNG được phá: khe NGOÀI phải rộng hơn khe TRONG
-     * Chip chỉ đọc ra là *một vật* khi `CHIP_GAP ≥ 1.5 × CHIP_ICON_GAP` (12 ≥ 12 ✓). Hạ hằng này xuống
-     * [KachiSpace.S] hoặc nâng [CHIP_ICON_GAP] lên [KachiSpace.M] là icon của chip sau dính vào chữ của chip
-     * trước — `TopStripWiringContractTest.khe ngoai chip phai rong hon khe icon-chu` canh đúng phép chia này.
-     */
-    const val CHIP_GAP = KachiSpace.M
+    // Android box B2 · W3: `CHIP_GAP` (khe giữa hai chip) gỡ cùng khối chip.
 
     // ══ THANH NÚT XE (taskbar) ══════════════════════════════════════════════════════════════════════════
     //
@@ -170,7 +138,7 @@ object KachiBars {
 
     /**
      * Bề rộng ô thanh nút khi thanh nằm NGANG — 85 % của 84dp (`= 71.4` → **71**). Trần vật lý cho mọi thứ bên
-     * trong ô; xem [KachiSpace.TOUCH_TIGHT] về hệ quả lên hàng `[−] [giá trị] [+]`.
+     * trong ô (Android box B2 · W3: hàng `[−] [giá trị] [+]` của ô STEP nút xe đã gỡ).
      */
     const val DOCK_TILE_W = 71
 
@@ -198,11 +166,8 @@ object KachiBars {
     /**
      * Bề cao ô thanh nút khi thanh nằm DỌC — 85 % của 70dp (`= 59.5` → **60**).
      *
-     * ⚠ Đây là ô **chật nhất** của cả launcher sau WP5, và nó chỉ vừa nhờ hai thứ khác cùng hạ trong lượt này:
-     * [ĐO số học] ô STEP cần `2×[DOCK_PAD] + ([KachiSpace.ICON_S] + [KachiSpace.XS]) + [KachiSpace.TOUCH_TIGHT]`
-     * = `8 + 24 + 27` = **59** ≤ 60. Với lề trong cũ ([KachiSpace.S]) hoặc nút −/+ cũ (32dp) thì nó **tràn** (67
-     * hoặc 64 > 60). Nói cách khác: đổi một trong ba hằng đó mà không tính lại chỗ này là làm ô dọc bị cắt, và
-     * việc cắt đó **im lặng** (`LinearLayout` gravity CENTER không báo gì).
+     * Từng là ô **chật nhất** của launcher (ô STEP nút xe cần 59dp); Android box B2 · W3 gỡ ô STEP cùng nút xe ⇒ ô
+     * thanh nay chỉ còn icon + nhãn của hành động launcher.
      */
     const val DOCK_TILE_H_VERTICAL = 60
 

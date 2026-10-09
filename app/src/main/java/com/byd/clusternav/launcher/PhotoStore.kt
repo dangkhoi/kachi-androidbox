@@ -8,8 +8,8 @@ import java.io.File
  * ═══ KHO ẢNH cho WIDGET **TRÌNH CHIẾU ẢNH** — THƯ MỤC RIÊNG (owner 2026-09-21) ═══════════════════════════════
  *
  * Owner: *"cái folder để làm wallpaper, widget trình chiếu ảnh phải khác với car image chứ, lý thuyết là phải 3
- * folder khác nhau"*. Đúng — nay có **ba** thư mục ảnh tách bạch, mỗi cái một việc:
- *  • `files/car/`        → ảnh xe tổng hợp ([CarImageStore])
+ * folder khác nhau"*. Đúng — thư mục ảnh tách bạch, mỗi cái một việc (Android box B2 · W3: `files/car/` — ảnh xe
+ * `CarImageStore` — gỡ cùng ảnh xe):
  *  • `files/wallpapers/` → ảnh NỀN màn hình ([WallpaperStore])
  *  • `files/photos/`     → ảnh cho widget *Trình chiếu ảnh* ([PhotoStore] — tệp này)
  *

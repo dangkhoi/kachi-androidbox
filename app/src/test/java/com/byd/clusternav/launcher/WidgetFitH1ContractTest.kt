@@ -26,8 +26,7 @@ class WidgetFitH1ContractTest {
     private val probe by lazy { code("FitProbe.kt") }
     private val layout by lazy { code("FitGridLayout.kt") }
     private val widgets by lazy { code("WidgetViews.kt") }
-    private val tele by lazy { code("WidgetTelemetry.kt") }
-    private val groups by lazy { code("GroupTiles.kt") }
+    private val tele by lazy { code("WidgetCards.kt") }   // W3: WidgetTelemetry.kt · GroupTiles.kt gỡ
     private val registry by lazy { code("WidgetRefreshers.kt") }
     private val home by lazy { code("KachiHomeActivity.kt") }
 
@@ -69,35 +68,23 @@ class WidgetFitH1ContractTest {
     }
 
     @Test
-    fun `3 - o nhom trong o nen do tai cho, moi nhanh mini co duong khong thay view`() {
-        val mini = SourceRoots.body(groups, "fun mini(ctx: Context, id: String, data: WidgetData)")
-        assertTrue(mini.contains("return WidgetRefreshers.live(root, ::fillGroupMini)"), "ô nhóm nén đăng ký hàm đổ")
-        val fill = SourceRoots.body(groups, "fun fillGroupMini(d: WidgetData)")
-        assertTrue(fill.contains("GroupBoard.of(id, d.car, d.units)?.let(::paint)"))
-        val paint = SourceRoots.body(groups, "fun paint(m: GroupBoardModel)")
-        assertTrue(paint.contains("if (tone != shown)"), "sắc thái chỉ ghi khi đổi (KachiGlass dựng lại nền là việc đắt)")
-        assertTrue(mini.contains("paint(first)"), "lượt dựng và lượt đổ đi qua CÙNG một cửa")
-        listOf("ImageView(", "LinearLayout(", "TextView(", "addView(", "text(ctx").forEach {
-            assertFalse(fill.contains(it) || paint.contains(it), "hàm đổ dựng view `$it` ⇒ chỉ dời cú giật vào trong")
-        }
-        assertTrue(SourceRoots.body(groups, "private fun fallback(").contains("WidgetRefreshers.live("), "mã lạ cũng không bị thay mỗi nhịp")
-        // Mọi bộ dựng mà `mini()` gọi: phân loại tường minh ⇒ bộ dựng mới chưa phân loại là ĐỎ.
+    fun `3 - moi nhanh mini co duong khong thay view`() {
+        // Android box B2 · W3: ô nhóm nén (GroupTiles), ô lốp nén, ô nút (actionTile), ô datum (telemetryMini) gỡ cùng
+        // widget xe — phần còn lại của bài: mọi bộ dựng của `mini()` được phân loại.
         val body = SourceRoots.body(widgets, "private fun mini(")
         // Bộ dựng = lời gọi ĐẦU nhánh (sau `->`, `else`, hoặc điều kiện `if (…)`), không phải trợ giúp trong lambda giá trị.
         val builders = Regex("""(?:->|else|\))\s+([A-Za-z_][\w.]*)\(ctx[,)]""").findAll(body).map { it.groupValues[1] }.toSet()
         assertEquals(
-            setOf("miniCard", "tyreMini", "PhotoWidgetView", "ShortcutIconsView", "GroupTiles.mini", "actionTile", "telemetryMini"),
-            builders, "nhánh mới của mini() — xếp nó vào một trong ba nhóm dưới đây",
+            setOf("miniCard", "PhotoWidgetView", "ShortcutIconsView"),
+            builders, "nhánh mới của mini() — xếp nó vào một trong hai nhóm dưới đây",
         )
         // (a) có hàm đổ tại chỗ
         assertTrue(SourceRoots.body(tele, "internal fun miniCard(").contains("WidgetRefreshers.live("))
-        assertTrue(SourceRoots.body(widgets, "private fun tyreMini(").contains("miniCard("))
-        assertTrue(SourceRoots.body(tele, "internal fun telemetryMini(").contains("WidgetRefreshers.live("))
+        assertTrue(body.contains("else       -> WidgetRefreshers.live("), "mã lạ cũng không bị thay mỗi nhịp")
         // (b) tự lo nội dung — refreshRead giữ nguyên view của chúng
         assertTrue(WorkspaceRenderPlanner.selfDriven("w_photos") && WorkspaceRenderPlanner.selfDriven("w_apps"))
-        // (c) nút: đường đọc-lại riêng, xét TRƯỚC mọi đường thay view
         val refresh = SourceRoots.body(widgets, "fun refreshRead(")
-        assertTrue(refresh.indexOf("CapabilityCatalog.isWrite(tag.id)") in 0 until refresh.indexOf("removeViewAt"))
+        assertTrue(refresh.indexOf("WorkspaceRenderPlanner.selfDriven(tag.id)") in 0 until refresh.indexOf("removeViewAt"))
     }
 
     @Test
@@ -131,7 +118,7 @@ class WidgetFitH1ContractTest {
 
     @Test
     fun `tep cham toi duoi tran 500 dong`() {
-        listOf("GroupTiles.kt", "WidgetRefreshers.kt", "KachiHomeActivity.kt", "FitScale.kt", "FitProbe.kt", "FitGridLayout.kt")
+        listOf("WidgetCards.kt", "WidgetRefreshers.kt", "KachiHomeActivity.kt", "FitScale.kt", "FitProbe.kt", "FitGridLayout.kt")
             .forEach { name ->
                 val n = SourceRoots.text("src/main/java/com/byd/clusternav/launcher/$name").lines().size
                 assertTrue(n <= 500, "$name dài $n dòng — trần là 500")

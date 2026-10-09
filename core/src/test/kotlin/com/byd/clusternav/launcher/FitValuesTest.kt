@@ -1,7 +1,5 @@
 package com.byd.clusternav.launcher
 
-import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.math.abs
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -145,17 +143,17 @@ class FitValuesTest {
         assertTrue(width("10:00", clockPx) < width("06:59", clockPx), "chữ thật khác bề rộng — vì vậy mới phải chừa")
     }
 
-    /** Chữ phụ đã dịch của ô PM2.5 (`µg · <mức>`) đọc thẳng tài nguyên 5 tiếng — đúng chữ người lái thấy. */
-    private fun pmCaptions(): Map<String, List<String>> {
-        val res = listOf(Paths.get("app/src/main/res"), Paths.get("../app/src/main/res")).first(Files::isDirectory)
-        return mapOf("vi" to "values", "en" to "values-en", "zh" to "values-zh-rCN", "th" to "values-th", "ms" to "values-ms")
-            .mapValues { (_, dir) ->
-                val xml = res.resolve(dir).resolve("strings_kachi.xml").toFile().readText()
-                listOf("good", "fair", "poor").map { lv ->
-                    Regex("""name="kachi_pm_$lv">([^<]*)<""").find(xml)!!.groupValues[1].let { "µg · $it" }
-                }
-            }
-    }
+    /**
+     * Chữ phụ đã dịch của ô PM2.5 (`µg · <mức>`) ở 5 tiếng. Android box B2 · W3: ô PM2.5 + ba khoá `kachi_pm_*` gỡ cùng
+     * widget xe ⇒ bài giữ nguyên văn đúng chữ bản BYD 2.98 hiện (dữ liệu đo bề rộng cho bộ chia hàng, không còn đọc tài nguyên).
+     */
+    private fun pmCaptions(): Map<String, List<String>> = mapOf(
+        "vi" to listOf("Tốt", "TB", "Kém"),
+        "en" to listOf("Good", "Fair", "Poor"),
+        "zh" to listOf("良", "一般", "差"),
+        "th" to listOf("ดี", "พอใช้", "แย่"),
+        "ms" to listOf("Baik", "Sederhana", "Buruk"),
+    ).mapValues { (_, lv) -> lv.map { "µg · $it" } }
 
     @Test
     fun `5 tieng - moi cap gia tri chu thich, moi be rong hang - gia tri khong bao gio bi cat khi con cho`() {

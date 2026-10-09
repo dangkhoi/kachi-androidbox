@@ -83,7 +83,8 @@ class BehindHomeWiringContractTest {
     fun `man chinh ve bo cuc DANG HIEN va chi doi tai cho o co moc moi`() {
         val fn = SourceRoots.body(render, "internal fun KachiHomeActivity.render(state: HomeUiState) {")
         // Review 2.89 Pass 3 · whole-r2-2 — ĐỔI GHIM có lý do: + cờ đổi hồ sơ (lượt dựng lại do đổi hồ sơ nhả app rời ô như 2.88).
-        assertTrue(fn.contains("workspace.render(state.effectiveWorkspace, state.carStatus, WorkspaceRenderPlanner.swapCandidates(prev?.swapNonce, state.swapNonce),\n        profileSwitch = prev != null && prev.activeProfile != state.activeProfile)"), fn)
+        // Android box B2 · W3: `state.carStatus` rời lời gọi (trạng thái xe gỡ).
+        assertTrue(fn.contains("workspace.render(state.effectiveWorkspace, WorkspaceRenderPlanner.swapCandidates(prev?.swapNonce, state.swapNonce),\n        profileSwitch = prev != null && prev.activeProfile != state.activeProfile)"), fn)
         assertTrue(fn.contains("windows.reconcileLocations(state.effectiveWorkspace.slots)"))
     }
 

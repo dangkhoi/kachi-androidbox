@@ -5,7 +5,7 @@ import android.os.Process
 import android.os.SystemClock
 import android.util.Log
 import com.byd.clusternav.launcher.DiagRingFile
-import com.byd.clusternav.launcher.MacroExec
+import com.byd.clusternav.launcher.SerialLanes
 import com.byd.clusternav.launcher.voice.WakeSessionJournal.Entry
 import com.byd.clusternav.launcher.voice.WakeSessionJournal.Outcome
 import java.time.LocalDateTime
@@ -16,7 +16,7 @@ import java.util.Locale
  * ═══ FIX286 · VK6 — NHẬT KÝ PHIÊN `:wake`: `filesDir/diag/wake-sessions.log` + logcat `KachiWakeSession` ═══════════════
  *
  * Phần CHẠM HỆ THỐNG của [WakeSessionJournal] (định dạng thuần ở `:core`); cùng khuôn `CtlJournalStore` (SR6): logcat
- * TRƯỚC, tệp vòng sau qua [DiagRingFile] (khoá liên tiến trình), làn tuần tự trên pool dùng chung [MacroExec] — không
+ * TRƯỚC, tệp vòng sau qua [DiagRingFile] (khoá liên tiến trình), làn tuần tự trên pool dùng chung [SerialLanes] (W3: trước là `MacroExec`) — không
  * dựng luồng mới, không I/O trên luồng chính. Đọc: cầu `wakelog` (`TestBridgeWakeLog`, tiến trình chính — tệp chung).
  *
  * ## Vì sao lối vào đi qua một "phiếu chờ" ([pending]) thay vì gắn thẳng vào phiên
@@ -69,7 +69,7 @@ internal object WakeSessionLog {
         val line = WakeSessionJournal.line(r.entry, r.mode, r.warm, r.loading, loadMs, readyMs, outcome)
         val full = "${clock.format(LocalDateTime.now())} pid=${Process.myPid()} $line"
         Log.i(TAG, full)
-        MacroExec.submitSerial(LANE) { ring.append(app, full) }
+        SerialLanes.submitSerial(LANE) { ring.append(app, full) }
     }
 
     /** Toàn bộ nhật ký (mọi tiến trình), mới nhất ở cuối — cầu `wakelog`. */

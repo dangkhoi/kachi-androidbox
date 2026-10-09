@@ -93,7 +93,7 @@ class FitRulesRound2WiringContractTest {
         // Đúng hai bộ dựng khai: widget nhạc (tên bài + nghệ sĩ) và ô nén khi chỗ gọi xin (`w_media`).
         val media = code("MediaWidgetView.kt")
         assertEquals(2, Regex("FitScale\\.markFree\\(").findAll(media).count(), "tên bài + nghệ sĩ")
-        val tele = code("WidgetTelemetry.kt")
+        val tele = code("WidgetCards.kt")   // W3: MiniCard dời từ WidgetTelemetry.kt (gỡ) sang WidgetCards.kt
         val card = tele.substringAfter("internal class MiniCard(").substringBefore("fun set(")
         assertEquals(2, Regex("if \\(free\\) FitScale\\.markFree\\(this\\)").findAll(card).count(), "số + dòng phụ khi xin")
         assertEquals(2, Regex("FitScale\\.markFree\\(").findAll(tele).count(), "không khai chỗ nào khác (dấu chưa kiểm, số đọc)")
@@ -108,6 +108,6 @@ class FitRulesRound2WiringContractTest {
             java.nio.file.Files.walk(root).use { s -> s.filter { it.toString().endsWith(".kt") }.toList() }
         }.filter { it.fileName.toString() != "FitScale.kt" && strip(it.toFile().readText()).contains("FitScale.markFree(") }
             .map { it.fileName.toString() }.toSet()
-        assertEquals(setOf("MediaWidgetView.kt", "WidgetTelemetry.kt"), callers)
+        assertEquals(setOf("MediaWidgetView.kt", "WidgetCards.kt"), callers)
     }
 }

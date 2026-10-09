@@ -124,12 +124,15 @@ class VoicePlacesParseTest {
         )
     }
 
-    /** Bỏ dấu thì *"đến"* = *"đèn"* — nhãn nút dài hơn phải thắng (`headMatch`), kể cả khi sổ có mục tên *"Đọc"*. */
+    /**
+     * Bỏ dấu thì *"đến"* = *"đèn"*. Android box B2 · W3: nút đèn đọc gỡ — câu MANG DẤU "đèn đọc" vẫn KHÔNG được
+     * thành dẫn đường tới mục sổ *"Đọc"*; nó là câu xe ⇒ "đã gỡ".
+     */
     @Test
-    fun `den va den - nhan nut van thang`() {
-        assertEquals(VoiceIntent.Control("readl", 1), one("đèn đọc"))
-        assertEquals(VoiceIntent.Control("readl", 1), one("đèn đọc", listOf("Đọc")))
-        assertEquals(VoiceIntent.Control("readl", 0), one("tắt đèn đọc"))
+    fun `den va den - cau den xe khong thanh dan duong`() {
+        listOf(one("đèn đọc"), one("đèn đọc", listOf("Đọc")), one("tắt đèn đọc")).forEach {
+            assertEquals(VoiceUnknownReason.FEATURE_GONE, (it as? VoiceIntent.Unknown)?.reason, "ra: $it")
+        }
     }
 
     /** Điểm đến MỞ không đổi một chữ: không khớp sổ ⇒ vẫn là [VoiceIntent.Nav] nguyên văn. */

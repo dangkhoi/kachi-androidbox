@@ -16,27 +16,29 @@ import org.junit.jupiter.api.Assertions.assertTrue
  */
 class DockSelectionTest {
 
-    /** Sáu mã đã gỡ trong 1.94/1.95 — cấu hình cũ lưu chúng phải TỰ RỤNG khi nạp. */
-    private val removed = listOf("lock", "door", "window", "steer_heat", "mac_leave", "mac_door_light")
+    /**
+     * Mã đã gỡ: sáu mã 1.94/1.95 + Android box B2 · W3 (2026-10-09) — MỌI nút xe, datum xe và gói lệnh gỡ cùng lõi
+     * HAL BYDAuto. Cấu hình cũ lưu chúng phải TỰ RỤNG khi nạp.
+     */
+    private val removed = listOf(
+        "lock", "door", "window", "steer_heat", "mac_leave", "mac_door_light",
+        "trunk", "readl", "fan", "fuel_range_km", "defrost", "seath", "pm25", "temp", "win_lf", "mac_win_close_all",
+    )
 
-    @Test fun `sanitize bo het ma da xoa 1_94-1_95`() {
+    @Test fun `sanitize bo het ma xe da xoa`() {
         removed.forEach { id ->
-            assertTrue(
-                CapabilityCatalog.kindOf(id) == null && ActionMacros.byId(id) == null,
-                "tiền đề: '$id' đã gỡ khỏi mọi bộ đăng ký",
-            )
+            assertTrue(CapabilityCatalog.kindOf(id) == null, "tiền đề: '$id' đã gỡ khỏi catalog")
         }
-        val old = listOf("lock", "window", "trunk", "readl", "fan", "door", "mac_door_light", "fuel_range_km", "defrost", "seath")
-        val clean = DockSelection.sanitize(old)
+        val old = listOf("lock", LauncherActions.APPS, "trunk", "readl", "fan", LauncherActions.VOICE, "mac_door_light", "seath")
         assertEquals(
-            listOf("trunk", "readl", "fan", "fuel_range_km", "defrost", "seath"), clean,
+            listOf(LauncherActions.APPS, LauncherActions.VOICE), DockSelection.sanitize(old),
             "chỉ giữ mã còn sống, thứ tự nguyên vẹn — số 'đang bật' phải khớp số nút hiện",
         )
     }
 
     @Test fun `sanitize giu nguyen ma con song`() {
-        val live = listOf("trunk", "readl", "pm25", "seatc", "seath", "fan", "temp", "win_lf", "windows_close_all", "mac_win_close_all")
-        assertEquals(live, DockSelection.sanitize(live), "mọi mã còn dùng được (control · datum · gói lệnh) phải giữ")
+        val live = listOf(LauncherActions.SHORTCUTS, LauncherActions.SETTINGS, LauncherActions.APPS, LauncherActions.VOICE)
+        assertEquals(live, DockSelection.sanitize(live), "mọi hành động launcher phải giữ, đúng thứ tự")
     }
 
     @Test fun `sanitize danh sach rong tra rong`() {

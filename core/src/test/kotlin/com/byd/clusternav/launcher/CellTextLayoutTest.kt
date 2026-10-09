@@ -87,45 +87,6 @@ class CellTextLayoutTest {
     // ══ V1 · thẻ đục KHÔNG được đè lên thân xe ════════════════════════════════════════════════════════════════
 
     @Test
-    fun `the KHONG BAO GIO de len than xe - moi co o, moi ti le anh`() {
-        var worstOldOverlapPct = 0f
-        for ((w, h) in realFrames() + syntheticFrames()) {
-            for (aspect in aspects) {
-                val c = content(w, h, aspect)
-                val m = minOf(w, h)
-                val gap = m * gapFrac
-                val pad = w * padFrac
-                for (corner in TyreCorner.values()) {
-                    val a = CarLayout.wheel(corner)
-                    val wheelX = c.left + a.x * c.width
-                    val onLeft = a.x < 0.5f
-                    val span = CellTextLayout.cardSpanX(onLeft, w, pad, c.left, c.right, wheelX, gap)
-                    assertTrue(span.width >= 0f, "thẻ có bề rộng âm ở ô ${w}×$h (tỉ lệ $aspect)")
-                    if (onLeft) {
-                        assertTrue(
-                            span.end <= c.left + TOL,
-                            "thẻ TRÁI ăn vào khung ảnh ${span.end - c.left} px (ô ${w}×$h, tỉ lệ $aspect)",
-                        )
-                    } else {
-                        assertTrue(
-                            span.start >= c.right - TOL,
-                            "thẻ PHẢI ăn vào khung ảnh ${c.right - span.start} px (ô ${w}×$h, tỉ lệ $aspect)",
-                        )
-                    }
-                    // Mức đè của công thức CŨ (`wheelX ∓ gap`) — đây là lỗi (C)/(D) owner chụp được.
-                    val oldOverlap = if (onLeft) (wheelX - gap) - c.left else c.right - (wheelX + gap)
-                    if (c.width > 0f) worstOldOverlapPct = maxOf(worstOldOverlapPct, oldOverlap / c.width * 100f)
-                }
-            }
-        }
-        // Chứng minh bài này không kiểm một lỗi tưởng tượng: công thức cũ đè ít nhất 5 % bề rộng thân xe MỖI BÊN.
-        assertTrue(
-            worstOldOverlapPct > 5f,
-            "công thức cũ chỉ đè ${"%.1f".format(worstOldOverlapPct)} % — kiểm lại giả định của bài",
-        )
-    }
-
-    @Test
     fun `o that van con cho ve thu - the khong bi kep het`() {
         for ((w, h) in realFrames()) {
             val c = content(w, h, 678f / 1397f)
@@ -246,62 +207,11 @@ class CellTextLayoutTest {
         assertEquals(0.5f, CellTextLayout.fitScale(200f, 100f), TOL, "rộng gấp đôi ⇒ co một nửa")
     }
 
-    // ══ V5 · dải feather không được ăn vào thân xe ════════════════════════════════════════════════════════════
-
-    @Test
-    fun `anh xe mac dinh - dai feather cu an vao than xe, nay bang 0`() {
-        // [ĐO 2026-09-26 — đo lại pixel trên CHÍNH tệp `app/src/main/assets/car/default-car.png`]: 678×1397; với
-        // ngưỡng mực alpha ≥ 8 (`CarImageStore.INK_ALPHA`) hộp mực = (29, 50)…(648, 1346) ⇒ lề trong suốt 29 px
-        // trái/phải, 50 px trên/dưới. Số dòng có mực CHẠM mép (dung sai 1 px) = 0/1397 mỗi bên; số điểm mực ở dòng
-        // ngoài cùng trên/dưới = 0/678 ⇒ **tỉ lệ mực cả 4 mép = 0**. Dải cũ = 0,08 × cạnh ngắn = 54,24 px ⇒ ăn
-        // 54,24 − 29 = 25 px vào THÂN xe mỗi bên (gradient DST_OUT xoá tới ~50 % alpha ngay tại mép thân).
-        val w = 678; val h = 1397
-        val full = minOf(w, h) * 0.08f
-        assertTrue(full > 29f, "kiểm lại giả định: dải cũ (${"%.1f".format(full)} px) phải sâu hơn lề 29 px")
-        assertEquals(0f, CarLayout.featherBand(full, 0f), TOL, "không mực nào chạm mép ⇒ KHÔNG feather mép đó")
-        // Cỡ giải mã thật cho khung bảng lốp (269×554): tỉ lệ mực KHÔNG đổi theo cỡ (đó là lý do đo tỉ lệ, không
-        // đo px) ⇒ kết luận giữ nguyên ở mọi cỡ giải mã.
-        assertEquals(0f, CarLayout.featherBand(minOf(269, 554) * 0.08f, 0f), TOL)
-    }
-
-    @Test
-    fun `anh chup chu nhat dac - van feather du 8 phan tram nhu cu`() {
-        val full = minOf(900, 600) * 0.08f
-        assertEquals(full, CarLayout.featherBand(full, 1f), TOL, "mép ĐẶC MỰC ⇒ mép CỨNG ⇒ giữ nguyên đường 2.73")
-        assertEquals(full, CarLayout.featherBand(full, 0.96f), TOL, "viền khử răng cưa / góc bo nhẹ vẫn là mép cứng")
-    }
-
-    @Test
-    fun `anh cat nen cat SAT mep - guong cham bien anh thi KHONG duoc feather`() {
-        // Đây là ca mà phép đo theo LỀ TRONG SUỐT không phân biệt được (lề = 0 px, y như ảnh chụp chữ nhật) nhưng
-        // cần xử lý NGƯỢC lại: ảnh cắt nền cắt sát chỉ có gương/mũi xe chạm biên ảnh ⇒ feather ở đó = xoá alpha của
-        // chính gương ⇒ đúng lỗi owner báo 2026-09-25, chỉ khác ảnh (rất dễ gặp: ảnh "car top view png" tải về
-        // thường cắt sát). Vì vậy luật đo TỈ LỆ MỰC của mép.
-        //
-        // [ĐO 2026-09-26] số thật: cắt `default-car.png` sát hộp mực ⇒ 620×1297, tỉ lệ mực 4 mép =
-        // 0,0123 · 0,1242 · 0,0116 · 0,0758 (giải mã về 269 px rộng: 0,0214 · 0,2082 · 0,0196 · 0,1673 — tỉ lệ ỔN
-        // ĐỊNH theo cỡ, đó là lý do đo tỉ lệ chứ không đo px). Ảnh chụp chữ nhật đặc cùng phép đo = 1,0 cả 4 mép.
-        val full = 40f
-        for (ratio in listOf(0.0123f, 0.1242f, 0.0116f, 0.0758f, 0.2082f, 0.1673f)) {
-            assertEquals(0f, CarLayout.featherBand(full, ratio), TOL, "mép cắt nền (tỉ lệ mực $ratio) ⇒ KHÔNG feather")
-        }
-        assertEquals(0f, CarLayout.featherBand(full, 0.60f), TOL, "thân xe rộng chạm 60 % mép vẫn KHÔNG phải mép cứng")
-        assertTrue(CarLayout.SOLID_EDGE_INK > 0.6f, "ngưỡng phải nghiêng về KHÔNG xoá mực")
-    }
-
-    @Test
-    fun `dai feather quyet dinh theo TUNG mep - anh nua dac nua cat nen`() {
-        val full = 40f
-        // Ảnh chụp đã xoá nền một phía: mép còn đặc mực vẫn được làm mềm, mép đã cắt nền thì không.
-        assertEquals(full, CarLayout.featherBand(full, 1f), TOL)
-        assertEquals(0f, CarLayout.featherBand(full, 0.3f), TOL)
-    }
-
     // ══ UX7 · khối chữ cân giữa Ô THẬT của TỪNG bảng — sai số ≤ 0,5 px ═══════════════════════════════════════
 
     /**
-     * Lưới cỡ ô THẬT của mọi bảng tổng hợp, suy từ [WorkspaceLayout] (không gõ tay một cỡ nào):
-     *  • **thẻ lốp**: cao `cellH` theo đúng phép toán `TyreBoardView.onDraw`;
+     * Lưới cỡ ô THẬT của mọi bảng tổng hợp, suy từ [WorkspaceLayout] (không gõ tay một cỡ nào). Android box B2 · W3:
+     * thẻ lốp (`TyreBoardView`, theo `CarLayout`) gỡ cùng widget xe.
      *  • **vòng đo** (*Năng lượng* · *Không khí*): ô vuông cạnh `d = 0.76 × cạnh ngắn` của khung vòng — khung vòng là
      *    ô trừ lề trong `col()` (Sp.L = 16dp ⇒ 24 px ở density 1.5) và dòng chú thích (~30 px) [SUY hai số đó, vì
      *    chúng do lượt đo cây view quyết]; phép kiểm KHÔNG phụ thuộc chúng (bất biến đúng với mọi `d`);
@@ -310,11 +220,6 @@ class CellTextLayoutTest {
     private fun boardBoxes(): List<Triple<String, Float, Float>> {
         val out = mutableListOf<Triple<String, Float, Float>>()
         for ((w, h) in realFrames()) {
-            val c = content(w, h, 678f / 1397f)
-            val m = minOf(w, h)
-            val wheelSpanY = (CarLayout.wheel(TyreCorner.REAR_LEFT).y - CarLayout.wheel(TyreCorner.FRONT_LEFT).y) * c.height
-            val cellH = minOf(h * 0.24f, wheelSpanY - m * 0.035f).coerceAtLeast(m * 0.10f)
-            out += Triple("thẻ lốp ${w.toInt()}×${h.toInt()}", w, cellH)
             val ringBox = minOf(w - 48f, h - 48f - 30f).coerceAtLeast(60f)
             out += Triple("vòng đo ${w.toInt()}×${h.toInt()}", ringBox, ringBox * 0.76f)
             out += Triple("ô ảnh ${w.toInt()}×${h.toInt()}", w, h)

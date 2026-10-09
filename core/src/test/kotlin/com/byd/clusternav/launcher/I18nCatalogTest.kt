@@ -103,27 +103,6 @@ class I18nCatalogTest {
         assertNull(I18nCatalog.lookup(Lang.EN, "Mở", "Open"))
     }
 
-    /**
-     * [soát 2.87 · P3] Từ đồng hình tiếng Mã Lai: `("Mở", "Open")` là CÙNG một cặp cho LỆNH (nút rèm che nắng ở
-     * CapTest/gán phím) và TRẠNG THÁI (`TelemetryReadout.openShut` — cửa/cửa sổ trời) ⇒ khoá cặp không tách được, và
-     * VI/EN không được đổi (R-nf1). Bản cũ dịch theo trạng thái (`Terbuka`) và cả lệnh `("Đóng", "Close")` cũng ra
-     * `Tertutup` ⇒ nút đọc *"Đã đóng | Đã mở | Nửa"*. Khoá: chữ của cặp dùng chung đúng cho CẢ HAI nghĩa (`Buka`/`Tutup`),
-     * lệnh đọc như lệnh, và trạng thái đọc như trạng thái cùng một cặp từ.
-     */
-    @Test
-    fun `tieng Ma Lai - lenh dong mo doc nhu lenh, trang thai cung cap tu`() {
-        val sunshade = ControlRegistry.byId("sunshade") ?: error("không còn nút «sunshade» — bài đang soi vùng không tồn tại")
-        assertEquals(listOf("Close", "Open", "Half"), sunshade.argsEn, "đầu vào của bài: đúng ba lệnh rèm che nắng")
-        assertEquals(listOf("Tutup", "Buka", "Separuh"), sunshade.argsIn(Lang.MS), "nút rèm che nắng = LỆNH")
-        val shut = CarStatus(body = CarStatus.Body(sunroofOpen = false))
-        val open = CarStatus(body = CarStatus.Body(sunroofOpen = true))
-        assertEquals("Tutup", TelemetryReadout.of("sunroof_state", shut, Lang.MS)?.valueText, "trạng thái đóng")
-        assertEquals("Buka", TelemetryReadout.of("sunroof_state", open, Lang.MS)?.valueText, "trạng thái mở")
-        // VI/EN của chính các cặp ấy giữ nguyên (R-nf1) — bản vá chỉ ở bảng ms.
-        assertEquals(listOf("Đóng", "Mở", "Nửa"), sunshade.argsIn(Lang.VI))
-        assertEquals("Open", TelemetryReadout.of("sunroof_state", open, Lang.EN)?.valueText)
-    }
-
     @Test
     fun `bang that nam tren classpath, doc duoc, khong loi dinh dang`() {
         for (lang in I18nPairs.TRANSLATED) {
@@ -185,7 +164,8 @@ class I18nCatalogTest {
     @Test
     fun `VI va EN cua t pick f giu nguyen chu nguon cho moi cap quet duoc`() {
         val literal = I18nPairs.calls.filter { it.isLiteralPair }
-        assertTrue(literal.size >= 250, "quét được ${literal.size} cặp — quá ít")
+        // Android box B2 · W3 [ĐO 2026-10-09]: 181 cặp (chữ của nút/datum/nhóm/gói lệnh xe gỡ) — sàn 250 → 160.
+        assertTrue(literal.size >= 160, "quét được ${literal.size} cặp — quá ít")
         literal.forEach { c ->
             val vi = c.vi!!.value!!
             val en = c.en!!.value!!
@@ -205,18 +185,7 @@ class I18nCatalogTest {
             assertEquals(row.label, row.labelIn(Lang.VI))
             assertEquals(row.labelEn?.takeIf { it.isNotBlank() } ?: row.label, row.labelIn(Lang.EN))
         }
-        (TelemetryRegistry.ALL.map { Triple(it.shortLabel, it.shortEn, it.labelEn) to it::shortLabelIn } +
-            ControlRegistry.ALL.map { Triple(it.shortLabel, it.shortEn, it.labelEn) to it::shortLabelIn }).forEach { (f, fn) ->
-            val (short, shortEn, labelEn) = f
-            assertEquals(short, fn(Lang.VI))
-            assertEquals(shortEn?.takeIf { it.isNotBlank() } ?: labelEn?.takeIf { it.isNotBlank() } ?: short, fn(Lang.EN))
-        }
-        ControlRegistry.ALL.forEach { c ->
-            assertEquals(c.args, c.argsIn(Lang.VI))
-            assertEquals(if (c.argsEn.size == c.args.size && c.argsEn.isNotEmpty()) c.argsEn else c.args, c.argsIn(Lang.EN))
-            // ZH/TH/MS: lệch số phần tử ⇒ tiếng Việt cả danh sách (như EN); đủ ⇒ từng phần tử lùi về bản Anh.
-            I18nPairs.TRANSLATED.forEach { l -> assertEquals(c.args.size, c.argsIn(l).size, "${c.id} $l") }
-        }
+        // Android box B2 · W3: nhãn ngắn / đối số của datum · nút gỡ cùng lõi HAL BYDAuto.
     }
 
     // ── 5 · Lựa chọn ngôn ngữ ───────────────────────────────────────────────────────────────────────────────────

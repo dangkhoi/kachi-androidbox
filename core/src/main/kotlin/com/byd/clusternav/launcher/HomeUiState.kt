@@ -16,15 +16,13 @@ import com.byd.clusternav.launcher.trip.TripConfig
  * @property themeMode chế độ giao diện sáng/tối (chung mọi hồ sơ).
  * @property embedded cờ RUNTIME: app có đang nhúng vào ô qua VirtualDisplay/ActivityView không (dadb loopback hoặc ROM
  *   platform-signed). KHÔNG bền — do host quyết định lúc chạy. Off-car/emulator không dadb → false.
- * @property carStatus ảnh chụp trạng thái xe LIVE (W1c) — do [CarStatusRepository] phát qua `StateFlow<CarStatus>`,
- *   Activity thu (`repeatOnLifecycle`) rồi bơm vào đây (một chiều) để widget render THEO STATE (KHÔNG đọc port trực
- *   tiếp trong view). KHÔNG bền (runtime; off-car mọi field null ⇒ widget "—"). Mặc định [CarStatus] rỗng.
+ *
+ * Android box B2 · W3 (2026-10-09): `carStatus` (ảnh chụp trạng thái xe LIVE), `topStrip` (chip thanh trên — mọi chip là
+ * chip xe) và `unitPrefs` (đơn vị — chỉ cho datum xe) gỡ cùng lõi HAL BYDAuto.
  */
 data class HomeUiState(
     val workspace: WorkspaceState = WorkspaceState(),
     val dock: DockConfig = DockConfig(),
-    /** Chip nào hiện trên thanh trạng thái (RW0 vùng thứ ba) — nguồn sự thật DUY NHẤT, KHÔNG có bản sao ở View. */
-    val topStrip: TopStripConfig = TopStripConfig.DEFAULT,
     /**
      * UX-OVERHAUL · WP4 — **THỨ TỰ các vật trên thanh trạng thái** ([HeaderLayout]).
      *
@@ -76,7 +74,6 @@ data class HomeUiState(
      */
     val langMode: LangMode = LangMode.AUTO,
     val embedded: Boolean = false,
-    val carStatus: CarStatus = CarStatus(),
     /**
      * Bố cục TỰ VẼ đang dùng (P9), `null` = dùng bố cục sẵn của [workspace].
      *
@@ -90,11 +87,6 @@ data class HomeUiState(
      * chứng minh tương-đương hơn 1000 tổ hợp — lý do tránh né ban đầu không còn đúng.
      */
     val customLayout: GridLayout? = null,
-    /**
-     * Lựa chọn ĐƠN VỊ của người dùng (R11–R13). Trước đây có **4 bản sao** (màn chính · khung làm việc · thanh nút ·
-     * bảng Tuỳ biến) đồng bộ bằng lời gọi tay ⇒ quên một chỗ là hai bề mặt nói hai đơn vị cho cùng một con số.
-     */
-    val unitPrefs: UnitPrefs = UnitPrefs.DEFAULT,
     /** Lựa chọn HÌNH NỀN (U4). Cùng lý do: state được render thì phải nằm trong nguồn sự thật. */
     val wallpaper: WallpaperPrefs = WallpaperPrefs.DEFAULT,
     /**

@@ -16,7 +16,7 @@ import android.widget.FrameLayout
  * @param onApplyLayout ghi bố cục tự vẽ vào nguồn sự thật (`null` = quay về bố cục sẵn).
  * @param onPreset chọn bố cục sẵn. S4 · R7 gỡ 5 nút bố cục khỏi thanh trên, nên đây là bề mặt DUY NHẤT của nó —
  *   intent thì giữ nguyên (`KachiHomeActivity.selectPreset`), chỉ bớt một chỗ gọi.
- * @param onWallpaper / [onUnitPrefs] intent lưu + áp lại tương ứng.
+ * @param onWallpaper intent lưu + áp lại tương ứng.
  * @param onDuplicateProfile S4 · R8 — tạo hồ sơ mới là **bản sao của hồ sơ đang dùng** (nhận tên mới). Hộp thoại
  *   hỏi tên do màn Cài đặt dựng bằng `SettingsDialogs.askName`, không phải ở đây.
  * @param bootProfile / [onBootProfile] S4 · R6 — hồ sơ áp lúc nổ máy (`null` = hồ sơ dùng gần nhất, đúng giao kèo
@@ -38,17 +38,12 @@ class HomePanels(
     private val trip: TripSettingsPort,
     /** 2.91 VOICE-APP-NAMES — trang *Dạy tên app*; chuyển thẳng xuống [SettingsDeps.voiceNames]. */
     private val voiceNames: VoiceNamesPort,
-    private val runAction: (String, Int) -> Boolean,
-    private val readInfo: (String) -> String?,
     private val onApplyLayout: (GridLayout?) -> Unit,
     private val onPreset: (LayoutPreset) -> Unit,
     private val onDockEdge: (DockEdge) -> Unit,
-    private val onTopStrip: (String, Boolean) -> Unit,
-    private val onTopStripConfig: (TopStripConfig) -> Unit,
     /** UX-OVERHAUL · WP4 — thứ tự các vật trên thanh trên; xem [SettingsDeps.onHeaderLayout]. */
     private val onHeaderLayout: (HeaderLayout) -> Unit,
     private val onWallpaper: (WallpaperPrefs) -> Unit,
-    private val onUnitPrefs: (UnitPrefs) -> Unit,
     /**
      * Sổ địa chỉ của hồ sơ đang dùng (spec `kachi-voice-addresses.html` R1) — nhận **cả danh sách** đã chốt.
      *
@@ -189,8 +184,6 @@ class HomePanels(
             // P9: đường mở bảng vẽ bố cục (đóng màn Cài đặt trước — hai lớp phủ chồng nhau thì Back mất nghĩa).
             onOpenLayoutEditor = { closeSettings(); openLayoutEditor() },
             onWallpaper = { p -> onWallpaper(p) },
-            onTopStrip = { id, on -> onTopStrip(id, on) },
-            onTopStripConfig = { cfg -> onTopStripConfig(cfg) },
             onHeaderLayout = { layout -> onHeaderLayout(layout) },
             // T6 · R-UI (m): một bộ chọn, hai lối vào. Bảng Cài đặt gấp tập đã chốt bằng `DockSelection.apply`
             // rồi đẩy xuống qua intent — lớp này không biết phép gấp đó, nó chỉ nối hai đầu dây.
@@ -200,10 +193,6 @@ class HomePanels(
             shortcuts = shortcuts,
             trip = trip,
             voiceNames = voiceNames,
-            runAction = { id, arg -> runAction(id, arg) },
-            readInfo = { id -> readInfo(id) },
-            // R11: đổi đơn vị ⇒ lưu bền + áp lại NGAY cho cả thanh nút và ô giữa màn (không cần mở lại app).
-            onUnitPrefs = { prefs -> onUnitPrefs(prefs) },
             // Sổ địa chỉ: một cổng, nhận cả danh sách đã chốt (xem KDoc [onSavedPlaces]).
             onSavedPlaces = { list -> onSavedPlaces(list) },
             onThemeMode = { m -> onThemeMode(m) },

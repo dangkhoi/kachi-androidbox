@@ -12,11 +12,8 @@ import com.byd.clusternav.launcher.voice.VoiceLexicon.Token
  * dấu nào (*"dẫn tới"* · *"đưa tôi đến"* · *"coi thử"* — bài canh của [SherpaSpokenWords] chỉ ép chiều *"mọi cách viết là một cụm
  * đã khai"*, không ép chiều ngược) cũng là *"không dữ liệu"* ⇒ hành vi cũ (senior review wave 2, [P3]).
  *
- * Từ mở đầu lệnh không thuộc [VoiceGrammar.VERBS] (*"hạ"* · *"kéo"* · *"nâng"* · *"lấy"*) đi CÙNG luật qua
- * [VoiceGrammar.ACTION_HEAD_WORDS] (senior review wave 2, [P1]): bỏ dấu thì *"hả"* = *"hạ"*, *"nắng"* = *"nâng"*.
- *
- * Ba chỗ hỏi CÙNG phép này: cổng tên bộ phận trần + ghép câu trả lời ([VoiceBareCover]) · mạch mượn động từ của câu ghép
- * ([VoiceClauseEllipsis]) · động từ mang sang lượt trả lời của câu hỏi lại ([VoiceClarify] `leadVerb`).
+ * Chỗ hỏi phép này: động từ mang sang lượt trả lời của câu hỏi lại ([VoiceClarify] `leadVerb`). (≤ 2.98 BYD còn cổng tên bộ phận
+ * xe trần và mạch mượn động từ của câu ghép — gỡ cùng nút xe ở Android box B2 · W3.)
  */
 internal object VoiceVerbSpelling {
 
@@ -41,20 +38,5 @@ internal object VoiceVerbSpelling {
         val forms = SPELLINGS[norm] ?: return true   // cụm chưa khai cách viết có dấu ⇒ không dữ liệu ⇒ như cũ
         return spelled == norm || spelled in forms
     }
-
-    /**
-     * Số từ của cụm động từ HÀNH ĐỘNG thật ở đầu [t] (`0` = không có): [VoiceGrammar.actionVerbAt] (bật/tắt/mở/đóng/tăng/giảm/đặt
-     * + từ mở đầu lệnh hướng kính *"hạ"* · *"kéo"* · *"nâng"* · *"lấy"*), dài theo cụm [VoiceGrammar.VERBS] khớp được, qua phép dấu
-     * [isVerb] — hay [VoiceGrammar.ACTION_HEAD_WORDS] cho từ mở đầu không thuộc bảng động từ.
-     *
-     * ⚠ Senior review wave 2 [P1] — [ĐO off-car 07/10] bản trước trả `1` cho MỌI token bỏ dấu ra `ha`/`nang`… mà không xét dấu: câu
-     * hỏi *"Mở hay đóng Kính lái?"* + trả lời *"hả"* (hả?) ⇒ [VoiceBareCover.verbFirst] ghép *"hả kính lái"* ⇒ `Control(win_lf, 1)`;
-     * *"… 4 kính?"* + *"hả"* ⇒ hạ cả bốn kính; *"… Cốp sau?"* + *"hả"* ⇒ đóng cốp.
-     */
-    fun actionSpan(t: List<Token>): Int {
-        if (!VoiceGrammar.actionVerbAt(t, 0)) return 0
-        val n = verbWords(t)
-        if (n == 0) return if (VoiceGrammar.ACTION_HEAD_WORDS.matches(t[0])) 1 else 0
-        return if (isVerb(t, n)) n else 0
-    }
+    // Android box B2 · W3: `actionSpan` (động từ mượn cho vế tên nút xe trần) gỡ cùng `VoiceClauseEllipsis`/`VoiceBareCover`.
 }

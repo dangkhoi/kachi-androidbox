@@ -41,31 +41,9 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
      * ✕ *tắt* + *chạy nền* (owner 03/10, L6) là cụm RIÊNG cạnh ⇄ ([SlotActionsCluster]), không phải nhãn.
      */
     var appWidgetName: ((SlotContent.AppWidget) -> String)? = null
-    // UDF: trạng thái xe LIVE đến từ HomeUiState.carStatus (KHÔNG đọc port trong view). Off-car mọi field null ⇒ "—".
-    var carStatus: CarStatus = CarStatus()
+    // Android box B2 · W3: `carStatus` · `control` (cổng nút xe) · `unitPrefs` (đơn vị datum xe) gỡ cùng lõi HAL BYDAuto.
     var mediaProvider: () -> MediaSnapshot? = { null }   // đọc nhạc live (Bitmap ở :app → ngoài state :core)
     var onMedia: (String) -> Unit = {}                    // transport: play/pause/next/prev
-    // RW0: ô giữa màn nay đặt được cả HÀNH ĐỘNG (R2) ⇒ cần đường ra xe. Port (không phải state) nên nằm ở view như
-    // mediaProvider; off-car [NoCar] ⇒ bấm no-op.
-    var control: CarControlPort = NoCar
-    /**
-     * RW0/R11: lựa chọn ĐƠN VỊ của người dùng, dùng khi dựng ô ĐỌC. Đặt qua [setUnitPrefs] (không phải gán trực
-     * tiếp) vì đổi đơn vị BẮT BUỘC phải dựng lại ô — chuỗi số nằm trong View đã dựng, không tự đổi theo.
-     */
-    private var unitPrefs: UnitPrefs = UnitPrefs.DEFAULT
-
-    /**
-     * Đổi lựa chọn đơn vị. Dựng lại CHỈ KHI lựa chọn thật sự khác, và khi đó **chỉ dựng lại ô WIDGET**.
-     *
-     * ⚠ Bản đầu gọi `rebuild()` (dựng lại TẤT CẢ) — nghĩa là đổi chữ "bar"→"psi" sẽ tháo cả ô App: `VdAppHost` bị
-     * nhả, màn ảo mới được tạo, app trong ô phải mở lại. Đơn vị chỉ ảnh hưởng ô widget, nên ràng buộc C5 áp ở đây
-     * đúng như [WorkspaceRenderPlanner] đã áp cho nhịp trạng thái xe: ô App KHÔNG bị chạm tới.
-     */
-    fun setUnitPrefs(prefs: UnitPrefs) {
-        if (prefs == unitPrefs) return
-        unitPrefs = prefs
-        rebuildWidgetSlots()
-    }
     // ── KÊNH NHÚNG (gói 1, P-bug2): 4 thứ dưới đây PHẢI được gắn CÙNG LÚC qua [applyEmbedSeam] ─────────────────
     // Vì sao private: `makeSlot` đọc chúng LÚC DỰNG VIEW. Nếu để công khai cho bên ngoài gán rời từng cái thì ai
     // gán sai THỨ TỰ (vd dựng lại ô trước khi gắn kênh chạm) sẽ ra bộ chiếu thiếu kênh chạm — chạy đường bơm chạm
@@ -83,7 +61,6 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
     // View-transient ONLY: bản sao khung hình ĐANG hiển thị, dùng để DIFF khi [render] để không dựng lại ô không đổi.
     // KHÔNG phải nguồn sự thật — nguồn sự thật là HomeViewModel.uiState; không code ngoài nào đọc field này.
     private var displayed = WorkspaceState()
-    private var displayedStatus = CarStatus()
     internal val slotViews = ArrayList<View>()
 
     /**
@@ -131,7 +108,7 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         heads.attach()
-        post { if (isAttachedToWindow && SlotHostHeal.anyReleased(slotViews)) renderInternal(displayed, displayedStatus, embedChanged = true) }
+        post { if (isAttachedToWindow && SlotHostHeal.anyReleased(slotViews)) renderInternal(displayed, embedChanged = true) }
     }
 
     /**
@@ -140,8 +117,15 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
      * giữ nguyên View (và VdAppHost) của các ô khác → thêm app vào ô mới KHÔNG relaunch/nháy app đang chạy ở ô khác,
      * launcher đứng yên. Đổi preset/số ô → dựng lại cả. Nguồn sự thật do HomeViewModel giữ; đây chỉ phản chiếu.
      */
-    fun render(s: WorkspaceState, status: CarStatus = carStatus, swap: Set<Int> = emptySet(), profileSwitch: Boolean = false) =
-        renderInternal(s, status, embedChanged = false, swap = swap, profileSwitch = profileSwitch)
+    fun render(s: WorkspaceState, swap: Set<Int> = emptySet(), profileSwitch: Boolean = false) =
+        renderInternal(s, embedChanged = false, swap = swap, profileSwitch = profileSwitch)
+
+    /**
+     * Android box B2 · W3 — đổ lại SỐ LIỆU của ô widget (nhạc · …) TẠI CHỖ theo nhịp đồng hồ có sẵn (`KachiHomeActivity.tick`,
+     * 10 s — không thêm nhịp mới). ≤ 2.98 BYD việc này chạy theo nhịp trạng thái xe 1 Hz (`CarStatusRepository`) đã gỡ; không có
+     * lời gọi này thì ô nhạc chỉ đổi bài khi có một lượt render khác. Ô App không bị chạm (C5 — [WorkspaceRenderPlanner]).
+     */
+    fun refreshValues() = renderInternal(displayed, embedChanged = false, valuesChanged = true)
 
     /**
      * Gắn NGUYÊN KHỐI kênh nhúng (dadb shell + kênh chạm + đăng ký/gỡ màn ảo) rồi tự áp [state] lại MỘT LẦN.
@@ -157,27 +141,25 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
         registerVd: (Int) -> Unit,
         unregisterVd: (Int) -> Unit,
         state: WorkspaceState,
-        status: CarStatus,
     ) {
         val had = this.shell != null
         this.registerVd = registerVd
         this.unregisterVd = unregisterVd
         this.inputClient = inputClient
         this.shell = shell
-        renderInternal(state, status, embedChanged = !had)
+        renderInternal(state, embedChanged = !had)
     }
 
-    private fun renderInternal(s: WorkspaceState, status: CarStatus, embedChanged: Boolean, swap: Set<Int> = emptySet(), profileSwitch: Boolean = false) {
+    private fun renderInternal(s: WorkspaceState, embedChanged: Boolean, swap: Set<Int> = emptySet(), profileSwitch: Boolean = false, valuesChanged: Boolean = false) {
         mediaCache = null      // lượt mới ⇒ đọc lại nhạc đúng MỘT lần cho cả lượt
         val old = displayed
-        val oldStatus = displayedStatus
-        displayed = s; displayedStatus = status; carStatus = status
+        displayed = s
         // Luật "ô nào cần dựng lại" nằm ở :core (WorkspaceRenderPlanner) → test được off-car, kể cả ca P-bug2.
         var structural = false
         // P9: số ô THỰC TẾ (bố cục tự vẽ có thể khác bố cục sẵn). Đọc từ bố cục sẵn ở đây sẽ làm bộ quyết định thấy 'số view lệch
         // số ô' mọi lần render ⇒ dựng lại TẤT CẢ liên tục. 2.97 · R5: luật đỗ chỉ nhìn ô ĐANG HIỆN (`shown`) — ô ngoài bố cục không nhận lại ai.
         val shown = s.slots.take(EffectiveLayout.slotCount(displayed.preset, customLayout))
-        when (val plan = WorkspaceRenderPlanner.decide(old, s, slotViews.size, status != oldStatus, embedChanged, slotCount = shown.size, swap = swap)) {
+        when (val plan = WorkspaceRenderPlanner.decide(old, s, slotViews.size, valuesChanged, embedChanged, slotCount = shown.size, swap = swap)) {
             WorkspaceRenderPlan.RebuildAll -> { rebuild(); EmptySlotLog.note(displayed.slots, slotViews.size); return }
             is WorkspaceRenderPlan.PerSlot -> (plan.rebuild + plan.swap).sorted().forEach { i ->   // 2.89-thử1: đặt tạm cũng dựng lại ô (ô 7 đỗ app cũ)
                 val nc = s.slots.getOrElse(i) { SlotContent.Empty }
@@ -204,13 +186,13 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
         EmptySlotLog.note(displayed.slots, slotViews.size)   // mọi lượt render (rẻ, tự khử trùng) — kể cả lượt ĐẦU không đổi ô nào
     }
 
-    /** Gói dữ liệu render widget hiện tại (trạng thái xe + nhạc live + cổng ra lệnh cho ô hành động + đơn vị). */
+    /** Gói dữ liệu render widget hiện tại (nhạc live + ảnh trình chiếu). */
     private fun widgetData(): WidgetData {
         // [SOÁT P2-8] Đọc nhạc là một lời gọi LIÊN TIẾN TRÌNH (`getActiveSessions`). Bản trước gọi nó trong hàm này,
         // mà hàm này được gọi **mỗi Ô** (tới 6 ô) và mỗi nhịp trạng thái xe (1 giây) ⇒ tới 6 lời gọi/giây trên thread
         // chính cho một dữ liệu y hệt nhau. Nay đọc MỘT LẦN cho mỗi lượt render và dùng lại trong lượt đó.
         val media = mediaCache ?: mediaProvider().also { mediaCache = it }
-        return WidgetData(carStatus, media, onMedia, control, unitPrefs, photos.provider(), photos.intervalSec)
+        return WidgetData(media, onMedia, photos.provider(), photos.intervalSec)
     }
 
     /** Ảnh chụp nhạc dùng cho LƯỢT render hiện tại (xoá ở đầu mỗi lượt) — xem KDoc widgetData. */
@@ -243,7 +225,7 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
     /**
      * U4(b) — đặt nguồn ảnh cho widget trình chiếu. Dựng lại **chỉ ô widget** khi nguồn thật sự đổi.
      *
-     * Cùng lối với [setUnitPrefs]: phải dựng lại vì ảnh nằm trong View đã dựng, nhưng **KHÔNG** dựng lại ô đang
+     * Phải dựng lại vì ảnh nằm trong View đã dựng, nhưng **KHÔNG** dựng lại ô đang
      * chiếu app (làm thế là ngắt kênh chạm — ràng buộc C5 của gói 2). Gọi lại với cùng nguồn thì không làm gì.
      */
     fun setPhotoSource(paths: List<String>, intervalSec: Int) {
@@ -308,7 +290,7 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
         // KachiTheme.surface(..., SurfaceTone.WELL, ...) như trước — cùng cửa, cùng tone, không đổi một byte.
         // Ô TRỐNG không đi qua kính, và KHÔNG được mang tag kính: FIX286 · ES1 (owner 03/10) — khung trống TRONG SUỐT
         // thấy hình nền; tag kính còn trên khung thì lượt `KachiGlass.refresh` khi ảnh đổi sẽ đắp kính lên (bẫy P1b).
-        if (content !is SlotContent.Empty) KachiGlass.apply(fl, Sp.RADIUS_L, SurfaceTone.WELL, slotDomain(content))
+        if (content !is SlotContent.Empty) KachiGlass.apply(fl, Sp.RADIUS_L, SurfaceTone.WELL)
         SlotFrameClip.apply(fl, Sp.dpf(context, Sp.RADIUS_L))   // cắt nội dung theo góc bo (overflow:hidden) — A5(b): viền RIÊNG, không mượn nền
         val mm = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
         when (content) {
@@ -385,7 +367,7 @@ class WorkspaceView(context: Context) : ViewGroup(context) {
         return fl
     }
 
-    // `slotDomain` · `startSlotDrag` → `WorkspaceViewSlotDomain.kt` (tách THUẦN theo trần 500 dòng, L6-debt 2026-09-27).
+    // `startSlotDrag` · `slotFrame` → `WorkspaceViewSlotDomain.kt` (tách THUẦN theo trần 500 dòng, L6-debt 2026-09-27).
 
     /**
      * Khung trong suốt bọc nút ⇄ **nổi** ở đầu ô.

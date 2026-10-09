@@ -49,16 +49,16 @@ class KachiChromeContractTest {
     @Test
     fun `fade dung nam cho dung cua man chinh`() {
         assertEquals(
-            listOf("ControlDockView.kt", "ControlTileFactory.kt", "KachiTopStrip.kt", "ReadTile.kt", "WallGlass.kt"),
+            // Android box B2 · W3: ControlTileFactory (ô nút xe) · ReadTile (ô đọc) gỡ ⇒ ô hành động launcher (LauncherTile).
+            listOf("ControlDockView.kt", "KachiTopStrip.kt", "LauncherTile.kt", "WallGlass.kt"),
             callers("KachiChrome.fade("),
         )
         assertEquals(
-            listOf("TyreBoardView.kt", "WallGlass.kt", "WallView.kt"), callers("KachiChrome.fraction"),
-            "hệ số chỉ đọc thẳng ở ba chỗ vẽ Canvas: cửa kính trên ảnh · thẻ bánh thường · hai dải che hình nền",
+            listOf("WallGlass.kt", "WallView.kt"), callers("KachiChrome.fraction"),
+            "hệ số chỉ đọc thẳng ở hai chỗ vẽ Canvas: cửa kính trên ảnh · hai dải che hình nền (W3: thẻ bánh lốp gỡ)",
         )
         assertEquals(listOf("ThemeHost.kt"), callers("KachiChrome.apply("), "một chỗ ghi")
-        assertTrue("KachiChrome.fade(KachiTheme.surface(ctx, size.radius))" in code(file("ControlTileFactory.kt")))
-        assertTrue("KachiChrome.fade(KachiTheme.surface(ctx, size.radius, domain = pick.domain))" in code(file("ReadTile.kt")))
+        assertTrue("KachiChrome.fade(KachiTheme.surface(ctx, size.radius))" in code(file("LauncherTile.kt")))
         // Mỗi chỗ đúng số lượt gọi: thanh trên + thanh nút dựng nền ở init/build VÀ restyle — thiếu restyle là đổi chủ
         // đề/độ đục xong thanh rơi về 100 %.
         assertEquals(2, count("KachiTopStrip.kt", "KachiChrome.fade("), "thanh trên: build() + restyle()")
@@ -85,17 +85,12 @@ class KachiChromeContractTest {
 
     @Test
     fun `khong mo nen mang thong tin`() {
-        val tiles = code(file("ControlTileFactory.kt"))
+        val tiles = code(file("LauncherTile.kt"))   // W3: ô nút xe (ControlTileFactory) gỡ ⇒ ô hành động launcher
         val applyBg = SourceRoots.body(tiles, "private fun applyBg(")
         assertTrue("KachiChrome.fade(KachiTheme.surface(ctx, size.radius))" in applyBg, "nhánh TẮT mờ")
         assertTrue(Regex("""if \(active\) KachiTheme\.gradientSoft\(ctx, size\.radius\) else""").containsMatchIn(applyBg), "nhánh BẬT trần")
         assertFalse("KachiChrome.fade(KachiTheme.gradientSoft" in tiles, "ô BẬT mang trạng thái — không mờ")
-        // Ô con nhóm WARN/ALERT: màu nền là thông tin.
-        val group = code(file("GroupTileViews.kt"))
-        val surfaceOf = SourceRoots.body(group, "fun surfaceOf(")
-        assertFalse("KachiChrome" in surfaceOf, "WARN/ALERT không mờ")
-        assertTrue(Regex("""GroupTone\.WARN, GroupTone\.ALERT ->\s*KachiGlass\.plain\(""").containsMatchIn(surfaceOf), "WARN/ALERT qua plain")
-        assertTrue("GroupTone.ACTIVE -> KachiGlass.apply(view, radius, SurfaceTone.ACTIVE, domain)" in surfaceOf)
+        // Android box B2 · W3: ô con nhóm WARN/ALERT (GroupTileViews) gỡ cùng ô nhóm xe.
         // Nền widget bên thứ ba (chữ trắng của RemoteViews đo trên nó) + đĩa ⇄.
         assertFalse("KachiChrome" in code(file("WorkspaceViewCards.kt")), "WIDGET_BACKING không mờ")
         assertTrue(
@@ -253,12 +248,7 @@ class KachiChromeContractTest {
         assertTrue("onSizeChanged(width, height, width, height)" in SourceRoots.body(wall, "fun restyle("))
         val render = code(file("KachiHomeRender.kt"))
         assertTrue("wall.restyle()" in SourceRoots.body(render, "internal fun KachiHomeActivity.applyThemeInPlace("))
-
-        val tyre = SourceRoots.body(code(file("TyreBoardView.kt")), "private fun drawCell(")
-        assertTrue("if (st.alert) ColorMath.mix(card2, col, SEMANTIC_MIX)" in tyre, "thẻ cảnh báo: màu nền là thông tin — không mờ")
-        assertTrue("else ColorMath.withAlpha(card2, ChromeOpacity.drawnAlpha(ColorMath.alpha(card2), KachiChrome.fraction))" in tyre,
-            "thẻ bánh thường mờ cùng hệ số, cùng phép")
-        assertEquals(1, Regex("""KachiChrome\.fraction""").findAll(tyre).count(), "chỉ nhánh thường đọc hệ số")
+        // Android box B2 · W3: thẻ bánh lốp (TyreBoardView) gỡ cùng bảng lốp.
     }
 
     /**

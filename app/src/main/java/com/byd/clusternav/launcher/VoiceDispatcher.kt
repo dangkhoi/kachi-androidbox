@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import android.util.Log
 import com.byd.clusternav.launcher.voice.VoiceIntent
 import com.byd.clusternav.launcher.voice.VoiceIntentParser
 import com.byd.clusternav.launcher.voice.VoiceReply
@@ -15,7 +14,6 @@ import com.byd.clusternav.launcher.voice.VoiceRisk
 import com.byd.clusternav.launcher.voice.VoiceRiskTable
 import com.byd.clusternav.launcher.voice.SlotPlaceOutcome
 import com.byd.clusternav.launcher.voice.VoiceSlotPlace
-import com.byd.clusternav.launcher.voice.VoiceWriteLane
 
 /**
  * ═══ V1 · TỪ Ý ĐỊNH TỚI **ĐƯỜNG ĐÃ CÓ** ═══════════════════════════════════════════════════════════════════════
@@ -24,13 +22,11 @@ import com.byd.clusternav.launcher.voice.VoiceWriteLane
  *
  * ## Ràng buộc số một: KHÔNG mở đường thứ hai tới bất cứ thứ gì
  * Mỗi nhánh dưới đây đi đúng con đường mà một cú **chạm** đang đi hôm nay:
- *  • nút xe → [actByKind] + ghi lại vào [ControlTileState.shared] — y hệt `ControlTileFactory`;
- *  • gói lệnh → [MacroRunner] trên thread nền — y hệt `ControlTileFactory.macroTile`;
+ *  • (≤ 2.98 BYD còn nút xe → `actByKind` và gói lệnh → `MacroRunner`; Android box B2 · W3 gỡ cùng HAL xe);
  *  • hành động launcher → hai lambda mà `KachiHomeWiring.controlDock` đã nối;
  *  • đổi hồ sơ → intent của `HomeViewModel` (tầng UI **0 lần** ghi bền — luật kiến trúc đang có);
  *  • nhạc → [MediaBridge]; mở app → [AppOpener].
- * Dựng một đường riêng cho giọng nói là cách chắc chắn để hai bề mặt lệch nhau (ô "Đèn đọc" vẫn sáng sau khi nói
- * *"tắt đèn đọc"*) — đúng lỗi mà `ControlTileState.shared` sinh ra để chặn.
+ * Dựng một đường riêng cho giọng nói là cách chắc chắn để hai bề mặt lệch nhau.
  *
  * ## Vào là **CHỮ**, và pha NGHE không đổi điều đó (R9–R14)
  * Từ 1.49 Kachi đã nghe được (`launcher/voice/VoiceSession`), nhưng ranh giới giữ nguyên: micro và bộ nhận dạng
@@ -38,11 +34,8 @@ import com.byd.clusternav.launcher.voice.VoiceWriteLane
  * hứa cũ thành hiện thực đúng như đã viết: tầng tiếng bật lên mà **không một dòng nào** trong tệp này phải viết
  * lại, và mọi bài kiểm của nó vẫn chạy off-car.
  *
- * Ra vẫn là **chữ + âm báo**, chưa có TTS: giọng nói tiếng Việt tại máy còn [CHƯA BIẾT] trên xe này (spec §4.4).
- * [VoiceIntent.Read.aloud] vẫn giữ sẵn ý định *"đọc to"* cho ngày đo xong.
  */
 class VoiceDispatcher(
-    private val control: () -> CarControlPort,
     private val state: () -> HomeUiState,
     private val media: () -> MediaTransport,
     /** Nhãn app → tên gói. Danh sách động (app đã cài) ⇒ KHÔNG gói nào bị viết cứng (CLAUDE.md §7). */
@@ -126,17 +119,6 @@ class VoiceDispatcher(
     /** Chạy một việc dài trên thread NỀN (gói lệnh) — tách ra để test/đo được, mặc định là một Thread. */
     private val background: (() -> Unit) -> Unit = { block -> Thread(block, "KachiVoice").start() },
     /**
-     * [SOÁT P1-1 · 2026-09-16] Đọc **TƯƠI** một datum trước khi đọc số cho người dùng nghe; `null` = *"ảnh chụp
-     * hiện có đã tươi"* ⇒ dùng [state] như cũ.
-     *
-     * Vì sao phải có: từ 1.67 vòng poll chỉ đọc datum **đang hiện trên màn** (`CarDataDemand`) và **giữ giá trị
-     * cũ** cho phần còn lại. Câu hỏi bằng giọng thì hỏi được **mọi** datum, kể cả thứ không có trên màn — nên nếu
-     * chỉ đọc [state] thì Kachi sẽ đọc to một con số của lần cuối cái ô ấy còn trên màn, nghe như đang sống.
-     *
-     * Mặc định `{ null }` để mọi bài test (và mọi bề mặt chưa nối) giữ NGUYÊN hành vi cũ: đọc ảnh chụp.
-     */
-    private val freshCar: (String) -> CarStatus? = { null },
-    /**
      * Mã app dẫn đường MẶC ĐỊNH (`voice_nav_default_app`), truyền xuống [VoiceTargetDispatch]. Mặc định `{ null }`
      * để mọi test/bề mặt chưa nối giữ hành vi cũ (thứ tự [VoiceTargetDispatch.NAV_PREFERENCE]).
      */
@@ -213,34 +195,17 @@ class VoiceDispatcher(
      * tích lần thứ hai. Hai lần phân tích là hai kết quả có thể lệch (danh sách app/hồ sơ đổi giữa hai lần), tức
      * màn hình nói một đằng và xe làm một nẻo; và nó cũng nhân đôi công vô ích trên thread giao diện.
      *
-     * ## [P1 · SOÁT Opus 2026-09-27] [onSettled] — *"cả câu đã ghi xong, hoặc đang chờ NGƯỜI LÁI"*
-     * Từ R5, hàm này **trả về trước** khi câu chạy xong: vế bất đồng bộ (rời-AUTO của [VoiceClimateStep], gói lệnh)
-     * đi xuống luồng nền, nên lúc nó trả về chưa có một lời `say` nào. Chỗ gọi ([VoiceSession.execute]) mà chốt lượt
-     * nói ở đó thì gom được một mảng **RỖNG**: không đọc gì cả, mở micro nối ngay, rồi hai câu trả lời về muộn bị
-     * cổng `micOpen` bỏ — kể cả câu *"xe không nhận lệnh"*. Vì vậy: [onSettled] gọi **đúng một lần**, khi
-     * [runFrom] đã đi hết câu (`done`) HOẶC đã dừng ở một hộp hỏi lại (phần còn lại chờ người lái, y 2.75 — nếu đợi
-     * tiếp thì tấm chữ treo suốt lượt hỏi/đáp).
+     * ## [onSettled] — *"cả câu đã chạy xong, hoặc đang chờ NGƯỜI LÁI"*
+     * Gọi **đúng một lần**, khi [runFrom] đã đi hết câu HOẶC đã dừng ở một hộp hỏi lại (phần còn lại chờ người lái —
+     * nếu đợi tiếp thì tấm chữ treo suốt lượt hỏi/đáp). (≤ 2.98 BYD còn vế ghi xe bất đồng bộ đi qua làn ghi
+     * `VoiceWriteLane`; Android box B2 · W3 gỡ nút xe ⇒ mọi vế chạy đồng bộ.)
      */
     fun execute(intents: List<VoiceIntent>, onSettled: () -> Unit = {}) {
         val labels = appsByLabel()
         val fired = java.util.concurrent.atomic.AtomicBoolean(false)
         val settled = { if (fired.compareAndSet(false, true)) onSettled() }
-        lane.submit { done -> runFrom(intents, 0, labels, done, settled) }
+        runFrom(intents, 0, labels, {}, settled)
     }
-
-    /**
-     * ═══ VOICE-WRITE-LANE (2.76 · spec kachi-276-closing R5) · MỘT LÀN GHI, vế sau chờ vế trước **ghi xong** ═══
-     *
-     * Mọi lệnh ghi HAL từ giọng nói của một câu đi qua đúng một [VoiceWriteLane]; các vế **nối tiếp bằng lời gọi
-     * lại** (`next`), không bằng vòng `while` trên luồng gọi. Vì sao — review Pass 1 của 2.74 ([P2]): vế rời-AUTO
-     * của [VoiceControlDispatch] là hai lệnh + nhịp 400 ms trên luồng nền, hàm trả về **trước** lệnh thứ hai; vòng
-     * `while` cũ chạy vế kế tiếp ngay ⇒ *"tăng gió rồi tắt điều hoà"* ghi `ac_auto=OFF` của vế 2 **vào giữa nhịp
-     * chờ** của vế 1, và theo tiền đề [ĐO] của `DEFAULT_GAP_MS` thì lệnh mức gió có thể bị xe bỏ mà Kachi vẫn đọc ✓.
-     *
-     * Với vế đồng bộ, `next` được gọi ngay trong lượt gọi ⇒ thứ tự lệnh và lời đáp **y nguyên** 2.75 (bài canh cũ
-     * giữ xanh). Làn là của **riêng cầu này** (dựng lại mỗi lượt nói) — lý do ở KDoc [VoiceWriteLane].
-     */
-    private val lane = VoiceWriteLane()
 
     /**
      * Chạy từ vế [from] tới hết, DỪNG tại vế đầu tiên phải hỏi lại; [done] khi cả câu đã xong (hoặc bị huỷ).
@@ -296,21 +261,17 @@ class VoiceDispatcher(
     // ── Thi hành ─────────────────────────────────────────────────────────────────────────────────
 
     /**
-     * Thi hành MỘT vế rồi gọi [next] **đúng một lần** khi vế ấy đã ghi xong (VOICE-WRITE-LANE).
+     * Thi hành MỘT vế rồi gọi [next] **đúng một lần**.
      *
-     * Ba nhánh **có thể** bất đồng bộ giữ [next] lại: nút xe ([VoiceControlDispatch] — nhánh rời-AUTO) · gói lệnh ([runMacro]
-     * — cả gói chạy nền). (Camera theo yêu cầu 2.93 gỡ ở Android box B2 · W2b.) Mọi nhánh còn lại không ghi HAL (mở app · nhạc · hồ sơ · đọc số
-     * · bố cục…) nên gọi [next] ngay sau khi làm — y nguyên thứ tự 2.75. Đường dẫn đường có tra toạ độ + hộp hỏi
+     * Mọi nhánh gọi [next] ngay sau khi làm (≤ 2.98 BYD: nút xe · gói lệnh giữ [next] tới khi ghi xong — gỡ ở Android box
+     * B2 · W3). Đường dẫn đường có tra toạ độ + hộp hỏi
      * ([VoiceTargetDispatch.runNav]) cũng vậy: nó không ghi gì xuống xe, và bắt vế sau chờ một lượt mạng là đổi
      * hành vi đã chạy hiện trường ngoài phạm vi phép đo (CLAUDE.md §6).
      */
     private fun run(intent: VoiceIntent, labels: Map<String, String>, next: () -> Unit) {
         when (intent) {
-            is VoiceIntent.Control -> { runControl(intent, next); return }
-            is VoiceIntent.Macro -> { runMacro(intent, next); return }
             is VoiceIntent.Launcher -> { runLauncher(intent, next); return }
             is VoiceIntent.Profile -> { onSwitchProfile(intent.name); say(VoiceReply.done(intent, lang)) }
-            is VoiceIntent.Read -> runRead(intent)
             is VoiceIntent.Nav -> targets.runNav(intent, labels)
             is VoiceIntent.NavigateSaved -> targets.runNavSaved(intent, labels)
             is VoiceIntent.Media -> targets.runMedia(intent, labels)
@@ -330,53 +291,6 @@ class VoiceDispatcher(
         next()
     }
 
-    /**
-     * Một nút xe — vai *"ghi gì, chờ ở đâu, nói gì, và lúc nào thì XONG"* nằm trọn ở [VoiceControlDispatch] (tách
-     * 2.76 vì trần 500 dòng). Dựng **một lần** cho cả đời cầu, cùng lẽ với [targets].
-     */
-    private val controls = VoiceControlDispatch(
-        control = control, state = state, say = say, freshCar = freshCar, onUi = onUi, background = background, lang = { lang },
-    )
-
-    private fun runControl(i: VoiceIntent.Control, next: () -> Unit) = controls.run(i, next)
-
-    /**
-     * Gói lệnh chạy **cả gói** trên luồng nền (nhiều lệnh HAL, có ngủ giữa các bước) ⇒ [next] chỉ được gọi khi gói
-     * đã xong — về luồng VẼ qua `onUi`, cùng lẽ [VoiceClimateStep] — kể cả khi gói ném (`finally`). Hai lối ra sớm
-     * (mã lạ · gói đang chạy) gọi [next] ngay: không có gì để chờ.
-     */
-    private fun runMacro(i: VoiceIntent.Macro, next: () -> Unit) {
-        val macro = ActionMacros.byId(i.id)
-        if (macro == null) { say(VoiceReply.failed(i, lang = lang)); next(); return }
-        if (!ControlTileState.shared.beginRun(macro.id)) {
-            say(VoiceReply.busy(i, lang))
-            next()
-            return
-        }
-        val port = control()
-        background {
-            try {
-                val res = MacroRunner.run(
-                    macro,
-                    emit = { id, arg -> runCatching { port.actByKind(id, arg) }.getOrDefault(false) },
-                    sleep = { ms -> runCatching { Thread.sleep(ms) } },
-                )
-                res.results.forEach { r ->
-                    if (r.ok && ControlRegistry.byId(r.controlId)?.kind == ControlKind.TOGGLE) {
-                        ControlTileState.shared.setOn(r.controlId, macro.steps.first { it.controlId == r.controlId }.arg > 0)
-                    }
-                }
-                say(res.notice(macro.labelIn(lang), lang) ?: VoiceReply.done(i, lang))
-            } catch (t: Throwable) {
-                Log.w(TAG, "gói ${macro.id} hỏng giữa lượt chạy", t)
-                say(VoiceReply.failed(i, lang = lang))
-            } finally {
-                ControlTileState.shared.endRun(macro.id)
-                onUi(next)
-            }
-        }
-    }
-
     private fun runLauncher(i: VoiceIntent.Launcher, next: () -> Unit) {
         when (i.id) {
             LauncherActions.APPS -> openAppList()
@@ -388,23 +302,6 @@ class VoiceDispatcher(
         }
         say(VoiceReply.done(i, lang))
         next()
-    }
-
-    private fun runRead(i: VoiceIntent.Read) {
-        val spec = TelemetryRegistry.byId(i.datumId)
-        // [SOÁT P1-1] Cổng hiệu năng H1 giữ giá trị CŨ cho datum không hiện trên màn ⇒ hỏi một lượt TƯƠI trước
-        // khi nói. Hụt/không cần ⇒ `null` ⇒ dùng ảnh chụp như bản 1.66. Xem KDoc [freshCar].
-        val car = runCatching { freshCar(i.datumId) }.getOrNull() ?: state().carStatus
-        // Nhãn + CHỮ giá trị theo tiếng GIỌNG NÓI ([lang]), không theo màn: câu này được đọc lên (spec R6).
-        val view = TelemetryReadout.of(i.datumId, car, lang)
-        val value = view?.displayWithUnit()
-        say(
-            when {
-                spec == null -> VoiceReply.failed(i, lang = lang)
-                value.isNullOrBlank() || value == NO_VALUE -> VoiceReply.noReading(spec.labelIn(lang), lang)
-                else -> spec.labelIn(lang) + ": " + value
-            },
-        )
     }
 
     // ══ V1.1 · TỪ VỰNG MỞ → APP ĐÍCH — đã tách sang [VoiceTargetDispatch] (trần 500 dòng) ═══════
@@ -471,15 +368,6 @@ class VoiceDispatcher(
 
         /** Khoá đếm của [teachTail] — một bộ đếm cho cả tiến trình (xem KDoc). */
         const val TEACH_HINT_SCOPE = "process"
-
-        /** Chuỗi `TelemetryReadout` trả về khi xe chưa có số — cùng ký hiệu mà ô đọc đang vẽ. */
-        const val NO_VALUE = "—"
-
-        /**
-         * R5 — hằng chờ của lượt đọc lại đã theo vai *"đọc lại xe rồi mới nói"* sang [VoiceReadback] (lượt E
-         * 2026-09-19). Giữ một bản sao ở đây là dựng hai hằng cho cùng một khoảng chờ, và bản không ai đọc sẽ
-         * lặng lẽ lệch — đúng họ lỗi mà ghi chú `NAV_PREFERENCE` dưới đây nói tới.
-         */
 
         // ⚠ [SOÁT Pass 4 · P2] `NAV_PREFERENCE` đã theo [VoiceTargetDispatch] sang tệp kia cùng ba hàm dùng nó.
         // Lượt tách để lại ở đây một **bản sao y nguyên** mà không còn ai đọc (companion này `private`) — đúng

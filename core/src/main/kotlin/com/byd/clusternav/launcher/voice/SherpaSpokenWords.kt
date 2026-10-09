@@ -38,271 +38,14 @@ object SherpaSpokenWords {
      * (`VoiceLexicon.deaccent(giá trị) == khoá`), nên chỗ này không thể trở thành nơi lén thêm câu lệnh.
      */
     val ACCENTED: Map<String, String> = mapOf(
-        "kinh phu" to "kính phụ",
-        "nua kinh truoc trai" to "nửa kính trước trái", "mo nua kinh truoc trai" to "mở nửa kính trước trái",
-        "kinh truoc trai" to "kính trước trái", "cua kinh truoc trai" to "cửa kính trước trái",
-        "kinh truoc phai" to "kính trước phải", "cua kinh truoc phai" to "cửa kính trước phải",
-        "kinh sau trai" to "kính sau trái", "kinh sau phai" to "kính sau phải",
-        "ghe mat" to "ghế mát", "mat ghe lai" to "mát ghế lái",
-        "ghe suoi" to "ghế sưởi", "suoi ghe lai" to "sưởi ghế lái",
-        // V2 (off-car 2026-09-23) — biến thể "mát ghế phụ" (VoiceSynonyms seatc_r/seath_r bổ sung).
-        "mat ghe ben phu" to "mát ghế bên phụ", "mat ghe phai" to "mát ghế phải",
-        "mat ghe ben phai" to "mát ghế bên phải", "quat ghe phu" to "quạt ghế phụ",
-        "quat ghe ben phu" to "quạt ghế bên phụ", "thoi ghe phu" to "thổi ghế phụ",
-        "thong gio ghe phu" to "thông gió ghế phụ", "mat cai ghe phu" to "mát cái ghế phụ",
-        "mat ghe nguoi ngoi" to "mát ghế người ngồi", "lam mat ghe ben phu" to "làm mát ghế bên phụ",
-        "ghe phu thoang" to "ghế phụ thoáng", "seat cooling passenger" to "seat cooling passenger",
-        "suoi ghe phai" to "sưởi ghế phải", "suoi ghe ben phai" to "sưởi ghế bên phải",
-        "am ghe phu" to "ấm ghế phụ", "nong ghe phu" to "nóng ghế phụ",
-        "suoi cai ghe phu" to "sưởi cái ghế phụ", "suoi ghe nguoi ngoi" to "sưởi ghế người ngồi",
-        "nua kinh lai" to "nửa kính lái", "mo nua kinh lai" to "mở nửa kính lái", "kinh lai mot nua" to "kính lái một nửa",
-        "nua kinh phu" to "nửa kính phụ", "mo nua kinh phu" to "mở nửa kính phụ", "kinh phu mot nua" to "kính phụ một nửa",
-        "nua kinh sau trai" to "nửa kính sau trái", "mo nua kinh sau trai" to "mở nửa kính sau trái",
-        "nua kinh sau phai" to "nửa kính sau phải", "mo nua kinh sau phai" to "mở nửa kính sau phải",
-        "nua het kinh" to "nửa hết kính", "mo nua het kinh" to "mở nửa hết kính",
-        "nua tat ca kinh" to "nửa tất cả kính", "mo mot nua tat ca kinh" to "mở một nửa tất cả kính",
-        "mat ghe phu" to "mát ghế phụ", "ghe phu mat" to "ghế phụ mát",
-        "lam mat ghe phu" to "làm mát ghế phụ", "thoi mat ghe phu" to "thổi mát ghế phụ",
-        "suoi ghe phu" to "sưởi ghế phụ", "ghe phu am" to "ghế phụ ấm",
-        "lam am ghe phu" to "làm ấm ghế phụ", "suoi ghe ben phu" to "sưởi ghế bên phụ",
-        "cop" to "cốp",
-        "cop xe" to "cốp xe",
-        "den trong xe" to "đèn trong xe",
-        "den doc sach" to "đèn đọc sách",
-        "loc bui" to "lọc bụi",
-        "loc khong khi" to "lọc không khí",
-        "thoi ghe" to "thổi ghế",
-        "ghe thoang" to "ghế thoáng",
-        "suoi ghe" to "sưởi ghế",
-        "suoi" to "sưởi",
-        "ghe am" to "ghế ấm",
-        "nhiet do dieu hoa" to "nhiệt độ điều hòa",
-        "nhiet do trong xe" to "nhiệt độ trong xe",
-        "nhiet do" to "nhiệt độ",
-        "dieu hoa bao nhieu do" to "điều hòa bao nhiêu độ",
-        "quat" to "quạt",
-        "quat gio" to "quạt gió",
-        // [ĐO xe 2026-09-18 · log] cách gọi ĐỌC của `ac_wind` (*"quạt điều hòa đang mất máy"*, 2 lượt).
-        "quat dieu hoa" to "quạt điều hòa",
-        "toc do quat" to "tốc độ quạt",
-        "suc gio" to "sức gió",
-        "say kinh truoc" to "sấy kính trước",
-        // Golden dataset 2026-09-22 — synonym mới cần dạng có dấu để bias.
-        "kieng trai" to "kiếng trái", "kinh trai" to "kính trái", "kieng phai" to "kiếng phải", "kinh phai" to "kính phải",
-        "say kinh" to "sấy kính", "say kieng truoc" to "sấy kiếng trước", "tat ca kinh" to "tất cả kính",
-        "loc ngay" to "lọc ngay", "loc bui ngay" to "lọc bụi ngay", "bam loc" to "bấm lọc",
-        "bam loc bui" to "bấm lọc bụi", "bam loc nhanh" to "bấm lọc nhanh", "chay loc" to "chạy lọc",
-        "chay loc ngay" to "chạy lọc ngay", "chay loc nhanh" to "chạy lọc nhanh", "loc lien" to "lọc liền",
-        "loc bui lien" to "lọc bụi liền",
-        "xa bang" to "xả băng",
-        "noc xe" to "nóc xe",
-        "cua noc" to "cửa nóc",
-        "cua so noc" to "cửa sổ nóc",
-        "den chieu xa" to "đèn chiếu xa",
-        "gio trong" to "gió trong",
-        "tuan hoan trong" to "tuần hoàn trong",
-        // ⚠ 1.90 · dạng có dấu của `vol` (*"tiếng"/"âm thanh"*) và `cast` (*"chiếu"/"chiếu lên cụm"/"chiếu màn"*)
-        // gỡ cùng hai nút (owner 2026-09-21). `SherpaBiasingCoverageTest` đỏ HAI CHIỀU, nên phải gỡ ở đây nữa.
-        // (*"đèn chiếu xa"* ở trên là cách nói của `headl` — nút đó còn, cụm đó Ở LẠI.)
-        "dieu hoa" to "điều hòa",
-        "may lanh" to "máy lạnh",
-        "dieu hoa tu dong" to "điều hòa tự động",
-        "het kinh" to "hết kính",
-        "toan bo kinh" to "toàn bộ kính",
-        "moi kinh" to "mọi kính",
-        "kinh" to "kính",
-        "cua so" to "cửa sổ",
-        "cac cua so" to "các cửa sổ",
-        // V3 · R10 — bốn cách nói về KÍNH LÁI ([ĐO xe 2026-09-16]: owner nói *"mở kính lái"*, máy nghe đúng
-        // nhưng từ vựng không có cụm nào bắt đầu bằng `kinh lai` ⇒ rơi về nút gộp 4 kính).
-        "kinh lai" to "kính lái",
-        "cua kinh lai" to "cửa kính lái",
-        "kinh tai xe" to "kính tài xế",
-        "cua so lai" to "cửa sổ lái",
-        "kinh ben lai" to "kính bên lái",
-        "kinh ghe lai" to "kính ghế lái",
-        "kinh ben phu" to "kính bên phụ",
-        "kinh ghe phu" to "kính ghế phụ",
-        // ⚠ 1.90 · dạng có dấu của `brightness_gear` và `powertrain_mode` gỡ cùng hai nút (owner 2026-09-21).
-        "loc khong khi ngay" to "lọc không khí ngay",
-        "pin" to "pin",
-        "phan tram pin" to "phần trăm pin",
-        "muc pin" to "mức pin",
-        "tam hoat dong" to "tầm hoạt động",
-        "di duoc bao xa" to "đi được bao xa",
-        "con di duoc bao nhieu" to "còn đi được bao nhiêu",
-        "dang chay bao nhieu" to "đang chạy bao nhiêu",
-        "van toc" to "vận tốc",
-        "nhiet do ngoai troi" to "nhiệt độ ngoài trời",
-        "ngoai troi" to "ngoài trời",
-        "bui min" to "bụi mịn",
-        "chat luong khong khi" to "chất lượng không khí",
-        "so km da di" to "số km đã đi",
-        "odo" to "odo",
-        "ap suat lop truoc trai" to "áp suất lốp trước trái",
-        "ap suat lop truoc phai" to "áp suất lốp trước phải",
-        "ap suat lop sau trai" to "áp suất lốp sau trái",
-        "ap suat lop sau phai" to "áp suất lốp sau phải",
-        "nong do bui min" to "nồng độ bụi mịn",
-        "suc khoe pin" to "sức khỏe pin",
-        "do chai pin" to "độ chai pin",
-        "muc tieu thu" to "mức tiêu thụ",
-        "tieu thu dien" to "tiêu thụ điện",
-        "ac quy" to "ắc quy",
-        "dien ap ac quy" to "điện áp ắc quy",
-        // ⚠ 2026-09-25 · dạng có dấu của *"muc ac quy"* gỡ cùng bí danh `volt_12v_level` ở `VoiceSynonyms`
-        // (`SherpaBiasingCoverageTest.khong co muc chet trong SherpaSpokenWords` canh đúng cặp này).
+        // Android box B2 · W3 (2026-10-09): mọi dạng có dấu của nút/datum xe (kính · ghế · đèn · điều hòa · lọc · cốp…)
+        // gỡ cùng `VoiceSynonyms.CONTROL`/`TELEMETRY` — bảng không được giữ mục chết (`SherpaBiasingCoverageTest`).
         "bai hat" to "bài hát",
         "bai" to "bài",
         "nhac" to "nhạc",
         "ca khuc" to "ca khúc",
         "duong den" to "đường đến",
         "duong toi" to "đường tới",
-
-        // ═══ 2026-09-16 · GIỌNG NAM ═════════════════════════════════════════════════════════════════
-        // Nguồn: `scripts/voice/data/nouns.tsv` (region = nam). Vì sao phải có: [ĐO]
-        // `voice-mishear-2026-09-16.md` §4 — vùng `nam` đúng 21,8 % so với `chung` 53,1 %, và §6 xếp loại
-        // là **TỪ VỰNG** (chính câu gốc cũng không trỏ đúng mã) ⇒ đây là chỗ chữa, không phải mô hình.
-        // ⚠ `"khoa cua xe"` đã bị GỠ khỏi [VoiceSynonyms.CONTROL] — nó nuốt cụm đã đo `MỞ KHÓA CỬA` qua luật
-        // tiền tố. Lý do đầy đủ ở chỗ khai (`VoiceSynonyms.kt`, mục `lock`). Bỏ luôn ở đây vì bài canh
-        // `SherpaBiasingCoverageTest` đòi bảng này **không có mục chết**.
-        "cua hau" to "cửa hậu",
-        "thung sau" to "thùng sau",
-        "den tran" to "đèn trần",
-        "dang doc sach" to "đang đọc sách",
-        "den noc" to "đèn nóc",
-        "may loc khong khi" to "máy lọc không khí",
-        "may loc bui" to "máy lọc bụi",
-        "loc gio cabin" to "lọc gió cabin",
-        "quat ghe" to "quạt ghế",
-        "lam mat ghe" to "làm mát ghế",
-        "thong gio ghe" to "thông gió ghế",
-        "ghe nong" to "ghế nóng",
-        "nhiet do may lanh" to "nhiệt độ máy lạnh",
-        "do lanh" to "độ lạnh",
-        "muc gio" to "mức gió",
-        "say kieng" to "sấy kiếng",
-        "den cot pha" to "đèn cốt pha",
-        "het kieng" to "hết kiếng",
-        "bon kinh" to "bốn kính",
-        "kieng lai" to "kiếng lái",
-        "cua kieng lai" to "cửa kiếng lái",
-        "kieng tai xe" to "kiếng tài xế",
-        "kieng truoc trai" to "kiếng trước trái",
-        "kieng truoc phai" to "kiếng trước phải",
-        "kieng sau trai" to "kiếng sau trái",
-        "kinh sau ben trai" to "kính sau bên trái",
-        "kieng sau phai" to "kiếng sau phải",
-        "kinh sau ben phai" to "kính sau bên phải",
-        "loc nhanh" to "lọc nhanh",
-        // ⚠ 1.85: "nap ca po"/"nap may" đã xoá cùng nút `hood` — bảng này KHÔNG được giữ mục chết
-        // (`SherpaBiasingCoverageTest` đỏ hai chiều: thiếu dạng có dấu, và có dạng có dấu mà cụm đã biến mất).
-        "say kieng sau" to "sấy kiếng sau",
-        // ⚠ 1.90 · dạng có dấu của `anion` (*"khử mùi"*) gỡ cùng nút (owner 2026-09-21).
-        "rem noc" to "rèm nóc",
-        "man che nang" to "màn che nắng",
-        // 1.85 · khoá trẻ em hai bên + cụm mơ hồ. Dạng CÓ DẤU là thứ mô hình VN mã hoá được bằng BPE — thiếu nó thì
-        // cụm không được bias và sự thiếu ấy im lặng (đúng bài học `MEDIA_WORDS` khai không dấu ở 1.75).
-        "khoa con nit" to "khóa con nít",
-        "khoa tre em" to "khóa trẻ em",
-        "khoa tre em ben trai" to "khóa trẻ em bên trái",
-        "khoa tre em ben phai" to "khóa trẻ em bên phải",
-        "khoa con nit ben phai" to "khóa con nít bên phải",
-        // ⚠ Bảng này CHỈ được viết lại dấu — bỏ dấu phải ra ĐÚNG khoá (`SherpaBiasingCoverageTest` khoá hai chiều).
-        // [ĐO] bản đầu viết *"gió au-tô"* (cách ĐỌC) ⇒ bỏ dấu ra "gio au-to" ≠ "gio auto" ⇒ đỏ đúng chỗ. Cách đọc
-        // là việc của `TtsPronunciation`, không phải của bảng bias.
-        "gio auto" to "gió auto",
-        // ⚠ 1.90 · dạng có dấu của `headlight_mode` · `screen_rotation` · `camera_view` · `cluster_music` gỡ cùng
-        // bốn nút (owner 2026-09-21).
-        "sac dien thoai" to "sạc điện thoại",
-
-        // ═══ 1.91 · MỞ RỘNG DICTIONARY (owner 2026-09-21: *"nhiều câu tương tự nhau cho 1 command"*) ══════════
-        // Dạng CÓ DẤU của các cách nói mới ở [VoiceSynonyms]. Bảng này **chỉ được viết lại dấu** — bài canh
-        // `dang co dau phai bo dau ra dung khoa cua no` ép `deaccent(giá trị) == khoá`, nên đây không phải chỗ
-        // đẻ cách nói mới. Chỗ đặt dấu theo kiểu MỚI ở âm tiết MỞ (`khóa` không phải `khoá`) — bài canh
-        // `luat dat dau chi ap cho am tiet MO` ép luôn.
-        // ── VIỆC 1 · nhánh *"cửa sổ" / "cửa kính"* của nút GỘP 4 kính (sửa bug *"mở hết cửa sổ"*) ────────────
-        "het cua so" to "hết cửa sổ",
-        "toan bo cua so" to "toàn bộ cửa sổ",
-        "tat ca cua so" to "tất cả cửa sổ",
-        "moi cua so" to "mọi cửa sổ",
-        "bon cua so" to "bốn cửa sổ",
-        "het cua kinh" to "hết cửa kính",
-        "toan bo cua kinh" to "toàn bộ cửa kính",
-        "tat ca cua kinh" to "tất cả cửa kính",
-        "bon cua kinh" to "bốn cửa kính",
-        "tat ca kieng" to "tất cả kiếng",
-        // ── VIỆC 2 · thân xe · khoá · cốp · cửa ──────────────────────────────────────────────────────────────
-        "cop hau" to "cốp hậu",
-        "cua cop" to "cửa cốp",
-        "khoang hanh ly" to "khoang hành lý",
-        // ── kính từng cửa + cửa sổ trời + rèm ────────────────────────────────────────────────────────────────
-        "kinh nguoi lai" to "kính người lái",
-        "cua so tai xe" to "cửa sổ tài xế",
-        "kieng ben lai" to "kiếng bên lái",
-        "kieng ben phu" to "kiếng bên phụ",
-        "kinh noc" to "kính nóc",
-        "rem troi" to "rèm trời",
-        "che nang" to "che nắng",
-        // ── đèn ──────────────────────────────────────────────────────────────────────────────────────────────
-        "den cabin" to "đèn cabin",
-        "chieu xa" to "chiếu xa",
-        "den lon" to "đèn lớn",
-        "den chay ban ngay" to "đèn chạy ban ngày",
-        // ── ghế mát / ghế sưởi / vô-lăng ─────────────────────────────────────────────────────────────────────
-        "mat ghe" to "mát ghế",
-        "mat dit" to "mát đít",
-        "mat mong" to "mát mông",
-        "thoi mat ghe" to "thổi mát ghế",
-        "ghe lai mat" to "ghế lái mát",
-        "am ghe" to "ấm ghế",
-        "lam am ghe" to "làm ấm ghế",
-        "suoi dit" to "sưởi đít",
-        "suoi mong" to "sưởi mông",
-        // ── điều hòa · gió · nhiệt · sấy · lọc ───────────────────────────────────────────────────────────────
-        "quat tu dong" to "quạt tự động",
-        "lam mat xe" to "làm mát xe",
-        "do nong" to "độ nóng",
-        "nhiet do xe" to "nhiệt độ xe",
-        "muc quat" to "mức quạt",
-        "toc do gio" to "tốc độ gió",
-        "gio dieu hoa" to "gió điều hòa",
-        "tan suong" to "tan sương",
-        "khu suong" to "khử sương",
-        "say kinh hau" to "sấy kính hậu",
-        "tuan hoan gio" to "tuần hoàn gió",
-        "tuan hoan khi" to "tuần hoàn khí",
-        "khu bui" to "khử bụi",
-        "loc khi" to "lọc khí",
-        "loc gap" to "lọc gấp",
-        "de sac" to "đế sạc",
-        // ── thông tin đọc ────────────────────────────────────────────────────────────────────────────────────
-        "dung luong pin" to "dung lượng pin",
-        "quang duong con lai" to "quãng đường còn lại",
-        "toc do xe" to "tốc độ xe",
-        "nhiet do ben ngoai" to "nhiệt độ bên ngoài",
-        "muc bui min" to "mức bụi mịn",
-        "so km xe da chay" to "số km xe đã chạy",
-        "binh xang" to "bình xăng",
-        "lop truoc trai" to "lốp trước trái",
-        "lop truoc phai" to "lốp trước phải",
-        "lop sau trai" to "lốp sau trái",
-        "lop sau phai" to "lốp sau phải",
-        "con chay duoc bao nhieu" to "còn chạy được bao nhiêu",
-        "xang con chay duoc bao xa" to "xăng còn chạy được bao xa",
-        // [ĐO xe 2026-09-18] ba cách nói về nhiên liệu (log: «chỉ số xăng» · «xăng còn bao nhiêu» ra Unknown).
-        "xang" to "xăng",
-        "nhien lieu" to "nhiên liệu",
-        "muc nhien lieu" to "mức nhiên liệu",
-        "ngoai troi nong khong" to "ngoài trời nóng không",
-        "nhiet trong xe" to "nhiệt trong xe",
-        "nhiet do trong cabin" to "nhiệt độ trong cabin",
-        "hoi banh truoc trai" to "hơi bánh trước trái",
-        "hoi banh truoc phai" to "hơi bánh trước phải",
-        "hoi banh sau trai" to "hơi bánh sau trái",
-        "hoi banh sau phai" to "hơi bánh sau phải",
-        "can so" to "cần số",
-        "so khung" to "số khung",
 
         // ═══ H3 · TÊN APP ĐỌC THEO ÂM VIỆT ([VoiceSynonyms.APP_TARGETS]) ═══════════════════════════════
         // Nguồn: `scripts/voice/data/apps.tsv` + §5 của `voice-mishear-2026-09-16.md` (chuỗi mô hình THẬT SỰ
@@ -339,7 +82,6 @@ object SherpaSpokenWords {
         "viet lap" to "việt láp",
         "viet mat" to "việt mát",
         "ban do viet" to "bản đồ việt",
-        "quang duong da di" to "quãng đường đã đi", "quang duong di duoc" to "quãng đường đi được", "quang duong da chay" to "quãng đường đã chạy",
         // owner 2026-09-23: dạng "VietMap Live" (việt máp lay/live).
         "viet map lay" to "việt máp lay",
         "viet map live" to "việt máp live",
@@ -357,39 +99,11 @@ object SherpaSpokenWords {
      *  • cụm mang **chữ số** (*"4 kinh"*) — [SherpaHotwords] bỏ token số, phần còn lại không còn nghĩa.
      */
     val NO_VI_FORM: Set<String> = setOf(
-        "ac",
-        "air con",
-        "air filter",
-        "air quality",
-        "aircon",
-        "battery",
-        "blower",
-        "boot",
-        "cabin light",
-        "cabin temperature",
-        "clean air now",
+        // Android box B2 · W3: chữ Anh / chữ số của nút xe gỡ cùng `VoiceSynonyms.CONTROL`.
         "destination",
-        // 1.91 — chữ tắt/chữ Anh của hai nút vừa được mở rộng cách nói: mô hình VN không phát ra token ấy.
-        "drl",
-        "sunroof",
-        // 1.91 — dạng viết bằng CHỮ SỐ của nút gộp 4 kính. [SherpaHotwords] bỏ token số, nên bias chúng vô nghĩa
-        // (cùng luật cụm chữ số ở trên); tầng CHỮ vẫn khớp, nên *"mở 4 cửa sổ"* gõ vào vẫn ra cả bốn.
-        "4 cua so",
-        "4 kinh",
-        "every window",
-        "high beam",
-        "mileage",
         "music",
-        "outside temperature",
-        "purifier",
-        "range",
-        "recirc",
-        "seat cooling",
         "song",
-        "state of charge",
-        "tailgate",
         "track",
-        "windows",
         // ── H3 · tên app viết NGUYÊN BẢN tiếng Anh ───────────────────────────────────────────────────
         // Cùng lý do với khối trên, có thêm một phép đo: [ĐO] `voice-mishear-2026-09-16.md` §4 — kiểu nói
         // `tieng_anh_viet` đúng **11,3 %** (thấp nhất trong 5 kiểu). Đường chữa của chúng là **cách đọc âm

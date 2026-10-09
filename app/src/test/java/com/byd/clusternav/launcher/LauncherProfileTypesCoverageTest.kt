@@ -118,7 +118,8 @@ class LauncherProfileTypesCoverageTest {
         val unresolved = mutableListOf<String>()
         val w = writes(unresolved).mapTo(HashSet()) { it.suffix }
         val r = reads(unresolved).mapTo(HashSet()) { it.suffix }
-        val plain = declared.keys - ProfileScope.SNAPSHOT_SUFFIXES.toSet()
+        // Android box B2 · W3: hậu tố đã gỡ mã (chip · đơn vị) chỉ còn khai kiểu cho tệp cũ — không còn lượt ghi/đọc.
+        val plain = declared.keys - ProfileScope.SNAPSHOT_SUFFIXES.toSet() - SettingsCatalog.RETIRED_LAUNCHER_CODE_REMOVED
         assertEquals(emptySet<String>(), plain - w, "hậu tố khai mà bài không thấy lượt GHI có kiểu")
         assertEquals(emptySet<String>(), plain - r, "hậu tố khai mà bài không thấy lượt ĐỌC an toàn kiểu")
         // Ảnh chụp: ghi bằng `putString` ở đúng một chỗ, đọc qua `storedSnapshot` (bài `ClusterProfileScopeCoverageTest`).

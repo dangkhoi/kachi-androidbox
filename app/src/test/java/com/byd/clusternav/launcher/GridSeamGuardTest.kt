@@ -162,13 +162,9 @@ class GridSeamGuardTest {
             0, Regex("private\\s+var\\s+customLayout").findAll(act).count(),
             "màn chính KHÔNG được giữ bản sao (var) của bố cục — phải đọc từ HomeUiState",
         )
-        assertEquals(
-            0, Regex("private\\s+var\\s+unitPrefs").findAll(act).count(),
-            "lựa chọn đơn vị cũng vậy — trước đây có 4 bản sao đồng bộ bằng tay",
-        )
+        // Android box B2 · W3: lựa chọn đơn vị (`unitPrefs`) gỡ cùng datum xe.
         val state = code("src/main/kotlin/com/byd/clusternav/launcher/HomeUiState.kt")
         assertTrue(state.contains("customLayout: GridLayout?"), "bố cục tự vẽ phải là field của HomeUiState")
-        assertTrue(state.contains("unitPrefs: UnitPrefs"), "đơn vị phải là field của HomeUiState")
         assertTrue(state.contains("wallpaper: WallpaperPrefs"), "hình nền phải là field của HomeUiState")
     }
 
@@ -180,7 +176,7 @@ class GridSeamGuardTest {
             0, Regex("workspaceRepository\\.set").findAll(act).count(),
             "tầng UI KHÔNG được ghi bền trực tiếp — phải đi qua intent của ViewModel (một chiều)",
         )
-        listOf("setGridLayout", "setUnitPrefs", "setWallpaperPrefs").forEach { setter ->
+        listOf("setGridLayout", "setWallpaperPrefs").forEach { setter ->   // W3: `setUnitPrefs` gỡ cùng datum xe
             assertEquals(
                 1, Regex("repository\\.$setter\\(").findAll(vm).count(),
                 "$setter phải được gọi ở ĐÚNG MỘT chỗ trong ViewModel",
@@ -200,8 +196,8 @@ class GridSeamGuardTest {
             "lượt nạp state phải gồm bố cục tự vẽ ⇒ đổi hồ sơ tự đúng",
         )
         assertTrue(
-            load.contains("unitPrefs = prefs.unitPrefs()") && load.contains("wallpaper = prefs.wallpaperPrefs()"),
-            "đơn vị + hình nền cũng phải nạp vào state (cùng lý do)",
+            load.contains("wallpaper = prefs.wallpaperPrefs()"),
+            "hình nền cũng phải nạp vào state (cùng lý do)",
         )
     }
 

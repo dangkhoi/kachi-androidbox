@@ -1,6 +1,7 @@
 package com.byd.clusternav.launcher.voice
 
 import com.byd.clusternav.launcher.Lang
+import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.Strings
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,38 +31,6 @@ class VoiceClarifyTest {
         assertNotNull(ask)
         assertEquals("Bật gì?", ask!!.question)
         assertEquals(listOf("bật"), ask.carry, "phải nhớ động từ để ghép với câu trả lời")
-    }
-
-    @Test
-    fun `mot tu tro toi NHIEU nut thi hoi CHON — danh sach sinh tu tu vung, khong chep tay`() {
-        // *"kính"* là chữ mở đầu của nhiều cụm trỏ tới nhiều mã nút khác nhau ⇒ đúng ca *"thiếu một từ"*.
-        val ask = VoiceClarify.ask(unknown(VoiceUnknownReason.NO_OBJECT, "mở kính"), round = 0)
-        assertNotNull(ask)
-        assertTrue(ask!!.question.startsWith("Kính nào —"), "câu hỏi thật: ${ask.question}")
-        assertTrue(ask.question.endsWith("?"), ask.question)
-        // Có liệt kê ít nhất hai lựa chọn có tên (nếu chỉ một thì không có gì để chọn).
-        assertTrue(ask.question.count { it == ',' } + 1 >= 2 || ask.question.contains(" hay "), ask.question)
-    }
-
-    /**
-     * ═══ H4 · *"lọc"* — câu owner nêu tên (2026-09-16, tester 1.66) ══════════════════════════════════════════
-     *
-     * *"nói 'lọc ngay' nó chả hiểu lọc cái gì, nó phải hỏi lại"*. Danh sách lựa chọn **sinh từ từ vựng**
-     * (`pm25` = *"Lọc bụi"* · `pm25_clean_now` = *"Lọc ngay"*), không có một dòng chữ nào viết cứng — đúng luật
-     * CLAUDE.md §7: thêm một nút bắt đầu bằng *"Lọc"* là câu hỏi tự dài ra.
-     *
-     * ⚠ Thứ tự đọc là thứ tự **DANH MỤC** (thứ tự nút trên màn), không phải thứ tự [VoiceGrammar.terms] (cụm dài
-     * trước). Trước bản vá, `pm25_clean_now` lên trước chỉ vì nó tình cờ có một cách nói BA từ
-     * (*"lọc không khí ngay"*) ⇒ câu hỏi đọc ngược: *"Lọc ngay hay Lọc bụi?"*.
-     */
-    @Test
-    fun `loc mot minh thi hoi Loc bui hay Loc ngay`() {
-        val parsed = VoiceIntentParser.parseOne("lọc")
-        assertTrue(parsed is VoiceIntent.Unknown, "phải là Unknown để có cửa hỏi lại, ra: $parsed")
-        val ask = VoiceClarify.ask(parsed as VoiceIntent.Unknown, round = 0)
-        assertNotNull(ask)
-        assertEquals("Lọc nào — Lọc bụi hay Lọc ngay?", ask!!.question)
-        assertEquals(emptyList<String>(), ask.carry, "không mang theo gì: cả câu mới có một từ")
     }
 
     @Test
@@ -137,14 +106,15 @@ class VoiceClarifyTest {
      */
     @Test
     fun `cau bo cuoc day cau tieng Viet o moi tieng`() {
-        assertEquals("Vẫn chưa rõ — thử nói \"bật đèn đọc\"", VoiceClarify.giveUp(Lang.VI), "VI không đổi một byte")
-        assertEquals("Still not sure — try saying \"bật đèn đọc\" in Vietnamese", VoiceClarify.giveUp(Lang.EN))
+        // Android box B2 · W3: câu mẫu cũ "bật đèn đọc" là lệnh xe đã gỡ ⇒ mẫu nay là một lệnh launcher có thật.
+        assertEquals("Vẫn chưa rõ — thử nói \"mở cài đặt\"", VoiceClarify.giveUp(Lang.VI))
+        assertEquals("Still not sure — try saying \"mở cài đặt\" in Vietnamese", VoiceClarify.giveUp(Lang.EN))
         Lang.entries.forEach { l ->
             val s = VoiceClarify.giveUp(l)
-            assertTrue(Regex("""["“]bật đèn đọc["”]""").containsMatchIn(s), "$l phải dạy đúng câu tiếng Việt: $s")
+            assertTrue(Regex("""["“]mở cài đặt["”]""").containsMatchIn(s), "$l phải dạy đúng câu tiếng Việt: $s")
             assertTrue(!s.contains("{0}"), "$l: chỗ trống chưa điền: $s")
         }
         val parsed = VoiceIntentParser.parseOne(VoiceClarify.GIVE_UP_EXAMPLE)
-        assertTrue(parsed is VoiceIntent.Control, "câu mẫu phải là lệnh thật, ra: $parsed")
+        assertEquals(VoiceIntent.Launcher(LauncherActions.SETTINGS), parsed, "câu mẫu phải là lệnh thật")
     }
 }

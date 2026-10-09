@@ -57,12 +57,12 @@ class BarLayoutTest {
 
     // ── HeaderLayout ─────────────────────────────────────────────────────────────────────────────────────
 
-    /** Mặc định = ĐÚNG hình dạng 1.85: ai không sửa gì thì không thấy gì khác. */
+    /** Mặc định = thứ tự 1.85 bỏ khối chip (Android box B2 · W3: chip xe gỡ cùng lõi HAL BYDAuto). */
     @Test
-    fun `mac dinh giu dung thu tu cua ban 1_85`() {
+    fun `mac dinh giu dung thu tu cua ban 1_85 tru khoi chip`() {
         assertEquals(
             listOf(
-                HeaderItem.CLOCK, HeaderItem.CHIPS, HeaderItem.VOICE,
+                HeaderItem.CLOCK, HeaderItem.VOICE,
                 HeaderItem.APPS, HeaderItem.SETTINGS, HeaderItem.PROFILE,
             ),
             HeaderLayout.DEFAULT.order,
@@ -80,17 +80,17 @@ class BarLayoutTest {
     @Test
     fun `move di qua BarOrder va giu bat bien`() {
         val moved = HeaderLayout.DEFAULT.move(HeaderItem.PROFILE, -1)
-        assertEquals(HeaderItem.PROFILE, moved.order[4])
-        assertEquals(HeaderItem.SETTINGS, moved.order[5])
-        assertEquals(HeaderItem.values().size, moved.order.size, "vẫn đủ 6 vật")
+        assertEquals(HeaderItem.PROFILE, moved.order[3])
+        assertEquals(HeaderItem.SETTINGS, moved.order[4])
+        assertEquals(HeaderItem.values().size, moved.order.size, "vẫn đủ 5 vật")
         assertSame(HeaderLayout.DEFAULT, HeaderLayout.DEFAULT.move(HeaderItem.CLOCK, -1), "đụng biên ⇒ chính nó")
     }
 
     @Test
     fun `ma hoa di vong tron`() {
-        val l = HeaderLayout.DEFAULT.move(HeaderItem.PROFILE, -2).move(HeaderItem.CHIPS, +1)
+        val l = HeaderLayout.DEFAULT.move(HeaderItem.PROFILE, -2).move(HeaderItem.VOICE, +1)
         assertEquals(l, HeaderLayout.decode(HeaderLayout.encode(l)))
-        assertEquals("CLOCK,CHIPS,VOICE,APPS,SETTINGS,PROFILE", HeaderLayout.encode(HeaderLayout.DEFAULT))
+        assertEquals("CLOCK,VOICE,APPS,SETTINGS,PROFILE", HeaderLayout.encode(HeaderLayout.DEFAULT))
     }
 
     /**
@@ -105,25 +105,28 @@ class BarLayoutTest {
         assertEquals(HeaderLayout.DEFAULT, HeaderLayout.decode(null), "chưa từng sắp")
         assertEquals(HeaderLayout.DEFAULT, HeaderLayout.decode(""), "chuỗi rỗng")
         assertEquals(HeaderLayout.DEFAULT, HeaderLayout.decode("KHONG_TON_TAI,CUNG_KHONG"), "toàn tên lạ")
-        // Thiếu 4 vật ⇒ hai vật đã khai giữ chỗ, bốn vật còn lại nối vào cuối theo thứ tự mặc định.
+        // Thiếu 3 vật ⇒ hai vật đã khai giữ chỗ, ba vật còn lại nối vào cuối theo thứ tự mặc định.
         assertEquals(
             listOf(
-                HeaderItem.PROFILE, HeaderItem.CLOCK, HeaderItem.CHIPS,
+                HeaderItem.PROFILE, HeaderItem.CLOCK,
                 HeaderItem.VOICE, HeaderItem.APPS, HeaderItem.SETTINGS,
             ),
             HeaderLayout.decode("PROFILE,CLOCK").order,
         )
-        // Tên lạ lẫn giữa tên thật ⇒ bỏ tên lạ, phần còn lại vẫn đủ 6.
+        // Tên lạ lẫn giữa tên thật ⇒ bỏ tên lạ, phần còn lại vẫn đủ 5.
         assertEquals(HeaderItem.values().size, HeaderLayout.decode("PROFILE,RAC,CLOCK").order.size)
         // Trùng lặp ⇒ giữ một lần (nếu không thì `init` ném).
-        assertEquals(HeaderItem.values().size, HeaderLayout.decode("CLOCK,CLOCK,CHIPS").order.size)
+        assertEquals(HeaderItem.values().size, HeaderLayout.decode("CLOCK,CLOCK,VOICE").order.size)
     }
 
-    /** Luật căn lề hàng chip — ở `:core` để kiểm off-car (xem [HeaderLayout.chipsAlignEnd]). */
+    /** Android box B2 · W3: chuỗi đã lưu từ bản có khối chip vẫn nạp được — `CHIPS` bị bỏ như một tên lạ. */
     @Test
-    fun `hang chip can END tru khi no dung dau thanh`() {
-        assertTrue(HeaderLayout.DEFAULT.chipsAlignEnd)
-        assertFalse(HeaderLayout.decode("CHIPS").chipsAlignEnd, "chip đứng đầu ⇒ căn START, không mở đầu bằng khoảng trống")
+    fun `chuoi cu co CHIPS van nap duoc va bo CHIPS`() {
+        val l = HeaderLayout.decode("PROFILE,CHIPS,CLOCK,VOICE,APPS,SETTINGS")
+        assertEquals(
+            listOf(HeaderItem.PROFILE, HeaderItem.CLOCK, HeaderItem.VOICE, HeaderItem.APPS, HeaderItem.SETTINGS),
+            l.order,
+        )
     }
 
     @Test
@@ -131,7 +134,7 @@ class BarLayoutTest {
         HeaderItem.values().forEach { assertTrue(it.labelEn.isNotBlank(), "${it.name} thiếu nhãn EN") }
         // WP5 giữ nguyên cỡ chữ của vật THÔNG TIN và hạ cỡ NÚT còn 70 % ⇒ phép phân loại này là dữ liệu, không
         // phải một danh sách viết tay ở tầng vẽ.
-        assertEquals(listOf(HeaderItem.CLOCK, HeaderItem.CHIPS), HeaderItem.values().filter { it.info })
+        assertEquals(listOf(HeaderItem.CLOCK), HeaderItem.values().filter { it.info })
     }
 
     // ── DockConfig: cùng phép, dữ liệu khác ──────────────────────────────────────────────────────────────

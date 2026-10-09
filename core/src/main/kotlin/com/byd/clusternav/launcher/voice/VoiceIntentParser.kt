@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.voice.VoiceLexicon.Token
 
 /**
@@ -63,15 +62,7 @@ object VoiceIntentParser {
         // 2026-09-22] nhóm FAIL lớn nhất: động từ không ở vị trí 0 ⇒ NO_VERB. Chi tiết ở [VoiceLexicon.stripCourtesy].
         val all = VoiceLexicon.stripCourtesy(raw0).ifEmpty { raw0 }
         // H4 — cụm NGHE NHẦM chỉ bật khi CẢ CÂU có từ ngữ cảnh, nên phải tính trên `all`, không trên từng vế.
-        val terms = VoiceGrammar.plusMisheard(VoiceGrammar.terms(profiles, apps, aliases), all)
-
-        // V2 (owner on-car 2026-09-22) — "sưởi/mát CẢ 2 GHẾ [mức N]" ⇒ hai lệnh ghế. Đứng trước
-        // [splitOnConnectors] vì nó SINH ra câu ghép; chi tiết ở [VoiceControlParse.expandBothSeats].
-        VoiceControlParse.expandBothSeats(all)?.let { (a, b) ->
-            val ia = parseTokens(a, terms, places, text)
-            val ib = parseTokens(b, terms, places, text)
-            if (ia !is VoiceIntent.Unknown && ib !is VoiceIntent.Unknown) return listOf(ia, ib)
-        }
+        val terms = VoiceGrammar.terms(profiles, apps, aliases)
 
         // Mỗi vế cũng qua [fuzzy] (chữa phương ngữ) — không thì "tắt máy nạnh" (l=n) trong câu ghép rớt DROPPED_CLAUSE.
         fun seg(p: List<Token>) = fuzzy(parseTokens(p, terms, places, text), p, terms, places, text)
@@ -80,19 +71,18 @@ object VoiceIntentParser {
         // theo động từ, CÙNG cổng của nhánh MIX dưới đây (mọi mảnh phải hiểu được — không thì giữ nguyên vế).
         val parts = splitOnConnectors(all).let { ps ->
             if (ps.size < 2) ps
-            else ps.flatMap { p -> VoiceControlParse.multiVerbSplit(p)?.takeIf { s -> s.none { seg(it) is VoiceIntent.Unknown } } ?: listOf(p) }
+            else ps.flatMap { p -> VoiceMultiVerb.multiVerbSplit(p)?.takeIf { s -> s.none { seg(it) is VoiceIntent.Unknown } } ?: listOf(p) }
         }
         if (parts.size > 1) {
-            // 2.93 — vế chỉ là TÊN một nút (*"tắt điều hòa và đèn đọc"* · *"… và cốp"*) mượn động từ của vế trước — [VoiceClauseEllipsis].
-            val each = VoiceClauseEllipsis.inherit(parts, terms) { seg(it) }
+            // (≤ 2.98 BYD: vế chỉ là tên một nút xe mượn động từ của vế trước — gỡ cùng nút xe, Android box B2 · W3.)
+            val each = parts.map { seg(it) }
             if (each.none { it is VoiceIntent.Unknown }) return each
-            VoiceClauseEllipsis.dropBare(parts, each, terms)?.let { return it }
             val whole = fuzzy(parseTokens(all, terms, places, text), all, terms, places, text)
             return listOf(whole) + VoiceDroppedNote.droppedNote(parts, each, whole)
         }
         // MIX KHÔNG LIÊN TỪ ("hạ kính lấy gió ngoài tắt máy lạnh" = 3 lệnh, 0 chữ "và/rồi") — chi tiết ở
-        // [VoiceControlParse.multiVerbSplit]. CHỈ nhận khi ≥2 vế + MỌI vế hiểu được (an toàn: tên bài không bị cắt).
-        VoiceControlParse.multiVerbSplit(all)?.let { segs ->
+        // [VoiceMultiVerb.multiVerbSplit]. CHỈ nhận khi ≥2 vế + MỌI vế hiểu được (an toàn: tên bài không bị cắt).
+        VoiceMultiVerb.multiVerbSplit(all)?.let { segs ->
             val each = segs.map { seg(it) }
             if (each.size >= 2 && each.none { it is VoiceIntent.Unknown }) return each
         }
@@ -126,10 +116,10 @@ object VoiceIntentParser {
         if (got !is VoiceIntent.Unknown) return got
         if (got.reason == VoiceUnknownReason.FEATURE_GONE) return got
         if (VoiceFeatureGone.match(t) != null) return VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, s)
-        val question = VoiceQuestion.isQuestion(t)
-        if (question && VoiceClarify.namesAFamily(t, terms)) return got
-        val out = VoicePhoneticMatch.orRepair(got, t, terms) { parseTokens(it, terms, p, s) }
-        return if (question && VoiceQuestion.writesToCar(out)) got else out
+        // Câu HỎI không được chữa chính tả thành một LỆNH (≤ 2.98 BYD: cổng D1 "hỏi không thành lệnh ghi xe"; Android box
+        // B2 · W3 không còn lệnh xe, nhưng câu hỏi vẫn không được thành mở app / đổi hồ sơ).
+        if (VoiceQuestion.isQuestion(t)) return got
+        return VoicePhoneticMatch.orRepair(got, t, terms) { parseTokens(it, terms, p, s) }
     }
 
     /** Phân tích MỘT vế (không tách tiếp) — cửa dùng cho test và cho chỗ đã tự tách. */
@@ -141,7 +131,7 @@ object VoiceIntentParser {
         aliases: List<VoiceAppAlias> = emptyList(),
     ): VoiceIntent {
         val t = VoiceLexicon.tokenize(text)
-        val terms = VoiceGrammar.plusMisheard(VoiceGrammar.terms(profiles, apps, aliases), t)
+        val terms = VoiceGrammar.terms(profiles, apps, aliases)
         return fuzzy(parseTokens(t, terms, places, text), t, terms, places, text)
     }
 
@@ -171,9 +161,6 @@ object VoiceIntentParser {
         if (t.isEmpty()) return VoiceIntent.Unknown(VoiceUnknownReason.EMPTY, original)
         // WP8 · [VoiceFeatureGone.HARD_BLOCK] — từ chặn cứng, xét TRƯỚC mọi phép khớp (lý do ở KDoc bên đó).
         if (VoiceFeatureGone.blocked(t)) return VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, original)
-        // «mở … một nửa / 50%» ⇒ cờ NỬA cho kính (COVER). Dò cả câu vì «một nửa» đứng TRƯỚC object («một nửa kính»).
-        val half = VoiceControlParse.mentionsHalf(t)
-
         // (a) Cụm hỏi (*"… bao nhiêu?"*) — người Việt hỏi xe bằng cụm hỏi, không bằng động từ đứng đầu.
         val ask = VoiceQuestion.askAt(t)
         if (ask != null) {
@@ -181,56 +168,22 @@ object VoiceIntentParser {
             val body = dropFillers(t.subList(0, at) + t.subList(at + len, t.size))
             return objectOnlyRead(body, terms, original)
         }
-        // (a″) D1 — **câu hỏi LỰA CHỌN** (*"… đang khóa hay đang mở"*, *"… hay không"*) ⇒ ép ĐỌC.
-        //
-        // [ĐO xe 2026-09-18] *"tất cả cửa đang khóa hay đang mở"* ra **`Control(sunroof, 1)`** = mở cửa sổ trời.
-        // Câu ấy không có cụm hỏi nào cắt được, nên nhánh (a) không thấy nó; mà bỏ dấu thì *"tất"* = *"tắt"* ⇒
-        // nó có đủ hình dạng một câu ra lệnh. Nhận dạng theo HÌNH DẠNG câu hỏi rồi đi đường ĐỌC là chỗ chữa
-        // duy nhất không phải liệt kê từng câu — xem ba cổng ở [VoiceQuestion.isChoice].
+        // (a″) Câu hỏi LỰA CHỌN (*"… hay không"*) — không bao giờ là lệnh ([VoiceQuestion.isChoice]).
         if (VoiceQuestion.isChoice(t)) return objectOnlyRead(VoiceQuestion.strip(t), terms, original)
-        // (a‴) D2 — câu hỏi mức mà chữ hỏi rụng còn MỘT tiếng ở cuối (*"ghế mát mức mấy"* → ASR *"ghế mất mấy"*): chỉ
-        //       đổi được thành lệnh ĐỌC, và chỉ khi thân ra datum thật. Ba cổng ở [VoiceQuestion.bareAskBody].
-        VoiceQuestion.bareAskBody(t)?.let { body ->
-            val read = objectOnlyRead(body, terms, original)
-            if (read is VoiceIntent.Read) return read
-        }
-        // (a') *"chỉ số X"* = *"cho biết giá trị của X"* — là câu ĐỌC kể cả khi KHÔNG có cụm hỏi (*"chỉ số bụi mịn
-        //      hiện nay"*). [objectOnlyRead] tự bỏ cụm dẫn để *"số"* không nuốt thành datum `gear`.
-        if (VoiceQuestion.readsLead(t)) return objectOnlyRead(t, terms, original)
+        // (≤ 2.98 BYD còn (a‴) câu hỏi mức rụng chữ hỏi + (a') *"chỉ số X"* — chỉ phục vụ đọc datum xe, gỡ ở Android box B2 · W3.)
 
         // (b) Động từ đứng đầu, khớp cụm DÀI nhất.
         val verbHit = VoiceGrammar.VERBS.firstOrNull { VoiceLexicon.phraseAt(t, 0, it.first) }
 
-        // "gió ngoài" / "lấy gió ngoài" → recirc TẮT (lấy gió ngoài = tắt tuần hoàn). Scoped ở đây vì cụm "gió
-        // ngoài" là chiều NGƯỢC của nút `recirc` (bật = lấy gió trong) — KHÔNG cho nó vào bảng synonym của recirc
-        // (sẽ BẬT khi người ta xin gió ngoài). (owner 2026-09-21)
-        //
-        // ⚠⚠ [SOÁT 2026-09-21 · P1] Luật này đọc ĐỘNG TỪ nên đứng SAU [verbHit]. Bản đầu trả `Control(recirc,0)`
-        // cho mọi câu "gio"+"ngoai" ⇒ "tắt gió ngoài" lại BẬT gió ngoài (chạy NGƯỢC — tệ hơn không hiểu).
-        // `recirc` chỉ có HAI trạng thái nên chiều phủ định là suy ra được, không phải đoán: *thôi lấy gió ngoài*
-        // = lấy gió trong = `recirc` BẬT. (Câu HỎI không tới được đây: [VoiceQuestion.isChoice]/[readsLead] đã cắt ở
-        // trên, và cổng D1 ở [parse] còn đổi mọi câu hỏi-ra-lệnh-GHI về đường ĐỌC.)
-        if (t.any { it.norm == "gio" } && t.any { it.norm == "ngoai" }) {
-            val stop = verbHit?.second == VoiceVerb.OFF || verbHit?.second == VoiceVerb.CLOSE
-            return VoiceIntent.Control("recirc", if (stop) 1 else 0)
-        }
-
         // (b') CẢ CÂU chính là TÊN của một việc ⇒ tên thắng động từ.
         //
-        // [ĐO] hai họ tên thật trong bộ đăng ký bắt đầu bằng một động từ: gói lệnh *"Mở hết kính"* / *"Đóng hết
-        // kính"* / *"Rời xe"* (`ActionMacros`) và nút *"Mở khoá cửa"* (`ControlRegistry.door`). Tách động từ ra
-        // trước thì *"Mở hết kính"* rơi vào nút `windows_all` — nút **chưa kiểm trên xe**, trong khi gói lệnh cùng
-        // tên gồm 4 nút **đã chạy thật** (xem KDoc `ActionMacros`); còn *"Mở khoá cửa"* rơi vào nút `lock` với
-        // nghĩa ngược. Luật: cụm khớp tại vị trí 0 mà **dài hơn** cụm động từ thì nó là tên của việc.
+        // Luật: cụm khớp tại vị trí 0 mà **dài hơn** cụm động từ thì nó là tên của việc. (≤ 2.98 BYD sinh ra cho gói lệnh
+        // *"Mở hết kính"* · nút *"Mở khoá cửa"*; Android box B2 · W3 còn mỗi hành động launcher.)
         headMatch(t, terms, verbHit?.first?.size ?: 0)?.let { head ->
             val after = dropFillers(t.subList(head.words.size, t.size))
             // ⚠ [SOÁT 1.69 · P1] Không động từ + cụm không đọc đuôi ⇒ KHÔNG phải lệnh (*"cốp xe bẩn quá"* từng ra **mở cốp**) — KDoc [VoiceGrammar.readsTail].
             if (verbHit == null && after.isNotEmpty() && !VoiceGrammar.readsTail(head)) return@let
-            // 2.93 — tên-việc KHÔNG đọc đuôi mà đuôi nói NỬA (*"mở hết kính một nửa"*) ⇒ để đường động từ hiểu ⇒ nút nửa ([VoiceHalfButton]).
-            if ((verbHit?.second == VoiceVerb.OPEN || verbHit?.second == VoiceVerb.ON) && VoiceHalfButton.markedNear(emptyList(), after) && !VoiceGrammar.readsTail(head)) return@let
-            // 2.93 VOICE-BARE-NOUN-IMPLICIT-VERB — bộ phận CHUYỂN ĐỘNG (kính·nóc·rèm·cốp) nói trần ⇒ hỏi lại — [VoiceBareCover].
-            if (VoiceBareCover.bare(t, head, verbHit?.first?.size ?: 0)) return VoiceIntent.Unknown(VoiceUnknownReason.NO_VERB, original)
-            return build(head, implicitVerb(head), aloud = false, after, terms, places, original, half)
+            return build(head, VoiceVerb.OPEN, after, terms, places, original)
         }
         // (b½) L7 — *"bố cục 2 cột"* / *"đổi sang bố cục 4 ô"* / *"về bố cục hai hàng"*.
         //
@@ -247,23 +200,9 @@ object VoiceIntentParser {
         // (b''') [ĐO log 1.79] "tìm + TỪ-NHẠC" → tra nhạc; "tìm <phi-nhạc>" giữ NO_VERB. Đứng sau headMatch nên "tìm đường đến X" (NAV) đã giải trước — xem [mediaSearch].
         if (verbHit == null) {
             VoiceMediaNavParse.mediaSearch(t, terms)?.let { return it }
-            // "hạ [cái] cốp [sau]" → ĐÓNG cốp — scoped: "hạ" mơ hồ theo vật (hạ kính=MỞ) nên KHÔNG vào bảng verb chung.
-            if (VoiceControlParse.lowersAt0(t) && t.any { it.norm == "cop" }) return VoiceIntent.Control("trunk", 0)
-            // Hướng KÍNH "hạ/kéo/nâng … [lên/xuống]" (owner phương ngữ) — chi tiết ở [VoiceControlParse.rewriteWindowDirection].
-            VoiceControlParse.rewriteWindowDirection(t)?.let { return parseTokens(it, terms, places, original) }
-            // "điều hòa/máy lạnh <số> độ" KHÔNG có động từ (owner 2026-09-21) ⇒ đẩy qua control(ac_auto, SET),
-            // nó tự nhận "<số> độ" → đặt nhiệt (nút temp).
-            // ⚠⚠ [SOÁT 2026-09-21 · P1] CHỈ nhận khi ra ĐÚNG setpoint nhiệt (id=="temp"). `ac_auto` là TOGGLE:
-            // trả thẳng `control(...)` thì "điều hòa chế độ hai"/"mức độ 3" (số không đứng trước "độ") BẬT điều
-            // hòa oan — cùng họ [P1] mà 1.83 đã vá. Không khớp ⇒ rơi `NO_VERB` như trước.
-            if (mentionsAc(t) && t.any { it.norm == "do" } && VoiceControlParse.hasNumber(t)) {
-                val set = VoiceControlParse.control("ac_auto", VoiceVerb.SET, t, original)
-                if (set is VoiceIntent.Control && set.id == "temp") return set
-            }
             return VoiceSlotNoVerb.pick(t, terms, original) ?: VoiceIntent.Unknown(VoiceUnknownReason.NO_VERB, original)
         }
         val verb = verbHit.second
-        val aloud = verbHit.first.any { it == "doc" || it == "read" || it == "nghe" }
         val rest = dropFillers(t.subList(verbHit.first.size, t.size))
 
         // (c) Điểm đến là từ vựng MỞ ⇒ KHÔNG đem so với từ vựng của xe. Một điểm đến bất kỳ có thể chứa đúng một
@@ -280,7 +219,7 @@ object VoiceIntentParser {
         rest.indices.forEach { i ->
             val cands = VoiceGrammar.matchAt(rest, i, terms)
             if (cands.isNotEmpty()) {
-                val term = choose(cands, verb)
+                val term = choose(cands)
                 // (d') H3 — **luật dãy dài nhất thắng áp cho cả TÊN APP**, không chỉ cho từ vựng chung.
                 //
                 // [ĐO xe 2026-09-16, tester 1.66] "Mở Google được mà Google Map chưa hiểu": nhãn app "Google"
@@ -295,14 +234,20 @@ object VoiceIntentParser {
                     VoiceTailClause.appByTargetName(rest, i, term.words.size)?.let { return it }
                 }
                 val after = dropFillers(rest.subList(i + term.words.size, rest.size))
-                val near = VoiceHalfButton.markedNear(rest.subList(0, i), after)   // 2.93 — dấu nửa NGAY cạnh tên nút
-                val built = build(term, verb, aloud, after, terms, places, original, half, near)
+                // W3 — chữ nhạc trong một câu về XE (đèn theo nhạc · nhạc trên cụm) ⇒ "đã gỡ", không phải lệnh nhạc.
+                if (term.kind == VoiceTermKind.MEDIA && VoiceFeatureGone.carMedia(rest.subList(0, i), after)) {
+                    return VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, original)
+                }
+                val built = build(term, verb, after, terms, places, original)
                 if (built !is VoiceIntent.Unknown) return built
                 if (firstMiss == null) firstMiss = built
             }
         }
         // (e) Chưa có cách hiểu nào CÓ NGHĨA ⇒ ba đường cuối (cách gọi app tiếng Việt · tên app bị ASR bóp méo ·
         //     tên hồ sơ bóp méo) — thứ tự + cổng ở KDoc [VoiceLastResort] (tệp riêng: đây đã sát trần 500 dòng).
+        // Android box B2 · W3 — câu nói về một bộ phận XE (*"mở kính"* · *"bật điều hoà"*) không được rơi xuống các đường ĐOÁN tên
+        // app phía dưới (thành mở một app tên gần giống) ⇒ trả lời "điều khiển xe đã bỏ" ([VoiceFeatureGone.carObject]).
+        if (firstMiss == null && verb != VoiceVerb.PLAY && VoiceFeatureGone.match(rest) != null) return VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, original)
         return VoiceLastResort.pick(verb, rest, terms, original) ?: firstMiss ?: noObject(verb, rest, original, terms)
     }
 
@@ -317,7 +262,9 @@ object VoiceIntentParser {
      *     test đang đòi, mà không cần một danh sách từ cấm nào.
      */
     private fun savedPlace(t: List<Token>, places: List<String>, terms: List<VoiceTerm>): VoiceIntent? {
-        val verb = VoicePlaces.PLACE_VERB_WORDS.firstOrNull { VoiceLexicon.phraseAt(t, 0, it) } ?: return null
+        val verb = VoicePlaces.PLACE_VERB_SPELLED.firstOrNull { (w, sp) ->
+            VoiceLexicon.phraseAt(t, 0, w) && w.indices.all { VoiceHomograph.spelledOk(t[it], sp[it]) }
+        }?.first ?: return null
         val after = dropFillers(t.subList(verb.size, t.size))
         if (after.isEmpty()) return null
         val hit = VoiceTailClause.appAfterMarker(after, VoiceAppKind.NAV, terms)
@@ -334,48 +281,20 @@ object VoiceIntentParser {
      * qua đường động từ. `internal`: [VoiceBareCover] hỏi đúng phép khớp này (không chép một bản thứ hai).
      */
     internal fun headMatch(t: List<Token>, terms: List<VoiceTerm>, verbWords: Int): VoiceTerm? {
-        val cands = VoiceGrammar.matchAt(t, 0, terms).filter {
-            it.kind == VoiceTermKind.MACRO || it.kind == VoiceTermKind.CONTROL || it.kind == VoiceTermKind.LAUNCHER
-        }
+        val cands = VoiceGrammar.matchAt(t, 0, terms).filter { it.kind == VoiceTermKind.LAUNCHER }
         if (cands.isEmpty()) return null
-        val best = choose(cands, VoiceVerb.OPEN)
+        val best = choose(cands)
         return best.takeIf { it.words.size > verbWords }
     }
 
-    /** Động từ ngầm cho một cụm tự đặt tên: gói lệnh thì "chạy", còn lại là "mở/bật". */
-    private fun implicitVerb(term: VoiceTerm): VoiceVerb =
-        if (term.kind == VoiceTermKind.MACRO) VoiceVerb.ON else VoiceVerb.OPEN
-
-    /** Câu chỉ có đối tượng + đuôi hỏi ⇒ ĐỌC. Không khớp được datum nào thì nói rõ là thiếu đối tượng. */
-    private fun objectOnlyRead(body0: List<Token>, terms: List<VoiceTerm>, original: String): VoiceIntent {
-        // D3 (log xe 2026-09-18) — câu HỎI về một tính năng đã bỏ thì trả lời đúng tên nó, TRƯỚC khi tra datum.
-        // *"xe đang sạc pin hay không"* trước đây ra `Read(soc)`: máy đọc phần trăm pin cho một câu hỏi về SẠC —
-        // đúng datum gần nhất, sai câu hỏi. Đây là chỗ an toàn để hỏi bảng: một câu HỎI không bao giờ là một
-        // điểm đến ([Nav] không đi qua đây). `forRead` = bỏ dòng [VoiceFeatureGone.Gone.readAlive] — vì sao: KDoc đó.
-        VoiceFeatureGone.match(body0, forRead = true)?.let { return VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, original) }
-        // [ĐO xe 2026-09-17 · log] *"chỉ số bụi mịn là bao nhiêu"* ra `Read(gear)` vì *"số"* (nhãn datum `gear`)
-        // khớp Ở TRƯỚC *"bụi mịn"*. *"chỉ số X"* = *"giá trị của X"* ⇒ bỏ cụm dẫn để *"số"* thôi nuốt câu.
-        val body = stripReadLead(body0)
-        // ⚠ Chọn datum DÀI NHẤT trong cả câu, KHÔNG lấy vị-trí-khớp-đầu-tiên. [ĐO] cùng câu trên: *"bụi mịn"* (2
-        // từ, `pm25`) phải thắng *"số"* (1 từ, `gear`) dù đứng sau. Đây là luật "dãy dài nhất thắng" áp cho READ —
-        // trước đây chỉ áp trong vòng quét hành động, còn câu hỏi thì dừng ở khớp đầu tiên (gốc bug).
-        var best: VoiceTerm? = null
-        body.indices.forEach { i ->
-            val term = VoiceGrammar.matchAt(body, i, terms)
-                .filter { it.kind == VoiceTermKind.TELEMETRY }
-                .maxByOrNull { it.words.size }
-            if (term != null && (best == null || term.words.size > best!!.words.size)) best = term
-        }
-        return best?.let { VoiceIntent.Read(it.id) } ?: VoiceIntent.Unknown(VoiceUnknownReason.NO_OBJECT, original)
-    }
-
-    /** Bỏ cụm dẫn *"chỉ số"* đầu câu hỏi (*"chỉ số bụi mịn"*) — nó là "giá trị của", không phải datum `gear`. */
-    private fun stripReadLead(body: List<Token>): List<Token> {
-        VoiceQuestion.READ_LEADS.forEach { lead ->
-            if (VoiceLexicon.phraseAt(body, 0, lead)) return dropFillers(body.subList(lead.size, body.size))
-        }
-        return body
-    }
+    /**
+     * Câu HỎI chỉ có đối tượng (*"pin bao nhiêu"*). ≤ 2.98 BYD tra datum xe (`Read`); Android box B2 · W3 không còn datum nào ⇒
+     * câu hỏi về xe nói "điều khiển xe đã bỏ" ([VoiceFeatureGone]), còn lại là thiếu đối tượng.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    private fun objectOnlyRead(body: List<Token>, terms: List<VoiceTerm>, original: String): VoiceIntent =
+        if (VoiceFeatureGone.match(body) != null) VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, original)
+        else VoiceIntent.Unknown(VoiceUnknownReason.NO_OBJECT, original)
 
     /**
      * Chọn ứng viên: **dài nhất trước**, rồi mới tới loại động từ (luật 1 rồi luật 2).
@@ -383,11 +302,9 @@ object VoiceIntentParser {
      * Thứ tự đó không hoán đổi được: ưu tiên loại trước sẽ cho phép một cụm NGẮN đúng loại thắng một cụm DÀI khác
      * loại, tức mở lại đúng cái cửa mà L-RE2 đã đóng (*"chế độ đèn pha"* → *"đèn pha"*).
      */
-    private fun choose(cands: List<VoiceTerm>, verb: VoiceVerb): VoiceTerm {
+    private fun choose(cands: List<VoiceTerm>): VoiceTerm {
         val longest = cands.maxOf { it.words.size }
-        val group = cands.filter { it.words.size == longest }
-        val wantRead = VoiceGrammar.isRead(verb)
-        return group.firstOrNull { (it.kind == VoiceTermKind.TELEMETRY) == wantRead } ?: group.first()
+        return cands.first { it.words.size == longest }
     }
 
     /** Không khớp đối tượng nào ⇒ vẫn còn vài động từ tự đứng một mình được (nhạc), phần còn lại là từ vựng mở. */
@@ -408,31 +325,18 @@ object VoiceIntentParser {
     private fun build(
         term: VoiceTerm,
         verb: VoiceVerb,
-        aloud: Boolean,
         after: List<Token>,
         terms: List<VoiceTerm>,
         places: List<String>,
         original: String,
-        half: Boolean = false,
-        near: Boolean = false,
     ): VoiceIntent =
         when (term.kind) {
-            VoiceTermKind.TELEMETRY ->
-                if (VoiceGrammar.isRead(verb)) VoiceIntent.Read(term.id, aloud)
-                else VoiceIntent.Unknown(VoiceUnknownReason.MISMATCH, original)
-
-            VoiceTermKind.CONTROL ->
-                if (VoiceGrammar.isAction(verb)) VoiceControlParse.control(term.id, verb, after, original, half, near)
-                else VoiceIntent.Unknown(VoiceUnknownReason.MISMATCH, original)
-
-            VoiceTermKind.MACRO ->
-                if (VoiceGrammar.isAction(verb)) VoiceIntent.Macro(term.id)
-                else VoiceIntent.Unknown(VoiceUnknownReason.MISMATCH, original)
-
             // *"Mở ứng dụng VTV Go"*: cụm "Ứng dụng" khớp hành động launcher (mở NGĂN KÉO), nhưng còn một cái
             // tên đứng sau — và cái tên đó mới là thứ người ta muốn. Đuôi khớp một app đã cài ⇒ mở thẳng app đó.
             VoiceTermKind.LAUNCHER -> when {
                 !VoiceGrammar.isAction(verb) -> VoiceIntent.Unknown(VoiceUnknownReason.MISMATCH, original)
+                // W3 [ĐO corpus `unknown_app_close`]: *"đóng ứng dụng này"* từng MỞ ngăn kéo app — động từ ĐÓNG/TẮT không mở.
+                VoiceTailClause.closesApp(verb) -> VoiceIntent.Unknown(VoiceUnknownReason.APP_CLOSE, original)
                 else -> VoiceTailClause.appInTail(after, terms)?.let { (app, tail) ->
                     if (VoiceTailClause.closesApp(verb)) VoiceIntent.Unknown(VoiceUnknownReason.APP_CLOSE, original)
                     else VoiceIntent.OpenApp(app, VoiceTailClause.slotAt(tail))
@@ -462,21 +366,6 @@ object VoiceIntentParser {
     // Cụm dẫn *"chỉ số X"* nay khai ở [VoiceQuestion.READ_LEADS] — [VoiceClarify] cần cùng bảng ấy (xem KDoc ở đó).
 
     // ── Tiện ích ─────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Câu có nhắc ĐIỀU HÒA không — cụm **hai từ** (*"điều hòa"* / *"máy lạnh"*), tra ở bất kỳ vị trí.
-     *
-     * ⚠ Cố ý KHÔNG nhận riêng chữ *"điều"* hay *"máy"*: chúng mở đầu hàng loạt từ khác (*"điều chỉnh"*, *"máy"* nói
-     * chung) và cổng gọi hàm này dẫn tới một lệnh GHI nhiệt độ cabin. Dùng [VoiceLexicon.phraseAt] thay vì hai phép
-     * `any` rời để *"máy"* và *"lạnh"* phải **đứng cạnh nhau** — hai `any` rời vẫn khớp *"máy … lạnh"* nằm ở hai đầu
-     * câu, tức hai chuyện khác nhau bị đọc thành một.
-     */
-    private fun mentionsAc(t: List<Token>): Boolean = AC_PHRASES.any { p ->
-        t.indices.any { VoiceLexicon.phraseAt(t, it, p) }
-    }
-
-    /** Cách gọi ĐIỀU HÒA đã bỏ dấu — xem [mentionsAc]. */
-    private val AC_PHRASES = listOf(listOf("dieu", "hoa"), listOf("may", "lanh"))
 
     private fun dropFillers(t: List<Token>): List<Token> = VoiceLexicon.dropLeadingFillers(t)
 }

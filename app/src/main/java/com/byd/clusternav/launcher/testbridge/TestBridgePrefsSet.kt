@@ -2,7 +2,6 @@ package com.byd.clusternav.launcher.testbridge
 
 import android.content.Context
 import com.byd.clusternav.Prefs
-import com.byd.clusternav.launcher.WorkspacePrefs
 import com.byd.clusternav.launcher.voice.SherpaModelCatalog
 import com.byd.clusternav.launcher.voice.VoiceEndpointer
 import com.byd.clusternav.launcher.voice.VoiceMicSource
@@ -55,17 +54,9 @@ import com.byd.clusternav.voiceVadThreshold
  * ([TestBridgeCommands.WRITABLE_PREFS_KEYS]) chặn ở **tầng phân tích**, và mọi khoá trong đó đều đảo lại được
  * bằng một cú chạm trong Cài đặt.
  *
- * ## Vì sao `top_strip_labels` đi đường KHÁC bốn khoá kia
- * Bốn khoá giọng nói là khoá **theo xe**, đọc lại ở mỗi lần dùng ⇒ ghi thẳng prefs là đủ, và chạy được cả khi
- * màn chính chưa lên. `top_strip_labels` thì **theo hồ sơ** *và* đang nằm trong `HomeUiState` mà màn hình đang
- * vẽ; ghi thẳng prefs dưới chân màn hình sẽ cho `state.bars.chip_labels` báo giá trị CŨ — tức một phép đo nói
- * một đằng màn hình hiện một nẻo, đúng thứ KDoc [TestBridgeHooks] cấm. Nó đi qua **đúng** lambda mà ô tích trong
- * Cài đặt đi ([TestBridgeHooks.setTopStripLabels]), nên cần màn chính đang chạy.
+ * (≤ 2.98 BYD còn `top_strip_labels` đi qua móc màn chính — gỡ cùng chip xe: W1 rời danh sách trắng, W3 gỡ nhánh.)
  */
 internal object TestBridgePrefsSet {
-
-    /** `top_strip_labels` cần màn chính (xem KDoc lớp) — cùng mã lỗi với mọi lệnh cần móc. */
-    const val KEY_TOP_STRIP_LABELS = "top_strip_labels"
 
     /** `--es text` không phải giá trị hợp lệ cho khoá ấy — nối nguyên văn để người đo thấy mình gõ gì. */
     const val ERR_BAD_VALUE = "bad_prefs_value:"
@@ -141,12 +132,6 @@ internal object TestBridgePrefsSet {
             // khoá theo-xe kia: `VoiceUtteranceLog.enabled` đọc lại ở mỗi lượt ghi, không cache.
             "voice_keep_log" -> bool(raw)?.let { Prefs.setVoiceKeepLog(app, it); it.toString() }
             // Android box B2 · W2b: mọi nhánh ghi khoá camera (`camera_*`, 2.67–2.93) gỡ cùng camera BYD.
-            KEY_TOP_STRIP_LABELS -> {
-                val on = bool(raw) ?: return reply.fail(ERR_BAD_VALUE + raw, "key" to cmd.key)
-                val h = hooks ?: return reply.fail(KachiTestBridge.ERR_NO_HOME, "key" to cmd.key)
-                h.setTopStripLabels(on)
-                on.toString()
-            }
             // Không thể tới: `:core` đã chặn khoá lạ ở tầng phân tích. Giữ nhánh để lượt thêm khoá mới mà quên nối dây trả về
             // một mã lỗi thay vì báo "đã ghi" cho một việc chưa xảy ra.
             else -> return reply.fail(TestBridgeCommands.ERR_BAD_PREFS_KEY + cmd.key)
@@ -179,8 +164,6 @@ internal object TestBridgePrefsSet {
             "voice_hotword_score" -> Prefs.voiceHotwordScore(app).toString()
             "voice_tts_speed" -> Prefs.voiceTtsSpeed(app).toString()
             "voice_keep_log" -> Prefs.voiceKeepLog(app).toString()
-            KEY_TOP_STRIP_LABELS -> (hooks?.state()?.topStrip?.showLabels ?: WorkspacePrefs(app).topStrip().showLabels)
-                .toString()
             else -> ""
         }
     }.getOrDefault("")

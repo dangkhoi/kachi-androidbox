@@ -107,7 +107,7 @@ object WorkspaceRenderPlanner {
     /**
      * Ô widget này có thứ gì **đọc từ xe** để làm mới không.
      *
-     * Từ RW0, ô giữa màn nhận được cả **HÀNH ĐỘNG** ([CapabilityKind.WRITE] — nút bấm). Ô chỉ chứa nút thì trạng thái
+     * (≤ 2.98 BYD: ô giữa màn nhận cả nút xe `WRITE` — gỡ ở Android box B2 · W3.) Từ RW0, ô chỉ chứa nút thì trạng thái
      * xe đổi KHÔNG có gì để làm mới, nhưng luật cũ vẫn dựng lại nó **1 nhịp/giây** trên xe ⇒ view bị tháo/gắn ngay
      * giữa cú chạm của người dùng (chuỗi MotionEvent đứt ⇒ **mất cú bấm**), và cú nháy 220ms của nút bấm-1-phát biến
      * mất. Đúng loại thiệt hại mà ràng buộc C5 dựng ra để chặn — trước đây chỉ chặn được cho ô App.
@@ -115,7 +115,7 @@ object WorkspaceRenderPlanner {
      * Danh sách rỗng hoặc mã lạ ⇒ coi như CÓ nội dung đọc (giữ y hành vi cũ, không đoán).
      */
     private fun hasReadContent(w: SlotContent.Widget): Boolean =
-        w.ids.isEmpty() || w.ids.any { !CapabilityCatalog.isWrite(it) && !isSelfDriven(it) }
+        w.ids.isEmpty() || w.ids.any { !isSelfDriven(it) }
 
     /**
      * Ô này **tự lo nội dung của nó**, KHÔNG lấy gì từ trạng thái xe.

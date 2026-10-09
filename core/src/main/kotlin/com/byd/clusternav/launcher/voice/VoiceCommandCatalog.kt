@@ -1,17 +1,10 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacro
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.ControlDef
-import com.byd.clusternav.launcher.ControlKind
-import com.byd.clusternav.launcher.ControlRegistry
-import com.byd.clusternav.launcher.Domain
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.LauncherActionDef
 import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.Localized
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.launcher.TelemetrySpec
 
 /**
  * Một câu **nói được** + việc Kachi sẽ làm với nó.
@@ -37,13 +30,11 @@ data class VoiceCommandExample(
  *
  * @property id mã ỔN ĐỊNH (nhật ký + bài canh), không phải chuỗi hiển thị.
  * @property title tiêu đề ĐÃ DỊCH.
- * @property domain miền xe của nhóm, `null` với nhóm không thuộc bộ đăng ký (nhạc · dẫn đường · app · hồ sơ).
- *   Bài canh dùng nó để chứng minh **câu nằm đúng nhóm** (ý định phân tích ra phải cùng miền).
+ * (≤ 2.98 BYD còn trường `domain` — miền xe của nhóm câu nút/datum; gỡ ở Android box B2 · W3.)
  */
 data class VoiceCommandGroup(
     val id: String,
     val title: String,
-    val domain: Domain?,
     val examples: List<VoiceCommandExample>,
 )
 
@@ -65,7 +56,7 @@ data class VoiceCommandGroup(
  * Danh từ = nhãn của chính bộ đăng ký (qua [SherpaHotwords.phrasesOf], cùng phép dọn dấu câu mà tệp hotword
  * dùng). Động từ = [SherpaPhraseHotwords.CONTROL_VERBS] × [SherpaSpokenWords.VERBS] — **đúng hai bảng** mà
  * [VoiceIntentParser] chấp nhận, nên không câu nào sinh ra mà parser không hiểu. Tiêu đề nhóm xe =
- * [Domain.labelIn] (đã dịch, đã được `LangCoverageTest` đếm).
+ * `Domain.labelIn` (đã dịch, đã được `LangCoverageTest` đếm).
  *
  * Bốn tiêu đề [FAMILY_TITLES] là chuỗi khai tại đây — **không** bộ đăng ký nào mang chúng, và khai ở `:core`
  * song ngữ là đúng lệ [VoiceReply] (hàng chục câu trả lời khai bằng [Strings.t] ngay cạnh bộ phân tích).
@@ -89,7 +80,7 @@ data class VoiceCommandGroup(
 object VoiceCommandCatalog {
 
     /**
-     * Mọi nhóm câu nói được, theo thứ tự hiện trên màn: miền xe (thứ tự khai của [Domain]) rồi bốn họ ngoài bộ
+     * Mọi nhóm câu nói được, theo thứ tự hiện trên màn: miền xe (thứ tự khai của `Domain`) rồi bốn họ ngoài bộ
      * đăng ký. Nhóm rỗng KHÔNG xuất hiện — không quảng cáo một nhóm không có câu nào.
      *
      * @param profiles tên hồ sơ trên máy này · @param apps nhãn app đã cài · @param places nhãn sổ địa chỉ.
@@ -110,87 +101,16 @@ object VoiceCommandCatalog {
         /** 2.91 — tên app đã dạy còn sống (nguồn động THỨ TƯ của parser) ⇒ nhóm *"Tên app đã dạy"* ([VoiceCommandCatalogTaught]). */
         aliases: List<VoiceAppAlias> = emptyList(),
     ): List<VoiceCommandGroup> {
-        val out = ArrayList<VoiceCommandGroup>(Domain.entries.size + FAMILY_TITLES.size)
-        Domain.entries.forEach { d ->
-            val ex = domainPairs(d).map { ex(it, confirmIds, lang) }
-            if (ex.isNotEmpty()) out.add(VoiceCommandGroup("dom_" + d.name.lowercase(), d.labelIn(lang), d, ex))
-        }
+        val out = ArrayList<VoiceCommandGroup>(FAMILY_TITLES.size + 1)
         FAMILY_TITLES.forEach { (id, title) ->
             val ex = familyPairs(id, profiles, apps, places).map { ex(it, confirmIds, lang) }
-            if (ex.isNotEmpty()) out.add(VoiceCommandGroup(id, title(lang), null, ex))
+            if (ex.isNotEmpty()) out.add(VoiceCommandGroup(id, title(lang), ex))
         }
         VoiceCommandCatalogTaught.group(aliases, lang) { ex(it, confirmIds, lang) }?.let { out.add(it) }
         return out
     }
 
-    // ══ 1 · Câu cho MỘT dòng bộ đăng ký ═════════════════════════════════════════════════════════════════
-
-    /**
-     * Câu mẫu của một nút — hình dạng theo [ControlKind], động từ theo [SherpaPhraseHotwords.CONTROL_VERBS].
-     *
-     * Đây là bộ sinh mà cả màn Cài đặt lẫn `FeatureCatalogDumpTest` (trường `voice` của `registry.json`) đọc.
-     */
-    fun samples(def: ControlDef): List<String> = controlPairs(def).map { it.first }
-
-    /** Câu mẫu của một datum — *"&lt;xem&gt; &lt;nhãn&gt;"*. Cùng vai [samples] cho nút. */
-    fun samples(spec: TelemetrySpec): List<String> = listOf(readPair(spec).first)
-
-    private fun controlPairs(def: ControlDef): List<Pair<String, VoiceIntent>> {
-        val noun = nounOf(def, VoiceTermKind.CONTROL)
-        val verbs = SherpaPhraseHotwords.CONTROL_VERBS[def.kind].orEmpty()
-        val out = ArrayList<Pair<String, VoiceIntent>>(3)
-        when (def.kind) {
-            ControlKind.TOGGLE, ControlKind.COVER -> {
-                verbs.take(2).forEach { v ->
-                    val on = v == VoiceVerb.ON || v == VoiceVerb.OPEN
-                    out.add("${verb(v)} $noun" to VoiceIntent.Control(def.id, if (on) 1 else 0))
-                }
-                // Mức NỬA (kính/rèm): tên mức là **dữ liệu của chính dòng đó** (`args[2]`, bản GỐC tiếng Việt — câu
-                // nói luôn tiếng Việt), và câu chỉ được bày ra khi [VoiceControlParse.mentionsHalf] thật sự nhận nó.
-                // Không có từ "nửa" nào viết cứng ở đây.
-                def.args.getOrNull(HALF_INDEX)?.let { half ->
-                    val p = "${verb(VoiceVerb.OPEN)} ${half.lowercase()} $noun"
-                    if (VoiceControlParse.mentionsHalf(VoiceLexicon.tokenize(p))) {
-                        out.add(p to VoiceIntent.Control(def.id, HALF_INDEX))
-                    }
-                }
-            }
-            ControlKind.STEP -> {
-                verbs.forEach { v ->
-                    when (v) {
-                        VoiceVerb.UP -> out.add("${verb(v)} $noun" to VoiceIntent.Control(def.id, null, 1))
-                        VoiceVerb.DOWN -> out.add("${verb(v)} $noun" to VoiceIntent.Control(def.id, null, -1))
-                        // Mức mặc định của chính dòng đó làm ví dụ — nhưng chỉ khi nó là một mức CÓ NGHĨA: `fan`
-                        // có `min = 0` mà [ĐO xe] `AC_WIND_LEVEL_SET = 0` bị xe bỏ qua, nên *"đặt gió 0"* sẽ là
-                        // một câu Kachi hứa mà xe không làm.
-                        else -> if (def.value > def.min) {
-                            out.add("${verb(v)} $noun ${def.value}" to VoiceIntent.Control(def.id, def.clamp(def.value)))
-                        }
-                    }
-                }
-            }
-            // Nút BẤM: cả câu là TÊN của việc (luật `VoiceIntentParser.headMatch`) — *"bấm Lọc ngay"* không ai nói.
-            ControlKind.BUTTON -> out.add(noun to VoiceIntent.Control(def.id, null))
-            // SELECT: tên nút + tên lựa chọn (đuôi là đối số thật — xem KDoc [VoiceGrammar.readsTail]).
-            ControlKind.SELECT -> def.args.indices.take(2).forEach { i ->
-                out.add("$noun ${def.args[i].lowercase()}" to VoiceIntent.Control(def.id, i))
-            }
-        }
-        return out
-    }
-
-    private fun readPair(spec: TelemetrySpec): Pair<String, VoiceIntent> =
-        "${verb(VoiceVerb.READ)} ${nounOf(spec, VoiceTermKind.TELEMETRY)}" to VoiceIntent.Read(spec.id)
-
-    private fun domainPairs(d: Domain): List<Pair<String, VoiceIntent>> {
-        val out = ArrayList<Pair<String, VoiceIntent>>(32)
-        ControlRegistry.ALL.filter { it.domain == d }.forEach { out.addAll(controlPairs(it)) }
-        ActionMacros.ALL.filter { it.domain == d }.forEach { m ->
-            out.add(nounOf(m, VoiceTermKind.MACRO) to VoiceIntent.Macro(m.id))
-        }
-        VoiceTelemetry.SPOKEN.filter { it.domain == d }.forEach { out.add(readPair(it)) }   // 2.88 — KDoc [VoiceTelemetry]
-        return out.distinctBy { it.first }
-    }
+    // ══ 1 · (≤ 2.98 BYD: câu cho một dòng bộ đăng ký nút / datum / gói lệnh xe — gỡ ở Android box B2 · W3) ══════════
 
     // ══ 2 · Bốn họ NGOÀI bộ đăng ký ═════════════════════════════════════════════════════════════════════
 
@@ -281,9 +201,6 @@ object VoiceCommandCatalog {
      * `FeatureCatalogDumpTest`) — khoá theo giá trị ở đây sẽ chẻ chúng thành năm dòng gần giống nhau.
      */
     internal fun keyOf(i: VoiceIntent): String? = when (i) {
-        is VoiceIntent.Control -> i.id
-        is VoiceIntent.Read -> i.datumId
-        is VoiceIntent.Macro -> i.id
         is VoiceIntent.Launcher -> i.id
         is VoiceIntent.Profile -> i.name
         is VoiceIntent.Media -> i.op.name
@@ -291,32 +208,6 @@ object VoiceCommandCatalog {
         is VoiceIntent.NavigateSaved -> i.placeName
         else -> null
     }
-
-    // ══ 3 · Câu cho BÀI CANH ĐỘ PHỦ (giữ nguyên nghĩa bản cũ trong test) ════════════════════════════════
-
-    /**
-     * Câu canh độ phủ của một nút: **đúng một** câu, dựng từ nhãn ĐẦY ĐỦ theo `lang`.
-     *
-     * Tách khỏi [samples] có chủ ý: bài canh độ phủ đòi một câu ra **đúng giá trị** mong đợi theo [ControlKind]
-     * (`VoiceGrammarCoverageTest.moi nut deu co dung gia tri mong doi`), còn danh sách bày cho người dùng thì cần
-     * nhiều câu (bật *và* tắt) và dùng nhãn đã dọn dấu câu. Gộp hai vai vào một hàm là làm bài canh kia đỏ —
-     * *"tắt X"* trả 0 trong khi nó chờ 1.
-     */
-    fun coverageSentence(def: ControlDef, lang: Lang): String {
-        val name = def.labelIn(lang)
-        val arg = (if (lang == Lang.EN) def.argsEn.firstOrNull() else null) ?: def.args.firstOrNull().orEmpty()
-        return when (def.kind) {
-            ControlKind.TOGGLE -> "${verb(VoiceVerb.ON, lang)} $name"
-            ControlKind.COVER -> "${verb(VoiceVerb.OPEN, lang)} $name"
-            ControlKind.BUTTON -> name
-            ControlKind.SELECT -> "${verb(VoiceVerb.SET, lang)} $name $arg"
-            ControlKind.STEP -> "${verb(VoiceVerb.SET, lang)} $name ${def.value}"
-        }
-    }
-
-    /** Câu canh độ phủ của một datum — *"xem &lt;nhãn đầy đủ&gt;"* / *"show &lt;full label&gt;"*. */
-    fun coverageSentence(spec: TelemetrySpec, lang: Lang): String =
-        "${verb(VoiceVerb.READ, lang)} ${spec.labelIn(lang)}"
 
     // ══ 4 · Động từ · danh từ ═══════════════════════════════════════════════════════════════════════════
 
@@ -393,9 +284,6 @@ object VoiceCommandCatalog {
     private fun slotTail(lang: Lang = Lang.VI): String =
         if (lang == Lang.EN) "in slot 1" else VoiceSlotPhrases.SPOKEN.first()
 
-    /** Mức NỬA của một nút COVER = chỉ số 2 của `args` (xem `VoiceReply.controlPreview`, nhánh COVER ≥ 2). */
-    private const val HALF_INDEX = 2
-
     /** Bao nhiêu ví dụ cho một danh sách ĐỘNG (hồ sơ · app · sổ địa chỉ) — đủ để thấy khuôn câu, không tràn trang. */
     private const val SHOWN_PER_LIST = 3
 
@@ -450,13 +338,7 @@ object VoiceCommandCatalog {
     }
 
     /** Mã của một dòng bộ đăng ký — bốn lớp khai `id` nhưng [Localized] không đòi nó, nên tra tại đây. */
-    private fun idOf(row: Localized): String = when (row) {
-        is ControlDef -> row.id
-        is TelemetrySpec -> row.id
-        is ActionMacro -> row.id
-        is LauncherActionDef -> row.id
-        else -> ""
-    }
+    private fun idOf(row: Localized): String = (row as? LauncherActionDef)?.id.orEmpty()
 
     /**
      * Cụm [noun] có khớp TRỌN một cụm của đúng `(kind, id)` không — và **không** bị một dòng cùng loại khác

@@ -117,11 +117,6 @@
     <string name="kachi_row_bar_scale">Size</string>
     <string name="kachi_bar_scale_a11y">Car button bar size: %1$s</string>
     <string name="kachi_bar_scale_note">Drag to shrink or enlarge the car button bar — 100% is as before. The tiles above are a true-size preview (view only). It applies when you let go: the tile area, widgets and shortcuts refit to the new space, and apps in tiles may redraw once. Buttons get smaller but their touch areas stay large enough to press while driving.</string>
-    <string name="kachi_sec_car_image">Car image</string>
-    <string name="kachi_car_image_current">In use: %1$s</string>
-    <string name="kachi_car_image_title">Car image</string>
-    <string name="kachi_car_image_default">Using the built-in default car image. To use your own car photo, follow the steps below.</string>
-    <string name="kachi_car_image_steps">How to change the car image (top-down view, transparent background works best):\n1. Plug a USB stick into the car, or open the Files app.\n2. Copy the image into this folder: %1$s\n3. The newest image in the folder is used; reopen the home screen to see it.\nTap the button below to copy the folder path.</string>
     <string name="kachi_copy_path">Copy folder path</string>
     <string name="kachi_path_copied">Folder path copied</string>
     <string name="kachi_color_note">Saved with the current profile. "From wallpaper" takes the dominant colour of the first photo in the wallpaper folder. Text always stays readable: on a very light accent the button text turns dark by itself. The new colour applies in place; apps in slots keep running.</string>
@@ -235,33 +230,16 @@
     <string name="kachi_dock_warn">⚠ Safety / Drivetrain / Entertainment groups change car behaviour.</string>
 
     <!-- ── TopStripPicker — chọn chip thanh trạng thái ── -->
-    <string name="kachi_topstrip_title">Status-bar chips</string>
-    <string name="kachi_topstrip_hint">Up to %1$d readings fit next to the clock. Tap a tile to switch it.</string>
-    <string name="kachi_topstrip_full">The top bar holds only %1$d chips — remove one first</string>
 
     <!-- ── WallpaperController / WallpaperStore — hình nền ── -->
     <string name="kachi_wall_no_photos">No photos yet. Put photos in:\n%1$s</string>
     <string name="kachi_wall_no_ext_storage">(external storage unavailable)</string>
 
     <!-- ── WidgetViews — ô widget dựng tay ── -->
-    <string name="kachi_badge_unverified">unverified on a car</string>
-    <string name="kachi_widget_board">Overview</string>
     <!-- [SOÁT ĐỘC LẬP 2026-09-12 · P1] Xem lý do ở `values/strings_kachi.xml`. `kachi_widget_none` giữ nguyên
          "WIDGET" ở cả hai thứ tiếng: đây là nhãn KỸ THUẬT của ô chưa chọn widget nào, và "widget" là từ dùng y hệt
          trong tiếng Việt — dịch nó thành một câu dài sẽ làm nhãn nhỏ đó bị cắt. -->
-    <string name="kachi_widget_car">Car</string>
-    <string name="kachi_widget_battery">battery</string>
     <string name="kachi_widget_none">WIDGET</string>
-    <string name="kachi_pm_good">Good</string>
-    <string name="kachi_pm_fair">Fair</string>
-    <string name="kachi_pm_poor">Poor</string>
-    <string name="kachi_tyre_temp_unverified">%1$s · temperature unverified</string>
-    <string name="kachi_outside_temp">%1$s · outside</string>
-    <string name="kachi_speed_current">Current speed</string>
-    <string name="kachi_doors_unknown">Door status —</string>
-    <string name="kachi_doors_open">A door is open</string>
-    <string name="kachi_doors_closed">All 4 doors closed</string>
-    <string name="kachi_tyre_pressure_unit">Tyre pressure (%1$s)</string>
 
     <!-- ── WorkspaceView — nút ⇄ của ô (FIX286 · ES4: mô tả trợ năng; ô trống trong suốt nên đây là chữ duy nhất nói "chỗ đặt app") ── -->
     <string name="kachi_slot_swap_empty">Choose an app for slot %1$d</string>
@@ -312,7 +290,6 @@
     <string name="kachi_save">Save</string>
 
     <!-- ── IA v2 nhóm 2 — Thanh trạng thái & thanh nút (SettingsBarsSection · TopStripPicker) ── -->
-    <string name="kachi_topstrip_count">On now · %1$d/%2$d</string>
     <string name="kachi_dock_pick_n">Choose bar buttons… (%1$d on)</string>
 
     <!-- ── IA v2 · R-UI (o) — chip thứ sáu của hàng bố cục: luôn có ĐÚNG một chip sáng ── -->
@@ -448,10 +425,6 @@
 
     <!-- U7 · R6 — see values/strings_kachi.xml for why the badge changed from "bright amber on
          almost every tile" to "dim dot + one line per group". -->
-    <plurals name="kachi_picker_unverified_n">
-        <item quantity="one">%1$d item not yet checked on the car</item>
-        <item quantity="other">%1$d items not yet checked on the car</item>
-    </plurals>
 
     <!-- ══ V1 · text command trial (docs/specs/kachi-voice-command.html R6) ══════════════════════════ -->
     <string name="kachi_voice_note">Type a sentence exactly as you would say it in Vietnamese, to see what the parser understands — e.g. “bật đèn đọc”, “đặt nhiệt độ 22”, “đóng hết kính”, “xem pin”, “mở Cài đặt”. To actually speak, use the “Talk to car” tile on the control bar or the mic button on the top bar.</string>
@@ -565,36 +538,6 @@
     <!-- F1 row 9 (spec shortcuts-autostart): the slot app is open full screen (K7); back to the slot on HOME (K8). -->
     <string name="kachi_sc_full_card">Showing full screen — tap to bring it back to the slot</string>
     <string name="kachi_sc_full_failed">Couldn\'t open %1$s full screen</string>
-    <string name="kachi_captest_title">Test each car function</string>
-    <string name="kachi_captest_note">Walk through every readout and action on the car. For an ACTION: tap Run, then mark OK or Not OK. For a READOUT: check the value shown. Results are saved so you can verify everything on the car.</string>
-    <string name="kachi_captest_summary">Checked %1$d/%2$d · OK %3$d · Not OK %4$d</string>
-    <string name="kachi_captest_start">▶ Start / Continue</string>
-    <string name="kachi_captest_export">Export report</string>
-    <string name="kachi_captest_clear">Clear results</string>
-    <string name="kachi_captest_clear_confirm">Clear all saved results?</string>
-    <string name="kachi_captest_run">▶ Run</string>
-    <string name="kachi_captest_ok">✓ OK</string>
-    <string name="kachi_captest_notok">✗ Not OK</string>
-    <string name="kachi_captest_skip">Skip</string>
-    <string name="kachi_captest_running">Testing: %s</string>
-    <string name="kachi_captest_sent">Command sent to the car.</string>
-    <string name="kachi_captest_notsent">Could not send (off-car or the button is unmapped).</string>
-    <string name="kachi_captest_reading">Reading…</string>
-    <string name="kachi_captest_value">Reading: %s</string>
-    <string name="kachi_captest_value_none">No reading (off-car or unmapped).</string>
-    <string name="kachi_captest_warn_body">⚠ This moves body hardware (windows/doors/tailgate). Make sure it is safe before running.</string>
-    <string name="kachi_captest_done">Checked all %d items.</string>
-    <string name="kachi_captest_report_title">Test report</string>
-    <string name="kachi_captest_kind_info">info</string>
-    <string name="kachi_captest_kind_act">action</string>
-    <string name="kachi_captest_badge_ok">OK</string>
-    <string name="kachi_captest_badge_notok">Not OK</string>
-    <string name="kachi_captest_badge_untested">not checked</string>
-    <string name="kachi_captest_unmapped">unmapped — needs the car</string>
-    <string name="kachi_captest_snapshot">Snapshot logs now</string>
-    <string name="kachi_captest_logs_where">Logs on the card: %1$s\nPull with: %2$s</string>
-    <string name="kachi_captest_snapshot_done">Log snapshot saved: %s</string>
-    <string name="kachi_captest_report_saved">Report saved to the card: %s</string>
     <!-- F2/F3 — trip at ignition (spec shortcuts-autostart §4.14, group C 2026-10-02) -->
     <string name="kachi_drawer_title_trip">Pick apps to open at ignition</string>
     <string name="kachi_drawer_hint_trip">Tap to add or remove an app · tap Apply to save · choose how each opens in Settings</string>

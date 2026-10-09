@@ -27,9 +27,8 @@ import com.byd.clusternav.R
  *
  * ## Dải mẫu = CHÍNH `ControlDockView` (K4 — một đường dựng, không bản sao phép cỡ ô)
  * Ba ô đầu của thanh hồ sơ đang dùng (bỏ khối lối tắt), cùng viền ⇒ đúng TỪNG PIXEL ô thật sẽ có ở cỡ đó. Trơ tuyệt đối:
- * cổng xe mặc định [NoCar], bảng trạng thái ô RIÊNG (`ControlTileState(ControlLastSent())` — không đụng `ControlTileState.shared`
- * lẫn `ControlLastSent.shared` (phím Đảo đọc) của thanh
- * thật), khung [InertFrame] nuốt mọi cú chạm trước khi tới ô và giấu cây khỏi trợ năng.
+ * khung [InertFrame] nuốt mọi cú chạm trước khi tới ô và giấu cây khỏi trợ năng. (≤ 2.98 BYD còn bảng trạng thái ô nút xe RIÊNG
+ * cho dải mẫu — gỡ ở Android box B2 · W3.)
  */
 internal class SettingsBarScaleSection(
     private val context: Context,
@@ -40,7 +39,7 @@ internal class SettingsBarScaleSection(
     fun build(body: LinearLayout) {
         body.addView(rows.sectionLabel(context.getString(R.string.kachi_sec_bar_scale)))
         val saved = deps.state()
-        val preview = PreviewStrip(context, saved.dock, saved.carStatus, saved.unitPrefs)
+        val preview = PreviewStrip(context, saved.dock)
         body.addView(rows.sliderRow(
             label = context.getString(R.string.kachi_row_bar_scale),
             positions = BarScale.POSITIONS,
@@ -54,11 +53,9 @@ internal class SettingsBarScaleSection(
     }
 
     /** Dải ô mẫu đúng cỡ (xem KDoc lớp). Khung cao CỐ ĐỊNH = cỡ ở [BarScale.MAX] ⇒ trang không nhảy khi kéo. */
-    private class PreviewStrip(ctx: Context, saved: DockConfig, car: CarStatus, units: UnitPrefs) {
+    private class PreviewStrip(ctx: Context, saved: DockConfig) {
         private val cfg = saved.copy(enabled = sample(saved.enabled), visible = true)
-        // `control` mặc định = NoCar. Review 2.89 Pass 3 · vietmap-dock-r2-4: bảng lệnh-cuối RIÊNG — `ControlTileState()` mặc định ghi
-        // vào `ControlLastSent.shared` (bảng phím Đảo đọc) mỗi lượt `rebuild` ⇒ kéo thanh là ghi đè giá trị CŨ của ảnh chụp lúc mở trang.
-        private val dock = ControlDockView(ctx, ControlTileState(ControlLastSent()))
+        private val dock = ControlDockView(ctx)
         private val frame = InertFrame(ctx)
         private var pending = saved.scalePct
         private val apply = Runnable { place(pending) }
@@ -66,7 +63,6 @@ internal class SettingsBarScaleSection(
         val view: View get() = frame
 
         init {
-            dock.setCarStatus(car, units)   // ô đọc hiện số thật một lần (chỉ đọc); không theo nhịp
             frame.addView(dock)
             frame.minimumHeight = extentAt(BarScale.MAX)
             place(saved.scalePct)

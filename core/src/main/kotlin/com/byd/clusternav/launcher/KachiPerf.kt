@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong
  *    có cắt được số lượt hỏi không"*, mà câu đó phải trả lời được **cả off-car** (máy ảo không có HAL BYDAuto —
  *    đếm sau khi resolve thì mọi số ở đó là 0 và bộ đếm vô dụng đúng nơi nó được dùng nhiều nhất). Trên xe, gần
  *    như mọi lượt vào cửa là một binder IPC nên hai cách đếm trùng nhau; off-car thì đọc nó là *"số lượt hỏi"*.
- *  • [HAL_SKIP_OFFSCREEN] — một datum **không hiện trên màn** nên không đọc (cổng H1, xem [CarDataDemand]).
+ *  • [HAL_SKIP_OFFSCREEN] — một datum **không hiện trên màn** nên không đọc (cổng H1, xem `CarDataDemand`).
  *  • [HAL_SKIP_ABSENT] — một datum đã **chứng minh là không có trên xe này** nên tạm ngưng đọc (xem
  *    `BydHalGateway`); khác [HAL_SKIP_OFFSCREEN] vì đây là *"xe không có"*, kia là *"màn không hiện"*.
  *  • [SHELL_CMD] — một lệnh shell qua dadb (mỗi lệnh là một lượt chặn trên hàng đợi dùng chung).
@@ -92,7 +92,7 @@ object KachiPerf {
         // ⚠ `Locale.ROOT`: `String.format` không có locale dùng locale MẶC ĐỊNH của máy, mà xe của owner chạy
         // `vi-VN` ⇒ `%.1f` in ra `1,5` thay vì `1.5`. Dòng này là **số đo** được chép vào `docs/diagnostics/perf-*`
         // và so giữa hai lần chạy; đổi dấu thập phân theo ngôn ngữ máy là làm hai lần đo không so được với nhau.
-        // Cùng luật với [TelemetryReadout] (`Locale.US`) và [Units.format] (`Locale.ROOT`).
+        // Cùng luật với `TelemetryReadout` (`Locale.US`) và `Units.format` (`Locale.ROOT`).
         return String.format(
             Locale.ROOT,
             "cửa sổ %ds · HAL đọc=%.0f/phút · bỏ-không-hiện=%.0f · bỏ-xe-không-có=%.0f · shell=%.1f/phút · log=%.1f KB/phút" +

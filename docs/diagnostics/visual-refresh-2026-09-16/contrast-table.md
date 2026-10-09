@@ -32,19 +32,6 @@
 | `INK trên surfFromOverArt (ảnh tối)` | P1b · chữ chính trên ảnh | 4.5 | **14.06** | ✅ |
 | `MUT trên surfFromOverArt (ảnh tối)` | P1b · nhãn phụ — CẦN scrim ở P1b | 4.5 | **6.85** | ✅ |
 
-### Sắc lĩnh vực TỐI — mực TỆ NHẤT trên thẻ đã tint
-
-| Lĩnh vực | Mã tint | Nền đỉnh | Nền đáy | Mực tệ nhất | Bước sáng |
-|---|---|---|---|---|---|
-| ENERGY | `#1a34d399` | `#233a49` | `#132931` | **4.70** | 1.21× |
-| DRIVETRAIN | `#1a7b5cff` | `#2b2e54` | `#1a1d3c` | **5.14** | 1.11× |
-| CLIMATE | `#1a29d3ee` | `#223a52` | `#12293a` | **4.65** | 1.23× |
-| TYRES | `#1a94a3b8` | `#2d354d` | `#1d2434` | **4.83** | 1.18× |
-| BODY | `#1aaeb8c8` | `#30374e` | `#202636` | **4.68** | 1.22× |
-| LIGHTS | `#1afbbf24` | `#38383e` | `#272725` | **4.62** | 1.23× |
-| IDENTITY | `#1a4c7dff` | `#263154` | `#16203c` | **5.06** | 1.13× |
-| INFOTAINMENT | `#1af59e0b` | `#37343b` | `#272323` | **4.86** | 1.17× |
-
 ## Bảng SÁNG
 
 | Cặp | Vai | Sàn | Đo được | Kết |
@@ -71,17 +58,4 @@
 | `MUT trên surfFromOverArt (ảnh sáng)` | P1b · nhãn phụ — CẦN scrim ở P1b | 4.5 | **7.22** | ✅ |
 | `INK trên surfFromOverArt (ảnh tối)` | P1b · chữ chính trên ảnh | 4.5 | **11.31** | ✅ |
 | `MUT trên surfFromOverArt (ảnh tối)` | P1b · nhãn phụ — CẦN scrim ở P1b | 4.5 | **4.50** | ❌ |
-
-### Sắc lĩnh vực SÁNG — mực TỆ NHẤT trên thẻ đã tint
-
-| Lĩnh vực | Mã tint | Nền đỉnh | Nền đáy | Mực tệ nhất | Bước sáng |
-|---|---|---|---|---|---|
-| ENERGY | `#1404684c` | `#ebf3f0` | `#e3ecee` | **5.34** | 1.13× |
-| DRIVETRAIN | `#145b3ee0` | `#f2effc` | `#eae9f9` | **5.34** | 1.13× |
-| CLIMATE | `#14026e83` | `#ebf3f5` | `#e3edf2` | **5.39** | 1.12× |
-| TYRES | `#145a6779` | `#f2f3f4` | `#eaecf1` | **5.42** | 1.11× |
-| BODY | `#144f5b6d` | `#f1f2f3` | `#e9ebf0` | **5.37** | 1.12× |
-| LIGHTS | `#147d5200` | `#f4f1eb` | `#edeae8` | **5.35** | 1.13× |
-| IDENTITY | `#142f5ae0` | `#eef2fc` | `#e7ebf9` | **5.38** | 1.12× |
-| INFOTAINMENT | `#14a5480a` | `#f7f0eb` | `#f0eae9` | **5.38** | 1.13× |
 

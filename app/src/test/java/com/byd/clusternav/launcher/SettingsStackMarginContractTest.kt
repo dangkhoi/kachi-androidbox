@@ -108,7 +108,8 @@ class SettingsStackMarginContractTest {
         val builders = builders().map { it.third }.toSet()
         val required = setOf(
             // pha 1 (design system)
-            "sectionLabel", "checkRow", "chipRow", "unitRow", "permissionRow", "note", "button",
+            // Android box B2 · W3: `unitRow` (đơn vị đo dữ liệu xe) gỡ cùng `Units`.
+            "sectionLabel", "checkRow", "chipRow", "permissionRow", "note", "button",
             // pha 2 (IA v2 §4.4 — T3)
             "subHeader", "statusRow", "stepperRow", "listRow", "embed",
             // tệp MỞ RỘNG (trần 500 dòng): ô màu (P1b · R8) + khối gập/mở (2.74 · R3)

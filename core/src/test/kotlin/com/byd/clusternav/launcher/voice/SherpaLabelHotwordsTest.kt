@@ -119,7 +119,8 @@ class SherpaLabelHotwordsTest {
         val names = listOf("cài đặt", "kính trước", "đèn", "ghế", "điều hòa", "sức khỏe", "camera lùi", "áp suất lốp", "máy ảnh")
             .map { t("com.example.${it.hashCode()}", it) }
         val p = SherpaTaughtHotwords.plan(base, names)
-        assertTrue(p.excluded.size >= 5, "tiền đề: phải có tên bị loại để so (${p.excluded})")
+        // Android box B2 · W3: tệp nền không còn cụm xe ⇒ chỉ "cài đặt" còn trùng; phép so hai đường giữ nguyên.
+        assertTrue(p.excluded.isNotEmpty(), "tiền đề: phải có tên bị loại để so (${p.excluded})")
         // So TẬP (thứ tự dòng đi theo thứ tự duyệt của tập truyền vào — plan dùng HashSet riêng của nó).
         p.excluded.forEach { e ->
             val linear = SherpaTaughtHotwords.killedBy(e.accented, baseLines)

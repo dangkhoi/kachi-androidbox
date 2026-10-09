@@ -30,23 +30,18 @@ class VoiceHomographTest {
 
     @Test
     fun `lien tu that van tach cau ghep nhu cu`() {
-        val want = listOf(VoiceIntent.Macro("mac_win_close_all"), VoiceIntent.Control("readl", 1))
-        assertEquals(want, VoiceIntentParser.parse("Đóng hết kính rồi bật đèn đọc"))
-        assertEquals(want, VoiceIntentParser.parse("ĐÓNG HẾT KÍNH RỒI BẬT ĐÈN ĐỌC".lowercase()))
-        assertEquals(
-            listOf(VoiceIntent.Control("readl", 1), VoiceIntent.Control("headl", 0)),
-            VoiceIntentParser.parse("Bật đèn đọc và tắt đèn pha"),
-        )
+        // Android box B2 · W3: câu mẫu cũ là lệnh xe ⇒ đổi sang hai việc launcher.
+        val want = listOf(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.APPS))
+        assertEquals(want, VoiceIntentParser.parse("Mở cài đặt rồi mở ứng dụng"))
+        assertEquals(want, VoiceIntentParser.parse("MỞ CÀI ĐẶT RỒI MỞ ỨNG DỤNG".lowercase()))
+        assertEquals(want, VoiceIntentParser.parse("Mở cài đặt và mở ứng dụng"))
     }
 
     /** Gõ KHÔNG dấu (bàn phím xe, kịch bản test): không có dữ liệu để tách đồng hình ⇒ hành vi cũ từng byte. */
     @Test
     fun `go khong dau giu hanh vi cu - roi van la lien tu`() {
-        assertEquals(
-            listOf(VoiceIntent.Macro("mac_win_close_all"), VoiceIntent.Control("readl", 1)),
-            VoiceIntentParser.parse("dong het kinh roi bat den doc"),
-        )
-        assertEquals(2, VoiceIntentParser.parse("bat den doc va tat den pha").size)
+        assertEquals(listOf(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.APPS)), VoiceIntentParser.parse("mo cai dat roi mo ung dung"))
+        assertEquals(2, VoiceIntentParser.parse("mo cai dat va mo ung dung").size)
     }
 
     /**
@@ -57,29 +52,26 @@ class VoiceHomographTest {
     @Test
     fun `cau nhac co chu roi di dung luat chung cua ten bai`() {
         assertEquals(
-            VoiceIntentParser.parse("phát bài hạ trắng bật đèn đọc").map { it::class },
-            VoiceIntentParser.parse("phát bài lá rơi bật đèn đọc").map { it::class },
+            VoiceIntentParser.parse("phát bài hạ trắng mở cài đặt").map { it::class },
+            VoiceIntentParser.parse("phát bài lá rơi mở cài đặt").map { it::class },
         )
         assertEquals(listOf(VoiceIntent.Media(VoiceMediaOp.QUERY, "lá rơi")), VoiceIntentParser.parse("phát bài lá rơi"))
         // Liên từ THẬT giữa hai vế vẫn tách.
         assertEquals(
-            listOf(VoiceIntent.Media(VoiceMediaOp.QUERY, "lá rơi"), VoiceIntent.Control("readl", 1)),
-            VoiceIntentParser.parse("phát bài lá rơi rồi bật đèn đọc"),
+            listOf(VoiceIntent.Media(VoiceMediaOp.QUERY, "lá rơi"), VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS)),
+            VoiceIntentParser.parse("phát bài lá rơi rồi mở cài đặt"),
         )
     }
 
     /** Câu MIX không liên từ ([VoiceControlParse.multiVerbSplit]): chữ nối THẬT ở đuôi vế được cắt, chữ đồng hình thì không. */
     @Test
     fun `cau MIX chi cat chu noi that o duoi ve`() {
-        fun segs(s: String) = VoiceControlParse.multiVerbSplit(VoiceLexicon.tokenize(s))!!.map { seg -> seg.joinToString(" ") { it.raw } }
+        fun segs(s: String) = VoiceMultiVerb.multiVerbSplit(VoiceLexicon.tokenize(s))!!.map { seg -> seg.joinToString(" ") { it.raw } }
         assertEquals(listOf("bật đèn đọc", "tắt máy lạnh"), segs("bật đèn đọc xong tắt máy lạnh"))
         assertEquals(listOf("bật đèn đọc", "tắt máy lạnh"), segs("bật đèn đọc rồi tắt máy lạnh"))
         assertEquals(listOf("bat den doc", "tat may lanh"), segs("bat den doc roi tat may lanh"), "không dấu ⇒ như cũ")
         assertEquals(listOf("bật đèn đọc rơi", "tắt máy lạnh"), segs("bật đèn đọc rơi tắt máy lạnh"), "«rơi» không phải chữ nối")
-        assertEquals(
-            listOf(VoiceIntent.Control("readl", 1), VoiceIntent.Control("ac_auto", 0)).map { it::class },
-            VoiceIntentParser.parse("bật đèn đọc xong tắt máy lạnh").map { it::class },
-        )
+        assertEquals(listOf(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.APPS)), VoiceIntentParser.parse("mở cài đặt xong mở ứng dụng"))
     }
 
     @Test

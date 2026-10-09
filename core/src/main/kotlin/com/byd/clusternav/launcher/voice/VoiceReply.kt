@@ -1,14 +1,9 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.launcher.ActionMacros
-import com.byd.clusternav.launcher.CarCapabilities
-import com.byd.clusternav.launcher.ClimateAuto
-import com.byd.clusternav.launcher.ControlRegistry
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.LauncherActions
 import com.byd.clusternav.launcher.ProfileNames
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.launcher.TelemetryRegistry
 
 /**
  * ═══ V1 · CÂU PHẢN HỒI — DỰNG Ở `:core`, SONG NGỮ ═════════════════════════════════════════════════════════════
@@ -33,13 +28,9 @@ import com.byd.clusternav.launcher.TelemetryRegistry
  */
 object VoiceReply {
 
-    /** Nhãn của bất kỳ mã nào trong bốn bộ đăng ký, theo [lang]; mã lạ ⇒ trả chính mã (không sập). */
+    /** Nhãn của một hành động launcher theo [lang]; mã lạ ⇒ trả chính mã (không sập). (≤ 2.98 BYD còn nút/datum/gói lệnh xe.) */
     fun labelOf(id: String, lang: Lang = Strings.current): String =
-        ControlRegistry.byId(id)?.labelIn(lang)
-            ?: TelemetryRegistry.byId(id)?.labelIn(lang)
-            ?: ActionMacros.byId(id)?.labelIn(lang)
-            ?: LauncherActions.byId(id)?.labelIn(lang)
-            ?: id
+        LauncherActions.byId(id)?.labelIn(lang) ?: id
 
     /**
      * Câu mô tả **việc sắp làm** — dùng cho hộp xác nhận và cho dòng "đã hiểu là…" của màn thử.
@@ -49,12 +40,9 @@ object VoiceReply {
      */
     @Suppress("CyclomaticComplexMethod")
     fun preview(i: VoiceIntent, lang: Lang = Strings.current): String = when (i) {
-        is VoiceIntent.Control -> VoiceReplyPreview.control(i, lang)
-        is VoiceIntent.Macro -> Strings.t("Chạy gói ", "Run pack ", lang) + labelOf(i.id, lang)
         // 2.93 — camera theo yêu cầu: câu nói đúng việc (KDoc [VoiceReplyPreview.launcher]).
         is VoiceIntent.Launcher -> VoiceReplyPreview.launcher(i, lang)
         is VoiceIntent.Profile -> Strings.t("Đổi sang hồ sơ ", "Switch to profile ", lang) + ProfileNames.display(i.name, lang)
-        is VoiceIntent.Read -> Strings.t("Xem ", "Show ", lang) + labelOf(i.datumId, lang)
         is VoiceIntent.Nav -> Strings.t("Dẫn đường tới ", "Navigate to ", lang) + i.query + VoiceReplyPreview.by(i.app, lang)
         // Sổ địa chỉ: đọc **nhãn**, không đọc địa chỉ. Người lái nói *"về nhà"* thì câu trả lời phải nói *"Nhà"* —
         // đọc lại nguyên dòng "123 Nguyễn Trãi, Hà Nội" là bắt họ đọc một thứ họ đã tự gõ và đã biết.
@@ -74,13 +62,13 @@ object VoiceReply {
      * kính lái"*) — 2.96 R12, xem [VoiceReplyDone].
      */
     fun done(i: VoiceIntent, lang: Lang = Strings.current): String =
-        "✓ " + VoiceReplyDone.body(i, lang, confirmed = false) + unverified(i, lang)
+        "✓ " + VoiceReplyDone.body(i, lang)
 
     /**
      * Đầu câu cho các ca chỉ làm được MỘT PHẦN (mở được app nhưng chưa chuyển điểm đến / chưa có phiên nhạc): giữ
      * câu xem-trước như 2.95, KHÔNG dùng câu quá khứ của [done] — *"Đã phát nhạc — chưa có phiên nhạc nào"* là tự mâu thuẫn.
      */
-    private fun partial(i: VoiceIntent, lang: Lang): String = "✓ " + preview(i, lang) + unverified(i, lang)
+    private fun partial(i: VoiceIntent, lang: Lang): String = "✓ " + preview(i, lang)
 
     /** Req2 (owner 2026-09-24) — câu tạm biệt ngắn khi kết thúc phiên voice; 2.96 R12: thêm *"hẹn gặp lại"* cho tự nhiên. */
     fun bye(lang: Lang = Strings.current): String = Strings.t("Tạm biệt, hẹn gặp lại", "Bye, see you", lang)
@@ -88,93 +76,8 @@ object VoiceReply {
     /** Câu ĐỌC khi lượt nghe không ra chữ nào — tấm chữ giữ `R.string` của màn; xem [VoiceReplyUnknown.nothingHeard]. */
     fun nothingHeard(lang: Lang = Strings.current): String = VoiceReplyUnknown.nothingHeard(lang)
 
-    /**
-     * ═══ E (owner test xe 2026-09-19) · ĐÃ **ĐỌC LẠI XÁC NHẬN** ⇒ BỎ ĐUÔI *"chưa kiểm trên xe"* ════════════════
-     *
-     * Khác [done] ở đúng một chỗ: **không** gọi [unverified]. Đuôi *"chưa kiểm trên xe"* nói về mức bằng chứng
-     * **tĩnh** của registry (`EvidenceTier`) — nó trả lời câu *"nút này từng chạy thật chưa"*. Nhưng khi chỗ gọi
-     * vừa ghi xong **rồi đọc lại đường ĐỌC của chính xe** và thấy đúng mức mong muốn, thì câu hỏi ấy đã được trả
-     * lời **tại chỗ, trên chiếc xe này, giây vừa rồi** — bằng chứng mạnh hơn hẳn một mức khai trong mã. Đọc thêm
-     * *"chưa kiểm"* vào đó là nói sai: nó vừa được kiểm.
-     *
-     * ⇒ Chỉ dùng khi lượt đọc lại **khớp**. Đọc không được (`null`) ⇒ chỗ gọi giữ [done] (còn nguyên đuôi hedge —
-     * đó là sự thành thật); đọc được mà **lệch** ⇒ [failed] (xe không nhận lệnh). Ba nhánh, ba câu khác nhau.
-     */
-    fun doneConfirmed(i: VoiceIntent, lang: Lang = Strings.current): String = "✓ " + VoiceReplyDone.body(i, lang, confirmed = true)
-
-    /**
-     * ═══ C (owner test xe 2026-09-19) · TỪ CHỐI MỞ CỐP/CA-PÔ KHI XE ĐANG CHẠY ═════════════════════════════════
-     *
-     * Xem [com.byd.clusternav.launcher.CtlSafetyPolicy.REQUIRES_STATIONARY] về vì sao chỉ hai mã ấy bị gate.
-     *
-     * Nói **điều kiện mở được** (*"khi xe đang dừng"*) thay vì một lời từ chối trơn: người lái vừa nói một câu
-     * hoàn toàn hợp lệ, thứ chặn nó là một điều kiện họ **giải được trong mười giây** (đạp phanh, về P). Câu
-     * *"xe không nhận lệnh"* ở đây sẽ làm họ nói lại lần hai, lần ba giữa lúc đang chạy — đúng thứ gate này sinh
-     * ra để tránh.
-     */
-    fun notWhileMoving(i: VoiceIntent, lang: Lang = Strings.current): String =
-        "✗ " + preview(i, lang) + " — " + Strings.t("chỉ mở được khi xe đang dừng", "only while the car is stopped", lang)
-
-    /**
-     * ═══ R5 · CÂU TRẢ LỜI ĐỌC LẠI **GIÁ TRỊ THẬT** MÀ XE BÁO ═══════════════════════════════════════════════
-     *
-     * Spec `docs/specs/kachi-voice-feedback.html` **R5 · T10**. Chỉ dùng cho nút [ControlKind.STEP], và chỉ khi
-     * [CarControlPort.readStep] đọc được một con số (`null` ⇒ chỗ gọi giữ nguyên [done] — **không bịa số**).
-     *
-     * ## Hai câu, vì đây là hai việc khác nhau
-     *  • **Khớp** ([actual] == giá trị đã gửi) ⇒ y hệt [done]: *"✓ Đặt Nhiệt độ = 24"*. Không thêm chữ nào —
-     *    một câu dài hơn cho cùng một kết quả chỉ tốn thêm hai giây của người đang lái.
-     *  • **Lệch** ⇒ nói ra **cả hai** con số: *"✓ Đã gửi Nhiệt độ 24 — xe báo 23"*. Không sửa câu thành *"đã đặt
-     *    23"* (lệnh đã gửi là 24, nói khác đi là giấu mất việc vừa xảy ra), cũng không đổi thành *"✗"* (lệnh
-     *    KHÔNG hỏng — nó được nhận, xe chỉ đang ở một con số khác).
-     *
-     * ## ⚠ Lệch KHÔNG có nghĩa là xe từ chối
-     * Ba nguyên nhân [SUY] có thể cho cùng một chỗ lệch, và câu trên đúng với cả ba: (a) xe **kẹp** giá trị vào
-     * dải của nó; (b) xe **chưa kịp áp** — đường đọc trả lại số CŨ vì lượt đọc chạy vài ms sau lượt ghi; (c) nút
-     * này thật sự không ăn trên trim đó. Phân biệt ba ca ấy cần một phép đo trên xe (spec §7 **OQ6**), nên câu trả
-     * lời chỉ **thuật lại** hai con số và để người lái nhìn thanh nút — nó không suy diễn nguyên nhân.
-     */
-    fun doneActual(i: VoiceIntent.Control, actual: Int, lang: Lang = Strings.current): String {
-        if (i.value == actual) return done(i, lang)
-        val name = ControlRegistry.byId(i.id)?.labelIn(lang) ?: labelOf(i.id, lang)
-        return "✓ " + Strings.fIn(
-            lang,
-            "Đã gửi {0} {1} — xe báo {2}",
-            "Sent {0} {1} — the car reports {2}", name, i.value, actual,
-        ) + unverified(i, lang)
-    }
-
-    /**
-     * ═══ UX4 — NẤC ĐÁY của thang gió tên là **AUTO**, không phải **0** ════════════════════════════════════════
-     *
-     * Dùng cho CẢ HAI ca mà [ClimateAuto.stepIntent] cho ra ở nấc đáy: vừa BẬT gió tự động (`EnableAuto`) và đã ở
-     * auto rồi nên không bắn gì (`NoOp`). Câu chỉ **thuật lại trạng thái** — đúng với cả hai ca — chứ không khẳng
-     * định *"đã đặt mức 0"*: [ĐO xe 2026-09-20] lệnh mức 0 bị xe **bỏ qua**, nên câu ấy sẽ là một lời nói dối.
-     * Không chữ tự nhiên nào để dịch (nhãn đã theo ngôn ngữ qua [labelOf]; `AUTO` là bốn chữ của màn AC gốc).
-     */
-    fun autoLevel(id: String, lang: Lang = Strings.current): String =
-        // 2.96 R12 — *"Đã để gió ở AUTO"* (đúng cho cả hai ca: vừa bật và vốn đã ở AUTO); 2.95 đọc ra *"Đã gió: AUTO"*.
-        "✓ " + Strings.fIn(lang, "Đã để {0} ở {1}", "{0}: {1}", VoiceReplyPreview.mid(labelOf(id, lang)), ClimateAuto.AUTO)
-
-    /**
-     * Đuôi *"chưa kiểm trên xe"* cho việc mà mức bằng chứng chưa phải [com.byd.clusternav.launcher.EvidenceTier.PROVEN].
-     *
-     * ## [SOÁT P2] Vì sao GIỌNG NÓI vẫn bắn, chỉ nói thêm một câu
-     * Thanh nút bấm được mọi nút ở mọi mức bằng chứng — mức thấp chỉ đeo **dấu** (`CarCapabilities.needsBadge`,
-     * `ActionMacro.needsBadge`). Cho giọng nói một luật khác (chặn, hoặc hỏi lại) là dựng **luật thứ hai** cho
-     * cùng một cái nút: người dùng bấm thì chạy, nói thì không — không ai giải thích nổi, và nó cũng không an
-     * toàn hơn (nút chưa kiểm phần lớn là *không ăn*, chứ không phải *nguy hiểm*; thứ nguy hiểm nằm ở
-     * [VoiceRiskTable]). Nhưng câu trả lời thì **phải** nói ra, vì ở đây không có dấu nào để nhìn: một chữ "✓"
-     * trơn cho một nút chưa từng chạy trên xe là hứa hão.
-     */
-    private fun unverified(i: VoiceIntent, lang: Lang): String {
-        val needs = when (i) {
-            is VoiceIntent.Control -> CarCapabilities.needsBadge(i.id)
-            is VoiceIntent.Macro -> ActionMacros.byId(i.id)?.needsBadge() ?: false
-            else -> false
-        }
-        return if (needs) " — " + Strings.t("chưa kiểm trên xe", "not yet checked on this car", lang) else ""
-    }
+    // Android box B2 · W3: `doneConfirmed` · `notWhileMoving` · `doneActual` · `autoLevel` · `unverified` (câu của lệnh nút xe —
+    // đọc lại xác nhận, cổng tốc độ cốp, đọc lại số thật, nấc AUTO của gió, đuôi "chưa kiểm trên xe") gỡ cùng nút xe.
 
     /**
      * Việc KHÔNG làm được — xe từ chối lệnh, hoặc app đích không có mặt.
@@ -197,31 +100,7 @@ object VoiceReply {
     fun busy(i: VoiceIntent, lang: Lang = Strings.current): String =
         failed(i, Strings.t("việc trước còn đang chạy", "the previous run is still going", lang), lang)
 
-    /** Xe chưa trả về số cho datum này (off-car là ca bình thường). [datumLabel] phải đã theo cùng [lang]. */
-    fun noReading(datumLabel: String, lang: Lang = Strings.current): String =
-        datumLabel + ": " + Strings.t("chưa đọc được", "no reading", lang)
-
-    /**
-     * H4 — nút **có trên màn nhưng xe này không có đường điều khiển** (route sentinel / absent on trim).
-     *
-     * ## Vì sao câu này phải tồn tại, và vì sao phép QUYẾT ĐỊNH không nằm ở đây
-     * [ĐO xe 2026-09-16] `ac_auto`: owner xác nhận **xe CÓ** điều hoà auto, nhưng mã HAL khai trong registry
-     * (`1324355606`) không có trong `BYDAutoFeatureIds` của đời xe này ⇒ lượt gọi trả sentinel *"absent on trim"*
-     * (xem ghi chú ở `ControlRegistry.ac_auto`). Người lái nói *"bật điều hoà"* và **không thấy gì xảy ra** —
-     * tệ hơn cả một lời từ chối, vì họ sẽ nói lại lần hai, lần ba.
-     *
-     * `:core` **không thể** tự biết điều đó: sentinel là kết quả **lúc chạy** của tầng HAL. Nên ở đây chỉ có hai
-     * thứ thuần: [uncontrollable] (hình dạng của ca) và câu chữ. Ai trả lời được câu *"mã này có đường thật
-     * không"* thì người đó gọi — cùng lệ với `freshCar`/`confirmIds` của `VoiceWiring`.
-     *
-     * @param routeAbsent chỗ gọi trả `true` khi mã không có đường điều khiển trên **chiếc xe này**.
-     */
-    fun uncontrollable(i: VoiceIntent, routeAbsent: (String) -> Boolean): Boolean =
-        i is VoiceIntent.Control && routeAbsent(i.id)
-
-    /** Câu đi kèm [uncontrollable] — nói thẳng là *chiếc xe này*, không nói *"lỗi"* (nút vẫn đúng, xe mới thiếu). */
-    fun notOnThisCar(i: VoiceIntent, lang: Lang = Strings.current): String =
-        failed(i, Strings.t("chưa điều khiển được trên xe này", "not controllable on this car", lang), lang)
+    // Android box B2 · W3: `noReading` · `uncontrollable` · `notOnThisCar` (datum / nút xe) gỡ cùng bộ đăng ký xe.
 
     /** Không có app dẫn đường nào trên máy. */
     fun noNavApp(i: VoiceIntent, lang: Lang = Strings.current): String =
@@ -427,10 +306,10 @@ object VoiceReply {
         "{0} only takes coordinates — add lat/lng to this entry in the address book", target.label,
     )
 
-    /** Câu hỏi lại cho việc [VoiceRisk.CONFIRM] — kèm cả dấu *"chưa kiểm trên xe"* nếu có (xem [unverified]). */
+    /** Câu hỏi lại cho việc [VoiceRisk.CONFIRM]. */
     fun confirmQuestion(i: VoiceIntent, lang: Lang = Strings.current): String {
         val why = VoiceRiskTable.reason(i, lang)
-        return preview(i, lang) + unverified(i, lang) + "?" + (why?.let { "\n" + it } ?: "")
+        return preview(i, lang) + "?" + (why?.let { "\n" + it } ?: "")
     }
 
     /**

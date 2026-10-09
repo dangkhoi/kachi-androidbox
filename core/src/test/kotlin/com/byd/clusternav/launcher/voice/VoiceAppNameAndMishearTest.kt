@@ -25,18 +25,6 @@ class VoiceAppNameAndMishearTest {
         return got as VoiceIntent.OpenApp
     }
 
-    private fun control(text: String): VoiceIntent.Control {
-        val got = one(text)
-        assertTrue(got is VoiceIntent.Control, "«$text» phải là Control, ra: $got")
-        return got as VoiceIntent.Control
-    }
-
-    private fun read(text: String): VoiceIntent.Read {
-        val got = one(text)
-        assertTrue(got is VoiceIntent.Read, "«$text» phải là Read, ra: $got")
-        return got as VoiceIntent.Read
-    }
-
     // ── H3(a) · cách nói tên app theo âm Việt ────────────────────────────────────────────────────
 
     @Test
@@ -105,63 +93,5 @@ class VoiceAppNameAndMishearTest {
                 val got = openApp(say, keys)
                 assertTrue(got.appName in keys, "«$say» phải trỏ về một khoá của «$label», ra: ${got.appName}")
             }
-    }
-
-    // ── H3 · giọng NAM ───────────────────────────────────────────────────────────────────────────
-
-    @Test
-    fun `cach goi giong Nam tro dung nut`() {
-        assertEquals("win_lf" to 1, control("bật kiếng lái lên").let { it.id to it.value })
-        assertEquals("trunk" to 1, control("mở cửa hậu").let { it.id to it.value })
-        assertEquals("trunk" to 1, control("mở thùng sau").let { it.id to it.value })
-        assertEquals("seatc" to 1, control("mở quạt ghế").let { it.id to it.value })
-        assertEquals("readl" to 0, control("tắt đèn nóc").let { it.id to it.value })
-        assertEquals("pm25" to 1, control("bật máy lọc không khí").let { it.id to it.value })
-        assertEquals("win_lf" to 1, control("mở kiếng trước trái").let { it.id to it.value })
-    }
-
-    @Test
-    fun `quat ghe khong cuop mat quat gio — luat day dai nhat thang`() {
-        assertEquals("fan", control("tăng quạt").id, "*\"quạt\"* một mình vẫn là quạt gió")
-        assertEquals("seatc", control("mở quạt ghế").id)
-    }
-
-    // ── H4 · chuỗi mô hình nghe nhầm, bí danh CÓ ĐIỀU KIỆN ───────────────────────────────────────
-
-    @Test
-    fun `cac bui la loc bui — tu ngu canh nam ngay trong cum`() {
-        assertEquals("pm25" to 1, control("các bụi").let { it.id to it.value })
-    }
-
-    /**
-     * Vế NGƯỢC, và nó mới là vế giữ an toàn: `đọc` là **động từ ĐỌC**, `ngày` là một từ đời thường. Một bí danh
-     * trần `"doc ngay"` → `pm25_clean_now` sẽ nuốt mọi câu dạng *"đọc ngày …"* mà **không gì báo**.
-     */
-    @Test
-    fun `doc ngay mot minh KHONG bien thanh lenh loc khi thieu tu ngu canh`() {
-        val got = one("đọc ngày")
-        assertTrue(
-            got !is VoiceIntent.Control || got.id != "pm25_clean_now",
-            "bí danh nghe nhầm đã bật khi chưa có từ ngữ cảnh: $got",
-        )
-        // …và động từ ĐỌC vẫn nguyên vẹn ở câu thường gặp nhất.
-        assertEquals("soc", read("đọc pin").datumId)
-        assertEquals("soc", read("xem pin").datumId)
-    }
-
-    @Test
-    fun `dieu kien ngu canh doc tren CA CAU, khong tren mot cua so hai tu`() {
-        // Có chữ `lọc` ở đâu đó trong câu ⇒ cụm nghe nhầm được bật; không có ⇒ nằm im (bài trên).
-        val terms = VoiceGrammar.plusMisheard(VoiceGrammar.terms(), VoiceLexicon.tokenize("lọc đọc ngày"))
-        assertTrue(terms.any { it.words == listOf("doc", "ngay") && it.id == "pm25_clean_now" })
-        val none = VoiceGrammar.plusMisheard(VoiceGrammar.terms(), VoiceLexicon.tokenize("đọc ngày"))
-        assertEquals(VoiceGrammar.terms(), none, "câu không có từ ngữ cảnh phải nhận ĐÚNG danh sách cũ")
-    }
-
-    /** [ĐO XE 2026-09-16, DL3 1.68 ×2] mô hình in ra *"đang đọc sách"* cho *"đèn đọc sách"*. */
-    @Test
-    fun `dang doc sach la den doc sach`() {
-        assertEquals("readl", control("đang đọc sách").id)
-        assertEquals("readl" to 0, control("tắt đang đọc sách").let { it.id to it.value })
     }
 }

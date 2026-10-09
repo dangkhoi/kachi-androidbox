@@ -8,8 +8,8 @@ package com.byd.clusternav.launcher
  * `Kaca blkg k…` ×2 — trong khi icon kính cũng không phân biệt được ([IconRepeat]) ⇒ người lái không biết nút nào là kính
  * nào.
  *
- * Quyết định điều phối (J1): mỗi ô nút/datum có sẵn NHÃN NGẮN đã dịch đủ 5 tiếng ([ControlDef.shortLabelIn] /
- * [TelemetrySpec.shortLabelIn] — đúng chữ của hàng nút nhóm, trần zh6/th14/ms14 ở `I18nPairs.SHORT_CAPS`). Nhãn đầy không hiện trọn
+ * Quyết định điều phối (J1): mỗi ô nút/datum có sẵn NHÃN NGẮN đã dịch đủ 5 tiếng (`ControlDef.shortLabelIn` /
+ * `TelemetrySpec.shortLabelIn` — đúng chữ của hàng nút nhóm, trần zh6/th14/ms14 ở `I18nPairs.SHORT_CAPS`). Nhãn đầy không hiện trọn
  * ⇒ ô đổi CHỮ sang nhãn ngắn (nhãn đầy vào mô tả trợ năng) TRƯỚC khi `…` hay chỉ-icon. Kèm luật PHÂN BIỆT: hai ô trong
  * cùng lưới mà hiện CÙNG một chữ thấy được ⇒ chọn cách hiện khác cho chúng (`Kaca BKr` / `Kaca BKn` khác nhau trong khi
  * `Kaca blkg k…` ×2 thì không).

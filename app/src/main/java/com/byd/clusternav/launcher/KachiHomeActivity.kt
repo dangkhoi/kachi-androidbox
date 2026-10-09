@@ -25,8 +25,8 @@ import com.byd.clusternav.launcher.KachiSpace as Sp
 
 /**
  * Màn hình chính Kachi (HOME) — wall gradient + thanh trạng thái + workspace (widget/ô) + thanh điều khiển 4 viền.
- * Landscape, thuần code, bám prototype kachi-workspace.html. Dữ liệu xe LIVE = [AppContainer.carStatusRepository]
- * (`StateFlow<CarStatus>`) thu qua `repeatOnLifecycle` → [HomeViewModel.setCarStatus] → state → render (off-car "—").
+ * Landscape, thuần code, bám prototype kachi-workspace.html. (Android box B2 · W3: dữ liệu xe LIVE — `carStatusRepository` →
+ * `HomeViewModel.setCarStatus` — gỡ cùng lõi HAL BYDAuto.)
  *
  * B5a: [HomeViewModel] giữ `StateFlow<HomeUiState>` là NGUỒN SỰ THẬT DUY NHẤT; Activity thu
  * (`repeatOnLifecycle(STARTED)`) → [render] áp state lên view; user event → INTENT (một chiều).
@@ -66,12 +66,6 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
             onWallpaperChanged = { p ->
                 viewModel.setWallpaperPrefs(p); wallpaper.reload()   // state + lưu bền; reload đọc lại từ state
             },
-            onUnitsChanged = { prefs ->
-                viewModel.setUnitPrefs(prefs)      // state + lưu bền trong MỘT lượt
-                dock.setCarStatus(viewModel.uiState.value.carStatus, prefs)
-                workspace.setUnitPrefs(prefs)
-                topStrip.refreshChips(viewModel.uiState.value.carStatus, prefs, viewModel.uiState.value.topStrip)
-            },
             shellUsable = { shell != null },
             shellAwaiting = { shellGate.awaitingApproval },   // F4 — hàng quyền nói ĐÚNG ai sửa được
             goImmersive = { goImmersive() },
@@ -79,10 +73,6 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
             openAppList = { drawerController.openAppList() },
             openAppByPackage = { pkg -> appOpener.openByIntent(pkg) },
             assignAppToSlot = { idx, pkg -> slots.placeTemporary(idx, pkg) },   // owner 01/10: giọng nói đặt TẠM
-            // Kiểm tra từng nút (owner 2026-09-15): chạy hành động qua cùng adapter điều khiển xe (`actByKind` định
-            // tuyến đúng cửa theo kind); đọc datum qua cùng bảng HAL mà widget dùng — không mở đường thứ hai.
-            runAction = { id, arg -> container.carControl.actByKind(id, arg) },
-            readInfo = { id -> container.telemetryText(id) },
             // Lớp phủ đóng/mở ⇒ nút ⇄ nổi ẩn đi, và nút mic soi lại điều kiện ([KachiTopStrip.refreshVoicePill]:
             // mô hình có thể vừa tải xong / công tắc vừa gạt, ngay trong màn Cài đặt vừa đóng).
             onPanelsChanged = { windows.updateOverlayHeads(); topStrip.refreshVoicePill() },
@@ -169,13 +159,12 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
     /**
      * Lựa chọn đang hiệu lực — **đọc từ nguồn sự thật duy nhất** ([HomeViewModel.uiState]), KHÔNG giữ bản sao.
      *
-     * ⚠ [SOÁT P1-1 kiến trúc] Ba nhóm này (đơn vị · hình nền · bố cục tự vẽ) trước đây là field riêng của màn chính
+     * ⚠ [SOÁT P1-1 kiến trúc] Các nhóm này (hình nền · bố cục tự vẽ; đơn vị gỡ ở Android box B2 · W3) trước đây là field riêng của màn chính
      * (và của cả `WorkspaceView`/`ControlDockView`/bảng "Tuỳ biến" cũ), đồng bộ bằng lời gọi tay. Lý do cũ ghi trong
      * KDoc là "đưa vào state thì mỗi nhịp trạng thái xe phải so lại" — nhưng `data class` so bằng tham chiếu cho
      * field không đổi nên phép so đó gần như miễn phí, còn giá của việc giữ nhiều bản sao thì đã trả bằng một lỗi
      * thật (xoá bố cục mà màn hình vẫn hiện 6 khung).
      */
-    internal val unitPrefs: UnitPrefs get() = viewModel.uiState.value.unitPrefs
     internal val customLayout: GridLayout? get() = viewModel.uiState.value.customLayout
     // Cửa sổ app: dadb (xe+emulator) → ShellAppLauncher; chưa có dadb → NoCar (2.93 · READY-AT-HOME-OQ6: IntentAppLauncher đã gỡ).
     @Volatile private var appLauncher: AppLauncher = NoCar
@@ -197,6 +186,7 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
         override fun run() {
             topStrip.updateClock()
             WidgetRefreshers.tickAll(workspace)   // QA 04/10: widget đồng hồ theo CÙNG nhịp, đổ tại chỗ (không dựng lại ô)
+            workspace.refreshValues()             // B2 · W3: ô nhạc đổ lại theo nhịp này (nhịp xe 1 Hz đã gỡ) — KDoc ở WorkspaceView
             wallpaper.step()   // U4: dùng LẠI nhịp có sẵn thay vì dựng thêm một vòng đếm riêng
             // PERF — báo cáo tải mỗi phút ([KachiPerf]); dùng LẠI nhịp này vì nó chạy đúng lúc vòng poll HAL chạy.
             // ⚠ `elapsedRealtime`, KHÔNG phải giờ tường: [ĐO] xe 14/09 giờ tường của đầu xe bị chỉnh nhảy >5 s giữa
@@ -264,10 +254,6 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
         workspace = WorkspaceView(this).apply {
             mediaProvider = { media.read() }                          // nhạc live (Bitmap ở :app, ngoài state :core)
             onMedia = { media.handle(it) }
-            control = container.carControl                             // RW0: ô giữa màn đặt được cả HÀNH ĐỘNG (R2)
-            // Đơn vị đặt TRƯỚC lượt render đầu: nếu để lượt render đầu chạy với mặc định rồi mới đặt, thì người dùng
-            // đã chọn (vd psi) sẽ phải chịu thêm một lượt dựng lại ô widget mỗi lần mở HOME mà không được gì.
-            setUnitPrefs(unitPrefs)
             onSlotTap = { drawerController.open(it) }
             onSlotClear = { slots.clearSlot(it) }
             onSlotSwap = { a, b -> slots.swapSlots(a, b) }
@@ -284,7 +270,6 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
         )
         // S4 · R12 — ô loại LAUNCHER trên thanh nút đi ĐÚNG hai đường của thanh trên (xem [Activity.controlDock]).
         dock = controlDock(
-            container.carControl,
             { drawerController.openAppList() },
             { panels.openSettings() },
             { voice.start() },
@@ -317,7 +302,7 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
         )
 
         // Hai vòng thu (state của VM + trạng thái xe LIVE) — thân ở [collectHome] (trần 500 dòng).
-        collectHome(this, viewModel, container, resyncTiles = { resyncTiles() }) { render(it) }
+        collectHome(this, viewModel) { render(it) }
 
         // Nối shell dadb (localhost:5555) nền → ShellAppLauncher reflow như xe; dispatcher + ShellTransport + daemon do AppContainer sở hữu.
         val dadb = DadbShell(this)
@@ -354,7 +339,7 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
         startVoiceIfRequested(intent, voice)
         // T-BRIDGE — móc cho cầu kiểm thử qua adb; lượt tháo tự nối theo vòng đời (xem KDoc `attachTestBridge`).
         // Gắn móc KHÔNG mở cửa nào: mọi lệnh vẫn bị chặn bởi công tắc ở Cài đặt (`KachiTestBridge`).
-        attachTestBridge(viewModel, { slots }, { voice }, { drawerController }, { panels }, { shell }, container.carControl)
+        attachTestBridge(viewModel, { slots }, { voice }, { drawerController }, { panels }, { shell })
     }
 
     /** `singleTask` ⇒ lời gọi thứ hai về ĐÂY, không phải [onCreate] (bấm bong bóng khi Kachi đang mở sẵn). */
@@ -427,8 +412,6 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
     override fun onStop() {
         super.onStop(); lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP); appWidgets.stopListening()
         SlotLiveProbe.pause()
-        // H1 — quên nhu cầu VÀ quên kết luận "xe không có datum ấy" ⇒ lần mở sau bắt đầu bằng một lượt đọc ĐỦ
-        container.forgetCarDemand()
         shellGate.onHidden()     // F4 — màn khuất ⇒ dừng vòng dò (không dựng hộp thoại lên app người lái đang dùng)
     }
 

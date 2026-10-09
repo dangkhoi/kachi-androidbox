@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.LayerDrawable
 import com.byd.clusternav.R
 
 /**
@@ -179,25 +178,11 @@ object KachiTheme {
     val FIELD_SUNKEN: String get() = palette.fieldSunken
     val SURF_FROM_OVER_ART: String get() = palette.surfFromOverArt
     val SURF_TO_OVER_ART: String get() = palette.surfToOverArt
-    // VISUAL-REFRESH P3 — hình xe mức tả thực (1); tra qua `CarArtInks` (tên token → vai), không gọi thẳng ở chỗ vẽ
-    val PART_FILL: String get() = palette.partFill
-    val PART_LINE: String get() = palette.partLine
-    val GLASS_FROM: String get() = palette.glassFrom
-    val GLASS_TO: String get() = palette.glassTo
-    val LAMP_ON: String get() = palette.lampOn
-    val LAMP_GLOW: String get() = palette.lampGlow
-    val TAIL_ON: String get() = palette.tailOn
-    val CAR_SHADOW: String get() = palette.carShadow
+    // Android box B2 · W3: tám vai hình xe (PART_* · GLASS_* · LAMP_* · TAIL_ON · CAR_SHADOW) gỡ cùng hình xe.
     // ⚠ WP1 (2026-09-20) GỠ `GLASS_SHEEN`/`GLASS_SHADE`: hai vai mép kính sinh ra sáng 2026-09-20 rồi CHẾT cùng
     // ngày — owner xem ảnh và gọi đúng tên *"bug gạch trên đầu mỗi khung"*, y như `surfEdge`/`surfOnEdge` của
     // Pass-4/Pass-5. Ba lần cùng một họ lỗi ⇒ **bất biến**: mép ghim vào cạnh là một VẠCH ở mọi alpha; chiều nổi
     // phải do chuyển sắc gánh. Vai cũng gỡ khỏi [KachiPalette] (giữ getter trơ sẽ đỏ `ThemePaletteContractTest`).
-
-    /**
-     * Sắc lĩnh vực của [domain] — vỏ bọc để chỗ vẽ **không** phải tự viết `?.name` (và không ai nghĩ ra cách thứ
-     * hai để tra). `null` ⇒ [CLEAR] = không tint.
-     */
-    fun domainTint(domain: Domain?): String = palette.domainTint(domain?.name)
 
     fun c(s: String): Int = Color.parseColor(s)
     fun dp(ctx: Context, v: Float): Float = v * ctx.resources.displayMetrics.density
@@ -250,14 +235,12 @@ object KachiTheme {
      *   màn chính) · [SurfaceTone.ACTIVE] thẻ/ô đang bật (mang màu nhấn) · [SurfaceTone.SUNKEN] ô lõm — **giữ
      *   phẳng**: một tô đặc, không gradient. Lồi và lõm phải khác nhau ở CƠ CHẾ chứ không chỉ ở độ sáng, nếu
      *   không thì hai vai đọc như một.
-     * @param domain lĩnh vực của nội dung trong thẻ — thêm một lớp sắc rất nhạt để mắt tìm được vùng *trước khi*
-     *   đọc chữ. `null` (mặc định) ⇒ không có lớp đó, không phải một màu mặc định.
      * @param overArtwork thẻ này nằm **trên ẢNH NỀN** ⇒ dùng bản bán trong suốt 80 % ([KachiPalette.surfFromOverArt])
      *   để ảnh lọt qua. Sinh ra cho P1b (spec §4.10) sau phản hồi owner 2026-09-16 kèm ảnh chụp trên xe: *"cái màu
      *   đen, xám của mình, khi nhét thêm hình nền vào, nó lại không đẹp nữa"* — thẻ đục trên ảnh đọc ra thành
      *   **miếng vá**, không thành **cửa sổ**.
      *   ⚠ P1 **chưa chỗ nào bật cờ này** (mặc định `false` ⇒ hành vi hôm nay không đổi một pixel). Nó có sẵn để
-     *   P1b chỉ phải thêm **một lớp ảnh ở chỉ số 0** của [LayerDrawable] chứ không phải viết lại hàm này — sau
+     *   P1b chỉ phải thêm **một lớp ảnh ở chỉ số 0** của một `LayerDrawable` chứ không phải viết lại hàm này — sau
      *   Pass 5 chồng lớp chỉ còn `base` (+ tint) nên chèn lớp đáy càng không lệch gì.
      *   ⚠⚠ Và ghi ra chỗ CHƯA ĐỦ: ở 80 %, [ĐO] trên hai nền tệ nhất (trắng tinh / đen tuyền) [INK] còn 7.27:1
      *   (tối) và 10.17:1 (sáng) — đạt; nhưng [MUT] chỉ còn 3.15–3.91:1. P1b **phải** kèm lớp che 35–50 % hoặc
@@ -267,7 +250,6 @@ object KachiTheme {
         ctx: Context,
         radius: Int = KachiSpace.RADIUS_XL,
         tone: SurfaceTone = SurfaceTone.NEUTRAL,
-        domain: Domain? = null,
         overArtwork: Boolean = false,
     ): Drawable {
         val r = KachiSpace.dpf(ctx, radius)
@@ -279,13 +261,11 @@ object KachiTheme {
         // Nền KÍNH: chuyển sắc DỌC theo tone. KHÔNG viền, KHÔNG mép/gạch đỉnh-đáy (WP1 · R1.1 — owner 2026-09-20:
         // "bỏ viền đi luôn"; gỡ hẳn sheen/shade bevel = "gạch trên đầu" + mọi setStroke). Trạng thái ACTIVE/WELL
         // phân biệt CHỈ bằng MÀU FILL qua surfacePair(tone), không stroke/edge nào.
-        val base = GradientDrawable(
+        // (≤ 2.98 BYD còn một lớp sắc LĨNH VỰC xe phủ lên — gỡ ở Android box B2 · W3.)
+        return GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
             surfacePair(tone, overArtwork),
         ).apply { cornerRadius = r }
-        val tint = domainTint(domain)
-        return if (tint == CLEAR) base
-        else LayerDrawable(arrayOf<Drawable>(base, GradientDrawable().apply { cornerRadius = r; setColor(c(tint)) }))
     }
 
     /**
@@ -311,175 +291,24 @@ object KachiTheme {
 
     /** Ánh xạ tên icon (ControlDef.icon / WidgetDef.icon) → vector drawable. 0 = không có. */
     fun iconRes(icon: String): Int = when (icon) {
-        "ic-lock" -> R.drawable.ic_lock
-        "ic-window" -> R.drawable.ic_window
-        "ic-readlight" -> R.drawable.ic_readlight
-        "ic-leaf" -> R.drawable.ic_leaf
-        "ic-seat-left" -> R.drawable.ic_seat_left
-        "ic-seat" -> R.drawable.ic_seat
-        // UX5 — bốn glyph GHÉP "ghế + dấu phương thức" (sưởi = ba làn nhiệt · mát = bông tuyết), sinh từ
-        // design/glyph qua gen-icons.py. Xem KDoc [CapabilityIcons] về vì sao ghép ở tầng glyph chứ không
-        // chồng hai drawable lúc chạy. `-left` = ghế LÁI (giữ đúng quy ước cạnh của `ic-seat-left`).
-        "ic-seat-heat-left" -> R.drawable.ic_seat_heat_left
-        "ic-seat-heat-right" -> R.drawable.ic_seat_heat_right
-        "ic-seat-vent-left" -> R.drawable.ic_seat_vent_left
-        "ic-seat-vent-right" -> R.drawable.ic_seat_vent_right
-        // 2.76 L7 — MỨC 1 của bốn họ ghế (một làn nhiệt / một bông tuyết); hình khái niệm ở trên = mức 2. Bảng `CapabilityIcons.LEVEL`.
-        "ic-seat-heat-left-1" -> R.drawable.ic_seat_heat_left_1
-        "ic-seat-heat-right-1" -> R.drawable.ic_seat_heat_right_1
-        "ic-seat-vent-left-1" -> R.drawable.ic_seat_vent_left_1
-        "ic-seat-vent-right-1" -> R.drawable.ic_seat_vent_right_1
-        "ic-temp" -> R.drawable.ic_temp
-        "ic-fan" -> R.drawable.ic_fan
-        "ic-defrost" -> R.drawable.ic_defrost
-        // Android box B2 · W2b: sáu icon camera (`ic-cam` Camera 360 · `ic-cam-off` · bốn `ic-cam-view-*`) gỡ cùng camera BYD.
-        "ic-door" -> R.drawable.ic_door
-        "ic-hood" -> R.drawable.ic_hood
-        "ic-light" -> R.drawable.ic_light
-        "ic-recirc" -> R.drawable.ic_recirc
-        // UX8 (owner 2026-09-27) — chip *Chế độ lấy gió* đổi HÌNH theo chế độ thay vì in chữ "Trong"/"Ngoài":
-        // `ic-recirc` (đã có) = lấy gió TRONG · `ic-air-fresh` = lấy gió NGOÀI · `ic-air-intake` = chưa đọc được
-        // chiều. Ba hình cùng một khoang xe nên đọc ra là một cặp ba. Bảng khai ở `CapabilityIcons.STATE`.
-        "ic-air-fresh" -> R.drawable.ic_air_fresh
-        "ic-air-intake" -> R.drawable.ic_air_intake
-        // Cùng lượt: cảm biến bụi mịn CHẾT (`pm25_online` = 0) — cảm biến còn sống dùng lại `ic-sensor`.
-        "ic-sensor-off" -> R.drawable.ic_sensor_off
-        "ic-volume" -> R.drawable.ic_volume
-        "ic-cast" -> R.drawable.ic_cast
-        "ic-bolt" -> R.drawable.ic_bolt
-        "ic-tire" -> R.drawable.ic_tire
+        // Android box B2 · W3 (2026-10-09): bảng còn đúng các tên icon mà mã đang dùng (widget · hành động launcher ·
+        // nút đầu ô · nút nhạc). Mọi dòng của nút/datum/nhóm/gói lệnh xe (60 dòng — ghế · kính · điều hòa · lốp · đèn ·
+        // bộ hình xe U7 · icon nhóm…) gỡ cùng lõi HAL BYDAuto; tệp vector của chúng xoá cùng lượt (gen-icons --check).
         "ic-sun" -> R.drawable.ic_sun
         "ic-music" -> R.drawable.ic_music
         "ic-prev" -> R.drawable.ic_prev
         "ic-play" -> R.drawable.ic_play
         "ic-next" -> R.drawable.ic_next
-        "ic-speed" -> R.drawable.ic_speed
-        "ic-grid" -> R.drawable.ic_grid
         "ic-swap" -> R.drawable.ic_swap
         "ic-close" -> R.drawable.ic_close
         "ic-to-back" -> R.drawable.ic_to_back   // L6 — nút *chạy nền* cạnh ⇄ (SlotActionsCluster)
-        // U1: 6 icon MỚI cho khái niệm xuất hiện nhiều mà trước đây không có icon nào gần nghĩa
-        "ic-road" -> R.drawable.ic_road
-        "ic-battery" -> R.drawable.ic_battery
-        // [SOÁT P3] 3 tên icon TRƯỚC ĐÂY KHÔNG được map ⇒ 13/64 nút lùi về icon NHÓM: 2 nút gương mang hình
-        // KÍNH (sai nghĩa), 3 nút chế độ lái và 8 nút hỗ trợ lái mang hình lưới (không gợi nghĩa gì).
-        // ── [KIỂM TOÁN UX 2026-09-12 · mục 4] 8 icon vá NGHĨA SAI / NGHĨA TRÙNG ────────────────────────
-        // Mỗi tên dưới đây tồn tại vì một hình đang mang SAI nghĩa hoặc mang NHIỀU nghĩa; lý do cụ thể ghi trong
-        // chính tệp XML (đó là chỗ người sửa icon sẽ đọc).
-        "ic-window-open" -> R.drawable.ic_window_open
-        "ic-window-close" -> R.drawable.ic_window_close
-        "ic-car" -> R.drawable.ic_car
         "ic-photo" -> R.drawable.ic_photo
-        "ic-fuel" -> R.drawable.ic_fuel
-        "ic-motor" -> R.drawable.ic_motor
-        "ic-drive" -> R.drawable.ic_drive
-        // ── [U6 · ĐO ảnh 2026-09-12] 18 icon MỚI: tách theo KHÁI NIỆM trong 3 nhóm dày nhất ───────────
-        // Bệnh đo được: nhóm Năng lượng có 9/28 ô cùng glyph tia sét và 6/28 cùng glyph con đường; nhóm Động lực có
-        // 6/14 ô cùng đồng hồ tốc; nhóm Khí hậu có 5/12 ô cùng nhiệt kế và 4/12 cùng chiếc lá. Icon trùng ở mật độ
-        // đó thì nó không còn giúp phân biệt gì — người dùng phải đọc chữ trong ô 40dp (mà chữ thì bị cắt).
-        // Lý do của TỪNG hình ghi trong chính tệp XML (đó là chỗ người sửa icon sẽ đọc).
-        // ⚠ (V) FEATURE-FILTER 2026-09-17: `ic-battery-charging` · `ic-plug` · `ic-drift` · `ic-car-top-window-rain`
-        // đã xoá (tên + tệp vector) — chủ duy nhất của chúng là 19 mã owner chấm NO. `ic-charger` ở lại vì nút
-        // `wireless_charge` (KHÔNG thuộc danh sách NO) vẫn dùng.
-        "ic-charger" -> R.drawable.ic_charger
-        "ic-consumption" -> R.drawable.ic_consumption
-        "ic-range" -> R.drawable.ic_range
-        "ic-cell-volt" -> R.drawable.ic_cell_volt
-        "ic-mode" -> R.drawable.ic_mode
-        // 2.76 (R9) — cặp trạng thái TỰ ĐỘNG/CHỈNH TAY cho chip `ac_mode_auto` (và `ac_wind_auto`): `ic-mode-auto` =
-        // núm mang chữ A (mã 0 = AUTO) · `ic-mode` (đã có) = núm có kim (mã 1 = tay / chưa đọc). Bảng ở `CapabilityIcons.STATE`.
-        "ic-mode-auto" -> R.drawable.ic_mode_auto
-        "ic-dust" -> R.drawable.ic_dust
-        "ic-sensor" -> R.drawable.ic_sensor
-        "ic-alert" -> R.drawable.ic_alert
-        // 4 tên dưới dùng cho CẢ mục đọc lẫn NÚT cùng khái niệm (mục tiêu sạc · nhiệt ngoài · điều hoà · lọc khí):
-        // hai ô cùng một việc thì phải cùng một hình, phần "xem hay bấm" đã nằm ở dòng phụ (U6).
-        "ic-target" -> R.drawable.ic_target
-        "ic-temp-out" -> R.drawable.ic_temp_out
-        "ic-ac" -> R.drawable.ic_ac
-        "ic-filter" -> R.drawable.ic_filter
-        // Tên icon dùng lại tệp đã có (trước đây chưa được map nên tra ra 0 = ô trống icon)
-        "ic-clock" -> R.drawable.ic_clock_g
-        // ── S4 · R12 · hai hành động của CHÍNH launcher ([LauncherActions]) ───────────────────────────
-        // KHÔNG vẽ hình mới: cả hai khái niệm đã có tệp đúng nghĩa trong bộ.
-        //  • `ic-apps` → `ic_grid` (⊞ bốn ô). Đây KHÔNG phá luật *"⊞ chỉ còn nghĩa bảng tổng hợp"*
-        //    (`CapabilityIconMeaningTest`): luật đó nói về **khả năng của XE** — mọi datum/nút/lĩnh vực từng lùi về
-        //    ⊞ đã được gỡ. Ở đây ⊞ mang nghĩa gốc của nó trên mọi launcher Android: *lưới ứng dụng*. Hai chỗ dùng
-        //    không bao giờ đứng cạnh nhau trong một danh sách: `w_board` có `domain = null` nên không vào bộ chọn
-        //    nút, còn khối Launcher chỉ hiện ở chế độ chọn-nút-thanh-xe.
-        //  • `ic-settings` → `ic_gear` (bánh răng THẬT — [ĐO] ảnh 2026-09-14: `ic_sys_g` là mặt trời 8 tia, đọc thành "độ sáng"; nét trắng 1.6 như cả bộ). `ic_menu_config.xml` cũng là bánh răng
-        //    nhưng GIỮ MÀU xanh thương hiệu (nó vẽ thẳng cho bảng con nút nổi Cast, không qua bước tint) ⇒ dùng nó ở
-        //    đây sẽ cho một ô xanh lạc giữa thanh nút.
+        // `ic-apps` → `ic_grid` (⊞ bốn ô = lưới ứng dụng trên mọi launcher Android).
         "ic-apps" -> R.drawable.ic_grid
+        // `ic-settings` → `ic_gear` (bánh răng THẬT — [ĐO] ảnh 2026-09-14: `ic_sys_g` là mặt trời 8 tia).
         "ic-settings" -> R.drawable.ic_gear
-        // V1 pha NGHE — `ic_mic` vẽ MỚI theo chuẩn bộ v2 (nét 1.6, ô quang học 20×20). KHÔNG dùng `ic_mic_g`
-        // đang có: tệp đó thuộc màn ClusterNav cũ (ô cockpit `activity_main.xml`), mang màu riêng và tỉ lệ khác
-        // — đặt nó cạnh `ic_grid`/`ic_gear` trên cùng một thanh là thấy ngay hai bộ hình.
+        // V1 pha NGHE — `ic_mic` vẽ theo chuẩn bộ v2 (nét 1.6); KHÔNG dùng `ic_mic_g` (ô cockpit ClusterNav cũ).
         "ic-mic" -> R.drawable.ic_mic
-        // ══ U7 · BỘ HÌNH XE THEO VỊ TRÍ (spec docs/specs/kachi-icon-set-v2.html) ═════════════════════
-        // Ba KHUNG dùng chung (top · front · rear) + VÙNG TÔ là bộ phận đang được nói tới. Tên tệp mang
-        // luôn khung + bộ phận + vị trí (`ic_car_top_door_lf`) nên đọc bảng này là đọc được cả nghĩa.
-        // ⚠ Chín dòng đã bị GỠ ở U7 (`ic-trunk` · `ic-sunroof` · `ic-mirror` · `ic-seatbelt` · `ic-radar` ·
-        // `ic-gps` · `ic-adas` · `ic-turn-left` · `ic-turn-right`): năm tệp đầu được hình xe thay 1:1 nên xoá luôn
-        // tệp; hai `ic_turn_*` chỉ chết TÊN, còn TỆP vẫn sống (mũi tên rẽ của màn dẫn đường).
-        // ⚠ 2026-09-16 — lượt gỡ ADAS/an toàn xoá tiếp 21 dòng + 21 tệp vector (dây an toàn · người ngồi · điểm mù
-        // · chuyển làn · cắt ngang sau · cảnh báo mở cửa · giữ làn · va chạm trước · cảm biến đỗ · ESP · biển báo ·
-        // khiên an toàn · ba icon nhóm).
-        "ic-car-top-door-lf" -> R.drawable.ic_car_top_door_lf
-        "ic-car-top-door-rf" -> R.drawable.ic_car_top_door_rf
-        "ic-car-top-door-lr" -> R.drawable.ic_car_top_door_lr
-        "ic-car-top-door-rr" -> R.drawable.ic_car_top_door_rr
-        "ic-car-top-door-all" -> R.drawable.ic_car_top_door_all
-        // 2.76 (R8) — cặp trạng thái cho chip cửa: MỞ = bốn vạt xoè ở trên (hình khái niệm), ĐÓNG = vạch cửa sát thân.
-        "ic-car-top-door-lf-shut" -> R.drawable.ic_car_top_door_lf_shut
-        "ic-car-top-door-rf-shut" -> R.drawable.ic_car_top_door_rf_shut
-        "ic-car-top-door-lr-shut" -> R.drawable.ic_car_top_door_lr_shut
-        "ic-car-top-door-rr-shut" -> R.drawable.ic_car_top_door_rr_shut
-        "ic-car-top-window-lf" -> R.drawable.ic_car_top_window_lf
-        "ic-car-top-window-rf" -> R.drawable.ic_car_top_window_rf
-        "ic-car-top-window-lr" -> R.drawable.ic_car_top_window_lr
-        "ic-car-top-window-rr" -> R.drawable.ic_car_top_window_rr
-        "ic-car-top-window-all" -> R.drawable.ic_car_top_window_all
-        "ic-car-top-tyre-fl" -> R.drawable.ic_car_top_tyre_fl
-        "ic-car-top-tyre-fr" -> R.drawable.ic_car_top_tyre_fr
-        "ic-car-top-tyre-rl" -> R.drawable.ic_car_top_tyre_rl
-        "ic-car-top-tyre-rr" -> R.drawable.ic_car_top_tyre_rr
-        "ic-car-top-tyre-temp-fl" -> R.drawable.ic_car_top_tyre_temp_fl
-        "ic-car-top-tyre-temp-fr" -> R.drawable.ic_car_top_tyre_temp_fr
-        "ic-car-top-tyre-temp-rl" -> R.drawable.ic_car_top_tyre_temp_rl
-        "ic-car-top-tyre-temp-rr" -> R.drawable.ic_car_top_tyre_temp_rr
-        "ic-car-top-seat-fl" -> R.drawable.ic_car_top_seat_fl
-        "ic-car-top-trunk" -> R.drawable.ic_car_top_trunk
-        "ic-car-top-sunroof" -> R.drawable.ic_car_top_sunroof
-        "ic-car-top-sunroof-pos" -> R.drawable.ic_car_top_sunroof_pos
-        // 2.76 (R8) — cửa sổ trời MỞ (mã 1) cho chip `sunroof_state`; ĐÓNG dùng `ic-car-top-sunroof`. Xe owner N/A.
-        "ic-car-top-sunroof-open" -> R.drawable.ic_car_top_sunroof_open
-        "ic-car-top-sunshade" -> R.drawable.ic_car_top_sunshade
-        "ic-car-top-lock" -> R.drawable.ic_car_top_lock
-        "ic-car-front-lowbeam" -> R.drawable.ic_car_front_lowbeam
-        "ic-car-front-highbeam" -> R.drawable.ic_car_front_highbeam
-        "ic-car-front-fog" -> R.drawable.ic_car_front_fog
-        "ic-car-front-drl" -> R.drawable.ic_car_front_drl
-        "ic-car-front-turn-l" -> R.drawable.ic_car_front_turn_l
-        "ic-car-front-turn-r" -> R.drawable.ic_car_front_turn_r
-        "ic-car-front-sidelight" -> R.drawable.ic_car_front_sidelight
-        "ic-car-front-headlight-mode" -> R.drawable.ic_car_front_headlight_mode
-        "ic-car-rear-fog" -> R.drawable.ic_car_rear_fog
-        "ic-car-rear-defrost" -> R.drawable.ic_car_rear_defrost
-        // Bốn thành phần của MỘT toạ độ, nhưng là bốn đại lượng khác nhau ⇒ bốn hình (U7 · OQ1: mục
-        // "nằm trên xe" mới vẽ hình xe, đại lượng đo thì giữ glyph trừu tượng — cùng nét, cùng ô).
-        // ── T2: 9 ICON NHÓM (spec kachi-capability-groups §4.1; 12 trước lượt gỡ ADAS 2026-09-16) ─────
-        // Đây là ĐẦU `:app` của giao kèo tên icon cho nhóm khả năng: `CapabilityGroups` (T1, `:core`) khai
-        // `icon = "ic-group-…"`, bảng này dịch sang `R.drawable`. Tên là HỢP ĐỒNG giữa hai module — đổi một bên mà
-        // không đổi bên kia thì icon tra ra 0 (ô trống), nên có [IconStyleContractTest] canh đủ 9 tên tra được.
-        "ic-group-tyres" -> R.drawable.ic_group_tyres
-        "ic-group-windows" -> R.drawable.ic_group_windows
-        "ic-group-doors" -> R.drawable.ic_group_doors
-        "ic-group-lights" -> R.drawable.ic_group_lights
-        "ic-group-climate" -> R.drawable.ic_group_climate
-        "ic-group-energy" -> R.drawable.ic_group_energy
-        "ic-group-battery" -> R.drawable.ic_group_battery_health
-        "ic-group-trip" -> R.drawable.ic_group_trip
         else -> 0
     }
 

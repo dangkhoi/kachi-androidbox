@@ -16,7 +16,7 @@ enum class LayoutPreset(val slotCount: Int) {
     /**
      * Nhãn cho người đọc (S1) — thanh trên chỉ có **icon**, còn màn Cài đặt bày cả 5 bố cục nên phải có chữ.
      *
-     * Đặt ở `:core` theo đúng lối các enum khác của launcher ([Quantity.label] · [Domain.label] · [ImageFit.label] ·
+     * Đặt ở `:core` theo đúng lối các enum khác của launcher (`Quantity.label` · `Domain.label` · [ImageFit.label] ·
      * [ThemeMode.label]): câu chữ người dùng đọc thì kiểm được off-car, còn `:app` chỉ giữ **bảng màu**. Khai bằng
      * `get()` chứ không thêm tham số hàm dựng ⇒ 5 dòng khai ở trên **không đổi một ký tự**, nên không kéo theo sửa
      * ở mọi chỗ đang dựng enum này.

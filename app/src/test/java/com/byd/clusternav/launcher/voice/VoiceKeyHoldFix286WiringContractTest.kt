@@ -249,7 +249,7 @@ class VoiceKeyHoldFix286WiringContractTest {
         assertTrue(listen.indexOf("marks?.ready()") > listen.indexOf("sẵn sàng nghe sau"), "mốc micro mở = ngay sau dòng 'sẵn sàng nghe'")
         assertTrue(SourceRoots.body(factory, "internal fun VoiceWakeService.buildSession(): VoiceSession {").contains("marks = WakeSessionLog.Marks(app)"))
         val flush = SourceRoots.body(journal, "private fun flush(app: Context, r: Rec, outcome: Outcome)")
-        assertTrue(flush.indexOf("Log.i(TAG, full)") in 0 until flush.indexOf("MacroExec.submitSerial(LANE)"), "logcat TRƯỚC, tệp sau, trên làn nền")
+        assertTrue(flush.indexOf("Log.i(TAG, full)") in 0 until flush.indexOf("SerialLanes.submitSerial(LANE)"), "logcat TRƯỚC, tệp sau, trên làn nền")
         assertTrue(flush.contains("WakeSessionJournal.line("), "định dạng ở :core (đã test)")
         assertTrue(journal.contains("DiagRingFile(NAME, WakeSessionJournal.MAX_LINES, TAG)"), "một lớp tệp vòng cho mọi nhật ký bền (DRY)")
     }

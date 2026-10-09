@@ -24,17 +24,8 @@ internal fun KachiHomeActivity.applyThemeInPlace() {
     panels.restyleSettings()   // 2.93 SETTINGS-RETHEME-INPLACE — màn Cài đặt đang mở cũng đổi màu tại chỗ
 }
 
-/**
- * Soát vòng 2 [P3] — bảng lệnh cuối vừa đổi bởi `:wake` (cầu `ControlSentRelay` → `ControlLastSent.absorb`) ⇒ ô nút vẽ lại
- * NGAY với trạng thái xe ĐANG CÓ: thanh nút ([ControlDockView.setCarStatus] — đổ lại ô đọc + ô hành động, không dựng lại)
- * và ô hành động giữa màn ([WidgetRefreshers.resyncActions]). Hàm đổ của ô so hình với bảng (`TileResync.stale`) nên ô đã
- * khớp không vẽ lại. Gọi từ [collectHome] (luồng chính).
- */
-internal fun KachiHomeActivity.resyncTiles() {
-    val car = viewModel.uiState.value.carStatus
-    dock.setCarStatus(car)
-    WidgetRefreshers.resyncActions(workspace, car)
-}
+// Android box B2 · W3 (2026-10-09): `resyncTiles` (vẽ lại ô nút xe khi `:wake` đổi bảng lệnh cuối — cầu `ControlSentRelay`)
+// gỡ cùng nút xe.
 
 internal fun KachiHomeActivity.render(state: HomeUiState) {
     val prev = shownState
@@ -49,7 +40,7 @@ internal fun KachiHomeActivity.render(state: HomeUiState) {
     if (prev?.slotHeadAutoHide != state.slotHeadAutoHide) workspace.setSlotHeadAutoHide(state.slotHeadAutoHide)
     // Màn vẽ bố cục ĐANG HIỆN (lớp lưu + lớp tạm — đính chính owner 01/10); ô có mốc đặt-tạm mới ⇒ đổi app tại chỗ.
     // 2.97 · R5: lượt dựng lại do ĐỔI HỒ SƠ — app hồ sơ mới vẫn hiện ⇒ ĐỖ để ô mới nhận lại, không thì nhả (`SlotParkPlan.leave`).
-    workspace.render(state.effectiveWorkspace, state.carStatus, WorkspaceRenderPlanner.swapCandidates(prev?.swapNonce, state.swapNonce),
+    workspace.render(state.effectiveWorkspace, WorkspaceRenderPlanner.swapCandidates(prev?.swapNonce, state.swapNonce),
         profileSwitch = prev != null && prev.activeProfile != state.activeProfile)
     // R1/R2 (quality-review 2026-09-15): registry vị-trí-app là PROJECTION của state — reconcile MỖI render ở
     // ĐÚNG MỘT chỗ, thay các lệnh d.place/d.remove sửa tay ở handler (nguồn drift "3 nguồn sự-thật"). Đọc-vẽ,
@@ -59,15 +50,7 @@ internal fun KachiHomeActivity.render(state: HomeUiState) {
     shortcuts.publish(state)
     // WP4 — thứ tự vật trên thanh trên đổi ⇒ ĐẶT LẠI CHỖ (không dựng lại view — `KachiTopStrip.setLayout`).
     if (prev?.header != state.header) topStrip.setLayout(state.header)
-    // ⚠ xét CẢ `topStrip`: thiếu nó thì đổi danh sách chip mà màn hình không đổi gì (off-car trạng thái xe gần như không đổi).
-    if (prev == null || prev.carStatus != state.carStatus || prev.topStrip != state.topStrip) {
-        topStrip.refreshChips(state.carStatus, unitPrefs, state.topStrip)
-        // RW0/Đ4: thanh nút cũng cần trạng thái xe để ô ĐỌC sống được ở đó. CHỈ đổ lại số của ô đọc — KHÔNG
-        // dựng lại thanh (C5: dựng lại mỗi nhịp 1/giây sẽ nháy + mất trạng thái ô vừa bấm).
-        dock.setCarStatus(state.carStatus, unitPrefs)
-        workspace.setUnitPrefs(unitPrefs)   // R11: ô giữa màn cũng theo lựa chọn đơn vị (tự bỏ qua nếu không đổi)
-        // Android box B2 · W1 — `cameraSignal.tick()` (camera theo xi-nhan qua HAL helper BYD) gỡ khỏi nhịp vẽ.
-    }
+    // Android box B2 · W3: khối đổ trạng thái xe (chip thanh trên · ô ĐỌC thanh nút · đơn vị ô giữa màn) gỡ cùng `carStatus`.
     // ⚠ S4 · R7 — KHÔNG còn dải nút bố cục trên thanh trên nên ở đây không còn gì để tô sáng. Ô đang sáng của
     // bố cục sẵn nay chỉ nằm trong Cài đặt › Màn hình chính, và trang đó tự dựng lại khi state đổi.
     if (prev?.dock != state.dock) {

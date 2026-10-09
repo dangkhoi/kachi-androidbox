@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher.testbridge
 
-import com.byd.clusternav.launcher.CtlWriteJournal
 import com.byd.clusternav.launcher.voice.WakeSessionJournal
 import com.byd.clusternav.modules.navaccess.A11yBindJournal
 
@@ -18,23 +17,12 @@ import com.byd.clusternav.modules.navaccess.A11yBindJournal
  * @property file tên tệp prefs (`prefs`), đã kiểm nằm trong danh sách cho phép.
  * @property slot số ô **1-based** đúng như người ta nói/gõ (`slot` · `slot_clear`); phép đổi sang 0-based nằm ở
  *   tầng thi hành, đúng một chỗ (cùng luật `VoiceDispatcher.runOpenApp`).
- * @property id mã một control trong `ControlRegistry` (`ctl`). **KHÔNG** kiểm tồn tại ở tầng phân tích (cùng luật
- *   `pkg`/`profile`/`preset`): danh mục control nằm ở `:core` nhưng phép kiểm ngữ nghĩa dồn về tầng thi hành để
- *   một lời đáp có thể liệt kê mã hợp lệ khi gõ sai — xem KDoc `KachiTestBridge.runCtl`.
- * @property v giá trị chính của control (`ctl` · `--ei v`): TOGGLE/COVER 1/0 · STEP giá trị · SELECT chỉ số ·
- *   BUTTON bỏ qua. **null = không truyền** ⇒ tầng thi hành chọn mặc định theo kind (bật/mở/bấm) — khác hẳn `0`
- *   (tắt/đóng), nên phải là `Int?` chứ không ép về `0` ở đây.
  * @property autoConfirm `--ez auto_confirm true` — xem KDoc [TestBridgeCommands.EXTRA_AUTO_CONFIRM].
- * @property dev tên ĐƠN GIẢN device BYDAuto cho lệnh `hal` (`BYDAutoBodyworkDevice`) — rỗng ⇒ tầng thi hành mặc
- *   định `BYDAutoBodyworkDevice` (thân xe: kính/cửa/đèn/rèm). FQN đầy đủ dựng ở tầng thi hành qua
- *   `HalBindingTable.deviceFqn` — MỘT converter, không viết cứng hai chỗ.
- * @property method tên method HAL thô cho lệnh `hal` (`getWindowState` · `setBodyWindowCtrlState`). Bắt buộc.
- * @property halArgs đối số int cho `hal`, phân tách bằng dấu phẩy (`"1"` · `"1,2"`). Getter 0-đối để rỗng.
- * @property op `get` (đọc getter) hay `set` (ghi named-method) cho `hal`; rỗng ⇒ suy theo tiền tố `get` của
- *   [method]. `set` là lượt GHI thân xe nên đi qua đúng cổng CONFIRM như `ctl` (cần `--ez auto_confirm true`).
+ * @property op `--es op` của `teach` / `teach_text` (rỗng hoặc `save` — [TestBridgeTeachCommands.validOp]).
+ *   (Android box B2 · W3: trường `id` · `v` · `dev` · `method` · `halArgs` của lệnh `ctl` / `hal` gỡ cùng HAL xe.)
  * @property key tên khoá prefs cho lệnh `prefs_set`, đã kiểm nằm trong [TestBridgeCommands.WRITABLE_PREFS_KEYS].
  *   Giá trị đi trong [text] (một chuỗi cho MỌI kiểu — xem KDoc [TestBridgeCommands.PREFS_SET]).
- * @property tail số dòng cuối của nhật ký cho lệnh `a11ylog` / `ctllog`, **đã kẹp** ở [TestBridgeCommands.parse]
+ * @property tail số dòng cuối của nhật ký cho lệnh `a11ylog` / `wakelog`, **đã kẹp** ở [TestBridgeCommands.parse]
  *   (đọc từ `--ei n`, xem [TestBridgeCommands.a11yLogTail]); `0` với mọi lệnh khác. Trường riêng chứ không mượn
  *   [slot]: `slot` là số Ô 1-based, và một tầng thi hành đọc `cmd.slot` ra số dòng là chỗ đọc nhầm không ai thấy.
  */
@@ -46,12 +34,7 @@ data class TestBridgeCommand(
     val arg: String = "",
     val file: String = "",
     val slot: Int = 0,
-    val id: String = "",
-    val v: Int? = null,
     val autoConfirm: Boolean = false,
-    val dev: String = "",
-    val method: String = "",
-    val halArgs: String = "",
     val op: String = "",
     val key: String = "",
     val tail: Int = 0,
@@ -97,22 +80,7 @@ object TestBridgeCommands {
     const val EXTRA_FILE = "file"
     const val EXTRA_SLOT = "n"
 
-    /** `--es id <controlId>` — mã một control trong `ControlRegistry` cho lệnh [CTL]. */
-    const val EXTRA_ID = "id"
-
-    /** `--ei v <value>` — giá trị chính của control cho lệnh [CTL] (tuỳ chọn; vắng ⇒ mặc định theo kind). */
-    const val EXTRA_V = "v"
-
-    /** `--es dev <simpleClass>` — device BYDAuto cho lệnh [HAL] (tuỳ chọn; vắng ⇒ `BYDAutoBodyworkDevice`). */
-    const val EXTRA_DEV = "dev"
-
-    /** `--es m <method>` — tên method HAL thô cho lệnh [HAL] (bắt buộc). */
-    const val EXTRA_METHOD = "m"
-
-    /** `--es args <csv-ints>` — đối số int (phân tách phẩy) cho lệnh [HAL]. */
-    const val EXTRA_HAL_ARGS = "args"
-
-    /** `--es op <get|set>` — kiểu thao tác cho lệnh [HAL] (tuỳ chọn; vắng ⇒ suy theo tiền tố `get`). */
+    /** `--es op <op>` — thao tác phụ của `teach` / `teach_text` (rỗng hoặc `save`). */
     const val EXTRA_OP = "op"
 
     /** `--es key <tên khoá>` — khoá prefs cho lệnh [PREFS_SET] (bắt buộc, phải nằm trong [WRITABLE_PREFS_KEYS]). */
@@ -133,9 +101,8 @@ object TestBridgeCommands {
     const val WAV = "wav"
     const val KWS = "kws"
 
-    // ⚠ Android box B2 · W1 — sáu mã [CTL] · [HAL] · [SWEEP] · [FEATMAP] · [CAPTEST] · [CTLLOG] KHÔNG còn trong [SPECS] ⇒
-    // [parse] trả `unknown_cmd`. Hằng còn chỉ vì mã thi hành mồ côi (`TestBridgeCtl` · `TestBridgeHal`…) còn nhắc tên — W3 xoá
-    // cùng. Ba mã camera (`camera` · `camera_frame` · `camera_synth`) gỡ hẳn ở W2b cùng mã thi hành của chúng.
+    // ⚠ Android box B2 · W1/W3 — sáu mã `ctl` · `hal` · `sweep` · `featmap` · `captest` · `ctllog` rời [SPECS] ở W1 (⇒ [parse]
+    // trả `unknown_cmd`), hằng + mã thi hành mồ côi gỡ ở W3. Ba mã camera gỡ ở W2b.
     const val TTS = "tts"
     const val LISTEN = "listen"
     const val PROFILE = "profile"
@@ -147,35 +114,6 @@ object TestBridgeCommands {
     const val STATE = "state"
     const val PREFS = "prefs"
     const val REAPPLY = "reapply"
-
-    /** Bắn MỘT control theo mã registry, đi qua ĐÚNG applier mà một cú chạm ô nút đi (`CarControlPort`). */
-    const val CTL = "ctl"
-
-    /**
-     * Gọi MỘT method HAL BYDAuto **thô** (đọc getter / ghi named-method) để CHẨN ĐOÁN cơ chế — không đi qua
-     * `ControlRegistry`. Sinh ra vì `ctl` chỉ bắn được value đã map (kính: mở=1/đóng=2) nên không đọc được
-     * `getWindowPermitState`/`getWindowState` cũng không thử được state khác (STOP=3…). Đúng tinh thần §14: một
-     * đầu dò shell-thô trên xe THẬT để chốt cơ chế trước khi mã hoá thành policy. Lượt GHI (`set`) chạm thân xe ⇒
-     * đi qua cổng CONFIRM y như `ctl` ([CtlSafetyPolicy] không áp được vì không có control-id, nên cổng nằm ở
-     * tầng thi hành `TestBridgeHal`).
-     */
-    const val HAL = "hal"
-
-    /**
-     * Quét MỘT LƯỢT: đọc raw MỌI telemetry (`readRaw`) + mô tả route MỌI control (KHÔNG bắn) → JSON trên thẻ.
-     * Thay cho việc bấm tay 187 mục trên xe (owner 2026-09-15). Chỉ-đọc ⇒ không cần confirm. `--es op info|ctl|all`.
-     */
-    const val SWEEP = "sweep"
-
-    /**
-     * V3 · R11(c) — đổ **bảng feature-id thật của chiếc xe này** (`BYDAutoFeatureIds` + `BYDAutoDeviceFeaturesMap`)
-     * ra JSON trên thẻ. Chỉ-đọc ⇒ không cần confirm, không đối số.
-     *
-     * Sinh ra sau [ĐO nguồn fw-dl3 2026-09-16]: hằng feature-id **không cố định** (gán theo `isCanFD`/`isToyota`
-     * lúc nạp lớp), nên bản decompile chỉ cho biết các *khả năng* — số THẬT chỉ chiếc xe biết. Một lượt lệnh này
-     * đổi *"mỗi dòng bind ngờ vực = một lượt lên xe"* thành *"tra off-car trong tệp JSON"*.
-     */
-    const val FEATMAP = "featmap"
 
     /**
      * ═══ [SOÁT Pass 1 · P2] GHI một khoá prefs trong **danh sách trắng** — chỉ chế độ kiểm thử ═══════════
@@ -220,26 +158,6 @@ object TestBridgeCommands {
     const val VOICE_DUMP = "voice_dump"
 
     /**
-     * ═══ WP7 · CÔNG CỤ "KIỂM TRA TỪNG NÚT XE" QUA adb ═══════════════════════════════════════════════════════
-     *
-     * `am broadcast … --es cmd captest --es op list|ok|notok|skip|report|clear [--es id <mã>] [--es text <ghi chú>]`
-     *
-     * ## Vì sao cần đường adb cho một công cụ đã có bề mặt bấm tay
-     * UX-OVERHAUL · WP7 đưa bảng bấm tay ([CapTestConsole]) vào sau cổng [DevMode] — nó vẫn còn, và buổi RE vẫn
-     * cần nó để **nhìn** (đèn có sáng không, cốp có mở không). Nhưng cái nó KHÔNG làm được là để **script** đi hết
-     * 25 mục RE: `op list` trả đủ mã + loại + đã-map-chưa để vòng lặp bash biết phải sweep những gì, `op ok/notok`
-     * đóng dấu kết quả ngay sau khi `hal`/`ctl` vừa chạy, `op report` xuất đúng một báo cáo như nút *Xuất* —
-     * **cùng một** `CapTestReport.build`, không phải một bộ dựng chữ thứ hai.
-     *
-     * ## Hai điều cố ý KHÔNG có ở đây
-     *  1. **Không có `op run`** — bắn một hành động xe đã có `ctl` (đi đúng applier của một cú chạm) và `hal` (thô).
-     *     Thêm `captest run` là đường thứ ba tới cùng một chỗ, và nó sẽ là đường quên mất cổng [CtlSafetyPolicy].
-     *  2. **Không cần `auto_confirm`** — cả sáu op chỉ đọc/ghi *nhật ký chấm điểm của chính Kachi*, không chạm xe,
-     *     không xuất dữ liệu cá nhân (khác [VOICE_DUMP] — nó nén tiếng cabin nên phải qua cổng).
-     */
-    const val CAPTEST = "captest"
-
-    /**
      * ═══ 2.83 · ĐỌC NHẬT KÝ GẮN DỊCH VỤ HỖ TRỢ (phím vô-lăng) — CHỈ ĐỌC ════════════════════════════════════
      *
      * `am broadcast … --es cmd a11ylog [--ei n <số dòng>]` ⇒ N dòng cuối của `filesDir/diag/a11y-bind.log` + hai
@@ -257,7 +175,7 @@ object TestBridgeCommands {
      *    hai đồng hồ · pid · trạng thái — KDoc `A11yBindJournal`), khác [VOICE_DUMP] xuất tiếng cabin.
      *  • `--ei n` **tuỳ chọn**, kẹp ở [a11yLogTail]: vắng/≤ 0 ⇒ [A11YLOG_DEFAULT_LINES], quá trần ⇒
      *    [A11yBindJournal.MAX_LINES] (tệp không bao giờ dài hơn thế). Kẹp ở đây, không ở tầng thi hành — cùng luật
-     *    "một chỗ quyết định mặc định" như `op` của [CAPTEST].
+     *    "một chỗ quyết định mặc định".
      */
     const val A11YLOG = "a11ylog"
 
@@ -269,21 +187,9 @@ object TestBridgeCommands {
         if (requested <= 0) A11YLOG_DEFAULT_LINES else requested.coerceAtMost(A11yBindJournal.MAX_LINES)
 
     /**
-     * FIX286 · SR6 — `am broadcast … --es cmd ctllog [--ei n <số dòng>]` ⇒ N dòng cuối của `filesDir/diag/ctl-writes.log`
-     * (mỗi lệnh ghi xe: rc thô · đọc trước/sau · lượt nhả · ảnh chụp getter — `CtlWriteJournal`). Cùng ranh giới với
-     * [A11YLOG]: **chỉ đọc**, không cần màn chính, không `auto_confirm` (không chạm xe, không đổi state). `n` kẹp ở
-     * [ctlLogTail] về `1..CtlWriteJournal.MAX_LINES`.
-     */
-    const val CTLLOG = "ctllog"
-
-    /** Kẹp `--ei n` của [CTLLOG] — cùng luật mặc định với [a11yLogTail], trần theo tệp `ctl-writes.log`. */
-    fun ctlLogTail(requested: Int): Int =
-        if (requested <= 0) A11YLOG_DEFAULT_LINES else requested.coerceAtMost(CtlWriteJournal.MAX_LINES)
-
-    /**
      * FIX286 · VK6 — `… --es cmd wakelog [--ei n <số dòng>]` ⇒ N dòng cuối của `filesDir/diag/wake-sessions.log` (mỗi
      * phiên nghe của `:wake`: lối vào · chế độ · mô hình sẵn · ms nạp · ms tới micro · kết cục — `WakeSessionJournal`).
-     * `usage-*.log` không có dòng nào của `:wake` (lọc pid chính). Cùng ranh giới [CTLLOG]: chỉ đọc, không cần màn
+     * `usage-*.log` không có dòng nào của `:wake` (lọc pid chính). Cùng ranh giới [A11YLOG]: chỉ đọc, không cần màn
      * chính, không `auto_confirm`; `n` kẹp ở [wakeLogTail].
      */
     const val WAKELOG = "wakelog"
@@ -291,21 +197,6 @@ object TestBridgeCommands {
     /** Kẹp `--ei n` của [WAKELOG] — cùng luật mặc định, trần theo tệp `wake-sessions.log`. */
     fun wakeLogTail(requested: Int): Int =
         if (requested <= 0) A11YLOG_DEFAULT_LINES else requested.coerceAtMost(WakeSessionJournal.MAX_LINES)
-
-    /** Op của [CAPTEST] — ASCII, script đọc. `list` là mặc định khi `--es op` vắng. */
-    object CapTestOps {
-        const val LIST = "list"
-        const val OK = "ok"
-        const val NOT_OK = "notok"
-        const val SKIP = "skip"
-        const val REPORT = "report"
-        const val CLEAR = "clear"
-
-        /** Ba op đóng dấu một mục ⇒ bắt buộc có `--es id`. */
-        val MARKS: Set<String> = setOf(OK, NOT_OK, SKIP)
-
-        val ALL: Set<String> = setOf(LIST, OK, NOT_OK, SKIP, REPORT, CLEAR)
-    }
 
     /**
      * Khoá prefs mà [PREFS_SET] được phép ghi — **danh sách trắng**, xem KDoc [PREFS_SET] ràng buộc (1).
@@ -330,7 +221,7 @@ object TestBridgeCommands {
     /** `--es key` của [PREFS_SET] không nằm trong [WRITABLE_PREFS_KEYS] — nối tên khoá để script biết gõ sai đâu. */
     const val ERR_BAD_PREFS_KEY = "bad_prefs_key:"
 
-    /** `--es op` của [CAPTEST] không thuộc [CapTestOps.ALL] — nối op đã gõ. */
+    /** `--es op` không hợp lệ cho lệnh ([TestBridgeTeachCommands.validOp]) — nối op đã gõ. */
     const val ERR_BAD_OP = "bad_op:"
 
     /**
@@ -427,13 +318,7 @@ object TestBridgeCommands {
                 arg = (extras[EXTRA_ARG] as? String).orEmpty().trim(),
                 file = file,
                 slot = slot,
-                id = (extras[EXTRA_ID] as? String).orEmpty().trim(),
-                // `as? Int` giữ nguyên null khi `--ei v` vắng ⇒ tầng thi hành phân biệt "không truyền" với `0`.
-                v = extras[EXTRA_V] as? Int,
                 autoConfirm = extras[EXTRA_AUTO_CONFIRM] as? Boolean ?: false,
-                dev = (extras[EXTRA_DEV] as? String).orEmpty().trim(),
-                method = (extras[EXTRA_METHOD] as? String).orEmpty().trim(),
-                halArgs = (extras[EXTRA_HAL_ARGS] as? String).orEmpty().trim(),
                 op = op,
                 key = key,
                 tail = when (name) {

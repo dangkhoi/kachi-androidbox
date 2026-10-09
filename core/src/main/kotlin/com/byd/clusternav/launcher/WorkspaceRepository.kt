@@ -6,7 +6,7 @@ import com.byd.clusternav.launcher.trip.TripConfig
  * Tầng-dữ-liệu (data-layer seam) cho trạng thái HOME của launcher — ranh giới giữa [HomeViewModel] và nơi lưu bền.
  *
  * Interface THUẦN (:core) nên test được off-car bằng một bản giả in-memory; bản thật `PrefsWorkspaceRepository` (:app)
- * bọc `WorkspacePrefs`/SharedPreferences. Cùng khuôn mẫu Port/Adapter như [AppLauncher]/[CarDataPort] trong :core.
+ * bọc `WorkspacePrefs`/SharedPreferences. Cùng khuôn mẫu Port/Adapter như [AppLauncher]/`CarDataPort` trong :core.
  *
  * Mọi hàm trả/nhận [HomeUiState] (immutable). Ghi bền theo HỒ SƠ đang chọn (khoá prefs scope theo tên hồ sơ).
  */
@@ -47,18 +47,7 @@ interface WorkspaceRepository {
     /** Ghi nhận vừa mở [pkg] (đưa lên đầu danh sách gần đây). Mặc định: không nhớ. */
     fun touchRecentApp(pkg: String) {}
 
-    /**
-     * Lựa chọn ĐƠN VỊ của người dùng (R11–R13). S4 · R3a: **theo HỒ SƠ** ([ProfileScope.LAUNCHER_PERSONAL_SUFFIXES])
-     * — đơn vị là lựa chọn của MỘT người lái, cùng lối với chủ đề/hình nền/ngôn ngữ.
-     *
-     * Giống [recentApps]: CỐ Ý **không** nằm trong [HomeUiState]. Nó chỉ đổi khi người dùng vào chọn, nên nhét vào
-     * state sẽ bắt cả HOME so-sánh-lại mỗi nhịp trạng thái xe mà chẳng được gì. Có thân MẶC ĐỊNH ⇒ bản giả
-     * in-memory trong test không phải sửa.
-     */
-    /** Cấu hình chip thanh trên (RW0 vùng thứ ba). Thân mặc định ⇒ bản giả trong test không phải sửa. */
-    fun topStrip(): TopStripConfig = TopStripConfig.DEFAULT
-
-    fun setTopStrip(config: TopStripConfig) {}
+    // Android box B2 · W3: `unitPrefs`/`setUnitPrefs` (đơn vị datum xe) và `topStrip`/`setTopStrip` (chip xe thanh trên) gỡ.
 
     /**
      * UX-OVERHAUL · WP4 — thứ tự các vật trên thanh trên. Thân mặc định ⇒ bản giả trong test không phải sửa.
@@ -69,11 +58,6 @@ interface WorkspaceRepository {
     fun headerLayout(): HeaderLayout = HeaderLayout.DEFAULT
 
     fun setHeaderLayout(layout: HeaderLayout) {}
-
-    fun unitPrefs(): UnitPrefs = UnitPrefs.DEFAULT
-
-    /** Ghi bền lựa chọn đơn vị. Mặc định: không lưu (bản giả). */
-    fun setUnitPrefs(prefs: UnitPrefs) {}
 
     /**
      * U4 — hình nền + trình chiếu. S4 · R3a: **theo HỒ SƠ** ([ProfileScope.LAUNCHER_PERSONAL_SUFFIXES]).

@@ -69,7 +69,8 @@ class TeachGuardTest {
     @Test fun `ten ngan van phai qua moi cong va cham du da lap lai`() {
         // Lặp lại đủ lượt KHÔNG mở cổng va chạm: trùng câu lệnh / tiền tố / động từ / hồ sơ vẫn CHẶN.
         // «ghe» = chuỗi THẬT mô hình in cho TTS "mở Gmail" [ĐO máy ảo 06/10, spec §9 F1] — bỏ dấu = «ghế» ⇒ tiền tố lệnh ghế.
-        listOf("pin" to Code.COMMAND, "ghe" to Code.COMMAND_PREFIX, "tắt" to Code.RESERVED_WORD, "vợ" to null).forEach { (n, code) ->
+        // Android box B2 · W3: «pin» (nút xe) và «ghe» (tiền tố lệnh ghế) không còn là câu lệnh ⇒ rời bài.
+        listOf("tắt" to Code.RESERVED_WORD, "vợ" to null).forEach { (n, code) ->
             val v = TeachGuard.check(ctx, maps, n, TaughtSource.SPEECH, takes = 3)
             if (code == null) assertEquals(Level.BLOCK, v.level, "«$n» (2 chữ cái) dưới sàn tuyệt đối: $v")
             else { assertEquals(Level.BLOCK, v.level, "«$n»: $v"); assertTrue(v.has(code), "«$n» phải có $code: $v") }
@@ -92,12 +93,14 @@ class TeachGuardTest {
         assertEquals(Level.NEW, v.level)
     }
 
-    @Test fun `trung nguyen van mot cum lenh bi chan`() { blocked("đèn đọc", Code.COMMAND); blocked("cài đặt", Code.COMMAND) }
+    // Android box B2 · W3: «đèn đọc» (nút xe) không còn là câu lệnh ⇒ chỉ còn lệnh launcher.
+    @Test fun `trung nguyen van mot cum lenh bi chan`() { blocked("cài đặt", Code.COMMAND); blocked("nói với xe", Code.COMMAND) }
 
     @Test fun `tien to cua mot cum lenh bi chan`() {
-        blocked("nhiệt", Code.COMMAND_PREFIX)
+        // Android box B2 · W3: mốc cũ «nhiệt» (tiền tố "nhiệt độ" — nút xe) ⇒ «nói với» (tiền tố "nói với xe").
+        blocked("nói với", Code.COMMAND_PREFIX)
         // Một lý do cho mỗi loại — không lặp cùng một câu chục lần trong hộp dạy.
-        assertEquals(1, v("nhiệt").reasons.count { it.code == Code.COMMAND_PREFIX })
+        assertEquals(1, v("nói với").reasons.count { it.code == Code.COMMAND_PREFIX })
     }
 
     @Test fun `mo dau bang dong tu bi chan ke ca xem phim`() { blocked("tắt máy xe", Code.RESERVED_WORD); blocked("xem phim", Code.RESERVED_WORD) }
@@ -146,8 +149,6 @@ class TeachGuardTest {
         assertEquals(Level.WARN, got.level, "$got")
         assertTrue(got.has(Code.STEALS_FUZZY) && got.has(Code.NEAR_OTHER_APP), "$got")
     }
-
-    @Test fun `ten chua mot tu cua lenh canh bao`() = warned("pin hoa hồng", Code.MISMATCH_WORD)
 
     @Test fun `ten lam rung dong hotword tinh canh bao khong bias`() {
         val static = SherpaBiasing.hotwordsFile(ctx.places, ctx.profiles).lines()
@@ -230,7 +231,8 @@ class TeachGuardTest {
         val r = TeachGuard.regression(ctx, cand)
         assertFalse(r.ok)
         assertTrue(r.changed.any { it.contains("Vợ Yêu") }, "${r.changed}")
-        assertTrue(r.checked > 50, "phải soát cả danh mục, soát ${r.checked}")
+        // Android box B2 · W3 [ĐO 2026-10-09]: danh mục câu mẫu còn 22 câu (trước > 50 — câu nút/datum xe gỡ).
+        assertTrue(r.checked >= 20, "phải soát cả danh mục, soát ${r.checked}")
     }
 
     @Test fun `may do hoi quy cho qua ten sach va kiem ten goi duoc`() {

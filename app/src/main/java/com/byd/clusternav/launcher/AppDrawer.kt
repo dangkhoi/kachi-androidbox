@@ -151,7 +151,7 @@ class AppDrawer(
             body.addView(sectionLabel(CapabilityPicker.LAUNCHER_TITLE))
             body.addView(note(CapabilityPicker.LAUNCHER_NOTE))
             addPickGrid(body, CapabilityPicker.launcherPicks(), cols = COLS_TILE)
-            groupSection(body); singlesSection(body)
+            // Android box B2 · W3: mục NHÓM + TỪNG MỤC RIÊNG (nút / datum xe theo lĩnh vực) gỡ cùng bộ đăng ký xe.
         } else if (assign) {
             // #7 (owner 2026-09-21): thứ tự App → Widget của app → Thông tin khác. App là thứ người dùng đưa vào
             // ô nhiều nhất nên bày TRƯỚC; "Thông tin khác" (nhóm xe · thẻ dựng tay · mục lẻ) xuống cuối.
@@ -170,11 +170,9 @@ class AppDrawer(
                 apps.grid(body, appWidgetPicks.map { p -> AppDrawerApps.Item(APPWIDGET_PKG, p.title, { p.icon }, p.onTap) }, cols = COLS_TILE)
             }
 
-            // ── Thông tin khác: nhóm · thẻ dựng tay · mục lẻ (Android box B2 · W1: khối camera theo yêu cầu đã gỡ) ──
-            groupSection(body)
+            // ── Thẻ dựng tay (Android box B2 · W1/W3: khối camera, mục nhóm và mục lẻ xe đã gỡ) ──
             body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_widgets)).also { it.setPadding(0, dpi(context, Sp.L), 0, dpi(context, Sp.XS)) })
             addWidgetGrid(body, cols = COLS_TILE)
-            singlesSection(body)
         } else if (pick) {
             body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_apps)))
             shortcutPickSection(body, apps, COLS_APP)   // F1 · U1 — lưới app đa chọn (AppDrawerShortcutPick.kt)
@@ -226,43 +224,6 @@ class AppDrawer(
             refreshPlaceBtn()
         }
         addView(panel, plp)
-    }
-
-    /**
-     * Mục **NHÓM** — thứ người dùng gặp TRƯỚC (G1 · T4 · §4.2). Dùng chung cho ngăn kéo gán-ô và bộ chọn thanh nút.
-     *
-     * ⚠ [SOÁT UI 2026-09-12] Nhóm dùng **4 cột như mọi phần ô-khả-năng bên dưới**. Trước đây Nhóm để 3 cột "cho dòng
-     * phụ rộng" — nhưng nó nằm NGAY TRÊN các phần 4 cột trong CÙNG một vùng cuộn, nên cuộn xuống thì tâm cột nhảy
-     * 3→4 = "lệch loạn" (owner báo). Một vùng cuộn phải có MỘT lưới cột.
-     */
-    private fun groupSection(body: LinearLayout) {
-        body.addView(sectionLabel(CapabilityPicker.GROUPS_TITLE))
-        body.addView(note(CapabilityPicker.GROUPS_NOTE))
-        val groups = CapabilityPicker.groupPicks()
-        PickerBadge.unverifiedNote(context, groups)?.let { body.addView(note(it)) }
-        addPickGrid(body, groups, cols = COLS_TILE)
-    }
-
-    /**
-     * Mục **TỪNG MỤC RIÊNG** — dữ liệu + HÀNH ĐỘNG của xe, gom theo lĩnh vực.
-     *
-     * [SOÁT RW0 2026-09-11] Chỗ này TRƯỚC ĐÂY chỉ bày `WidgetCatalog.telemetryByDomain()` = **duy nhất mục ĐỌC**.
-     * Hệ quả: `WidgetViews` VẼ được ô hành động và `ActionMacros` có 4 gói lệnh, nhưng người dùng **không có nút
-     * nào** để đặt chúng vào ô giữa màn. Nay dùng CÙNG nguồn với màn Cài đặt ([CapabilityCatalog.byDomain]), nên hai
-     * màn chọn không thể lệch nhau về việc "cái gì đặt được ở đâu".
-     */
-    private fun singlesSection(body: LinearLayout) {
-        body.addView(sectionLabel(CapabilityPicker.SINGLES_TITLE).also { it.setPadding(0, dpi(context, Sp.L), 0, dpi(context, Sp.XS)) })
-        CapabilityCatalog.byDomain().forEach { (domain, picks) ->
-            // `singlesOf` BẮT BUỘC: nhóm đã bày ở mục đầu, để nó nằm trong lĩnh vực nữa là **hai ô cùng một mã**
-            // ⇒ `widgetTiles[id]` bị ghi đè ⇒ chỉ ô sau được tô sáng (đúng lỗi RW0 đã ghi).
-            body.addView(sectionLabel(domain.displayLabel).also { it.setPadding(0, dpi(context, Sp.M), 0, dpi(context, Sp.XS)) })
-            CapabilityPicker.groupHint(picks).takeIf { it.isNotEmpty() }?.let { body.addView(note(it)) }
-            val singles = CapabilityPicker.singlesOf(picks)
-            // U7 · R6: nói MỘT câu cho cả lĩnh vực thay vì 19 chấm hổ phách rải khắp lưới (xem [PickerBadge]).
-            PickerBadge.unverifiedNote(context, singles)?.let { body.addView(note(it)) }
-            addPickGrid(body, singles, cols = COLS_TILE)
-        }
     }
 
     /** Thanh đáy ghim: câu nhắc trần ô (bên trái) + nút áp (bên phải). */
@@ -429,11 +390,8 @@ class AppDrawer(
         //
         // VISUAL-REFRESH P1 · T3: hai trạng thái nay đi qua CÙNG [KachiTheme.surface], chỉ khác `tone` — trước đây
         // nhánh BẬT dựng `GradientDrawable` tại chỗ còn nhánh TẮT gọi `card()`, tức hai cách vẽ cho hai trạng thái
-        // của **một** ô. Sắc lĩnh vực giúp mắt tìm vùng trong lưới trộn nhiều nhóm.
-        tile.background = KachiTheme.surface(
-            context, Sp.RADIUS_L, if (on) SurfaceTone.ACTIVE else SurfaceTone.NEUTRAL,
-            CapabilityCatalog.pick(id)?.domain,
-        )
+        // của **một** ô. (Sắc lĩnh vực xe gỡ ở Android box B2 · W3.)
+        tile.background = KachiTheme.surface(context, Sp.RADIUS_L, if (on) SurfaceTone.ACTIVE else SurfaceTone.NEUTRAL)
         // [KIỂM TOÁN UX mục 5b] Đầy trần ⇒ LÀM MỜ những ô không còn chọn được, để trạng thái "không bấm được nữa"
         // nhìn ra được TRƯỚC khi bấm; toast chỉ là lớp thứ hai cho người đã bấm.
         tile.alpha = if (on || selected.size < cap) 1f else DIMMED

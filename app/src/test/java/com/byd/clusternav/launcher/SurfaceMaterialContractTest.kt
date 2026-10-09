@@ -160,7 +160,7 @@ class SurfaceMaterialContractTest {
     fun `nhanh SUNKEN giu phang va thoat som`() {
         val body = SourceRoots.body(theme(), "fun surface(")
         val open = "SurfaceTone.SUNKEN) return"
-        val close = "val base"
+        val close = "return GradientDrawable("   // W3: mốc cũ `val base` (nền dưới lớp sắc lĩnh vực) gỡ cùng lớp ấy
         listOf(open, close).forEach {
             assertTrue(it in body, "mốc cắt vùng `$it` không còn trong surface() — sửa bài này, đừng để nó quét tràn")
         }
@@ -188,10 +188,8 @@ class SurfaceMaterialContractTest {
     @Test
     fun `be mat loi khong con vien hay mep`() {
         val body = SourceRoots.body(theme(), "fun surface(")
-        assertTrue(
-            "LayerDrawable(" in body,
-            "sắc lĩnh vực phải gom bằng LayerDrawable (lớp thứ hai chồng lên nền), không vẽ tay trong onDraw",
-        )
+        // Android box B2 · W3: lớp sắc LĨNH VỰC xe (LayerDrawable chồng lên nền) gỡ cùng `Domain` ⇒ bề mặt là MỘT chuyển sắc.
+        assertTrue("LayerDrawable(" !in body, "không còn lớp sắc lĩnh vực nào để chồng")
         assertEquals(
             1, Regex("""Orientation\.TOP_BOTTOM""").findAll(body).count(),
             "nền thẻ phải là ĐÚNG MỘT chuyển sắc DỌC (mặt kính). Chéo (TL_BR) là nhận diện của 'cái đang được chọn' " +

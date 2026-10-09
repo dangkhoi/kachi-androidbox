@@ -28,28 +28,12 @@ import com.byd.clusternav.launcher.KachiSpace as Sp
  */
 internal object KachiIcons {
 
-    /** drawable 24dp → (32dp, 48dp). Sinh cùng lượt với bộ icon; `IconStyleContractTest` khoá đủ 21 mục và không mồ côi. */
+    /** drawable 24dp → (32dp, 48dp). Sinh cùng lượt với bộ icon; `IconStyleContractTest` khoá không mồ côi (W3: còn 4 mục). */
     private val LARGE: Map<Int, Pair<Int, Int>> = mapOf(
-        R.drawable.ic_bolt to (R.drawable.ic_bolt_l to R.drawable.ic_bolt_xl),
-        R.drawable.ic_car to (R.drawable.ic_car_l to R.drawable.ic_car_xl),
-        R.drawable.ic_door to (R.drawable.ic_door_l to R.drawable.ic_door_xl),
         R.drawable.ic_grid to (R.drawable.ic_grid_l to R.drawable.ic_grid_xl),
-        R.drawable.ic_group_battery_health to (R.drawable.ic_group_battery_health_l to R.drawable.ic_group_battery_health_xl),
-        R.drawable.ic_group_climate to (R.drawable.ic_group_climate_l to R.drawable.ic_group_climate_xl),
-        R.drawable.ic_group_doors to (R.drawable.ic_group_doors_l to R.drawable.ic_group_doors_xl),
-        R.drawable.ic_group_energy to (R.drawable.ic_group_energy_l to R.drawable.ic_group_energy_xl),
-        R.drawable.ic_group_lights to (R.drawable.ic_group_lights_l to R.drawable.ic_group_lights_xl),
-        R.drawable.ic_group_trip to (R.drawable.ic_group_trip_l to R.drawable.ic_group_trip_xl),
-        R.drawable.ic_group_tyres to (R.drawable.ic_group_tyres_l to R.drawable.ic_group_tyres_xl),
-        R.drawable.ic_group_windows to (R.drawable.ic_group_windows_l to R.drawable.ic_group_windows_xl),
-        R.drawable.ic_leaf to (R.drawable.ic_leaf_l to R.drawable.ic_leaf_xl),
-        R.drawable.ic_lock to (R.drawable.ic_lock_l to R.drawable.ic_lock_xl),
         R.drawable.ic_music to (R.drawable.ic_music_l to R.drawable.ic_music_xl),
         R.drawable.ic_photo to (R.drawable.ic_photo_l to R.drawable.ic_photo_xl),
-        R.drawable.ic_speed to (R.drawable.ic_speed_l to R.drawable.ic_speed_xl),
         R.drawable.ic_sun to (R.drawable.ic_sun_l to R.drawable.ic_sun_xl),
-        R.drawable.ic_window_close to (R.drawable.ic_window_close_l to R.drawable.ic_window_close_xl),
-        R.drawable.ic_window_open to (R.drawable.ic_window_open_l to R.drawable.ic_window_open_xl),
     )
 
     /** Icon cho một mặt cỡ [sizeDp]: biến thể 48 từ [KachiSpace.ICON_XL] (44), biến thể 32 từ [KachiSpace.ICON_L]. */
@@ -88,20 +72,7 @@ internal object KachiIcons {
         img.colorFilter = null
     }
 
-    /**
-     * 2.76 L7 — ô NÚT đổi hình theo MỨC: họ có hình theo mức ([CapabilityIcons.forLevel]) thì mức ≥ 1 vẽ đúng hình
-     * của mức ấy (một/hai làn nhiệt · một/hai bông tuyết); mức 0 / họ không khai ⇒ hình khái niệm [concept] như cũ.
-     * Cùng nguồn hình với chip ([TopStripChips]) và [DatumIconView] ⇒ ba bề mặt không bao giờ nói ba mức khác nhau.
-     *
-     * `setImageResource` **chỉ khi đổi thật** (ghi id vào `tag`): [ControlTileFactory] gọi `look` theo nhịp trạng
-     * thái xe (1 Hz), mà `setImageResource` luôn giải mã lại drawable — không có cửa này là một lượt cấp phát/giây cho
-     * mỗi ô (cùng lẽ `ControlLevelBar.light` chỉ đổi alpha). Không tra ra hình (`0`) ⇒ giữ nguyên, không xoá icon.
-     */
-    fun byLevel(img: ImageView, concept: String, level: Int, sizeDp: Int) {
-        drawn(img).also { it.concept = concept; it.level = level }
-        val r = res(CapabilityIcons.forLevel(concept, level) ?: concept, sized(img, sizeDp))
-        if (r != 0 && img.tag != r) { img.setImageResource(r); img.tag = r }
-    }
+    // Android box B2 · W3: `byLevel` (hình nút xe theo MỨC — sưởi/mát ghế) gỡ cùng nút xe.
 
     // ── L5 WIDGET-FIT-ALL (2.87, soát vòng 1 P3) — biến thể + tint theo cỡ ĐÃ KHỚP ─────────────────────────────────
     /**
@@ -109,15 +80,10 @@ internal object KachiIcons {
      * `WeakHashMap` không dọn được — bài học [WidgetRefreshers]). [fittedDp] = cỡ do `FitScale` đặt (0 = chưa khớp).
      */
     private class Drawn {
-        var concept: String? = null
-        var level = 0
         var tinted = false
         var selected = false
         var ink = KachiTheme.INK
         var fittedDp = 0
-
-        /** 2.93 — mức mờ TẮT đang xin ([fadeOff]); `null` = icon không qua đường mờ TẮT / đang BẬT. */
-        var offDim: Float? = null
     }
 
     /** CHỈ luồng chính chạm (bộ dựng ô, `look`, lượt đo của `FitGridLayout`). */
@@ -130,40 +96,19 @@ internal object KachiIcons {
 
     /**
      * `FitScale` vừa đổi cỡ icon cố định thành [sidePx] (cạnh nhỏ) ⇒ chọn lại biến thể 32/48dp + luật tint theo cỡ THẬT
-     * và vẽ lại đúng lần vẽ cuối (hình theo mức, chọn/không chọn, mực). Không có bước này thì ô `DOCK` 20dp được nhân ×2
+     * và vẽ lại đúng lần vẽ cuối (chọn/không chọn, mực). Không có bước này thì ô `DOCK` 20dp được nhân ×2
      * thành 40dp vẫn mang biến thể + tint của mặt NHỎ, khác hẳn ô `BIG` cùng cỡ trên màn (soát vòng 1, P3). Icon chưa
-     * từng qua [tint]/[byLevel] (vd icon ô nén tô màu riêng) ⇒ chỉ ghi cỡ, không vẽ gì.
+     * từng qua [tint] (vd icon ô nén tô màu riêng) ⇒ chỉ ghi cỡ, không vẽ gì.
      */
     fun refit(img: ImageView, sidePx: Int) {
         val dp = (sidePx / img.resources.displayMetrics.density).roundToInt()
         val d = drawn(img)
         if (d.fittedDp == dp) return
         d.fittedDp = dp
-        d.concept?.let { byLevel(img, it, d.level, dp) }
         if (d.tinted) tint(img, dp, d.selected, d.ink)
-        d.offDim?.let { fadeOff(img, dp, active = false, dim = it) }   // 2.93: qua ngưỡng mặt lớn ⇒ bộ lọc đổi ⇒ tính lại
     }
 
-    /**
-     * 2.93 `WIDGET-ICON-OFF-FAINT` — độ đục của icon ô điều khiển: BẬT ⇒ 1; TẮT ⇒ [IconFade.offAlpha] (mờ tới [dim] nhưng
-     * lớp chính giữ ≥ 4,5:1 trên nền ô tắt — mực [KachiTheme.ICON], nền [KachiTheme.SURF_FROM]/[KachiTheme.SURF_TO]). Mặt
-     * lớn chủ đề tối đã mờ [UNSELECTED_ALPHA] trong bộ lọc ⇒ `inner` (bản cũ nhân hai lần: 0,72 × 0,72 = 0,52). Ghi nhớ
-     * [dim] để [refit] tính lại khi cỡ đã khớp đổi; nhớ kết quả theo (mực, nền, inner, dim) — nhịp vẽ 1 Hz không tính lại.
-     */
-    fun fadeOff(img: ImageView, sizeDp: Int, active: Boolean, dim: Float) {
-        drawn(img).offDim = if (active) null else dim
-        if (active) { img.alpha = 1f; return }
-        val inner = if (KachiTheme.night && sized(img, sizeDp) >= Sp.ICON_L) UNSELECTED_ALPHA else 1f
-        val key = FadeKey(KachiTheme.ICON, KachiTheme.SURF_FROM, KachiTheme.SURF_TO, inner, dim)
-        img.alpha = fades.getOrPut(key) {
-            IconFade.offAlpha(c(key.ink), intArrayOf(c(key.from), c(key.to)), dim.toDouble(), inner.toDouble()).toFloat()
-        }
-    }
-
-    private data class FadeKey(val ink: String, val from: String, val to: String, val inner: Float, val dim: Float)
-
-    /** CHỈ luồng chính; vài khoá (chủ đề × màu × hai mức cỡ) — không cần trần. */
-    private val fades = HashMap<FadeKey, Float>()
+    // Android box B2 · W3: `fadeOff` (mờ icon ô nút xe TẮT theo tương phản) gỡ cùng ô nút xe — 0 chỗ gọi.
 
     /**
      * Ô chưa chọn ở chủ đề tối: bão hoà 35 % + độ mờ 72 % — [ĐO] Δ độ sáng so với ô đang chọn ≥ 20 % (AC2.6) mà hình
@@ -181,6 +126,6 @@ internal object KachiIcons {
         },
     )
 
-    /** Độ mờ trong bộ lọc [UNSELECTED] — một hằng cho bộ lọc và cho phép tính `inner` của [fadeOff]. */
+    /** Độ mờ trong bộ lọc [UNSELECTED] — hằng của bộ lọc. */
     private const val UNSELECTED_ALPHA = 0.72f
 }

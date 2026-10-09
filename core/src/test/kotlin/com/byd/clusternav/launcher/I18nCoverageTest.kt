@@ -91,15 +91,15 @@ class I18nCoverageTest {
         val msRows = I18nPairs.merge(
             listOf(
                 I18nPairs.Row("Mở cốp", "Open boot", I18nPairs.Kind.LABEL, "g"),
-                I18nPairs.Row("Số", "Gear", I18nPairs.Kind.LABEL, "h"),
+                I18nPairs.Row("Trung tính", "Neutral", I18nPairs.Kind.LABEL, "h"),
                 I18nPairs.Row("Điều hòa", "A/C", I18nPairs.Kind.LABEL, "i"),
                 I18nPairs.Row("Mở", "Open", I18nPairs.Kind.ARGS, "j"),
             ),
         )
-        val ms = I18nCatalog.parse("Mở cốp\tOpen boot\tOpen boot\nSố\tGear\tGear\nĐiều hòa\tA/C\tA/C\nMở\tOpen\tBuka\n")
+        val ms = I18nCatalog.parse("Mở cốp\tOpen boot\tOpen boot\nTrung tính\tNeutral\tNeutral\nĐiều hòa\tA/C\tA/C\nMở\tOpen\tBuka\n")
         val m = I18nPairs.audit(Lang.MS, ms, msRows)
         assertEquals(listOf("trùng nguyên văn bản Anh: «Open boot» → «Open boot» (g)"), m.quality, "chỉ bản chép cột Anh bị bắt")
-        assertTrue(I18nPairs.audit(Lang.ZH, I18nCatalog.parse("Số\tGear\t档位\n"), msRows.filter { it.en == "Gear" }).ok)
+        assertTrue(I18nPairs.audit(Lang.ZH, I18nCatalog.parse("Trung tính\tNeutral\t中性\n"), msRows.filter { it.en == "Neutral" }).ok)
     }
 
     /** Mục [I18nPairs.MS_SAME_AS_EN] phải còn sống: bảng ms thật vẫn có dòng trùng nguyên văn đúng chữ Anh ấy. */

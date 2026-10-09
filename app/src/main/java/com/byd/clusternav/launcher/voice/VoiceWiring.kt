@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.byd.clusternav.AppContainer
 import com.byd.clusternav.launcher.HomeUiState
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.MediaBridge
@@ -147,13 +146,6 @@ object VoiceWiring {
          */
         placeInSlot: ((Int, String) -> SlotPlaceOutcome)? = null,
         /**
-         * VOICE-WAKE-SLOTCOUNT — tiến trình của bề mặt này KHÔNG có màn (`:wake`): không vòng poll nào, và [state] không
-         * mang số liệu xe (`CarStatus()` rỗng). Khi ấy "nhu cầu màn" của tiến trình là RỖNG — sự thật — chứ không phải
-         * `null` (= "vòng poll đang đọc hết"); để `null` thì `AppContainer.refreshForRead` luôn trả `null` và mọi câu hỏi
-         * số liệu / cổng tốc độ rơi về ảnh rỗng. `false` (mặc định) = y nguyên 2.85 cho bề mặt chung tiến trình với màn.
-         */
-        screenless: Boolean = false,
-        /**
          * FIX286 · VK4 — bề mặt KHÁC tiến trình với Cài đặt (`:wake`) truyền: tập hỏi xác nhận + app dẫn đường/nhạc mặc
          * định đọc từ ảnh chụp mà tiến trình chính ghi (cache `SharedPreferences` của `:wake` không bao giờ nạp lại —
          * KDoc [VoiceWakePrefs]). Trường nào ảnh chụp không mang (`null`) ⇒ lùi về prefs như cũ. `null` = màn chính.
@@ -167,7 +159,6 @@ object VoiceWiring {
          */
         lang: Lang,
     ): VoiceDispatcher = VoiceDispatcher(
-        control = { AppContainer.get(ctx).carControl },
         state = state,
         media = { MediaBridge(ctx) },
         appsByLabel = appsByLabel,
@@ -181,9 +172,7 @@ object VoiceWiring {
         confirm = confirm,
         // V3 · R7 — đọc lại prefs ở MỖI vế (lambda, không phải giá trị): người dùng vừa tích một ô trong Cài đặt
         // thì câu ngay sau đó đã đi luật mới. `runCatching`: không đọc được prefs thì hành vi đúng là **mặc định của
-        // owner**, không phải hỏi mọi thứ. [Senior review FIX286 Pass 1 · P3] Từ 2.86 mặc định KHÔNG còn rỗng (mở cửa
-        // sổ trời hỏi — SR5) ⇒ lùi về `defaultIds()`, không về tập rỗng: lỗi đọc prefs chỉ được nghiêng về phía hỏi
-        // thêm (KDoc `VoiceRiskTable.effectiveIds`), không bao giờ về phía mở nóc mà không hỏi.
+        // owner** (`defaultIds()` — rỗng từ Android box B2 · W3), không phải hỏi mọi thứ.
         confirmIds = { fresh?.invoke()?.confirmIds ?: runCatching { Prefs.voiceConfirmIds(ctx) }.getOrDefault(VoiceRiskTable.defaultIds()) },
         say = say,
         assignAppToSlot = assignAppToSlot,
@@ -194,19 +183,6 @@ object VoiceWiring {
         mediaPackage = { MediaBridge(ctx).activePackage() },
         onUi = { block ->
             if (Looper.myLooper() == Looper.getMainLooper()) block() else Handler(Looper.getMainLooper()).post(block)
-        },
-        // [SOÁT P1-1 · 2026-09-16] Cổng H1 giữ giá trị cũ cho datum ngoài màn ⇒ câu hỏi bằng giọng phải ghim
-        // datum đó vào nhu cầu rồi đọc NGAY một lượt. `AppContainer.refreshForRead` tự trả `null` khi ảnh chụp
-        // vốn đã tươi, nên chỗ này không phải biết gì về lịch poll.
-        // 2.93 VOICE-READ-STALE-BG — tiến trình CHÍNH mà màn đã khuất (nhu cầu `null`, poll dừng): `readFresh` đọc ĐÚNG một
-        // datum (cùng luật phím gán nút xe) thay vì trả `null` = "ảnh chụp đã tươi" trong khi nó cũ từ lúc màn còn hiện.
-        freshCar = { id ->
-            runCatching {
-                val c = AppContainer.get(ctx)
-                // Chỉ tiến trình KHÔNG màn; vẫn lười (chỉ khi có câu hỏi số liệu), không dựng gì ngoài đường đọc HAL.
-                if (screenless && c.carDemand.get() == null) c.carDemand.set(emptySet())
-                c.readFresh(id)
-            }.getOrNull()
         },
         // App dẫn đường mặc định (owner chọn trong Cài đặt › Dẫn đường) — đọc mỗi lượt để đổi là ăn ngay.
         navDefault = { fresh?.invoke()?.navDefault ?: com.byd.clusternav.Prefs.voiceNavDefaultApp(ctx) },

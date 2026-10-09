@@ -23,9 +23,10 @@ class VoiceFillerAndConfirmTest {
     @Test
     fun `u va um la tieng dem — cau lenh mo dau bang chung van hieu dung`() {
         assertTrue("u" in VoiceLexicon.FILLERS && "um" in VoiceLexicon.FILLERS)
-        listOf("ừ bật đèn đọc", "ừm bật đèn đọc", "ừ, bật đèn đọc").forEach {
+        // Android box B2 · W3: lệnh mẫu "bật đèn đọc" (xe) gỡ ⇒ dùng lệnh launcher "mở cài đặt".
+        listOf("ừ mở cài đặt", "ừm mở cài đặt", "ừ, mở cài đặt").forEach {
             val got = VoiceIntentParser.parseOne(it)
-            assertTrue(got is VoiceIntent.Control && got.id == "readl" && got.value == 1, "«$it» ra: $got")
+            assertEquals(VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), got, "«$it»")
         }
     }
 

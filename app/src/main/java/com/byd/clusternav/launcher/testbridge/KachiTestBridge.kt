@@ -88,10 +88,6 @@ class KachiTestBridge : BroadcastReceiver() {
             runCatching { intent.getIntExtra(TestBridgeCommands.EXTRA_SLOT, 0) }
                 .getOrNull()?.let { out[TestBridgeCommands.EXTRA_SLOT] = it }
         }
-        if (intent.hasExtra(TestBridgeCommands.EXTRA_V)) {
-            runCatching { intent.getIntExtra(TestBridgeCommands.EXTRA_V, 0) }
-                .getOrNull()?.let { out[TestBridgeCommands.EXTRA_V] = it }
-        }
         if (intent.hasExtra(TestBridgeCommands.EXTRA_AUTO_CONFIRM)) {
             runCatching { intent.getBooleanExtra(TestBridgeCommands.EXTRA_AUTO_CONFIRM, false) }
                 .getOrNull()?.let { out[TestBridgeCommands.EXTRA_AUTO_CONFIRM] = it }
@@ -112,26 +108,18 @@ class KachiTestBridge : BroadcastReceiver() {
     private fun fileTag(raw: String?): String =
         raw.orEmpty().filter { it.isLetterOrDigit() || it == '_' }.take(TAG_CAP).ifEmpty { UNNAMED }
 
-    /** Nhãn tệp — `ctl` nối thêm mã control (`ctl_win_lf`) để buổi quét HAL nhận ra tệp nào của control nào. */
-    private fun fileTagFor(extras: Map<String, Any?>): String {
-        val base = fileTag(extras[TestBridgeCommands.EXTRA_CMD] as? String)
-        val id = (extras[TestBridgeCommands.EXTRA_ID] as? String)?.filter { it.isLetterOrDigit() || it == '_' }
-        return if (base == TestBridgeCommands.CTL && !id.isNullOrEmpty()) "${base}_$id".take(TAG_CAP) else base
-    }
+    /** Nhãn tệp = tên lệnh (≤ 2.98 BYD: `ctl` nối thêm mã nút xe — gỡ cùng lệnh `ctl` ở Android box B2 · W3). */
+    private fun fileTagFor(extras: Map<String, Any?>): String = fileTag(extras[TestBridgeCommands.EXTRA_CMD] as? String)
 
     // ── Điều phối ────────────────────────────────────────────────────────────────────────────────
 
     /**
      * Sáu lệnh **KHÔNG cần màn chính**, gom vào một `when` (trần 500 dòng — CLAUDE.md §4.1):
      *  • `prefs` chỉ đọc đĩa ⇒ chạy được khi launcher chưa lên, đúng lúc cần chẩn đoán *"vì sao không lên"*;
-     *  • `hal` gọi thẳng gateway HAL (không đọc `HomeUiState`, không chạm ô/bố cục) — chẩn đoán HAL độc lập với UI;
-     *  • `sweep`/`featmap` cũng thuần HAL (chỉ-đọc, luồng nền); `voice_dump` (H2) chỉ đọc `filesDir/voice-log/`
+     *  • (Android box B2 · W3: `hal` · `sweep` · `featmap` · `captest` gỡ cùng lõi HAL BYDAuto.) `voice_dump` (H2) chỉ đọc `filesDir/voice-log/`
      *    rồi nén ra thẻ, nên kéo được tiếng về cả sau một lượt launcher vừa khởi động lại ([TestBridgeVoiceDump]);
      *  • `prefs_set` ghi một khoá trong danh sách trắng; nó **nhận móc dưới dạng nullable** vì bốn khoá giọng nói
-     *    ghi thẳng prefs được, còn `top_strip_labels` thì phải đi qua màn chính (xem KDoc [TestBridgePrefsSet]);
-     *  • `captest` (WP7) chỉ chạm prefs `kachi_captest` + dựng chuỗi ở `:core` ⇒ cũng **không cần màn chính**: một
-     *    buổi RE hay bắt đầu bằng `force-stop` rồi đo, mà bắt nó chờ launcher lên mới đóng dấu được kết quả thì mất
-     *    đúng những mục đo ngay sau khi khởi động lại.
+     *    ghi thẳng prefs được (xem KDoc [TestBridgePrefsSet]).
      */
     private fun dispatch(app: Context, cmd: TestBridgeCommand, reply: TestBridgeReply) {
         if (TestBridgeNoHome.handle(app, cmd, reply)) return
@@ -422,10 +410,6 @@ class KachiTestBridge : BroadcastReceiver() {
             TestBridgeCommands.EXTRA_PKG,
             TestBridgeCommands.EXTRA_ARG,
             TestBridgeCommands.EXTRA_FILE,
-            TestBridgeCommands.EXTRA_ID,
-            TestBridgeCommands.EXTRA_DEV,
-            TestBridgeCommands.EXTRA_METHOD,
-            TestBridgeCommands.EXTRA_HAL_ARGS,
             TestBridgeCommands.EXTRA_OP,
             TestBridgeCommands.EXTRA_KEY,
         )

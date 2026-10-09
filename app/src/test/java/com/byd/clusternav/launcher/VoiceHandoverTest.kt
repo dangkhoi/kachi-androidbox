@@ -48,7 +48,6 @@ class VoiceHandoverTest {
         fun agreeLast() = yes.removeAt(yes.size - 1).invoke()
 
         val dispatcher = VoiceDispatcher(
-            control = { error("bài này không chạm nút xe") },
             state = { HomeUiState(workspace = WorkspaceState(preset)) },
             media = { error("bài này không chạm transport nhạc") },
             appsByLabel = { labels },

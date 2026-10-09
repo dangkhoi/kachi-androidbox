@@ -49,9 +49,10 @@ class VoiceLogCases0918Test {
             "kính đang mở hay đang đóng",
         ).forEach { s ->
             val got = one(s)
-            assertFalse(
-                VoiceQuestion.writesToCar(got),
-                "«$s» là câu HỎI — tuyệt đối không được ra lệnh ghi, ra: $got",
+            // Android box B2 · W3: không còn lệnh ghi nào ⇒ câu hỏi về xe phải ra "đã gỡ", không thành lệnh khác.
+            assertEquals(
+                VoiceUnknownReason.FEATURE_GONE, (got as? VoiceIntent.Unknown)?.reason,
+                "«$s» là câu HỎI về xe — phải là FEATURE_GONE, ra: $got",
             )
         }
     }
@@ -65,138 +66,9 @@ class VoiceLogCases0918Test {
     @Test fun `D1 · den khan cap KHONG duoc thanh mo cop`() {
         val got = one("bật đèn khẩn cấp")
         assertEquals(VoiceUnknownReason.FEATURE_GONE, (got as? VoiceIntent.Unknown)?.reason, "ra: $got")
-        assertFalse(VoiceQuestion.writesToCar(got), "không được chạm thân xe")
-    }
-
-    /**
-     * *"áp suất lốp bên trái là bao nhiêu"* → **`Read(soc)`**: máy trả **phần trăm pin** cho một câu hỏi về lốp.
-     *
-     * Gốc: tầng chữa chính tả sửa *"bên"* → *"pin"*. Câu đã nêu rõ họ **Áp …** nhưng không nói lốp nào, nên việc
-     * đúng là **hỏi lại** ([VoiceClarify]) — không phải đoán sang một họ khác. Bài khoá cả hai nửa: không ra
-     * `soc`, và có một câu hỏi lại nêu tên lốp.
-     */
-    @Test fun `D1 · cau hoi ve lop KHONG duoc tra loi bang pin, phai hoi lai`() {
-        val got = one("áp suất lốp bên trái là bao nhiêu")
-        assertTrue(got is VoiceIntent.Unknown, "phải hỏi lại, ra: $got")
-        assertEquals(VoiceIntent.Read("soc"), VoiceIntent.Read("soc")) // mốc đọc: `soc` là thứ KHÔNG được ra
-        assertTrue(got !is VoiceIntent.Read, "không được đọc một datum khác họ")
-        val ask = VoiceClarify.ask(got as VoiceIntent.Unknown, 0)
-        assertTrue(ask != null && ask.question.contains("lốp"), "câu hỏi lại phải nêu tên lốp, ra: ${ask?.question}")
-    }
-
-    /** …và cổng D1 KHÔNG được siết quá tay: mọi câu hỏi đang trả lời đúng vẫn phải y nguyên. */
-    @Test fun `D1 · cong cau hoi khong lam cam cac cau dang chay dung`() {
-        assertEquals(VoiceIntent.Read("soc"), one("pin còn bao nhiêu"))
-        assertEquals(VoiceIntent.Read("inside_temp"), one("nhiệt độ đang bao nhiêu"))
-        assertEquals(VoiceIntent.Read("inside_temp"), one("máy lạnh đang bao nhiêu độ"))
-        assertEquals(VoiceIntent.Read("pm25_level"), one("chỉ số bụi mịn"))
-        // ⚠ 1.90 2026-09-21: datum `op_mode` đã xoá (owner: xe thuần điện) ⇒ câu này KHÔNG còn đường đọc nào và
-        // nay ra `Unknown`. Ghi đúng sự thật mới thay vì đổi mốc: bài này đo *"cổng câu HỎI không làm câm các câu
-        // đang chạy đúng"*, và vế ấy vẫn được phủ bởi các câu khác trong cùng bài (`window_lf` · `soc` · `temp`).
-        // ⚠ 2026-09-21: ĐÃ thêm `["che","do","lai"]`/`["che","do","phanh"]` vào `VoiceFeatureGone.ALL` (op_mode đã
-        // xoá nên không còn đường đọc để giữ) ⇒ câu chế-độ-lái nay ra FEATURE_GONE ("đã bỏ"), lịch sự hơn "không hiểu".
-        assertEquals(VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, "xe đang ở chế độ lái nào"), one("xe đang ở chế độ lái nào"))  // 2026-09-21: chế độ lái đã bỏ → nói "đã bỏ"
-        assertEquals(VoiceIntent.Read("window_lf"), one("xem kính trước trái"))
-        // Câu RA LỆNH vẫn ra lệnh — `hay` ở đầu câu là *"hãy"*, không phải *"hoặc"* (cổng 2 của `isChoice`).
-        assertEquals(VoiceIntent.Control("readl", 1), one("hãy bật đèn đọc"))
-        assertEquals(VoiceIntent.Control("win_lf", 1), one("mở kính"))   // lượt D: cụm mơ hồ = kính LÁI
     }
 
     // ══ D2 · CÂU HỢP LỆ MÀ TỪ VỰNG CÒN THIẾU ══════════════════════════════════════════════════════════
-
-    /** Nhiên liệu: cả hai câu đều ra Unknown trong log; `fuel_pct` (*"Mức xăng"*) là datum có thật. */
-    @Test fun `D2 · cau hoi nhien lieu doc dung datum`() {
-        assertEquals(VoiceIntent.Read("fuel_pct"), one("chỉ số xăng"))
-        assertEquals(VoiceIntent.Read("fuel_pct"), one("xăng còn bao nhiêu"))
-        assertEquals(VoiceIntent.Read("fuel_pct"), one("xem mức nhiên liệu"))
-        // ⚠ *"mức nhiên liệu"* đứng trần vẫn là NO_VERB — đúng cổng [SOÁT 1.69 · P1] (*"một danh ngữ không có
-        // động từ KHÔNG phải một lệnh"*). Cách nói mới không được mở lại cánh cửa đó.
-        assertTrue(one("mức nhiên liệu") is VoiceIntent.Unknown, "danh ngữ trần không phải lệnh")
-        // …mà KHÔNG cướp cụm dài hơn, và KHÔNG đụng điểm đến (đường NAV không tra từ vựng xe).
-        assertEquals(VoiceIntent.Read("fuel_range_km"), one("xem tầm hoạt động xăng"))
-        assertEquals(VoiceIntent.Nav("trạm xăng gần nhất"), one("Chỉ đường đến trạm xăng gần nhất"))
-    }
-
-    /**
-     * *"ghế mát mức mấy"* → Unknown. Cụm hỏi *"mức mấy"* chưa có trong bảng — thêm ở [VoiceQuestion.ASK_EXTRA].
-     *
-     * ⚠ Chữ *"mấy"* đứng trần **không** được nhận: bỏ dấu xong nó trùng hệt *"máy"*, nên nó sẽ ép cả họ câu
-     * *"bật **máy** lạnh"* thành câu hỏi. Dòng thứ hai khoá đúng ranh giới đó.
-     */
-    @Test fun `D2 · muc may la cum hoi, con may dung tran thi khong`() {
-        assertEquals(VoiceIntent.Read("seat_vent_state"), one("ghế mát mức mấy"))
-        assertEquals(VoiceIntent.Read("seat_heat_state"), one("ghế sưởi mức mấy"))
-        assertEquals(VoiceIntent.Control("ac_auto", 1), one("bật máy lạnh"))
-    }
-
-    /**
-     * ⚠ …và chuỗi mô hình THẬT SỰ in ra là **`ghế mất mấy`** — rụng hẳn chữ *"mức"*.
-     *
-     * [ĐO xe 2026-09-18] `heard: "ghế mất mấy"` → `intents: []`. Bỏ dấu thì *"mát"* = *"mất"* (`mat`) nên phần đối
-     * tượng vẫn đúng; thứ duy nhất thiếu là **chữ hỏi**, và nó chỉ còn một tiếng. Cụm hai từ *"mức mấy"* của bài
-     * trên không còn gì để khớp ⇒ câu rơi vào `NO_VERB` = *"không hiểu"*, dù người lái nói rất rõ.
-     * Hình dạng thứ ba ([VoiceQuestion.bareAskBody]) chữa đúng ca này — ba cổng của nó ở KDoc, và cổng thứ tư là
-     * *"phần thân phải ra một datum THẬT"* nên nó không bao giờ biến một câu thành lệnh ghi.
-     */
-    @Test fun `D2 · chu hoi rung con MOT tieng o cuoi cau van doc duoc`() {
-        assertEquals(VoiceIntent.Read("seat_vent_state"), one("ghế mất mấy"))
-        assertEquals(VoiceIntent.Read("seat_heat_state"), one("ghế sưởi mấy"))
-        // Hai câu THẬT khác của cùng phiên log (`heard`, cùng người, 2 lượt) — *"quạt gió đang **mức mấy**"*.
-        // `ac_wind` (*"Mức quạt gió"*) là datum có thật; nhãn nó cần chữ *"mức"* nên phải khai cách nói ở
-        // [VoiceSynonyms.TELEMETRY], và cụm ấy trùng nút `fan` một cách **hợp lệ** (read/action tách qua `choose`).
-        assertEquals(VoiceIntent.Read("ac_wind"), one("quạt gió đang mất máy"))
-        assertEquals(VoiceIntent.Read("ac_wind"), one("quạt điều hòa đang mất máy"))
-        // …mà KHÔNG cướp nút gió: câu RA LỆNH vẫn về `fan`.
-        assertEquals(VoiceIntent.Control("fan", null, relative = 1), one("tăng quạt gió"))
-    }
-
-    /**
-     * ⚠⚠ Ba cổng của [VoiceQuestion.bareAskBody] — mỗi dòng dưới đây là một câu **phải KHÔNG đổi**.
-     *
-     * Chữ `may` là dấu hiệu nguy hiểm nhất có thể nhận: bỏ dấu xong nó trùng hệt *"máy"*, từ nằm giữa cả họ câu
-     * lệnh máy lạnh. Nên bài này quan trọng hơn bài ở trên: nó chứng minh cái giá phải trả là **0**.
-     */
-    @Test fun `D2 · chu hoi mot tieng KHONG duoc cuop cau lenh nao`() {
-        // (1) `may` phải là từ CUỐI — *"bật **máy** lạnh"* có nó ở giữa.
-        assertEquals(VoiceIntent.Control("ac_auto", 1), one("bật máy lạnh"))
-        assertEquals(VoiceIntent.Control("ac_auto", 0), one("tắt máy lạnh"))
-        // (2) phải còn ≥ 2 từ phía trước. Cổng này gác đúng một họ câu THẬT: danh ngữ tiếng Việt kết bằng *"máy"*
-        //     mà từ đứng trước lại là một datum — *"số máy"* (số điện thoại) trỏ `gear` (*"Số"*), *"pin máy"* trỏ
-        //     `soc`. Không có cổng này thì *"cho anh số máy"* trả về **vị trí cần số** của xe.
-        //     ⚠ [ĐO thử phá] ba câu *"tắt máy"* / *"mở máy"* / *"nổ máy"* KHÔNG chứng minh được cổng này — chúng đã
-        //     bị cổng (3) hoặc (4) chặn trước, nên hạ trần xuống 2 mà bộ bài canh vẫn xanh. Hai câu dưới mới là ca
-        //     mà **chỉ** cổng (2) đứng chắn.
-        listOf("số máy", "pin máy").forEach {
-            assertTrue(one(it) !is VoiceIntent.Read, "«$it» là danh ngữ, không phải câu hỏi mức — ra: ${one(it)}")
-        }
-        listOf("tắt máy", "mở máy", "nổ máy").forEach {
-            assertTrue(one(it) !is VoiceIntent.Read, "«$it» không phải câu hỏi mức, ra: ${one(it)}")
-        }
-        // …mà câu hỏi mức THẬT (≥ 2 từ đối tượng) vẫn đi lọt.
-        assertEquals(VoiceIntent.Read("speed"), one("tốc độ mấy"))
-        // (4) phần thân phải ra một datum THẬT — *"kiểm tra máy"* thì không, nên câu đi tiếp y như trước.
-        assertTrue(one("kiểm tra máy") !is VoiceIntent.Read, "ra: ${one("kiểm tra máy")}")
-    }
-
-    /**
-     * *"chỉ số áp suất lốp"* / *"kiểm tra áp suất"* — [ĐO xe] cả hai ra `intents: []`.
-     *
-     * Không thể đoán lốp nào (bốn lốp, câu không nói), nên việc đúng là **hỏi lại** — và hỏi lại **về lốp**. Bản
-     * 1.76 hỏi *"Số nào — Odo tổng hay Số VIN?"* và *"Áp nào — Áp cell cao, Áp cell thấp, …?"*; chuỗi hỏi-lại đầy
-     * đủ khoá ở `VoiceClarifyQuestionTest`. Ở đây chỉ khoá phần bộ phân tích: **không** ra một datum khác họ.
-     *
-     * ⚠ Dòng cuối là chuỗi mô hình THẬT in ra (`chỉ số áp suất **lớp**`) — bỏ dấu thì *"lớp"* = *"lốp"* nên nó tự
-     * đi cùng đường, và bài này ghim điều đó lại để không ai "chữa" bằng một bảng lẫn âm thứ hai.
-     */
-    @Test fun `D2 · cau hoi ap suat khong doan lop nao, va khong nhay ho khac`() {
-        listOf("kiểm tra áp suất", "chỉ số áp suất lốp", "chỉ số áp suất lớp").forEach { s ->
-            val got = one(s)
-            assertTrue(got is VoiceIntent.Unknown, "«$s» phải hỏi lại chứ không đoán, ra: $got")
-            assertFalse(VoiceQuestion.writesToCar(got), "«$s» là câu ĐỌC — không được ghi vào xe")
-        }
-        // Nói rõ lốp nào thì đọc thẳng, không hỏi lại.
-        assertEquals(VoiceIntent.Read("tyre_p_fr"), one("áp suất lốp trước phải là bao nhiêu"))
-    }
 
     // ══ D3 · TÍNH NĂNG ĐÃ BỎ / KHÔNG CÓ NÚT — trả lời lịch sự, đúng tên ═══════════════════════════════
 
@@ -220,23 +92,6 @@ class VoiceLogCases0918Test {
         assertTrue(say.contains("đèn khẩn cấp"), "phải gọi đúng tên tính năng, ra: $say")
         Strings.current = Lang.EN
         assertTrue(VoiceReply.unknown(got).contains("hazard"), "câu tiếng Anh phải nêu tên, ra: ${VoiceReply.unknown(got)}")
-    }
-
-    /**
-     * …và bảng [VoiceFeatureGone] **không được** giết đường ĐỌC còn sống.
-     *
-     * `light_left_turn` · `op_mode` vẫn là datum có thật: bảng chỉ nói về **nút**, và nó chỉ được hỏi khi câu đã
-     * không hiểu được.
-     *
-     * ⚠ WP8 2026-09-20: mốc `mirror_fold` (gương) đã purge (#30) ⇒ rời bài. Hai mốc còn lại giữ nguyên tính chất.
-     */
-    @Test fun `D3 · bang tinh nang da bo khong giet duong DOC con song`() {
-        assertEquals(VoiceIntent.Read("light_left_turn"), one("xem xi nhan trái"))
-        // ⚠ 1.90: xem chú thích ở ca D1 — `op_mode` đã xoá nên câu này ra `Unknown(NO_OBJECT)`.
-        assertEquals(VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, "xem chế độ lái"), one("xem chế độ lái"))  // 2026-09-21: chế độ lái đã bỏ
-        // Không có gì để hỏi lại khi tính năng đã bỏ — nói lại cũng ra đúng câu ấy.
-        val gone = one("kiểm tra dây an toàn") as VoiceIntent.Unknown
-        assertEquals(null, VoiceClarify.ask(gone, 0), "tính năng đã bỏ thì KHÔNG hỏi lại")
     }
 
     // ══ ⑤ · CHỌN APP DẪN ĐƯỜNG khi tên app bị rụng âm cuối ════════════════════════════════════════════
