@@ -68,6 +68,4 @@ fun ClusterNavBridge.checkUpdate(onText: (String) -> Unit) {
 // trong Cài đặt; hai màn chẩn đoán mở được CHỈ qua lệnh cầu `diag_screen` (`TestBridgeScreens`, sau cổng test-mode —
 // wave 2B). Bài `DevSurfaceGateContractTest.hai man chan doan chi mo qua lenh cau sau cong test-mode` khoá việc này.
 
-// ── Lấy gió trong: đường "áp ngay" (HomePanels cũ: bật ⇒ áp NGAY, không chờ lần nổ máy sau) ─────────
-/** Áp chế độ lấy gió trong NGAY (bất đồng bộ) — lặp lại `HomePanels.onRecircOnStart` trước IA v2. */
-fun ClusterNavBridge.applyRecircNow() = com.byd.clusternav.comfort.RecircApplier.applyNowAsync(app)
+// Android box B2 · W2e — `applyRecircNow` (lấy gió trong qua HAL BYD) gỡ cùng tiện nghi xe.

@@ -143,11 +143,10 @@ class ZeroBorderContractTest {
          */
         val INK_VIEWS: Map<String, String> = mapOf(
             "RingView.kt" to "cung + rãnh của đồng hồ đo — nét CHÍNH LÀ cái vòng; gỡ là không còn đồng hồ",
-            "Pm25GaugeView.kt" to "cung đồng hồ bụi mịn — cùng lẽ RingView",
             // ⚠ WP3-v5: "CarArtPainter.kt" (hình xe vector) đã XOÁ — hình xe nay là ẢNH bitmap ([CarImageLayer],
             // dùng FILL + PorterDuff feather, KHÔNG stroke). "DoorBoardView.kt" cũng bỏ khỏi đây: bản mới không còn
             // đường tách vùng tô (chấm màu FILL trên ảnh), nên nó hết dùng STROKE — để lại là "mục chết".
-            "SeatDiagramView.kt" to "đường bao thân xe + đệm/ốp/tựa của ghế — nét LÀ hình cái ghế",
+            // Android box B2 · W2e — `SeatDiagramView.kt` + `Pm25GaugeView.kt` (tiện nghi xe) gỡ cùng trang Tiện nghi xe.
             "DatumIconView.kt" to "chấm MỨC rỗng dưới icon (viền tròn) = trạng thái datum (mức 1/2) — nét LÀ cái chấm chưa đầy, gỡ là mất mức",
             "VoiceWaveView.kt" to "hai vòng ripple mờ (STROKE) quanh vòng tròn khi ĐANG NGHE = tín hiệu 'máy đang nghe' (voice-ux R2) — nét LÀ waveform, không phải khung",
             "GridEditorView.kt" to "LƯỚI ô của trình vẽ bố cục — thứ người dùng canh theo khi kéo khung " +
@@ -166,10 +165,7 @@ class ZeroBorderContractTest {
          * hoặc trên pixel của app khác, đã chạy ổn trên xe từ trước, và CLAUDE.md §6 cấm đảo thứ tự đường đã chạy
          * tốt ngoài hiện trường. Cùng lối miễn trừ mà `SurfaceMaterialContractTest` đã ghi cho `speedbadge/`.
          */
-        val EMBEDDED: List<String> = listOf(
-            "src/main/java/com/byd/clusternav/comfort/SeatDiagramView.kt",
-            "src/main/java/com/byd/clusternav/comfort/Pm25GaugeView.kt",
-        )
+        val EMBEDDED: List<String> = emptyList()   // W2e: hai view tiện nghi xe (`comfort/`) đã xoá — không còn view nhúng nào
     }
 
     private fun uiSources(): List<Path> {

@@ -50,9 +50,6 @@ internal fun ClusterNavBridge.reapplyAll() {
 
     // ── ⚠ CỐ Ý KHÔNG gọi lại — mỗi dòng là một quyết định, không phải một chỗ quên ───────────────
     //
-    //  • `recirc_on_start_enabled` — nghĩa của khoá là *"lấy gió trong khi NỔ MÁY"* (`RecircApplier.applyOnStart`,
-    //    đọc một lần ở `BootSetupService.kt:97`). `applyNowAsync` thì **KHÔNG gate** theo công tắc
-    //    (`RecircApplier.kt:56-58`) nên gọi nó ở đây là bật quạt lấy gió trong mỗi lần đổi hồ sơ.
     //  • `headless_autostart` — chỉ rẽ nhánh một quyết định của `RebindReceiver` lúc nhận BOOT_COMPLETED
     //    (`RebindReceiver.kt:42,64`). Không có dịch vụ nào đang chạy để báo.
     //  • `theme_choice` — `ThemeMode.setChoice` đọc ở `attachBaseContext`, và KDoc của nó
@@ -61,8 +58,7 @@ internal fun ClusterNavBridge.reapplyAll() {
     //  • `voicekey_custom_buttons` — [ĐO] không có consumer sống: chỉ `ClusterNavBridgeKeys.kt:159,162` đọc để đổ
     //    danh sách trong màn Cài đặt.
     //
-    // (Chú thích cũ *"`seat_level_1..3` KHÔNG theo hồ sơ"* đã hết đúng từ S4-SEAT 2026-09-23: ba ghế đã khai ở
-    // `SettingsCatalogClusterNav.KEYS` nên vào ảnh chụp, và `SeatComfortApplier.applyNow` ở trên áp cả bốn.)
+    // (Android box B2 · W2e: ghế · lọc bụi · lấy gió trong gỡ cùng HAL BYD — không còn applier tiện nghi nào để gọi lại.)
 }
 
 /**

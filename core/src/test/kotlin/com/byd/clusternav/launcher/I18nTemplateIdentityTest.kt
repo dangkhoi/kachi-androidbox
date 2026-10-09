@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.comfort.Pm25Filter
 import com.byd.clusternav.launcher.voice.VoiceAppEvidence
 import com.byd.clusternav.launcher.voice.VoiceAppTargets
 import com.byd.clusternav.launcher.voice.VoiceClarify
@@ -298,7 +297,5 @@ class I18nTemplateIdentityTest {
             assertTrue(items.size >= 3, "ca ≥ 3 lựa chọn: $kinh")
             assertTrue(items.last().startsWith(old(l, "hay ", "or ")), "vế cuối «, hay »/«, or »: $kinh")
         }
-        assertEquals("—", Pm25Filter.levelLabel(Pm25Filter.INVALID, l))
-        assertEquals(old(l, "Tốt", "Good"), Pm25Filter.levelLabel(Pm25Filter.GOOD, l))
     }
 }

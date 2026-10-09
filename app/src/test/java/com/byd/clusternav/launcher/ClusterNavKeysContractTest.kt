@@ -47,8 +47,8 @@ class ClusterNavKeysContractTest {
             // 1.70 — tệp THỨ TƯ cùng `clusternav_prefs`: khoá daemon chạm (`inputd_disabled` · `inputd_token`)
             // tách sang `PrefsInputd.kt` (hàm mở rộng của [Prefs], trần 500 dòng) — cùng tệp prefs, cùng lẽ V3.
             "src/main/java/com/byd/clusternav/PrefsInputd.kt",
-            // 1.85 — tệp THỨ NĂM cùng `clusternav_prefs`: ba khoá automation (`rain_defrost_enabled` ·
-            // `nav_automation_rules` · `nav_automation_fired`) tách sang `PrefsAutomation.kt` (hàm mở rộng của
+            // 1.85 — tệp THỨ NĂM cùng `clusternav_prefs`: khoá automation (`nav_automation_rules` · `nav_automation_fired`;
+            // ba khoá tự sấy kính gỡ ở W2e) tách sang `PrefsAutomation.kt` (hàm mở rộng của
             // [Prefs]) vì `Prefs.kt` đã 536 dòng — cùng tệp prefs, cùng lẽ V3/inputd, không phải cửa thứ hai.
             "src/main/java/com/byd/clusternav/PrefsAutomation.kt",
         ),
@@ -65,8 +65,8 @@ class ClusterNavKeysContractTest {
     /**
      * Khoá có mặt nguyên văn (`"khoá"`) không — hoặc, với khoá **dựng động**, dạng chưa nội suy (`"tiền_tố$`).
      *
-     * `Prefs.seatComfortLevel` ghi `"seat_level_$seatIndex"` cho 4 ghế trong một hàm chung, nên `"seat_level_0"` không
-     * tồn tại nguyên văn ở đâu. Tha theo **tiền tố đã khai tường minh** ([SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES]),
+     * (Ca lịch sử: `Prefs.seatComfortLevel` ghi `"seat_level_$seatIndex"` — gỡ ở W2e, bảng tiền tố nay rỗng.) Tha theo
+     * **tiền tố đã khai tường minh** ([SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES]),
      * không phải theo "bắt đầu bằng seat" — cùng kỷ luật đã dùng cho họ khoá `slot_*` ở [SettingsCatalog.SLOT_KEY_PREFIX].
      */
     private fun declares(src: String, key: String): Boolean {
@@ -97,9 +97,11 @@ class ClusterNavKeysContractTest {
                 "tên tệp prefs '$prefsFile' không có trong ${rels}",
             )
         }
+        // Sàn 30 (IA v2 §4.3) hạ 25 ở Android box B2 · W2e: 11 khoá tiện nghi xe + tự sấy kính rời bảng cùng mã
+        // ([RetiredComfortKeys]); sàn vẫn chặn ca "bộ quét/bảng rỗng".
         assertTrue(
-            SettingsCatalog.CLUSTERNAV_KEYS.size >= 30,
-            "bảng khoá chỉ có ${SettingsCatalog.CLUSTERNAV_KEYS.size} khoá — IA v2 §4.3 kiểm kê ≥ 30",
+            SettingsCatalog.CLUSTERNAV_KEYS.size >= 25,
+            "bảng khoá chỉ có ${SettingsCatalog.CLUSTERNAV_KEYS.size} khoá — kiểm kê Android box ≥ 25",
         )
     }
 
@@ -127,6 +129,21 @@ class ClusterNavKeysContractTest {
         assertTrue(removed.all { it in SettingsCatalog.CLUSTERNAV_KEYS && it in SettingsCatalog.RETIRED_UI_KEYS })
         val all = SOURCES.values.flatten().joinToString("\n") { codeOf(it) }
         assertEquals(emptyList<String>(), removed.filter { declares(all, it) }, "khoá 'đã gỡ mã' mà mã còn đọc/ghi")
+    }
+
+    /**
+     * Android box B2 · W2e — khoá tiện nghi xe + tự sấy kính gỡ mã: rời [SettingsCatalog.CLUSTERNAV_KEYS] (không còn chủ
+     * nào trong mã để bài nguyên-văn canh) và phải THẬT SỰ vắng khỏi mọi tệp nguồn phía ClusterNav (mọc lại một chỗ đọc
+     * là mọc lại tính năng HAL mà không ai nối). Tên vẫn xếp phạm vi qua [RetiredComfortKeys] (bài ở `ProfileScopeTest`).
+     */
+    @Test
+    fun `khoa tien nghi xe da go vang khoi ma va khoi danh muc`() {
+        val names = RetiredComfortKeys.PROFILE.keys + RetiredComfortKeys.DEVICE.keys
+        assertEquals(11, names.size, "bảng retired tiện nghi xe hụt: $names")
+        assertEquals(emptyList<String>(), names.filter { it in SettingsCatalog.CLUSTERNAV_KEYS }, "còn trong danh mục")
+        val all = SOURCES.values.flatten().joinToString("\n") { codeOf(it) }
+        assertEquals(emptyList<String>(), names.filter { declares(all, it) }, "mã còn đọc/ghi khoá tiện nghi xe")
+        assertTrue("\"seat_level_\$" !in all, "mẫu dựng động mức ghế đã gỡ")
     }
 
     /**

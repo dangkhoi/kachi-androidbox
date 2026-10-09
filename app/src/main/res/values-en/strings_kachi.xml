@@ -156,10 +156,7 @@
     <string name="kachi_home_profile_note">Every setting in Settings — except System and permissions (though Auto-start Kachi on engine start, Run background service on engine start, Open apps at ignition and Play music when you get in do follow the profile), most of Voice, Default navigation app, Real glass (blur the backdrop), Auto-defrost when it rains, the per-car camera tuning (rotation, mirroring, view), and About — is saved for profile «%1$s», including cluster casting, each app\'s frame and DPI, the floating button and the camera. Switch to another profile in Driver profiles and the layout, slot contents, chips, button bar, theme and units change at once; casting frame and DPI change from the next cast, and casting on/off from the next ignition.</string>
     <string name="kachi_delete">Delete</string>
 
-    <!-- ── SettingsSections — Tiện nghi xe · Quyền · Khởi động ── -->
-    <string name="kachi_sec_recirc">Recirculation</string>
-    <string name="kachi_recirc_title">Recirculate cabin air on engine start</string>
-    <string name="kachi_recirc_sub">The car forgets this mode on every start — Kachi re-enables it.</string>
+    <!-- ── SettingsSections — Quyền · Khởi động ── -->
     <string name="kachi_sec_permissions">Permissions</string>
     <string name="kachi_perm_all_ok">All permissions granted. Kachi re-requests them every time it opens, in case the system revoked them.</string>
     <string name="kachi_perm_some_missing">Kachi re-requests what it can; the rest states exactly what you need to do.</string>
@@ -309,7 +306,6 @@
     <string name="kachi_bridge_gemini_setting">Setting Gemini as system assistant…</string>
     <string name="kachi_bridge_gemini_set">Assistant set to Google/Gemini. Long-press mic to TALK (not open app).</string>
     <string name="kachi_bridge_gemini_failed">Couldn\'t set the system assistant.</string>
-    <string name="kachi_bridge_cleaning_air">Cleaning the air…</string>
     <string name="kachi_bridge_update_needs_screen">Open the screen to check for updates.</string>
 
     <!-- ── Dùng chung (hộp thoại của Cài đặt · SettingsDialogs) ── -->
@@ -340,33 +336,8 @@
 
     <!-- ── AUTOMATION (1.85) — docs/specs/kachi-automation.html ── -->
     <!-- #1 · Auto-defrost when it rains (Car comfort group) -->
-    <string name="kachi_sub_rain_defrost">Auto-defrost when it rains</string>
     <!-- kachi-automation V8 (owner 2026-09-30) — TWO independent rows, no master switch any more (spec §V8 · D1). -->
-    <string name="kachi_rain_defrost_front">Turn on the front defroster when it rains</string>
-    <string name="kachi_rain_defrost_front_sub">The windscreen at the front.</string>
-    <string name="kachi_rain_defrost_rear">Turn on the rear defroster + mirrors when it rains</string>
-    <string name="kachi_rain_defrost_rear_sub">The rear window and the door mirrors.</string>
-    <string name="kachi_rain_defrost_note">Reads the rain sensor every 5 minutes; the two boxes are independent. While it rains, a defroster that gets switched off (by the car or by you) is turned back on; when the rain stops Kachi only switches off what Kachi turned on — if you turned it on, Kachi leaves it alone.</string>
     <!-- kachi-automation V8.1 (2026-09-30) · R-V8.7 — per-glass status line under the two defrost rows. {n} = wiper level, {t} = HH:mm. -->
-    <string name="kachi_rain_st_front">Front windscreen</string>
-    <string name="kachi_rain_st_rear">Rear + mirrors</string>
-    <string name="kachi_rain_st_never">not checked since the car started</string>
-    <string name="kachi_rain_st_next">next check ~{t}</string>
-    <string name="kachi_rain_st_rain">rain (wiper {n})</string>
-    <string name="kachi_rain_st_dry">dry (wiper {n})</string>
-    <string name="kachi_rain_st_sensor_error">rain sensor unreadable ⇒ left as is</string>
-    <string name="kachi_rain_st_car_on">car says: on</string>
-    <string name="kachi_rain_st_car_off">car says: off</string>
-    <string name="kachi_rain_st_car_off_after_on">car says: still off after the {t} turn-on</string>
-    <string name="kachi_rain_st_car_error">car says: unreadable</string>
-    <string name="kachi_rain_st_turn_on_ok">Kachi turned it on: reached the car ✓</string>
-    <string name="kachi_rain_st_turn_on_fail">turn-on command: did not reach the car ✗</string>
-    <string name="kachi_rain_st_turn_off_ok">Kachi turned it off: reached the car ✓</string>
-    <string name="kachi_rain_st_turn_off_fail">turn-off command: did not reach the car ✗</string>
-    <string name="kachi_rain_st_skipped">command dropped (selection just changed)</string>
-    <string name="kachi_rain_st_keep_on">already on, left alone</string>
-    <string name="kachi_rain_st_nothing">nothing to do</string>
-    <string name="kachi_rain_st_not_ours">not managed by Kachi, left alone</string>
     <!-- #2 · Scheduled navigation (Navigation group) -->
     <string name="kachi_sec_nav_auto">Scheduled navigation</string>
     <string name="kachi_nav_auto_note">At the right time on the right day, opens your navigation app to a saved address. Each window navigates once per day.</string>
@@ -427,7 +398,6 @@
     <string name="kachi_keys_learn">Learn a new key…</string>
     <string name="kachi_keys_learn_name">Name the button you just pressed</string>
     <string name="kachi_key_custom_name">%1$s (code %2$d)</string>
-    <string name="kachi_key_custom_name_src">%1$s (code %2$d · %3$s)</string>
     <string name="kachi_key_code">key code %1$d</string>
     <string name="kachi_key_unknown">%1$s (%2$d)</string>
     <string name="kachi_key_mic_hold">Steering-wheel mic — hold (328)</string>
@@ -443,34 +413,6 @@
     <string name="kachi_key_target_gemini">System assistant via hard key (Gemini · 231)</string>
     <string name="kachi_key_target_recognizer">Speech recognizer</string>
     <string name="kachi_key_target_kachi_voice">Kachi listens (on-device)</string>
-    <string name="kachi_key_src_detail">code %1$d · scan %2$s · device %3$s · source: %4$s · read %5$s</string>
-    <string name="kachi_key_src_knob">centre-console knob</string>
-    <string name="kachi_key_src_wheel">steering wheel</string>
-    <string name="kachi_key_src_unknown">unknown value (%1$s)</string>
-    <string name="kachi_key_src_failed">could not read (%1$s)</string>
-    <string name="kachi_key_src_not_measured">not measured for this key</string>
-    <string name="kachi_key_src_pending">reading…</string>
-
-    <!-- ── IA v2 nhóm 8 — Tiện nghi xe (SettingsCarSection): ghế + bụi mịn nhận từ màn ClusterNav ── -->
-    <string name="kachi_sub_seat">Seat cooling / heating</string>
-    <string name="kachi_seat_enabled_title">Adjust the seats automatically</string>
-    <string name="kachi_seat_enabled_sub">The car applies the level you set for each seat once the cabin temperature calls for it.</string>
-    <string name="kachi_seat_mode">Mode</string>
-    <string name="kachi_seat_cool">Cooling</string>
-    <string name="kachi_seat_heat">Heating</string>
-    <string name="kachi_seat_hint">Tap a seat to change its level: off → level 1 → level 2.</string>
-    <string name="kachi_sub_pm25">Air purifier</string>
-    <string name="kachi_pm25_title">Purify automatically when the air is dirty</string>
-    <string name="kachi_pm25_sub">The car runs the purifier when the dust level rises; turn it off to purify only on demand.</string>
-    <string name="kachi_pm25_clean_now">Purify now</string>
-    <string name="kachi_pm25_level">Fine dust right now: %1$s</string>
-    <string name="kachi_pm25_unknown">not available</string>
-    <string name="kachi_pm25_excellent">Excellent</string>
-    <string name="kachi_pm25_good">Good</string>
-    <string name="kachi_pm25_low">Low grade</string>
-    <string name="kachi_pm25_middle">Moderate</string>
-    <string name="kachi_pm25_heavy">Heavy</string>
-    <string name="kachi_pm25_serious">Serious</string>
 
     <!-- ── IA v2 nhóm 9 — Hệ thống & quyền: Khởi động · Bảo trì · Nâng cao ── -->
     <string name="kachi_headless_title">Run the background service on engine start (physical keys · scheduled navigation)</string>

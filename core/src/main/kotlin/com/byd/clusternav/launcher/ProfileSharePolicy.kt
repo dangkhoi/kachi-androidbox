@@ -45,7 +45,7 @@ object ProfileSharePolicy {
     // không vị trí ⇒ bản chia sẻ mang theo (owner 03/10). `KeyCtlTargetTest` canh dạng chuỗi.
     private const val R_KEYS =
         "phím vô-lăng: mã phím (+ nguồn knob/wheel, 2.88) + đích là gói app/mã việc (Prefs.VK_TARGET_*) / mã nút xe ctl:<nút>:<việc> — không vị trí"
-    private const val R_COMFORT = "tiện nghi xe theo người lái (ghế, lọc bụi, lấy gió) — không vị trí"
+    private const val R_COMFORT = "tiện nghi xe theo người lái (ghế, lọc bụi, lấy gió — RetiredComfortKeys.PROFILE) — không vị trí"
     private const val R_CAMERA = "sở thích hiển thị camera (RetiredCameraKeys.PROFILE) — không vị trí"
     private const val R_APPS = "gói app mặc định / dịch vụ nền lúc nổ máy — không vị trí"
 
@@ -69,10 +69,7 @@ object ProfileSharePolicy {
             "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x", "vm_bubble_y",
         ).forEach { put(it, R_CLUSTER) }
         listOf("voicekey_enabled", "voicekey_bindings", "voicekey_custom_buttons").forEach { put(it, R_KEYS) }
-        listOf(
-            "seat_comfort_enabled", "seat_comfort_mode", "seat_level_0", "seat_level_1", "seat_level_2", "seat_level_3",
-            "pm25_filter_enabled", "recirc_on_start_enabled",
-        ).forEach { put(it, R_COMFORT) }
+        RetiredComfortKeys.PROFILE.keys.forEach { put(it, R_COMFORT) }
         listOf(
             "camera_signal_enabled", "camera_on_cluster", "camera_pos_left", "camera_pos_right", "camera_shape",
             "camera_dewarp_amount", "camera_projection", "camera_zoom",

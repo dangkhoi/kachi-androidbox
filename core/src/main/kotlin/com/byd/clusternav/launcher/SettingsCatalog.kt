@@ -76,7 +76,7 @@ object SettingsCatalog {
      */
     val RETIRED_CODE_REMOVED_KEYS: Set<String> = SettingsCatalogRetired.CODE_REMOVED
 
-    /** Tiền tố khoá dựng động phía ClusterNav → lý do (nay chỉ có `seat_level_`). */
+    /** Tiền tố khoá dựng động phía ClusterNav → lý do (rỗng từ Android box B2 · W2e — `seat_level_` gỡ cùng mã ghế). */
     val CLUSTERNAV_DYNAMIC_KEY_PREFIXES: Map<String, String> = SettingsCatalogClusterNav.DYNAMIC_KEY_PREFIXES
 
     /**

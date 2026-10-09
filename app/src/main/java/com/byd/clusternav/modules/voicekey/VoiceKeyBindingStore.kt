@@ -1,7 +1,6 @@
 package com.byd.clusternav.modules.voicekey
 
 import android.content.SharedPreferences
-import com.byd.clusternav.voicekey.KeySourceKind
 import com.byd.clusternav.voicekey.VoiceKeyBinding
 import com.byd.clusternav.voicekey.VoiceKeyBindings
 
@@ -25,18 +24,21 @@ import com.byd.clusternav.voicekey.VoiceKeyBindings
  * `android.jar` chỉ có bản stub ném "Stub!"); [encode]/[decode] không cần `SharedPreferences`.
  *
  * MỌI đường đọc đều đi qua [VoiceKeyBindings.sanitize]: file prefs có thể hỏng, bị sửa tay, hoặc đến từ
- * bản trước ⇒ không được tin nội dung của nó giữ bất biến "một (mã phím, nguồn) một đích".
+ * bản trước ⇒ không được tin nội dung của nó giữ bất biến "một mã phím một đích".
  *
- * ── 2.88 · trường nguồn `"s"` (spec `kachi-288-key-source-split` R5, §4.4) ─────────────────────────
- * JSON mỗi dòng: `{"k":mã,"t":đích}` + `"s":"knob"|"wheel"` CHỈ khi dòng có nguồn ([KeySourceKind.code]).
- *  - thiếu `"s"` ⇒ dòng không nguồn — JSON của mọi bản cũ đọc ra y như 2.87;
- *  - `"s"` mang mã lạ (bản tương lai) ⇒ BỎ dòng, KHÔNG hạ thành dòng không nguồn (hạ xuống thì nó bắt cả nút kia);
- *  - ghi: danh sách không có dòng nguồn nào mã hoá ra ĐÚNG từng byte như 2.87 (hồ sơ/so sánh không thấy đổi oan).
+ * ── Trường nguồn `"s"` của Kachi BYD 2.88 — Android box B2 · W2f (2026-10-09) ─────────────────────
+ * JSON mỗi dòng: `{"k":mã,"t":đích}`. Kachi BYD 2.88+ thêm `"s":"knob"|"wheel"` cho dòng gán theo nút (núm bệ giữa / vô-lăng);
+ * gán theo nguồn đã gỡ cùng HAL BYD, nhưng chuỗi đã lưu (máy cũ, tệp hồ sơ nhập) phải đọc lên được, KHÔNG ném:
+ *  - `"s"` (mã gì cũng vậy, kể cả mã lạ / sai kiểu) bị BỎ QUA ⇒ dòng thành dòng thường, bắt MỌI nút ra mã đó;
+ *  - nhiều dòng cùng mã (2.88 cho phép dòng không nguồn + dòng núm + dòng vô-lăng cùng mã) ⇒ giữ dòng KHÔNG nguồn nếu có
+ *    (đúng thứ 2.88 bắn khi không biết nguồn), không có thì dòng ĐẦU; giữ vị trí dòng thắng;
+ *  - ghi: không bao giờ ghi `"s"` ⇒ lượt ghi đầu sau khi nâng cấp ra đúng khuôn JSON 2.87.
  */
 object VoiceKeyBindingStore {
 
     private const val K_KEYCODE = "k"
     private const val K_TARGET = "t"
+    /** Trường nguồn của Kachi BYD 2.88 — chỉ còn được nhận ra khi đọc, không bao giờ ghi. */
     private const val K_SOURCE = "s"
 
     /**
@@ -60,20 +62,27 @@ object VoiceKeyBindingStore {
             (0 until arr.length()).mapNotNull { i ->
                 val o = arr.optJSONObject(i) ?: return@mapNotNull null
                 if (!o.has(K_KEYCODE) || !o.has(K_TARGET)) return@mapNotNull null
-                // R5: có "s" mà mã lạ ⇒ bỏ cả dòng (không hạ thành dòng không nguồn).
-                val source = if (o.has(K_SOURCE)) KeySourceKind.fromCode(o.optString(K_SOURCE)) ?: return@mapNotNull null else null
-                VoiceKeyBinding(keyCode = o.optInt(K_KEYCODE), targetSpec = o.optString(K_TARGET), source = source)
+                // W2f: "s" (gán theo nút BYD) chỉ còn dùng để chọn dòng thắng khi trùng mã — giá trị không được đọc.
+                Row(VoiceKeyBinding(keyCode = o.optInt(K_KEYCODE), targetSpec = o.optString(K_TARGET)), hadSource = o.has(K_SOURCE))
             }
         }.getOrDefault(emptyList())
-        return VoiceKeyBindings.sanitize(parsed)
+        return VoiceKeyBindings.sanitize(preferSourceless(parsed))
+    }
+
+    private class Row(val binding: VoiceKeyBinding, val hadSource: Boolean)
+
+    /** Trùng mã ⇒ dòng không `"s"` thắng, không có thì dòng đầu; dòng đích rỗng không bao giờ thắng. Giữ thứ tự dòng thắng. */
+    private fun preferSourceless(rows: List<Row>): List<VoiceKeyBinding> {
+        val valid = rows.filter { it.binding.targetSpec.isNotBlank() }
+        val winner = valid.groupBy { it.binding.keyCode }
+            .mapValues { (_, same) -> same.firstOrNull { !it.hadSource } ?: same.first() }
+        return valid.filter { winner[it.binding.keyCode] === it }.map { it.binding }
     }
 
     fun encode(bindings: List<VoiceKeyBinding>): String {
         val arr = org.json.JSONArray()
         VoiceKeyBindings.sanitize(bindings).forEach {
-            val o = org.json.JSONObject().put(K_KEYCODE, it.keyCode).put(K_TARGET, it.targetSpec)
-            it.source?.let { s -> o.put(K_SOURCE, s.code) }   // chỉ ghi khi có nguồn ⇒ dòng không nguồn y byte 2.87
-            arr.put(o)
+            arr.put(org.json.JSONObject().put(K_KEYCODE, it.keyCode).put(K_TARGET, it.targetSpec))
         }
         return arr.toString()
     }

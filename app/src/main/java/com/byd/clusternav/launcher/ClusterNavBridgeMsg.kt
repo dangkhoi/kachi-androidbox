@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.voicekey.KeySourceKind
 
 /**
  * ═══ TỪ VỰNG của [ClusterNavBridge] — mã thông điệp, KHÔNG phải câu chữ ═════════════════════════
@@ -105,10 +104,8 @@ enum class BridgeMsg {
      */
     GEMINI_ASSISTANT_FAILED,
 
-    // ── Tiện nghi xe · Hệ thống ─────────────────────────────────────────────────────────────────
-
-    /** VI "Đang lọc bụi mịn…" · EN "Cleaning the air…" — `MainActivity.kt:1305`. */
-    CLEANING_AIR,
+    // ── Hệ thống ─────────────────────────────────────────────────────────────────────────────────
+    // Android box B2 · W2e — `CLEANING_AIR` (nút *Lọc ngay* bụi mịn PM2.5) gỡ cùng tiện nghi xe.
 
     /**
      * Không có Activity để chạy luồng cập nhật (xem `ClusterNavBridge.checkUpdate`).
@@ -136,28 +133,26 @@ enum class VoiceKeyStatus { OFF, ACTIVE, DISCONNECTED }
  * chính họ, không phải chữ của dự án nên không dịch. `null` ⇒ đây là **preset**: tầng Settings tra
  * tên theo [code] trong tài nguyên (bảng preset gốc ở `MainActivity.kt:707–717`).
  *
- * [source] (2.88 · KEY-SOURCE-SPLIT tầng 2) = nút vật lý của nút tự học đã học kèm nguồn (núm bệ giữa / vô-lăng);
- * gán từ mục này ra dòng gán theo nguồn. `null` = preset hoặc nút học không nguồn.
+ * (Trường nguồn 2.88 — núm bệ giữa / vô-lăng BYD — gỡ ở Android box B2 · W2f.)
  */
 data class ButtonOption(
     val code: Int,
     val customName: String? = null,
-    val source: KeySourceKind? = null,
 ) {
     val isPreset: Boolean get() = customName == null
 }
 
 /**
- * 2.93 · KEY-LABEL-PRESET-SHADOW — mục NÚT mang nhãn cho một dòng gán `(mã, nguồn)`, `null` = không mục nào khớp.
+ * 2.93 · KEY-LABEL-PRESET-SHADOW — mục NÚT mang nhãn cho một dòng gán (mã phím), `null` = không mục nào khớp.
  *
  * [ĐO máy ảo QA 04/10] học phím 88 đặt tên *"MEDIA PREVIOUS"* ⇒ dòng gán hiện *"Bài trước (PREVIOUS · 88)"*: danh sách là
  * preset TRƯỚC + nút tự học SAU ([buttonOptions]) và phép tra cũ lấy mục khớp ĐẦU TIÊN ⇒ preset cùng mã che tên người dùng
  * tự đặt. Luật: trong các mục khớp, nút TỰ HỌC thắng preset (tên người dùng đặt là thứ họ nhận ra); nhiều nút tự học cùng
- * `(mã, nguồn)` ⇒ mục học trước (thứ tự danh sách giữ nguyên). Không ẩn preset khỏi hộp chọn — chọn bản nào cũng ra CÙNG
- * một dòng gán `(mã, nguồn)`, nên chỉ phép tra nhãn phải đổi. Bài: `ButtonOptionLabelTest`.
+ * mã ⇒ mục học trước (thứ tự danh sách giữ nguyên). Không ẩn preset khỏi hộp chọn — chọn bản nào cũng ra CÙNG một dòng gán,
+ * nên chỉ phép tra nhãn phải đổi. Bài: `ButtonOptionLabelTest`.
  */
-fun List<ButtonOption>.labelOwner(code: Int, source: KeySourceKind?): ButtonOption? {
-    val hits = filter { it.code == code && it.source == source }
+fun List<ButtonOption>.labelOwner(code: Int): ButtonOption? {
+    val hits = filter { it.code == code }
     return hits.firstOrNull { !it.isPreset } ?: hits.firstOrNull()
 }
 

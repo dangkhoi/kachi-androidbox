@@ -18,21 +18,12 @@ package com.byd.clusternav.launcher
 internal object SettingsCatalogClusterNav {
 
     /**
-     * Tiền tố khoá MỨC GHẾ (`seat_level_0`..`seat_level_3`).
+     * Tiền tố khoá dựng động → lý do. Bài canh nguyên-văn tra bảng này trước khi kết luận "khoá không tồn tại".
      *
-     * ⚠ `Prefs.seatComfortLevel` ghi `"seat_level_$seatIndex"` — **khoá dựng động trong một biểu thức nội suy**, nên
-     * chuỗi `"seat_level_0"` KHÔNG tồn tại nguyên văn ở đâu trong mã. Cùng tình huống với
-     * [SettingsCatalog.SLOT_KEY_PREFIX]: bài canh phải chấp nhận dạng **chưa nội suy**, không thì nó đỏ oan; và phải
-     * chấp nhận theo **tiền tố khai tường minh** chứ không theo "bắt đầu bằng seat", không thì nó tha quá tay.
+     * Android box B2 · W2e: RỖNG — tiền tố duy nhất (`seat_level_`, mức từng ghế ghi bằng `"seat_level_$seatIndex"`) gỡ cùng
+     * mã ghế; bốn tên `seat_level_0..3` xếp phạm vi ở [RetiredComfortKeys].
      */
-    const val SEAT_LEVEL_KEY_PREFIX = "seat_level_"
-
-    /** Tiền tố khoá dựng động → lý do. Bài canh nguyên-văn tra bảng này trước khi kết luận "khoá không tồn tại". */
-    val DYNAMIC_KEY_PREFIXES: Map<String, String> = mapOf(
-        SEAT_LEVEL_KEY_PREFIX to
-            "Prefs.seatComfortLevel/setSeatComfortLevel ghi `\"seat_level_\$seatIndex\"` cho 4 ghế trong một hàm " +
-                "chung — bốn tên đầy đủ không tồn tại nguyên văn trong mã",
-    )
+    val DYNAMIC_KEY_PREFIXES: Map<String, String> = emptyMap()
 
     /**
      * Tệp SharedPreferences mà **phía ClusterNav** đang ghi → nơi khai tên tệp đó.
@@ -63,11 +54,9 @@ internal object SettingsCatalogClusterNav {
             // 2.90 · R8 — cờ "người lái CHỦ ĐỘNG ẩn bóng"; 2.91 · F1: chủ là công tắc hiện bóng (mục `vm_bubble_enabled`).
             "vm_bubble_hidden",
             "voicekey_enabled", "voicekey_bindings", "voicekey_custom_buttons", "voicekey_learn",
-            "seat_comfort_enabled", "seat_comfort_mode", "seat_level_0",
-            // S4-SEAT (owner 2026-09-23): 3 ghế còn lại cùng tệp với ghế lái → vào ảnh chụp theo hồ sơ. Không có
-            // dòng này thì snapshotClusterNav (lặp CLUSTERNAV_KEYS) bỏ sót chúng dù đã khai COMPANION.
-            "seat_level_1", "seat_level_2", "seat_level_3",
-            "pm25_filter_enabled", "recirc_on_start_enabled", "headless_autostart",
+            // Android box B2 · W2e — ghế · lọc bụi · lấy gió (`seat_*` · `pm25_filter_enabled` · `recirc_on_start_enabled`) rời
+            // bảng cùng mã; tên + phạm vi ở [RetiredComfortKeys].
+            "headless_autostart",
             // V1 pha NÓI · R4 (spec `kachi-voice-feedback.html` T9) — hai công tắc của đường ra TIẾNG. Khoá nằm
             // cùng tệp với `voice_mic_pill` (cũng của `Prefs`), nên "cấu hình giọng nói ở đâu" có một câu trả lời.
             "voice_speak_replies", "voice_prefer_offline",
@@ -82,15 +71,11 @@ internal object SettingsCatalogClusterNav {
             "voice_nav_default_app",
             // App nhạc mặc định (owner 2026-09-21) — cùng tệp, cùng lẽ với app dẫn đường.
             "voice_music_default_app",
-            // AUTOMATION (1.85, spec kachi-automation) — hai khoá CẤU HÌNH. Khai ở `PrefsAutomation.kt` (hàm mở
+            // AUTOMATION (1.85, spec kachi-automation) — khoá CẤU HÌNH của lịch tự dẫn. Khai ở `PrefsAutomation.kt` (hàm mở
             // rộng của `Prefs`, cùng tệp `clusternav_prefs` — tách vì trần 500 dòng, xem KDoc tệp đó).
-            // ⚠ Khoá thứ ba `nav_automation_fired` KHÔNG ở đây: nó là TRẠNG THÁI CHẠY, khai ở
-            // `SettingsCatalog.NOT_SETTINGS` — bảng này chỉ nhận khoá **có mặt trên UI**.
-            "rain_defrost_enabled", "nav_automation_rules",
-            // V7 (owner 2026-09-25) — hai ô chọn kính của #1 (V8 2026-09-30: hai hàng độc lập). Khai ở
-            // `PrefsAutomation.kt`, cùng tệp `clusternav_prefs`. Chủ của chúng là mục `car_rain_defrost` — xem
-            // [COMPANION_KEYS] về vì sao KHÔNG mở hai mục danh mục riêng.
-            "rain_defrost_front", "rain_defrost_rear",
+            // ⚠ `nav_automation_fired` KHÔNG ở đây: nó là TRẠNG THÁI CHẠY, khai ở `SettingsCatalog.NOT_SETTINGS`.
+            // Android box B2 · W2e — ba khoá tự sấy kính `rain_defrost_*` rời bảng cùng mã ([RetiredComfortKeys], theo XE).
+            "nav_automation_rules",
             // V8 (owner 2026-09-25) — công tắc *"Tự động cập nhật"*. Chủ là mục `system_update` (hàng *Kiểm tra
             // cập nhật* của nhóm Hệ thống nay có một công tắc **và** một nút) — xem [COMPANION_KEYS].
             "auto_update_enabled",

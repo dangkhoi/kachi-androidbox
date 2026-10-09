@@ -18,12 +18,12 @@ import com.byd.clusternav.navAutomationRules
  * ═══ ĐỘNG CƠ NỀN CỦA LỊCH TỰ DẪN ĐƯỜNG ═══════════════════════════════════════════════════════════════════
  *
  * Spec `docs/specs/kachi-automation.html` R4. Foreground service, nhịp [TICK_MS]; mỗi nhịp gọi
- * [ScheduledNavApplier.tick]. Android box B2 · W1 (2026-10-09): nhịp mưa (`RainDefrostApplier`) và đồng bộ camera theo
- * xi-nhan đã gỡ khỏi vòng (HAL BYD) — engine chỉ còn lịch tự dẫn đường. [RAIN_EVERY_TICKS] còn lại cho mã mồ côi tới W2e.
+ * [ScheduledNavApplier.tick]. Android box B2 · W1 (2026-10-09): nhịp mưa và đồng bộ camera theo xi-nhan gỡ khỏi vòng
+ * (HAL BYD); W2e xoá mã tự sấy kính — engine chỉ còn lịch tự dẫn đường.
  *
  * ## Vì sao FGS + `Thread.sleep`, KHÔNG WorkManager / AlarmManager
  * Spec §Quyết định thiết kế: Kachi vốn **thường trú** (nó là HOME, autostart mỗi lần nổ máy), IVI khoá nhiều
- * đường, và nhịp-trong-FGS là công thức **đã chạy thật** trên xe này (`Pm25FilterApplier.startPollLoop`).
+ * đường, và nhịp-trong-FGS là công thức **đã chạy thật** trên xe (vòng poll lọc bụi đời BYD, nay đã gỡ).
  * WorkManager có min-interval 15 phút — quá thô cho một khung giờ 7–9h cần độ phân giải một phút.
  *
  * ## Guard vòng: [running] + [generation] — copy đúng cơ chế đã proven
@@ -31,7 +31,7 @@ import com.byd.clusternav.navAutomationRules
  * cú gạt công tắc có thể tới trong cùng một giây). [generation] = **danh tính** vòng; một thread CHỈ sống khi
  * `myGen == generation`. Nhờ token thế hệ, chuỗi bật→tắt→bật (tắt lúc thread đang NGỦ [TICK_MS] rồi bật lại)
  * KHÔNG để thread cũ sống cạnh thread mới, và `finally` của thread cũ KHÔNG xoá cờ của thread mới — đúng bài học
- * `Pm25FilterApplier` đã ghi (chỉ `@Volatile var running` thì thread cũ đọc thấy cờ thread mới vừa bật ⇒ 2 vòng).
+ * vòng poll lọc bụi đời BYD đã ghi (chỉ `@Volatile var running` thì thread cũ đọc thấy cờ thread mới vừa bật ⇒ 2 vòng).
  *
  * ## Tự tắt khi không còn việc
  * [anyEnabled] `false` ⇒ service `stopSelf()`. Một FGS thường trú với một thông báo `IMPORTANCE_MIN` mà **không
@@ -111,15 +111,6 @@ class AutomationService : Service() {
          */
         const val TICK_MS = 60_000L
 
-        /**
-         * Rule mưa chạy mỗi ngần này nhịp ⇒ ≈5 phút (R1.2) — tính theo thời gian trôi: `RainDefrostApplier` dựng
-         * `RainDefrostCadence(periodMs = TICK_MS * RAIN_EVERY_TICKS)` (kachi-automation V8.1).
-         *
-         * Đếm nhịp thay vì dựng vòng thứ hai: hai vòng là hai thứ phải nhớ dừng lúc huỷ, và [ĐO] lịch sử dự án
-         * cho thấy cái thứ hai là cái bị quên (KDoc `PhotoWidgetView` — nhịp sống lâu hơn ô).
-         */
-        const val RAIN_EVERY_TICKS = 5
-
         /** Thông báo riêng, KHÔNG dùng lại id của `BootSetupService` (1043) / cast bubble (1042) — ba FGS cùng sống. */
         private const val NOTIFICATION_ID = 1044
         private const val CHANNEL_ID = "kachi_automation"
@@ -146,7 +137,7 @@ class AutomationService : Service() {
         }
 
         /**
-         * Đồng bộ service với công tắc — **gọi sau MỌI lượt đổi cấu hình** (bật/tắt sấy-mưa, sửa/xoá luật) và ở
+         * Đồng bộ service với công tắc — **gọi sau MỌI lượt đổi cấu hình** (sửa/xoá/bật/tắt luật) và ở
          * đường khởi động.
          *
          * Idempotent: đang chạy mà còn việc ⇒ no-op (guard [running]); hết việc ⇒ service tự `stopSelf` ở
@@ -158,7 +149,7 @@ class AutomationService : Service() {
             runCatching {
                 if (!anyEnabled(app)) {
                     // TẮT: vô hiệu vòng NGAY (không chờ service chết) rồi mới xin dừng. Thiếu bước này thì thread
-                    // đang ngủ còn chạy thêm một nhịp và có thể ghi HAL sau khi người dùng đã tắt công tắc.
+                    // đang ngủ còn chạy thêm một nhịp và có thể mở app dẫn đường sau khi người dùng đã tắt luật.
                     synchronized(GUARD) {
                         generation++
                         running = false
@@ -194,8 +185,8 @@ class AutomationService : Service() {
                     // giá là một phút không giải thích được với người vừa bấm.
                     while (myGen == generation && anyEnabled(app)) {
                         val nowMs = android.os.SystemClock.elapsedRealtime()
-                        // Nav theo THỜI GIAN TRÔI (giữ mốc elapsed — không phụ thuộc số nhịp). Android box B2 · W1: nhịp mưa
-                        // (`RainDefrostApplier.tickIfDue`) và đồng bộ camera xi-nhan (`syncCamera`) gỡ khỏi vòng.
+                        // Nav theo THỜI GIAN TRÔI (giữ mốc elapsed — không phụ thuộc số nhịp). Android box B2: nhịp mưa
+                        // và đồng bộ camera xi-nhan gỡ khỏi vòng (W1), mã tự sấy kính xoá ở W2e.
                         if (nowMs - lastNavMs >= TICK_MS) {
                             lastNavMs = nowMs
                             runCatching { ScheduledNavApplier.tick(app) }.onFailure { Log.w(TAG, "tick nav lỗi", it) }

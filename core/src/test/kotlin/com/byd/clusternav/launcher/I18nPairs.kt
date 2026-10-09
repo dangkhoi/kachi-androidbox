@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.comfort.Pm25Filter
 import com.byd.clusternav.launcher.voice.VoiceFeatureGone
 import com.byd.clusternav.launcher.voice.VoicePlaces
 import com.byd.clusternav.launcher.voice.VoiceRiskTable
@@ -97,10 +96,6 @@ internal object I18nPairs {
         KeyCtlTargets.groups().forEach { add(it.label, it.labelEn, Kind.LABEL, "keyctl-group:${it.id}") }
         VoiceRiskTable.CONTROL_RULES.forEach { add(it.whyVi, it.whyEn, Kind.DATA, "risk:${it.controlId}") }
         VoiceFeatureGone.ALL.forEach { add(it.label, it.labelEn, Kind.VOICE, "gone:${it.words.joinToString(" ")}") }
-        listOf(
-            Pm25Filter.EXCELLENT, Pm25Filter.GOOD, Pm25Filter.LOW_GRADE,
-            Pm25Filter.MIDDLE, Pm25Filter.HEAVY, Pm25Filter.SERIOUS,
-        ).forEach { add(Pm25Filter.levelLabelVi(it), Pm25Filter.levelLabelEn(it), Kind.LABEL, "pm25:$it") }
         // Ba chỗ mà chữ VIỆT là một hằng (lời gọi có đối số không-phải-chữ ⇒ quét nguồn không lấy được cặp): đọc
         // chính hàm hiển thị ở hai thứ tiếng, không chép lại chữ (đổi chữ ở mã ⇒ bài này tự theo).
         for ((vi, where) in listOf(VoicePlaces.HOME to "place:HOME", VoicePlaces.WORK to "place:WORK")) {

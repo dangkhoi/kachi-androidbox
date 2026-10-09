@@ -198,22 +198,18 @@ class SettingsCoverageContractTest {
     // ── Khoá nằm ngoài WorkspacePrefs ────────────────────────────────────────────────────────────
 
     /**
-     * Khoá lấy gió trong nằm ở `Prefs` của ClusterNav, không ở `WorkspacePrefs`, nên bài trên không phủ nó (gốc quét
-     * cố ý KHÔNG gồm cả `Prefs.kt`: đó là tệp của ClusterNav với hàng chục khoá của tính năng cũ, kéo vào sẽ biến bài
-     * R2 thành bài kiểm ClusterNav).
-     *
-     * ⚠ [ĐO] spec §2 ghi tên khoá là `recirc_on_start`, còn mã thật là `recirc_on_start_enabled`
-     * (`Prefs.K_RECIRC_ON_START`). Lấy theo MÃ; bài này đọc thẳng hằng đó nên nếu ai đổi tên khoá mà quên sửa danh
-     * mục thì đỏ.
+     * Khoá lấy gió trong (`recirc_on_start_enabled`, trước ở `Prefs.K_RECIRC_ON_START`) — Android box B2 · W2e: mã gỡ cùng
+     * tiện nghi xe BYD. Bài cũ đọc hằng trong `Prefs.kt` để chặn lệch tên giữa mã và danh mục; nay chặn chiều ngược lại:
+     * hằng KHÔNG còn trong mã, khoá không có chủ trên UI, tên ĐÚNG (có `_enabled`) vẫn được xếp phạm vi qua bảng retired.
      */
     @Test
-    fun `khoa lay gio trong khai dung ten that trong Prefs`() {
+    fun `khoa lay gio trong da go ma, ten van xep pham vi`() {
         val src = SourceRoots.codeOf("src/main/java/com/byd/clusternav/Prefs.kt")
-        val real = Regex("""K_RECIRC_ON_START\s*=\s*"([^"]+)"""").find(src)?.groupValues?.get(1)
-        assertNotNull(real, "không đọc được hằng K_RECIRC_ON_START — bài test đang quét vùng không tồn tại")
-        // Android box B2 · W1 — nhóm Tiện nghi xe gỡ: khoá THẬT phải nằm ở bảng "đã rời UI" (còn theo hồ sơ), không còn chủ.
-        assertNull(SettingsCatalog.groupOf(real!!), "khoá lấy gió trong ('$real') đã rời UI ở Android box")
-        assertTrue(real in SettingsCatalog.RETIRED_UI_KEYS, "khoá lấy gió trong ('$real') phải khai đúng tên ở RETIRED_UI_KEYS")
+        assertNull(Regex("""K_RECIRC_ON_START\s*=""").find(src), "hằng lấy gió trong đã gỡ khỏi Prefs (W2e)")
+        val real = "recirc_on_start_enabled"
+        assertNull(SettingsCatalog.groupOf(real), "khoá lấy gió trong đã rời UI ở Android box")
+        assertTrue(real in RetiredComfortKeys.PROFILE, "tên thật ('$real') phải khai ở RetiredComfortKeys")
+        assertTrue(real !in SettingsCatalog.RETIRED_UI_KEYS, "khoá đã gỡ mã rời bảng 'chỉ rời UI'")
         assertNull(
             SettingsCatalog.groupOf("recirc_on_start"),
             "tên trong spec §2 bị thiếu hậu tố _enabled — danh mục không được dùng tên đó",

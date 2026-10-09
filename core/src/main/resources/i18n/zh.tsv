@@ -31,11 +31,6 @@ tải thất bại	download failed	下载失败
 đang cài…	installing…	正在安装…
 Phím-thoại đang bật	Voice key active	语音键已启用
 Tự động hoá đang chạy	Automation running	自动化正在运行
-Lái	Driver	主驾
-Phụ	Front R	副驾
-Sau T	Rear L	左后
-Sau P	Rear R	右后
-M	L	L
 Đang chuẩn bị model câu gọi… {0}%	Preparing wake model… {0}%	正在准备唤醒模型…{0}%
 Đang chuẩn bị model câu gọi…	Preparing wake model…	正在准备唤醒模型…
 Model câu gọi đã sẵn sàng	Wake model ready	唤醒模型已就绪
@@ -725,11 +720,6 @@ gạt mưa	the wipers	雨刮
 khoá xe	locking the car	锁车
 gói rời xe	the leave-car routine	离车组合
 âm lượng	the volume	音量
-Rất tốt	Excellent	优
-Khá	Low grade	轻度
-Trung bình	Moderate	中度
-Nặng	Heavy	重度
-Nghiêm trọng	Serious	严重
 Nhà	Home	家
 Công ty	Work	公司
 Mặc định	Default	默认

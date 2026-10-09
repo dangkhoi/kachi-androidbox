@@ -187,12 +187,14 @@ class ClusterProfileScopeCoverageTest {
 
     /**
      * Khoá đã gỡ mã ghi (tên còn khai kiểu ở [ProfileScopeTypes.CLUSTERNAV] để tệp hồ sơ cũ còn đọc đúng kiểu tới W4): camera
-     * (Android box B2 · W2b) + biển báo tốc độ / bong bóng VietMap (W2c). Bộ quét không thấy lời ghi nào ⇒ đúng tập này nằm
+     * (Android box B2 · W2b) + biển báo tốc độ / bong bóng VietMap (W2c) + tiện nghi xe (W2e). Bộ quét không thấy lời ghi nào ⇒ đúng tập này nằm
      * ngoài `seen`, và chỉ nó.
      */
     private val retiredNoWriter: Set<String> by lazy {
         ProfileScopeTypes.CLUSTERNAV.keys.filter { it.startsWith("camera_") || it.startsWith("badge_") || it.startsWith("vm_bubble_") }
-            .toSet() + setOf("show_upcoming_badge", "show_alert_chip")
+            .toSet() + setOf("show_upcoming_badge", "show_alert_chip") +
+            // Android box B2 · W2e — ghế · lọc bụi · lấy gió (mã ghi gỡ cùng tiện nghi xe, kiểu khai ở RetiredComfortKeys).
+            RetiredComfortKeys.TYPES.keys
     }
 
     /**

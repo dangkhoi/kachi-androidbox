@@ -31,11 +31,6 @@ tải thất bại	download failed	ดาวน์โหลดไม่สำเ
 đang cài…	installing…	กำลังติดตั้ง…
 Phím-thoại đang bật	Voice key active	ปุ่มสั่งเสียงทำงานอยู่
 Tự động hoá đang chạy	Automation running	ระบบอัตโนมัติกำลังทำงาน
-Lái	Driver	คนขับ
-Phụ	Front R	ผู้โดยสาร
-Sau T	Rear L	หลังซ้าย
-Sau P	Rear R	หลังขวา
-M	L	L
 Đang chuẩn bị model câu gọi… {0}%	Preparing wake model… {0}%	กำลังเตรียมโมเดลคำปลุก… {0}%
 Đang chuẩn bị model câu gọi…	Preparing wake model…	กำลังเตรียมโมเดลคำปลุก…
 Model câu gọi đã sẵn sàng	Wake model ready	โมเดลคำปลุกพร้อมแล้ว
@@ -725,11 +720,6 @@ gạt mưa	the wipers	ที่ปัดน้ำฝน
 khoá xe	locking the car	การล็อกรถ
 gói rời xe	the leave-car routine	ชุดคำสั่งเมื่อลงจากรถ
 âm lượng	the volume	ระดับเสียง
-Rất tốt	Excellent	ดีมาก
-Khá	Low grade	น้อย
-Trung bình	Moderate	ปานกลาง
-Nặng	Heavy	หนัก
-Nghiêm trọng	Serious	รุนแรง
 Nhà	Home	บ้าน
 Công ty	Work	ที่ทำงาน
 Mặc định	Default	ค่าเริ่มต้น

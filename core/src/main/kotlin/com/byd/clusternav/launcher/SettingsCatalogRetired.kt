@@ -12,14 +12,14 @@ package com.byd.clusternav.launcher
  * *"quên gom"* với *"cố ý đã rời UI"* — mỗi khoá kèm lý do, giống [SettingsCatalog.NOT_SETTINGS]. Bất biến (chốt ở
  * `init` của [SettingsCatalog] + bài `SettingsCatalogRetiredTest`): khoá ở đây KHÔNG có mục nào sở hữu, không nằm trong
  * [SettingsCatalog.NOT_SETTINGS], và mọi khoá phía ClusterNav vẫn nằm trong [SettingsCatalog.CLUSTERNAV_KEYS] (tức `ProfileScope`
- * còn xếp được — phần lớn theo hồ sơ, bộ ba tự sấy kính theo xe như trước). W4 dọn khoá chết thì xoá dòng tương ứng ở đây cùng lượt.
+ * còn xếp được). W2e: khoá tiện nghi xe + tự sấy kính đã gỡ mã ⇒ rời hẳn sang [RetiredComfortKeys]. W4 dọn khoá chết thì xoá
+ * dòng tương ứng ở đây cùng lượt.
  */
 internal object SettingsCatalogRetired {
 
     private const val NAV_HUD = "dẫn đường lên cụm/HUD BYD — Android box B2 · W1 gỡ mục Cài đặt; khoá còn theo hồ sơ tới W4"
     private const val BADGE = "biển báo tốc độ trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt, W2c gỡ mã; khoá còn theo hồ sơ tới W4"
     private const val VM_BUBBLE = "bong bóng VietMap trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt, W2c gỡ mã; khoá còn theo hồ sơ tới W4"
-    private const val CAR = "tiện nghi xe qua HAL BYD (nhóm Cài đặt gỡ ở Android box B2 · W1); khoá giữ phạm vi cũ (hồ sơ / xe) tới W4"
     private const val STRIP = "chip thanh trạng thái = chip dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt; W3 gỡ khối chip"
     private const val UNITS = "đơn vị chỉ dùng cho dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt; W3 gỡ cùng dữ liệu xe"
 
@@ -30,11 +30,8 @@ internal object SettingsCatalogRetired {
             "badge_enabled", "show_upcoming_badge", "show_alert_chip", "badge_size_dp", "badge_center_x", "badge_center_y",
         ).forEach { put(it, BADGE) }
         listOf("vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x", "vm_bubble_y").forEach { put(it, VM_BUBBLE) }
-        listOf(
-            "recirc_on_start_enabled", "seat_comfort_enabled", "seat_comfort_mode",
-            "seat_level_0", "seat_level_1", "seat_level_2", "seat_level_3", "pm25_filter_enabled",
-            "rain_defrost_enabled", "rain_defrost_front", "rain_defrost_rear",
-        ).forEach { put(it, CAR) }
+        // Android box B2 · W2e — khoá tiện nghi xe + tự sấy kính rời bảng này sang [RetiredComfortKeys] (mã gỡ, khoá rời
+        // `CLUSTERNAV_KEYS` nhưng giữ phạm vi cũ tới W4).
         put("top_strip", STRIP)
         put("top_strip_labels", STRIP)
         put("unit_prefs", UNITS)

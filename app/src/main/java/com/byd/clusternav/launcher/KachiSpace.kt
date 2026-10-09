@@ -412,24 +412,13 @@ object KachiSpace {
 
     // ── Chiều cao của view TỰ VẼ nhúng vào Cài đặt (`SettingsRows.embed`) ───────────────────────────────
     //
-    // ⚠ Ba số này là **bề cao một khối bố cục**, cùng họ [LABEL_COL]/[RAIL_COL]/[NOTE_MAX_W] — KHÔNG phải một
+    // ⚠ Số ở mục này (nay không còn số nào) là **bề cao một khối bố cục**, cùng họ [LABEL_COL]/[RAIL_COL]/[NOTE_MAX_W] — KHÔNG phải một
     // bậc khoảng cách. Chúng phải nằm ở đây chứ không viết tại chỗ gọi vì `embed(view, heightDp)` nhận dp thô:
     // một số trần ở chỗ gọi **không** bị `SpacingScaleContractTest` bắt (nó chỉ soi đối số của `dp(`/`dpi(`),
     // tức đúng cái lỗ mà `px()` đã lách qua một lần (xem KDoc `dpHelperNames` của bài canh đó).
 
-    /**
-     * Sơ đồ ghế **và** khung KÉO-THẢ vị trí trên cụm (biển báo tốc độ · bong bóng VietMap).
-     *
-     * ⚠ Khung kéo-thả TRƯỚC ĐÂY có bậc riêng `EMBED_TALL = 200`. Bỏ đi ở lượt soát ảnh v2 (R4 — nhóm *Dẫn đường*
-     * đo được **2.68 màn cuộn**, trần là 2): khung đó **letterbox** cụm 1920×720 nên hạ chiều cao chỉ làm hình
-     * chiếu nhỏ lại, KHÔNG cắt mất phần nào của cụm — [ĐO] sau khi hạ, marker vẫn tròn, vẫn kéo được, biên khung
-     * vẫn thấy. Một bậc ít hơn cũng là một chỗ ít hơn để hai khung cùng loại trôi khỏi nhau.
-     */
-    const val EMBED_M = 160
-
-    /** Đồng hồ PM2.5 — một cung tròn + một con số; cao hơn nữa chỉ là chỗ trống. */
-    const val EMBED_S = 120
-
+    // Android box B2 · W2e — `EMBED_M` (sơ đồ ghế; khung kéo-thả biển báo/bong bóng đã gỡ ở W2c) và `EMBED_S` (đồng hồ
+    // PM2.5) gỡ cùng tiện nghi xe. `SettingsRows.embed` còn nhận dp thô cho view tự vẽ sau này.
     // Android box B2 · W2c — `EMBED_PREVIEW` (ô xem trước cụm `ClusterPreviewView` của nhóm Chiếu cụm) gỡ cùng view đó.
 
     /** Ảnh bìa nhạc (vuông). */

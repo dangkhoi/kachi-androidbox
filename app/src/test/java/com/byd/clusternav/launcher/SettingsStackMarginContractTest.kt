@@ -34,8 +34,8 @@ class SettingsStackMarginContractTest {
         // Android box B2 · W2c — `SettingsSectionsNav.kt` (khối cụm/HUD/biển báo/bong bóng, không ai dựng từ W1) + `SettingsSectionsCast*.kt`
         // gỡ; hàng app dẫn đường mặc định (`SettingsSectionsNavApp.kt`) vào thay.
         "SettingsSectionsBars.kt", "SettingsSectionsNavApp.kt",
-        "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
-        // (`SettingsSectionsCamera.kt` 2.76 · R1 — xoá ở Android box B2 · W2b.)
+        "SettingsSectionsKeys.kt",
+        // (`SettingsSectionsCamera.kt` 2.76 · R1 — xoá ở Android box B2 · W2b; `SettingsSectionsCar.kt` — xoá ở W2e.)
         // 2.74 · R3 — nhóm Giọng nói cũng dựng bằng `rows.*` (và nay có cả khối gập/mở).
         "SettingsVoiceSection.kt",
         // 2.89 · B3 — hàng cỡ thanh nút (thanh kéo + dải mẫu + ghi chú) dựng bằng `rows.*`.

@@ -47,4 +47,13 @@ object HomeActivityCmd {
      *    (`packages/Shell/AndroidManifest.xml:140`) ⇒ `ActivityStarter.java:993-996` không huỷ lượt mở.
      */
     const val GO_HOME = "am start -a android.intent.action.MAIN -c android.intent.category.HOME"
+
+    /**
+     * Người dùng có muốn Kachi làm HOME không — đã bấm "Đặt làm màn hình chính" ([homeChosen]) hoặc bật "giữ khi nổ máy"
+     * ([keepHomeOnBoot]); "Bỏ chọn" xoá cả hai. Chỗ dùng: đường khởi động nguội (`KachiAutostart`) quyết có đặt lại HOME.
+     *
+     * Android box B2 · W2f (2026-10-09): dời từ `HomeGuardPolicy` (nhịp giành lại HOME từ launcher BYD 5.7.5 — gỡ) về đây,
+     * cạnh hai lệnh nó gác, nguyên nghĩa.
+     */
+    fun wantsKachiHome(homeChosen: Boolean, keepHomeOnBoot: Boolean): Boolean = homeChosen || keepHomeOnBoot
 }

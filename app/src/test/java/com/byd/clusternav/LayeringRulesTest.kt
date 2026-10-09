@@ -227,10 +227,7 @@ class LayeringRulesTest {
         // `appsByLabel`), nên chuyển sang `:core` là kéo cả phiên theo. Tệp riêng vì `VoiceSession.kt` và
         // `VoiceSessionTurns.kt` đều đã 499/500 dòng — cùng lẽ với `VoiceTargetDispatch.kt`/`VoiceReadback.kt`.
         "VoiceSessionTerms.kt" to "hàm mở rộng VoiceSession (Context + PackageManager qua appsByLabel)",
-        // L6-debt 2026-09-27: cửa DUY NHẤT của reflection vào `SystemProperties` (gộp 3 bản sao DRY). "Thuần" theo phép
-        // đo chỉ vì reflection không `import android.*` — nhưng `:core` bị CẤM nhắc chữ `android` kể cả trong chuỗi
-        // (`core khong duoc biet Android`), nên nó không có chỗ nào khác ngoài `:app`.
-        "SysProps.kt" to "reflection SystemProperties của hệ — :core bị cấm nhắc Android",
+        // (`SysProps.kt` — reflection `SystemProperties` — xoá ở Android box B2 · W2e: ba chỗ gọi cũ camera · cụm · ghế đều đã gỡ.)
         // L6 (2026-10-03): bộ thi hành đường LÙI của chạm vào màn ảo ô, tách khỏi `VdAppHost.kt` (500/500) nguyên byte để
         // có chỗ cho luật hoàn ô. "Thuần" theo phép đo chỉ vì một `ThreadPoolExecutor` không import android — nhưng nó là
         // một nửa của `VdAppHost.onTouchEvent` (View, chỉ một chỗ dùng), cùng lẽ `KachiSpaceBars.kt`/`WorkspacePrefsSlotHead.kt`.

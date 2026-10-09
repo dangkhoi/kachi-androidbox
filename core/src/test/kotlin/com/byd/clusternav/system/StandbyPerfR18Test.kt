@@ -1,7 +1,6 @@
 package com.byd.clusternav.system
 
 import com.byd.clusternav.launcher.BootHomeUp
-import com.byd.clusternav.launcher.HomeGuardPolicy
 import com.byd.clusternav.modules.navaccess.A11yBindJournal
 import com.byd.clusternav.testsupport.SourceRoots
 import org.junit.jupiter.api.AfterEach
@@ -54,16 +53,7 @@ class StandbyPerfR18Test {
 
     // Android box B2 · W2c — ca `repin ghi ban doc …` (lượt dò repin của chiếu cụm) gỡ cùng `SimpleCastCoordinator`.
 
-    /** [ĐO máy ảo 07/10] `kachi-home-guard` thức 0,6 lần/giây cả khi màn tắt. */
-    @Test
-    fun `HomeGuard thua lai khi man tat, nhip cu khi bat`() {
-        assertEquals(HomeGuardPolicy.SCREEN_OFF_TICK_MS, HomeGuardPolicy.nextDelayMs(0L, false))
-        assertEquals(HomeGuardPolicy.FAST_TICK_MS, HomeGuardPolicy.nextDelayMs(0L, true))
-        assertEquals(HomeGuardPolicy.FAST_TICK_MS, HomeGuardPolicy.nextDelayMs(0L, null))
-        assertEquals(HomeGuardPolicy.SLOW_TICK_MS, HomeGuardPolicy.nextDelayMs(HomeGuardPolicy.FAST_WINDOW_MS, true))
-        // Bật lại màn ⇒ thấy trong ≤ 10 s, vẫn kịp ca giành HOME đã đo (~15–17 s sau khi Kachi lên).
-        assertTrue(HomeGuardPolicy.SCREEN_OFF_TICK_MS < 15_000L)
-    }
+    // Android box B2 · W2f — ca `HomeGuard thua lai khi man tat…` xoá cùng `HomeGuardPolicy` (nhịp giành HOME từ launcher BYD).
 
     /** [ĐO log xe 20:48:44] BOOT_COMPLETED +24 s chạy `am start` màn chính đã resumed (~0,5 s kênh shell). */
     @Test

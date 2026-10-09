@@ -26,15 +26,11 @@ class Automation185WiringTest {
 
     private fun app(relative: String): String = SourceRoots.codeOf("src/main/java/com/byd/clusternav/$relative")
 
-    private val rain by lazy { app("automation/RainDefrostApplier.kt") }
     private val navApplier by lazy { app("automation/ScheduledNavApplier.kt") }
     private val service by lazy { app("automation/AutomationService.kt") }
     private val gps by lazy { app("automation/GpsAvailability.kt") }
     private val bridge by lazy { app("launcher/ClusterNavBridgeAutomation.kt") }
     private val prefs by lazy { app("PrefsAutomation.kt") }
-
-    /** kachi-automation V8: trình tự một nhịp mưa chuyển sang `:core` (SourceRoots giải `main/java` → `core/…/kotlin`). */
-    private val glasses by lazy { app("launcher/automation/RainDefrostGlasses.kt") }
     private val autostart by lazy { app("KachiAutostart.kt") }
     private val boot by lazy { app("BootSetupService.kt") }
 
@@ -80,68 +76,21 @@ class Automation185WiringTest {
     // ── Phần QUÉT NGUỒN: đường dây ────────────────────────────────────────────────────────────────
 
     /**
-     * R1: sấy đọc trạng thái **TỪ XE**, không từ một cờ RAM. Cờ RAM không thấy người lái bấm nút sấy trên màn xe
-     * ⇒ R1.5 (*"chỉ tắt cái sấy do automation bật"*) chết im lặng.
-     *
-     * ⚠ kachi-automation V8 (bảng V8.3b): V7 khoá *"nút được đọc = mỏ neo `pick.first()`"*. Bất biến thật sự vẫn
-     * là *cái được ĐỌC phải là cái đang được GHI* — V8 giữ nó chặt hơn: MỖI kính đọc và ghi qua cùng
-     * `controlOf(glass)` của chính nó (`RainDefrostV8WiringTest`), mỏ neo phải VẮNG, và trình tự
-     * lọc-sentinel → `step`/`stepUnknown` nằm ở `:core` nơi `RainDefrostGlassesTest` chạy THẬT (C5 · C11 · C12).
+     * Android box B2 · W2e (2026-10-09) — AUTOMATION #1 *tự sấy kính khi mưa* gỡ cùng HAL BYD (cảm biến mưa
+     * `SETTING_FRONT_RAIN_WIPER_SPEED` + nút sấy). Ba bài canh dây nối của nó (đọc sấy từ xe · chỉ ghi kính đã chọn ·
+     * bind theo tên hằng) xoá cùng mã; bài này chặn nó mọc lại nửa vời: không tệp, không lời gọi, không cổng prefs.
      */
     @Test
-    fun `say doc trang thai tu xe qua readState`() {
-        assertTrue("carControl.readState(controlId)" in rain, "phải đọc sấy qua đường readKey của nút")
-        assertFalse("pick.first()" in rain, "mỏ neo V7 đã gỡ — còn nó là còn quyết định của kính này áp cho kính kia")
-        assertTrue("RainDefrostGlasses.tick(" in SourceRoots.body(rain, "fun tick("), "nhịp phải đi qua hai làn của :core")
-        assertTrue("RainDefrostPolicy.plausible(" in glasses, "lần đọc mưa phải qua bộ lọc sentinel của :core")
-        assertTrue("RainDefrostOwner.step(" in glasses, "quyết định phải đi qua máy trạng thái R1.5")
-        assertTrue("RainDefrostOwner.stepUnknown(" in glasses, "đọc không được ⇒ giữ nguyên, KHÔNG coi như trời khô")
-    }
-
-    /**
-     * V7 (owner 2026-09-25) đảo chiều bài canh 1.85 (*"bật cả hai"* ⇒ *"chỉ những nút đã chọn"*); kachi-automation
-     * V8 giữ nguyên ba bất biến, đổi chỗ đứng (bảng V8.3b):
-     *  1. lượt ghi chỉ chạm **những kính đã chọn** — nhịp lặp `choice.glasses`, không một danh sách cứng;
-     *  2. lựa chọn dựng từ đúng các khoá prefs — `Prefs.rainDefrostChoice` đọc đủ BA khoá qua
-     *     `RainDefrostChoice.fromKeys` (hiệu lực = `enabled && con`), không có đường thứ hai quyết định kính nào;
-     *  3. **không chọn gì ⇒ no-op + quên**: `choice.any` gác đầu nhịp, kính không chọn bị `forget`.
-     *
-     * Hai hằng mã nút vẫn phải đúng nguyên văn: chúng là mã của `ControlRegistry`, gõ sai là ghi vào hư không.
-     */
-    @Test
-    fun `say chi ghi nhung nut da chon`() {
-        assertTrue("CTL_FRONT = \"defrost\"" in rain)
-        assertTrue("CTL_REAR = \"defrost_rear\"" in rain)
-        assertFalse(
-            "listOf(CTL_FRONT, CTL_REAR)" in rain,
-            "danh sách CỨNG hai nút đã bị V7 thay bằng lựa chọn — còn nó là còn đường ghi cả hai bất chấp lựa chọn",
-        )
-        val tick = SourceRoots.body(glasses, "fun tick(")
-        assertTrue("choice.glasses.map" in tick, "một nhịp chỉ chạm các kính ĐÃ CHỌN")
-        assertTrue("if (!choice.any) return emptyList()" in tick, "không chọn gì ⇒ tính năng TẮT, gác ngay đầu nhịp")
-        assertTrue("filterNot(choice::has).forEach(memory::forget)" in tick, "kính không chọn ⇒ quên ký ức")
-        assertTrue("Prefs.rainDefrostChoice(app)" in SourceRoots.body(rain, "fun choice("), "lựa chọn đọc từ prefs")
-        val read = SourceRoots.body(prefs, "fun Prefs.rainDefrostChoice(")
-        assertTrue("RainDefrostChoice.fromKeys(" in read, "3 khoá ⇒ lựa chọn hiệu lực chỉ dịch ở MỘT chỗ (:core)")
-        listOf("K_RAIN_DEFROST, false", "K_RAIN_DEFROST_FRONT, true", "K_RAIN_DEFROST_REAR, true").forEach {
-            assertTrue(it in read, "phải đọc khoá + mặc định cũ nguyên văn: $it")
+    fun `tu say kinh khi mua da go het`() {
+        listOf(
+            "automation/RainDefrostApplier.kt", "launcher/SettingsSectionsCar.kt",
+            "launcher/automation/RainDefrostGlasses.kt", "launcher/automation/RainDefrostPolicy.kt",
+        ).forEach { assertFalse(SourceRoots.exists("src/main/java/com/byd/clusternav/$it"), "$it phải đã xoá") }
+        listOf(service, bridge, prefs, navApplier).forEach { src ->
+            listOf("RainDefrost", "rainDefrost", "RAIN_EVERY_TICKS", "K_RAIN_DEFROST", "RainGlass").forEach {
+                assertFalse(it in src, "'$it' còn trong mã automation (W2e)")
+            }
         }
-    }
-
-    /**
-     * Bind theo **TÊN HẰNG** trước, số đo được chỉ là đường lùi (R11: `BYDAutoFeatureIds` gán giá trị trong
-     * `static {}` theo cấu hình xe ⇒ dán số là đúng cho một xe).
-     */
-    @Test
-    fun `mua bind theo ten hang truoc roi moi lui ve so do duoc`() {
-        assertTrue("SETTING_FRONT_RAIN_WIPER_SPEED" in rain)
-        assertTrue("featureIdByName(RAIN_CONST) ?: MEASURED_ID" in rain, "tên hằng trước, số là đường lùi")
-        assertEquals(
-            1196425250,
-            RainDefrostApplier.MEASURED_ID,
-            "[ĐO xe 2026-09-20] đổi số này là đổi một dữ kiện đã đo — phải có lượt đo mới",
-        )
-        assertTrue("rawIsSentinel(raw)" in rain, "sentinel > ngưỡng mưa ⇒ phải lọc, không thì bật sấy giữa nắng")
     }
 
     /**
@@ -186,7 +135,7 @@ class Automation185WiringTest {
         assertTrue("PackageQueries.queryActivities(" in navApplier, "hỏi app đã cài qua cửa duy nhất của dự án")
     }
 
-    /** R4: nhịp 60 s cho nav, và rule mưa đếm nhịp ra ~5 phút (KHÔNG dựng vòng thứ hai). */
+    /** R4: nhịp 60 s cho nav, một vòng duy nhất (nhịp mưa ~5 phút gỡ ở W1/W2e). */
     @Test
     fun `mot dong co, mot vong, chi nhip lich dan duong`() {
         assertEquals(60_000L, AutomationService.TICK_MS)
@@ -208,7 +157,7 @@ class Automation185WiringTest {
     }
 
     /**
-     * Guard vòng đúng cơ chế đã proven ở `Pm25FilterApplier`: `running` + **token thế hệ**. Thiếu token thì chuỗi
+     * Guard vòng đúng cơ chế đã proven ở vòng poll lọc bụi đời BYD (gỡ ở W2e): `running` + **token thế hệ**. Thiếu token thì chuỗi
      * bật→tắt→bật để thread cũ sống cạnh thread mới, và `finally` của thread cũ xoá cờ của thread mới.
      */
     @Test
@@ -233,11 +182,7 @@ class Automation185WiringTest {
      */
     @Test
     fun `moi setter cua cau deu dong bo dong co`() {
-        // kachi-automation V8 (bảng V8.3b): setter một-tham-số của công tắc chính đã gỡ; cửa ghi duy nhất nay là
-        // `setRainDefrostGlass`, và nó phải ghi ĐỦ ba khoá thật (xem `RainDefrostV8WiringTest` cho thân prefs).
-        val setRain = SourceRoots.body(bridge, "fun ClusterNavBridge.setRainDefrostGlass(")
-        assertTrue("Prefs.setRainDefrostChoice(app, after)" in setRain, "phải ghi ĐÚNG ba khoá thật")
-        assertTrue("AutomationService.sync(app)" in setRain, "ghi xong phải đồng bộ engine")
+        // Android box B2 · W2e — cửa ghi tự sấy kính (`setRainDefrostGlass`) gỡ cùng tính năng; còn đúng cửa sổ luật.
         val setRules = SourceRoots.body(bridge, "fun ClusterNavBridge.setNavRules(")
         assertTrue("setNavAutomationRules(app, NavAutomationBook.encode(rules))" in setRules)
         assertTrue("ScheduledNavApplier.pruneFired(app)" in setRules, "phải dọn dấu đã-dẫn mồ côi")
@@ -255,7 +200,7 @@ class Automation185WiringTest {
         assertTrue("AutomationService.sync(applicationContext)" in boot, "BootSetupService phải re-arm engine")
     }
 
-    /** Vòng nhịp là RAM ⇒ không re-arm thì hai automation chỉ chạy đúng phiên người dùng gạt công tắc. */
+    /** Vòng nhịp là RAM ⇒ không re-arm thì lịch tự dẫn chỉ chạy đúng phiên người dùng sửa luật. */
     @Test
     fun `engine khong tu nho vong qua lan no may`() {
         assertTrue(

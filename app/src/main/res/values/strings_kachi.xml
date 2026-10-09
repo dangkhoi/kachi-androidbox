@@ -167,10 +167,7 @@
     <string name="kachi_home_profile_note">Mọi thiết lập ở Cài đặt — trừ nhóm Hệ thống và quyền (riêng Tự mở Kachi khi nổ máy, Chạy dịch vụ nền khi nổ máy, Mở app khi nổ máy và Tự mở nhạc khi lên xe vẫn theo hồ sơ), hầu hết nhóm Giọng nói, App dẫn đường mặc định, Kính thật (làm mờ nền), Tự sấy kính khi mưa, phần chỉnh camera theo xe (xoay, lật gương, góc nhìn), và Giới thiệu — đều lưu cho hồ sơ «%1$s», kể cả chiếu lên cụm, khung và DPI từng app, nút nổi và camera. Đổi sang hồ sơ khác ở nhóm Hồ sơ tài xế thì bố cục, nội dung ô, chip, thanh nút, giao diện và đơn vị đổi ngay; khung và DPI khi chiếu đổi từ lần chiếu sau, còn bật/tắt chiếu đổi từ lần nổ máy sau.</string>
     <string name="kachi_delete">Xoá</string>
 
-    <!-- ── SettingsSections — Tiện nghi xe · Quyền · Khởi động ── -->
-    <string name="kachi_sec_recirc">Lấy gió trong</string>
-    <string name="kachi_recirc_title">Nổ máy thì tự lấy gió trong</string>
-    <string name="kachi_recirc_sub">Xe quên chế độ này mỗi lần khởi động — Kachi tự bật lại.</string>
+    <!-- ── SettingsSections — Quyền · Khởi động ── -->
     <string name="kachi_sec_permissions">Quyền</string>
     <string name="kachi_perm_all_ok">Đủ quyền — không thiếu gì. Kachi tự xin lại mỗi lần mở nếu hệ thống thu hồi.</string>
     <string name="kachi_perm_some_missing">Kachi tự xin lại phần tự xin được; phần còn lại nói rõ việc cần làm.</string>
@@ -323,7 +320,6 @@
     <string name="kachi_bridge_gemini_setting">Đang đặt Gemini làm trợ lý hệ thống…</string>
     <string name="kachi_bridge_gemini_set">Đã đặt trợ lý = Google/Gemini. Giữ nút mic để NÓI (không mở app).</string>
     <string name="kachi_bridge_gemini_failed">Chưa đặt được trợ lý hệ thống.</string>
-    <string name="kachi_bridge_cleaning_air">Đang lọc bụi mịn…</string>
     <string name="kachi_bridge_update_needs_screen">Mở màn hình để kiểm tra cập nhật.</string>
 
     <!-- ── Dùng chung (hộp thoại của Cài đặt · SettingsDialogs) ── -->
@@ -355,34 +351,6 @@
     <string name="kachi_edit">Sửa</string>
 
     <!-- ── AUTOMATION (1.85) — docs/specs/kachi-automation.html ── -->
-    <!-- #1 · Tự sấy kính khi mưa (nhóm Tiện nghi xe) -->
-    <string name="kachi_sub_rain_defrost">Tự sấy kính khi mưa</string>
-    <!-- kachi-automation V8 (owner 2026-09-30) — HAI hàng độc lập, không còn công tắc chính (spec §V8 · D1). -->
-    <string name="kachi_rain_defrost_front">Mưa thì tự bật sấy kính trước</string>
-    <string name="kachi_rain_defrost_front_sub">Kính chắn gió phía trước.</string>
-    <string name="kachi_rain_defrost_rear">Mưa thì tự bật sấy kính sau + gương</string>
-    <string name="kachi_rain_defrost_rear_sub">Kính sau và gương chiếu hậu.</string>
-    <string name="kachi_rain_defrost_note">Đọc cảm biến mưa mỗi 5 phút, hai ô độc lập. Đang mưa mà sấy tắt (xe tự tắt hoặc bạn tắt) thì Kachi bật lại; hết mưa Kachi chỉ tắt cái sấy do Kachi bật — bạn tự bật thì Kachi không đụng.</string>
-    <!-- kachi-automation V8.1 (2026-09-30) · R-V8.7 — dòng tình trạng từng kính dưới hai hàng sấy. {n} = mức gạt, {t} = HH:mm (không dùng %1$d: xem spec V8.1 · D11). -->
-    <string name="kachi_rain_st_front">Kính trước</string>
-    <string name="kachi_rain_st_rear">Kính sau + gương</string>
-    <string name="kachi_rain_st_never">chưa kiểm lần nào từ lúc mở xe</string>
-    <string name="kachi_rain_st_next">nhịp kế ~{t}</string>
-    <string name="kachi_rain_st_rain">mưa (gạt {n})</string>
-    <string name="kachi_rain_st_dry">khô (gạt {n})</string>
-    <string name="kachi_rain_st_sensor_error">cảm biến mưa không đọc được ⇒ để nguyên</string>
-    <string name="kachi_rain_st_car_on">xe báo: bật</string>
-    <string name="kachi_rain_st_car_off">xe báo: tắt</string>
-    <string name="kachi_rain_st_car_off_after_on">xe báo: vẫn tắt sau lệnh bật {t}</string>
-    <string name="kachi_rain_st_car_error">xe báo: không đọc được</string>
-    <string name="kachi_rain_st_turn_on_ok">Kachi bật: tới xe ✓</string>
-    <string name="kachi_rain_st_turn_on_fail">lệnh bật: không tới xe ✗</string>
-    <string name="kachi_rain_st_turn_off_ok">Kachi tắt: tới xe ✓</string>
-    <string name="kachi_rain_st_turn_off_fail">lệnh tắt: không tới xe ✗</string>
-    <string name="kachi_rain_st_skipped">bỏ lệnh (vừa đổi lựa chọn)</string>
-    <string name="kachi_rain_st_keep_on">đang sấy, để nguyên</string>
-    <string name="kachi_rain_st_nothing">không cần sấy</string>
-    <string name="kachi_rain_st_not_ours">Kachi không quản, để nguyên</string>
     <!-- #2 · Tự dẫn đường theo lịch (nhóm Dẫn đường) -->
     <string name="kachi_sec_nav_auto">Tự dẫn đường theo lịch</string>
     <string name="kachi_nav_auto_note">Đúng giờ, đúng thứ thì tự mở app dẫn đường tới một địa chỉ đã lưu. Mỗi khung giờ chỉ dẫn một lần trong ngày.</string>
@@ -445,7 +413,6 @@
     <string name="kachi_keys_learn">Học phím mới…</string>
     <string name="kachi_keys_learn_name">Đặt tên cho nút vừa bấm</string>
     <string name="kachi_key_custom_name">%1$s (mã %2$d)</string>
-    <string name="kachi_key_custom_name_src">%1$s (mã %2$d · %3$s)</string>
     <string name="kachi_key_code">mã phím %1$d</string>
     <string name="kachi_key_unknown">%1$s (%2$d)</string>
     <string name="kachi_key_mic_hold">Nút mic vô-lăng — giữ (328)</string>
@@ -461,35 +428,6 @@
     <string name="kachi_key_target_gemini">Trợ lý qua phím cứng (Gemini · 231)</string>
     <string name="kachi_key_target_recognizer">Nhận dạng giọng nói</string>
     <string name="kachi_key_target_kachi_voice">Kachi nghe (tại máy)</string>
-    <!-- L7 · KEY-SOURCE-SPLIT tầng 1: dòng chi tiết dưới tên nút vừa học (mã · scan · thiết bị · nguồn HAL) — để anh em chụp màn hình. -->
-    <string name="kachi_key_src_detail">mã %1$d · scan %2$s · thiết bị %3$s · nguồn: %4$s · đọc %5$s</string>
-    <string name="kachi_key_src_knob">núm yên ngựa</string>
-    <string name="kachi_key_src_wheel">vô-lăng</string>
-    <string name="kachi_key_src_unknown">giá trị lạ (%1$s)</string>
-    <string name="kachi_key_src_failed">không đọc được (%1$s)</string>
-    <string name="kachi_key_src_not_measured">không đo cho phím này</string>
-    <string name="kachi_key_src_pending">đang đọc…</string>
-
-    <!-- ── IA v2 nhóm 8 — Tiện nghi xe (SettingsCarSection): ghế + bụi mịn nhận từ màn ClusterNav ── -->
-    <string name="kachi_sub_seat">Ghế mát / sưởi</string>
-    <string name="kachi_seat_enabled_title">Tự chỉnh ghế theo nhiệt độ</string>
-    <string name="kachi_seat_enabled_sub">Xe tự bật mức đã đặt cho từng ghế khi đủ điều kiện nhiệt độ.</string>
-    <string name="kachi_seat_mode">Chế độ</string>
-    <string name="kachi_seat_cool">Làm mát</string>
-    <string name="kachi_seat_heat">Sưởi</string>
-    <string name="kachi_seat_hint">Chạm một ghế để đổi mức: tắt → mức 1 → mức 2.</string>
-    <string name="kachi_sub_pm25">Lọc bụi mịn</string>
-    <string name="kachi_pm25_title">Tự lọc khi không khí bẩn</string>
-    <string name="kachi_pm25_sub">Xe tự chạy lọc khi mức bụi lên cao; tắt là chỉ lọc khi bạn bấm.</string>
-    <string name="kachi_pm25_clean_now">Lọc ngay một lượt</string>
-    <string name="kachi_pm25_level">Bụi mịn hiện tại: %1$s</string>
-    <string name="kachi_pm25_unknown">chưa đọc được</string>
-    <string name="kachi_pm25_excellent">Rất tốt</string>
-    <string name="kachi_pm25_good">Tốt</string>
-    <string name="kachi_pm25_low">Khá</string>
-    <string name="kachi_pm25_middle">Trung bình</string>
-    <string name="kachi_pm25_heavy">Nặng</string>
-    <string name="kachi_pm25_serious">Nghiêm trọng</string>
 
     <!-- ── IA v2 nhóm 9 — Hệ thống & quyền: Khởi động · Bảo trì · Nâng cao ── -->
     <string name="kachi_headless_title">Chạy dịch vụ nền khi nổ máy (phím vật lý · lịch tự dẫn)</string>

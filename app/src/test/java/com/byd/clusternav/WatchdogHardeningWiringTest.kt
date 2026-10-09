@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 /**
  * B1 (2026-09-25, `kachi-closeout-hardening` R3 — BG-11/BG-14/F6/F7): các cổng THUẦN ở `:core` (có test riêng:
- * `AccessibilityHealGatesTest`, `InstalledPackageGateTest`, `Pm25PollBackoffTest`) phải THẬT SỰ được nối vào đường chạy
+ * `AccessibilityHealGatesTest`, `InstalledPackageGateTest`) phải THẬT SỰ được nối vào đường chạy
  * trên xe. `:app` không có Robolectric (`android.util.Log` ném trong JVM) nên khoá dây bằng đọc mã như
  * [AccessibilityForceBindTest] / [VoiceKeyAdbApprovalWiringTest]; helper [SourceRoots.body] nổ nếu mốc không tồn tại.
  */
@@ -60,11 +60,6 @@ class WatchdogHardeningWiringTest {
         assertTrue(destroy.contains("inProcessWatchdogAlive = false"))
     }
 
-    @Test
-    fun `Pm25 poll dung Pm25PollBackoff va dem lai tu 0 khi doc duoc`() {
-        val fn = SourceRoots.body(code("comfort/Pm25FilterApplier.kt"), "private fun startPollLoop(app: Context)")
-        assertTrue(fn.contains("Pm25PollBackoff.nextIntervalMs(consecutiveInvalid, POLL_INTERVAL_MS)"))
-        assertTrue(fn.contains("consecutiveInvalid = 0"), "đọc được ⇒ về 45 s ngay (không khoá vĩnh viễn)")
-        assertTrue(fn.contains("var consecutiveInvalid = 0"), "bộ đếm là cục bộ của vòng ⇒ bật lại công tắc là đếm lại")
-    }
+    // Android box B2 · W2e — bài `Pm25 poll dung Pm25PollBackoff…` xoá cùng vòng poll lọc bụi PM2.5 (`Pm25FilterApplier` +
+    // `:core Pm25PollBackoff`, HAL BYD).
 }

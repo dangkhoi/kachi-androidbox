@@ -2,18 +2,10 @@ package com.byd.clusternav.launcher
 
 import com.byd.clusternav.Prefs
 import com.byd.clusternav.automation.AutomationService
-import com.byd.clusternav.automation.RainDefrostApplier
 import com.byd.clusternav.automation.ScheduledNavApplier
 import com.byd.clusternav.launcher.automation.NavAutomationBook
-import com.byd.clusternav.launcher.automation.RainDefrostChoice
-import com.byd.clusternav.launcher.automation.RainDefrostStatus
-import com.byd.clusternav.launcher.automation.RainGlass
-import com.byd.clusternav.launcher.automation.RainStatusLine
-import com.byd.clusternav.launcher.automation.RainStatusWords
 import com.byd.clusternav.launcher.automation.ScheduledNavRule
 import com.byd.clusternav.navAutomationRules
-import com.byd.clusternav.rainDefrostChoice
-import com.byd.clusternav.setRainDefrostChoice
 import com.byd.clusternav.autoUpdateEnabled
 import com.byd.clusternav.setAutoUpdateEnabled
 import com.byd.clusternav.setNavAutomationRules
@@ -21,63 +13,26 @@ import com.byd.clusternav.setNavAutomationRules
 /**
  * ═══ AUTOMATION trên cầu Settings (hàm mở rộng của [ClusterNavBridge]) ═══════════════════════════════════════
  *
- * Spec `docs/specs/kachi-automation.html` R1 · R2 · R4. Cùng khuôn `ClusterNavBridgeWake`/`…Home`/`…Keys`: màn
+ * Spec `docs/specs/kachi-automation.html` R2 · R4 (R1 tự sấy kính gỡ ở Android box B2 · W2e). Cùng khuôn `ClusterNavBridgeWake`/`…Home`/`…Keys`: màn
  * Cài đặt KHÔNG ghi `Prefs.set` trực tiếp (`SettingsScreenWiringContractTest` cấm — state trên màn và state bền
  * phải đi qua MỘT cửa). Tách tệp vì `ClusterNavBridge.kt` đã 499 dòng (trần 500, CLAUDE.md §4.1).
  *
  * ⚠ **V8 (owner 2026-09-25) thêm một khoá KHÔNG phải automation vào đây**: công tắc *"Tự động cập nhật"*. Nó ở
- * cùng tệp vì nó thuộc **cùng họ**: những việc chiếc xe tự làm hộ khi mở máy (sấy khi mưa · dẫn theo lịch · dò
+ * cùng tệp vì nó thuộc **cùng họ**: những việc chiếc xe tự làm hộ khi mở máy (dẫn theo lịch · dò
  * bản mới), và khoá của nó cũng nằm ở `PrefsAutomation.kt`. Mở một tệp `ClusterNavBridgeUpdate.kt` cho đúng ba
  * hàm sẽ thêm một tệp nữa phải giải trình ở `LayeringRulesTest` mà không chia được việc gì.
  *
  * ## ⚠⚠ Mỗi lượt GHI phải kèm một lượt `AutomationService.sync` — đây là phần dễ quên nhất
  * [ĐO] S4 · T2: **0 chỗ nào trong toàn dự án** đăng ký `registerOnSharedPreferenceChangeListener`. Nghĩa là ghi
- * prefs xong là *"đúng trên đĩa mà không có gì đang chạy biết"*. Với hai automation này, hậu quả cụ thể:
+ * prefs xong là *"đúng trên đĩa mà không có gì đang chạy biết"*. Với lịch tự dẫn, hậu quả cụ thể:
  *  • bật công tắc mà không `sync` ⇒ động cơ nền **không lên** tới lần nổ máy sau (người dùng kết luận nó hỏng);
- *  • tắt công tắc mà không `sync` ⇒ vòng nhịp **vẫn chạy** và còn ghi HAL sau khi đã tắt;
+ *  • tắt lịch cuối cùng mà không `sync` ⇒ vòng nhịp **vẫn chạy** (FGS giữ tiến trình vô ích);
  *  • thêm luật đầu tiên mà không `sync` ⇒ sổ có luật nhưng không ai đánh giá nó.
- * Vì thế `sync` nằm **trong** hai setter dưới đây, không phải một bước chỗ gọi phải nhớ.
+ * Vì thế `sync` nằm **trong** setter sổ luật dưới đây, không phải một bước chỗ gọi phải nhớ.
  */
 
-/**
- * AUTOMATION #1 — kính nào được tự sấy khi mưa (theo XE, mặc định KHÔNG kính nào). Một biểu thức cho hai hàng ô
- * tích của màn Cài đặt (`choice.front` · `choice.rear`) — đúng lựa chọn hiệu lực mà động cơ nền đang dùng.
- */
-fun ClusterNavBridge.rainDefrostChoice(): RainDefrostChoice = Prefs.rainDefrostChoice(app)
-
-/**
- * kachi-automation V8 — tích/bỏ MỘT kính, kính kia giữ nguyên (owner 2026-09-30: *"tách auto này độc lập, không
- * constrain nhau"*).
- *
- * ## Thứ tự trong thân là một hợp đồng
- *  1. **Ghi prefs trước** (cả 3 khoá, `Prefs.setRainDefrostChoice`) rồi mới [RainDefrostApplier.forget]: nhịp nền
- *     chụp ký ức RỒI mới đọc lựa chọn, nên quên-sau-ghi đảm bảo một nhịp đang chạy dở hoặc đọc lựa chọn MỚI, hoặc
- *     bị bỏ commit (thế hệ đổi) — ký ức không bao giờ được ghi từ lựa chọn cũ (KDoc `RainDefrostGlasses.tick`).
- *  2. **Quên RIÊNG kính vừa đổi** (V8 · D4/D8): không ghi xe, ký ức kính kia còn nguyên. V7 gọi `reset()` xoá cả
- *     hai ⇒ bỏ tích "sau" làm Kachi quên luôn cái sấy trước nó đang giữ, hết mưa không tắt hộ được.
- *  3. [RainDefrostApplier.requestSoon] rồi [AutomationService.sync] (xem ⚠ ở KDoc tệp): engine đang chạy ⇒ nhịp
- *     mưa ở lượt thức kế (≤ 60 s, R-V8.5); engine đang dừng ⇒ `sync` dựng vòng mới, nhịp đầu chạy ngay; không còn
- *     kính nào (và không automation nào khác) ⇒ `sync` dừng engine.
- */
-fun ClusterNavBridge.setRainDefrostGlass(glass: RainGlass, on: Boolean) {
-    val after = Prefs.rainDefrostChoice(app).with(glass, on)
-    Prefs.setRainDefrostChoice(app, after)
-    RainDefrostApplier.forget(glass)
-    RainDefrostApplier.requestSoon()
-    RainDefrostApplier.logChoice(after, glass)
-    AutomationService.sync(app)
-}
-
-/**
- * kachi-automation V8.1 · R-V8.7 — dòng tình trạng cho MỖI kính đang chọn (owner 30/09: app phải tự cho thấy nguyên
- * nhân, anh em chỉ cần chụp màn hình — CLAUDE.md §11).
- *
- * Chỉ đọc RAM của tiến trình (kết quả nhịp gần nhất từng kính + giờ nhịp kế — `RainDefrostApplier`, cùng tiến trình
- * với Cài đặt [ĐO manifest]) và prefs của lựa chọn — **không một lượt HAL** nên gọi được trên luồng vẽ. Luật chọn/ghép
- * chữ ở `:core` ([RainDefrostStatus]); chữ do màn Cài đặt đưa vào ([words], từ tài nguyên) cùng đồng hồ HH:mm.
- */
-fun ClusterNavBridge.rainDefrostStatus(words: RainStatusWords, clock: (Long) -> String): List<RainStatusLine> =
-    RainDefrostStatus.lines(rainDefrostChoice(), RainDefrostApplier::lastOf, RainDefrostApplier.nextCheckWallMs(), words, clock)
+// Android box B2 · W2e (2026-10-09) — AUTOMATION #1 *tự sấy kính khi mưa* (cổng chọn kính + dòng tình trạng từng kính) gỡ
+// cùng HAL BYD (cảm biến mưa + nút sấy). Còn: lịch tự dẫn đường (#2) và công tắc tự cập nhật.
 
 // ── V8 · TỰ CẬP NHẬT (owner 2026-09-25) ──────────────────────────────────────────────────────────
 

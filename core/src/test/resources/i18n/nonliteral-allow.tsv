@@ -21,6 +21,5 @@ core:launcher/ProfileNames.kt:display	hằng HomeUiState.DEFAULT_PROFILE ("Mặc
 core:launcher/voice/VoicePlaces.kt:displayLabel	hằng HOME/WORK ("Nhà"/"Công ty") — runtime "place:HOME"/"place:WORK"
 core:launcher/voice/VoiceRisk.kt:why	Rule.whyVi/whyEn — runtime "risk:<controlId>"
 core:launcher/voice/VoiceFeatureGone.kt:name	Gone.label/labelEn (tên tính năng ghép vào câu) — runtime "gone:<cụm>"
-core:comfort/Pm25Filter.kt:vi	levelLabelVi/En — runtime "pm25:<mức>"
 app:Lang.kt:t	hàm bọc Lang.t(vi, en) của :app → CoreStrings.t(…, effective().core); các lời gọi Lang.t("…","…") được bộ quét đọc như chữ cố định
 app:Lang.kt:f	hàm bọc Lang.f(vi, en, args) của :app → CoreStrings.fIn(effective().core, …); các lời gọi Lang.f("…","…", x) được bộ quét đọc như mẫu cố định

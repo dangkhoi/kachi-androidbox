@@ -82,7 +82,6 @@ internal fun bridgeMsgRes(msg: BridgeMsg): Int = when (msg) {
     BridgeMsg.SETTING_GEMINI_ASSISTANT -> R.string.kachi_bridge_gemini_setting
     BridgeMsg.GEMINI_ASSISTANT_SET -> R.string.kachi_bridge_gemini_set
     BridgeMsg.GEMINI_ASSISTANT_FAILED -> R.string.kachi_bridge_gemini_failed
-    BridgeMsg.CLEANING_AIR -> R.string.kachi_bridge_cleaning_air
     BridgeMsg.UPDATE_NEEDS_SCREEN -> R.string.kachi_bridge_update_needs_screen
 }
 

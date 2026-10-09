@@ -1,7 +1,6 @@
 package com.byd.clusternav
 
 import android.content.SharedPreferences
-import com.byd.clusternav.voicekey.KeySourceKind
 import com.byd.clusternav.voicekey.VoiceKeyBinding
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -207,26 +206,32 @@ class VoiceKeyBindingMigrationTest {
         )
     }
 
-    // ── CA 5 — 2.88 · KEY-SOURCE-SPLIT tầng 2: gán theo NGUỒN đi qua đúng hàm mà nút bấm gọi ──────────────────────────
+    // ── CA 5 — Android box B2 · W2f: chuỗi `voicekey_bindings` của Kachi BYD 2.88+ có trường nguồn `"s"` ───────────────
 
     /**
-     * Máy đang chạy 2.87 có dòng gán 291 (không nguồn) → nâng cấp → owner gán thêm núm lên → quạt. Hai dòng cùng mã phải
-     * cùng sống qua khởi động lại; xoá dòng núm không đụng dòng cũ; chuỗi lưu của dòng cũ không đổi một byte.
+     * Máy/tệp hồ sơ mang dòng gán theo nút (2.88: núm `"knob"` / vô-lăng `"wheel"`, cả mã lạ) → bản box đọc lên KHÔNG ném,
+     * mọi dòng thành dòng thường (bắt mọi nút ra mã đó); trùng mã ⇒ dòng KHÔNG nguồn thắng (đúng thứ 2.88 bắn khi không biết
+     * nguồn), không có thì dòng đầu. Lượt ghi đầu tiên ra lại khuôn JSON 2.87 (không `"s"`), và phím vẫn bắn đúng đích.
      */
     @Test
-    fun `nang cap 2_87 roi gan them theo nguon — dong cu nguyen ven, xoa dung nguon`() {
-        val old = """[{"k":291,"t":"$KIKI"}]"""
-        val p = FakePrefs(mapOf(K_BINDINGS to old))
-        assertEquals(listOf(VoiceKeyBinding(291, KIKI)), Prefs.voiceKeyBindings(p), "JSON 2.87 ⇒ dòng không nguồn")
+    fun `chuoi 2_88 co truong nguon doc len duoc, coi nhu moi nguon`() {
+        val stored = """[{"k":291,"t":"$VIETMAP","s":"knob"},{"k":291,"t":"$KIKI"},{"k":292,"t":"$VIETMAP","s":"wheel"},""" +
+            """{"k":328,"t":"$KIKI","s":"pedal"},{"k":88,"t":"$KIKI","s":7}]"""
+        val p = FakePrefs(mapOf(K_BINDINGS to stored))
+        val read = Prefs.voiceKeyBindings(p)
+        assertEquals(
+            listOf(VoiceKeyBinding(291, KIKI), VoiceKeyBinding(292, VIETMAP), VoiceKeyBinding(328, KIKI), VoiceKeyBinding(88, KIKI)),
+            read,
+            "dòng không nguồn thắng ở 291; mã nguồn lạ / sai kiểu vẫn đọc được (không bỏ dòng)",
+        )
+        val m = com.byd.clusternav.voicekey.VoiceKeyMatcher()
+        val cfg = com.byd.clusternav.voicekey.VoiceKeyConfig(true, read)
+        val d = m.onKey(cfg, com.byd.clusternav.voicekey.VoiceKeyAction.DOWN, 292, 1L)
+        assertEquals(VIETMAP, d.targetSpec, "dòng chỉ-vô-lăng cũ nay bắt mọi nút ra 292")
 
-        assertNull(Prefs.addVoiceKeyBinding(p, 291, VIETMAP, KeySourceKind.CONSOLE_KNOB), "khác nguồn ⇒ dòng mới, không ghi đè")
-        assertEquals(VIETMAP, Prefs.addVoiceKeyBinding(p, 291, KIKI, KeySourceKind.CONSOLE_KNOB), "cùng (mã, nguồn) ⇒ ghi đè + trả đích cũ")
-        val afterRestart = Prefs.voiceKeyBindings(FakePrefs(p.store))
-        assertEquals(listOf(VoiceKeyBinding(291, KIKI), VoiceKeyBinding(291, KIKI, KeySourceKind.CONSOLE_KNOB)), afterRestart)
-
-        Prefs.removeVoiceKeyBinding(p, 291, KeySourceKind.CONSOLE_KNOB)
-        assertEquals(listOf(VoiceKeyBinding(291, KIKI)), Prefs.voiceKeyBindings(p), "xoá dòng núm ⇒ còn đúng dòng cũ")
-        val oldEncoding = org.json.JSONArray().put(org.json.JSONObject().put("k", 291).put("t", KIKI)).toString()
-        assertEquals(oldEncoding, p.store[K_BINDINGS], "…và chuỗi lưu đúng như bộ mã hoá 2.87 ghi (không trường \"s\")")
+        assertEquals(KIKI, Prefs.addVoiceKeyBinding(p, 291, VIETMAP), "ghi đè theo MÃ, trả đích cũ")
+        assertTrue("\"s\"" !in p.store[K_BINDINGS].toString(), "lượt ghi không bao giờ mang trường nguồn")
+        Prefs.removeVoiceKeyBinding(p, 292)
+        assertEquals(listOf(291, 328, 88), Prefs.voiceKeyBindings(FakePrefs(p.store)).map { it.keyCode })
     }
 }

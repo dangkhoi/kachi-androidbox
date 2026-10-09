@@ -15,19 +15,18 @@ object ProfileScopeTypes {
 
     val CLUSTERNAV: Map<String, PrefType> = buildMap {
         putAll(RetiredCameraKeys.TYPES)
+        putAll(RetiredComfortKeys.TYPES)   // Android box B2 · W2e — ghế · lọc bụi · lấy gió (mã gỡ, khoá còn theo hồ sơ tới W4)
         // `Prefs.enabled/marquee` getBoolean · `Prefs.navClusterScreenMode` getInt · khoá biển báo/bong bóng đời BYD
         // (mã đọc đã gỡ, khoá còn theo hồ sơ tới W4 — `SettingsCatalogRetired`).
         listOf("enabled", "marquee", "badge_enabled", "show_upcoming_badge", "show_alert_chip", "vm_bubble_enabled", "vm_bubble_hidden")
             .forEach { put(it, PrefType.BOOLEAN) }
         listOf("nav_cluster_screen_mode", "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_x", "vm_bubble_y")
             .forEach { put(it, PrefType.INT) }
-        listOf("voicekey_enabled", "seat_comfort_enabled", "pm25_filter_enabled", "recirc_on_start_enabled", "headless_autostart")
+        listOf("voicekey_enabled", "headless_autostart")
             .forEach { put(it, PrefType.BOOLEAN) }
         listOf(
             "voicekey_bindings", "voicekey_custom_buttons", "voice_music_default_app", "nav_automation_rules",
             "nav_automation_fired", "theme_choice",
         ).forEach { put(it, PrefType.STRING) }
-        listOf("seat_comfort_mode", "seat_level_0", "seat_level_1", "seat_level_2", "seat_level_3")
-            .forEach { put(it, PrefType.INT) }
     }
 }

@@ -13,6 +13,15 @@ class HomeActivityCmdTest {
 
     private val comp = "com.byd.launcher/com.byd.clusternav.launcher.KachiHomeActivity"
 
+    /** Android box B2 · W2f — dời nguyên nghĩa từ `HomeGuardPolicyTest.wantsKachiHome - mot trong hai dau` (lớp đó đã gỡ). */
+    @Test
+    fun `wantsKachiHome - mot trong hai dau`() {
+        assertTrue(HomeActivityCmd.wantsKachiHome(homeChosen = true, keepHomeOnBoot = false))
+        assertTrue(HomeActivityCmd.wantsKachiHome(homeChosen = false, keepHomeOnBoot = true))
+        assertTrue(HomeActivityCmd.wantsKachiHome(homeChosen = true, keepHomeOnBoot = true))
+        assertFalse(HomeActivityCmd.wantsKachiHome(homeChosen = false, keepHomeOnBoot = false), "Bỏ chọn ⇒ không đụng HOME")
+    }
+
     @Test
     fun `set dung dinh dang set-home-activity`() {
         assertEquals("cmd package set-home-activity $comp", HomeActivityCmd.set(comp))

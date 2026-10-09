@@ -1,12 +1,11 @@
 package com.byd.clusternav
 
 import android.content.Context
-import com.byd.clusternav.launcher.automation.RainDefrostChoice
 
 /**
  * ═══ Khoá của hai AUTOMATION — tách khỏi [Prefs] theo VAI (1.85, trần 500 dòng) ═══════════════════════════════
  *
- * Spec `docs/specs/kachi-automation.html` R1 · R2 · R5. Cùng cách [PrefsVoiceV3] / `PrefsInputd` tách nhóm: hàm
+ * Spec `docs/specs/kachi-automation.html` R2 · R5 (R1 tự sấy kính gỡ ở Android box B2 · W2e). Cùng cách [PrefsVoiceV3] / `PrefsInputd` tách nhóm: hàm
  * mở rộng của [Prefs], **cùng tệp `clusternav_prefs`** (mở tệp thứ hai là dựng cửa thứ hai vào cùng chỗ lưu —
  * thứ [com.byd.clusternav.launcher.SettingsCatalog.PREFS_FILES] sinh ra để bắt).
  *
@@ -27,49 +26,8 @@ import com.byd.clusternav.launcher.automation.RainDefrostChoice
 internal fun autoPrefs(ctx: Context) =
     ctx.applicationContext.getSharedPreferences("clusternav_prefs", Context.MODE_PRIVATE)
 
-// ── AUTOMATION #1 · Tự sấy kính khi mưa (R1 · §V8 hai kính độc lập) ─────────────────────────────
-// MẶC ĐỊNH TẮT — cài mới KHÔNG đọc cảm biến, KHÔNG đụng nút sấy tới khi owner tự tích một kính. Có kính được
-// chọn ⇒ `AutomationService` đọc `SETTING_FRONT_RAIN_WIPER_SPEED` ([ĐO xe 2026-09-20]: 1 khô / ≥2 mưa) mỗi ~5
-// phút và bật/tắt TỪNG kính đã chọn, độc lập (`RainDefrostGlasses`).
-// ⚠ Ký ức *"sấy này của tôi"* là cờ RAM trong `RainDefrostApplier`, KHÔNG ở đây — lý do đầy đủ ở KDoc
-// `RainDefrostState` (nổ máy lại thì quên là hướng sai AN TOÀN).
-//
-// ## Ba khoá, hai ô (kachi-automation V8 · D2)
-// `rain_defrost_enabled` là công tắc CHÍNH của 1.85/V7 (mặc định false); `rain_defrost_front`/`_rear` là hai ô
-// con của V7 (mặc định true = hành vi 1.85 "bật cả hai"). V8 bỏ công tắc chính khỏi giao diện nhưng GIỮ khoá:
-// lựa chọn hiệu lực = `enabled && con` (`RainDefrostChoice.fromKeys`) ⇒ không khoá mới, không bước di trú, hạ cấp
-// về V7 vẫn đúng nghĩa. Hai ô con là hai khoá riêng, KHÔNG một khoá 3 giá trị ("front"/"rear"/"both"): chuỗi ba
-// giá trị sinh ra trạng thái thứ tư không ai định nghĩa khi prefs bị sửa tay (`prefs_set` trên xe).
-private const val K_RAIN_DEFROST = "rain_defrost_enabled"
-private const val K_RAIN_DEFROST_FRONT = "rain_defrost_front"
-private const val K_RAIN_DEFROST_REAR = "rain_defrost_rear"
-
-/**
- * AUTOMATION #1 — kính nào được tự sấy khi mưa (lựa chọn HIỆU LỰC). Cổng ĐỌC duy nhất của ba khoá: cả động cơ
- * (`RainDefrostApplier.choice`, `AutomationService.anyEnabled`) lẫn màn Cài đặt (qua cầu) đều hỏi đây.
- */
-fun Prefs.rainDefrostChoice(ctx: Context): RainDefrostChoice {
-    val p = autoPrefs(ctx)
-    return RainDefrostChoice.fromKeys(
-        enabled = p.getBoolean(K_RAIN_DEFROST, false),
-        front = p.getBoolean(K_RAIN_DEFROST_FRONT, true),
-        rear = p.getBoolean(K_RAIN_DEFROST_REAR, true),
-    )
-}
-
-/**
- * Ghi lựa chọn: CẢ BA khoá trong MỘT `edit()` (V8 · D2) — ghi lẻ `enabled` sẽ làm ô con cũ `true` "sống lại" (cài
- * mới là `(false, true, true)`: tích "sau" chỉ bằng cách bật `enabled` ⇒ kính trước cũng chạy). Chỗ gọi phải
- * `AutomationService.sync` sau khi ghi (xem `ClusterNavBridge.setRainDefrostGlass`).
- */
-fun Prefs.setRainDefrostChoice(ctx: Context, choice: RainDefrostChoice) {
-    val k = choice.toKeys()
-    autoPrefs(ctx).edit()
-        .putBoolean(K_RAIN_DEFROST, k.enabled)
-        .putBoolean(K_RAIN_DEFROST_FRONT, k.front)
-        .putBoolean(K_RAIN_DEFROST_REAR, k.rear)
-        .apply()
-}
+// ── AUTOMATION #1 · Tự sấy kính khi mưa — Android box B2 · W2e (2026-10-09): gỡ cùng HAL BYD (cảm biến mưa + nút sấy).
+// Ba khoá `rain_defrost_*` không còn đường đọc/ghi; tên còn xếp phạm vi (theo XE) ở `:core RetiredComfortKeys` tới W4.
 
 // ── V8 (owner 2026-09-25) — TỰ CẬP NHẬT khi mở app ───────────────────────────────────────────────
 // Owner: *"tách auto-update thành 1 toggle riêng ở Hệ thống, KHÔNG gắn với Nav+HUD"*. Trước V8 lượt dò bản mới
@@ -78,7 +36,7 @@ fun Prefs.setRainDefrostChoice(ctx: Context, choice: RainDefrostChoice) {
 //
 // MẶC ĐỊNH TẮT: nó mở một kết nối HTTPS ra GitHub mỗi lần mở launcher và có thể dựng hộp thoại *"cài bản mới?"*
 // trước mặt người đang lái. Một tính năng tự-tải-về-rồi-cài-đè phải do chủ xe bật tường minh — cùng lẽ
-// `rain_defrost_enabled` / `voice_wake_enabled` mặc định TẮT.
+// `voice_wake_enabled` mặc định TẮT.
 private const val K_AUTO_UPDATE = "auto_update_enabled"
 
 /** V8 — "Tự động cập nhật": mở launcher thì tự dò bản mới trong `apk/`. Mặc định **false**. */

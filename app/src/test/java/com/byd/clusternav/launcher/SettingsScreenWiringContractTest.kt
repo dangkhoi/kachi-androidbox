@@ -48,7 +48,6 @@ class SettingsScreenWiringContractTest {
     // Android box B2 · W2c — `SettingsSectionsNav.kt` + `SettingsSectionsCast*.kt` gỡ; hàng app dẫn đường mặc định ở `…NavApp.kt`.
     private val nav by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsNavApp.kt") }
     private val keys by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsKeys.kt") }
-    private val car by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsCar.kt") }
     private val places by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsPlaces.kt") }
     private val rows by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsRows.kt") }
     private val panels by lazy { code("src/main/java/com/byd/clusternav/launcher/HomePanels.kt") }
@@ -130,7 +129,7 @@ class SettingsScreenWiringContractTest {
         mapOf(
             "SettingsPanel" to panel, "SettingsSections" to sections, "SettingsSectionsHome" to home,
             "SettingsSectionsBars" to bars, "SettingsSectionsNavApp" to nav,
-            "SettingsSectionsKeys" to keys, "SettingsSectionsCar" to car,
+            "SettingsSectionsKeys" to keys,   // (`SettingsSectionsCar` — Tiện nghi xe — xoá ở Android box B2 · W2e.)
             // Sổ địa chỉ (docs/specs/kachi-voice-addresses.html) — section MỚI, và là section đầu tiên ghi một
             // khoá **của launcher** (không phải của ClusterNav qua `bridge`), nên nó đúng là loại tệp mà bài này
             // sinh ra để canh: mọi lượt ghi phải đi qua `deps.onSavedPlaces` → ViewModel.

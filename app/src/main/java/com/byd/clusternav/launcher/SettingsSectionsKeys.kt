@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.KeyEvent
 import android.widget.LinearLayout
 import com.byd.clusternav.R
-import com.byd.clusternav.voicekey.KeySourceKind
 
 /**
  * Nhóm **"Phím vô-lăng"** (IA v2 §4.1 nhóm 7) — công tắc nhận nút vật lý · trạng thái dịch vụ Hỗ trợ · danh sách
@@ -109,12 +108,11 @@ class SettingsKeysSection(
         val targets = bridge.targetOptions()
         bindings.forEach { binding ->
             bindingList.addView(rows.listRow(
-                title = buttonLabel(binding.keyCode, binding.source, buttons),
+                title = buttonLabel(binding.keyCode, buttons),
                 sub = targetLabel(binding.targetSpec, targets),
                 actionLabel = context.getString(R.string.kachi_delete),
             ) {
-                // 2.88 · R4: xoá đúng (mã, nguồn) của dòng này — dòng cùng mã khác nguồn giữ nguyên.
-                bridge.removeBinding(binding.keyCode, binding.source)
+                bridge.removeBinding(binding.keyCode)
                 rebuildBindings()
             })
         }
@@ -135,10 +133,9 @@ class SettingsKeysSection(
             buttons.map { optionLabel(it) },
             context.getString(R.string.kachi_keys_no_buttons),
         ) { buttonIndex ->
-            // 2.88 · R2: nút học kèm nguồn ⇒ dòng gán theo nguồn (mục preset / nút không nguồn ⇒ `source` null như 2.87).
             val option = buttons[buttonIndex]
             pickTarget { spec ->
-                bridge.addBinding(option.code, spec, option.source)
+                bridge.addBinding(option.code, spec)
                 rebuildBindings()
             }
         }
@@ -176,7 +173,7 @@ class SettingsKeysSection(
                 sub = context.getString(R.string.kachi_key_code, button.keyCode),
                 actionLabel = context.getString(R.string.kachi_delete),
             ) {
-                bridge.removeCustomButton(button.keyCode, button.source)   // 2.88 · R4: đúng (mã, nguồn)
+                bridge.removeCustomButton(button.keyCode)
                 rebuildButtons()
             })
         }
@@ -190,7 +187,7 @@ class SettingsKeysSection(
      * nên khuôn ấy nay là tài nguyên `kachi_key_custom_name` của launcher. Lệch khuôn thì cùng một nút hiện hai
      * tên khác nhau ở hai màn.
      *
-     * Android box B2 · W1 — không còn đọc số đo nguồn phím lúc Lưu (2.88 · R1): nút học luôn lưu KHÔNG kèm nguồn.
+     * Android box B2 · W1/W2f — không còn số đo nguồn phím (2.88 · R1, HAL BYD): nút học chỉ có tên + mã.
      *
      * [ClusterNavBridge.stopLearn] gọi ngay sau khi nhận được mã: bus chỉ giữ **một** listener, để treo là
      * phiên Settings sau (hoặc màn cũ) không học được nữa.
@@ -211,9 +208,7 @@ class SettingsKeysSection(
                 context.getString(R.string.kachi_keys_learn_name),
                 bridge.defaultLearnName(code),
             ) { name ->
-                // Android box B2 · W1 — bỏ dòng số đo nguồn phím (HAL BYD `AUDIO_VOLUME_CTRL_MODE`, L7/2.88) và lưu nút KHÔNG
-                // kèm nguồn: Android box không tách núm bệ giữa / vô-lăng. Nút đã lưu kèm nguồn vẫn đọc + xoá được.
-                bridge.addCustomButton(context.getString(R.string.kachi_key_custom_name, name, code), code, null)
+                bridge.addCustomButton(context.getString(R.string.kachi_key_custom_name, name, code), code)
                 rebuildButtons()
             }
         }
@@ -237,23 +232,13 @@ class SettingsKeysSection(
         option.customName ?: presetLabel(option.code)
 
     /**
-     * Nhãn của một (mã phím, nguồn) ĐÃ GÁN — tra trong cùng bảng mà hộp chọn dùng, để hai chỗ không hiện khác nhau.
+     * Nhãn của một mã phím ĐÃ GÁN — tra trong cùng bảng mà hộp chọn dùng, để hai chỗ không hiện khác nhau.
      *
      * [buttons] truyền VÀO (không tự gọi `bridge.buttonOptions()`): xem KDoc [rebuildBindings].
-     *
-     * 2.88 · R4: tra theo (mã, nguồn). Dòng có nguồn mà nút tự học của nó đã bị xoá ⇒ vẫn ghi rõ nguồn
-     * (`kachi_key_custom_name_src` với tên hằng framework) để hai dòng núm / vô-lăng cùng mã không trông giống hệt nhau.
      */
-    private fun buttonLabel(code: Int, source: KeySourceKind?, buttons: List<ButtonOption>): String =
+    private fun buttonLabel(code: Int, buttons: List<ButtonOption>): String =
         // 2.93 · KEY-LABEL-PRESET-SHADOW — nút tự học trùng mã thắng preset (tra cũ lấy mục khớp ĐẦU TIÊN = preset).
-        buttons.labelOwner(code, source)?.let { optionLabel(it) }
-            ?: source?.let {
-                context.getString(
-                    R.string.kachi_key_custom_name_src,
-                    KeyEvent.keyCodeToString(code).removePrefix(KEYCODE_PREFIX), code, KeySourceDetailText.kindLabel(context, it),
-                )
-            }
-            ?: presetLabel(code)
+        buttons.labelOwner(code)?.let { optionLabel(it) } ?: presetLabel(code)
 
     /**
      * Tên của một mã phím preset. Mã lạ (nút tự học đã bị xoá, hoặc dữ liệu cũ) ⇒ ghép từ tên hằng của framework

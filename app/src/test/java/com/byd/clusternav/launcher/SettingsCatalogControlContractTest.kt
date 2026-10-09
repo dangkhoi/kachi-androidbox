@@ -24,7 +24,6 @@ class SettingsCatalogControlContractTest {
     private val bars by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsBars.kt") }
     // Android box B2 · W2c — `SettingsSectionsNav.kt` + `SettingsSectionsCast.kt` gỡ (không bài nào còn đọc hai biến này).
     private val keys by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsKeys.kt") }
-    private val car by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsCar.kt") }
     private val places by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsPlaces.kt") }
 
     /** AUTOMATION #2 (1.85) — lịch tự dẫn; tệp riêng vì `SettingsSectionsNav.kt` đã 425 dòng (trần 500). */

@@ -22,9 +22,8 @@ class Goi2FeatureWiringContractTest {
     private val panel by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSections.kt") }
 
     /** Nhóm "Màn hình chính" — lưới khả năng nằm ở đây (tách vì trần 500 dòng). */
-    private val car by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsCar.kt") }
     private val bridgeKt by lazy { code("src/main/java/com/byd/clusternav/launcher/ClusterNavBridge.kt") }
-    private val bridgeSystemKt by lazy { code("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeSystem.kt") }   // `applyRecircNow` tách sang tệp mở rộng (L6-debt 2026-09-27)
+    private val bridgeSystemKt by lazy { code("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeSystem.kt") }
     private val drawerKt by lazy { code("src/main/java/com/byd/clusternav/launcher/AppDrawer.kt") }
 
     /** Dòng chọn đơn vị — chuyển sang bộ dựng dòng dùng chung (S1·T2). */
@@ -32,7 +31,6 @@ class Goi2FeatureWiringContractTest {
     private val panels by lazy { code("src/main/java/com/byd/clusternav/launcher/HomePanels.kt") }
     private val activity by lazy { code("src/main/java/com/byd/clusternav/launcher/KachiHomeActivity.kt") }
     private val boot by lazy { code("src/main/java/com/byd/clusternav/BootSetupService.kt") }
-    private val applier by lazy { code("src/main/java/com/byd/clusternav/comfort/RecircApplier.kt") }
     private val prefs by lazy { code("src/main/java/com/byd/clusternav/launcher/WorkspacePrefs.kt") }
 
     // ── W4 · bảng áp suất lốp ────────────────────────────────────────────────────────────────────
@@ -205,43 +203,18 @@ class Goi2FeatureWiringContractTest {
         assertEquals(2, Regex("""readings\.map""").findAll(fn).count(), "đúng 2 danh sách song song sinh từ readings")
     }
 
-    // ── W3 · ô tick tự lấy gió trong ─────────────────────────────────────────────────────────────
+    // ── W3 · ô tick tự lấy gió trong — Android box B2 · W2e: gỡ cùng tiện nghi xe BYD ─────────────────────────────
 
     @Test
-    fun `o tick nam o be mat dung bang code va co canh bao chua kiem tren xe`() {
-        // T4: ô tick chuyển sang [SettingsCarSection] cùng lúc nhóm "Tiện nghi xe" nhận thêm ghế + lọc bụi mịn.
-        assertTrue(car.contains("R.string.kachi_recirc_title"), "ô tick phải nằm trong màn Cài đặt (dựng bằng code)")
-        // U5·T3 — chữ dời sang tài nguyên; kiểm cả dây nối lẫn nội dung (xem [res]).
-        assertTrue(car.contains("R.string.kachi_recirc_sub"), "dòng phụ của ô tick phải là chuỗi cảnh báo đó")
-        assertFalse(
-            res("kachi_recirc_sub").contains("chưa kiểm"),
-            "V1 (owner 2026-09-25): lấy gió ĐÃ kiểm trên xe — bỏ chú thích chưa-kiểm thừa",
-        )
-    }
-
-    @Test
-    fun `bat thi ap ngay tat thi chi dat lai co`() {
-        // T4: hành vi chuyển NGUYÊN từ `HomePanels.onRecircOnStart` sang [SettingsCarSection.recirc]; cả đường GHI
-        // (`bridge.setRecircOnStart` → `Prefs.setRecircOnStartEnabled`) lẫn đường ÁP NGAY (`bridge.applyRecircNow` →
-        // `RecircApplier.applyNowAsync`) đều đi qua cầu (IA v2 · N2, 2026-09-13: 0 ngoại lệ).
-        val block = SourceRoots.body(car, "private fun recirc(")
-        assertTrue(block.contains("setRecircOnStart("), "phải lưu bền lựa chọn")
-        assertTrue(bridgeKt.contains("fun setRecircOnStart("), "và đường lưu bền phải nằm ở CẦU, không ở section")
-        assertTrue(block.contains("if (on)") && block.contains("applyRecircNow"),
-            "bật thì áp NGAY, không chờ lần nổ máy sau")
-        assertTrue(bridgeSystemKt.contains("fun ClusterNavBridge.applyRecircNow()") && bridgeSystemKt.contains("RecircApplier.applyNowAsync(app)"),
-            "đường áp ngay nằm ở CẦU và gọi đúng RecircApplier.applyNowAsync")
-        assertFalse(block.contains("toggle(\"recirc\", false)"),
-            "tắt ô tick KHÔNG được tắt chế độ đang bật trên xe")
-    }
-
-    @Test
-    fun `ap luc khoi dong va suy giam an toan`() {
-        // Android box B2 · W1 — lượt nổ máy KHÔNG còn áp lấy gió trong / lọc bụi / ghế (HAL BYD); applier mồ côi tới W2e.
-        listOf("RecircApplier.applyOnStart", "Pm25FilterApplier.applyOnStart", "SeatComfortApplier.applyOnStart")
-            .forEach { assertTrue(!boot.contains(it), "'$it' đã gỡ khỏi chuỗi khởi động") }
-        assertTrue(applier.contains("runCatching"), "phải bắt mọi lỗi — không được kéo sập chuỗi khởi động")
-        assertTrue(applier.contains("recircOnStartEnabled"), "phải có cổng theo công tắc (mặc định TẮT)")
+    fun `lay gio trong khi no may da go het`() {
+        // Ba bài cũ (ô tick ở trang Tiện nghi xe · bật thì áp ngay · áp lúc nổ máy suy giảm an toàn) canh mã đã xoá.
+        assertFalse(SourceRoots.exists("src/main/java/com/byd/clusternav/comfort/RecircApplier.kt"), "applier đã xoá")
+        assertFalse(SourceRoots.exists("src/main/java/com/byd/clusternav/launcher/SettingsSectionsCar.kt"), "trang Tiện nghi xe đã xoá")
+        listOf("RecircApplier", "Pm25FilterApplier", "SeatComfortApplier").forEach {
+            assertFalse(boot.contains(it), "'$it' đã gỡ khỏi chuỗi khởi động")
+        }
+        listOf("recircOnStart", "setRecircOnStart").forEach { assertFalse(bridgeKt.contains(it), "cầu còn '$it'") }
+        assertFalse(bridgeSystemKt.contains("applyRecircNow"), "cửa áp lấy gió ngay đã gỡ")
     }
 
     // ── R11–R13 · chọn đơn vị ────────────────────────────────────────────────────────────────────

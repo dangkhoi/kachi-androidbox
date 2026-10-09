@@ -203,13 +203,13 @@ class VoiceKeyBindingListTest {
 
     /**
      * Thêm/xoá phải đi qua luật `:core` (put/remove), không tự viết lại luật ở tầng lưu trữ.
-     * 2.88 (KEY-SOURCE-SPLIT tầng 2): khoá của một dòng là (mã, nguồn) ⇒ nguồn phải được chuyển NGUYÊN vào luật `:core`
-     * (bỏ rơi nó ở đây là nút núm ghi đè nút vô-lăng mà mọi bài `:core` vẫn xanh).
+     * Android box B2 · W2f: khoá của một dòng là MÃ phím (gán theo nguồn 2.88 gỡ cùng HAL BYD).
      */
     @Test
     fun `Prefs them xoa deu di qua luat core`() {
-        assertTrue(prefsSrc.contains("VoiceKeyBindings.put(voiceKeyBindings(p), keyCode, targetSpec, source)"))
-        assertTrue(prefsSrc.contains("VoiceKeyBindings.remove(voiceKeyBindings(p), keyCode, source)"))
+        assertTrue(prefsSrc.contains("VoiceKeyBindings.put(voiceKeyBindings(p), keyCode, targetSpec)"))
+        assertTrue(prefsSrc.contains("VoiceKeyBindings.remove(voiceKeyBindings(p), keyCode)"))
+        assertFalse(prefsSrc.contains("KeySourceKind"), "không còn tham số nguồn ở tầng lưu trữ")
         assertTrue(
             prefsSrc.substringAfter("fun addVoiceKeyBinding(").substringBefore("fun removeVoiceKeyBinding(")
                 .contains("return result.replaced"),
@@ -233,6 +233,19 @@ class VoiceKeyBindingListTest {
         assertFalse(body.contains("Prefs.voiceKeyTargetSpec("), "còn đọc đích một-cặp ⇒ mọi nút mở CÙNG một app")
     }
 
+    /**
+     * Android box B2 · W2f — dịch vụ phím không còn bộ ghi/tra NGUỒN (L7 · 2.88, HAL BYD `AUDIO_VOLUME_CTRL_MODE` đọc đồng bộ
+     * trên DOWN đầu): onKeyEvent không chạm HAL/AppContainer, không dựng luồng phụ nào khi nối dịch vụ.
+     */
+    @Test
+    fun `dich vu phim khong con doc nguon HAL`() {
+        listOf("KeySource", "KeySample", "keySource", "halGateway", "AppContainer", "primeSource", "lookupSource").forEach {
+            assertFalse(it in serviceSrc, "NavAccessibilityService còn '$it'")
+        }
+        val matcherSrc = SourceRoots.codeOf("src/main/java/com/byd/clusternav/voicekey/VoiceKeyMatcher.kt")
+        assertFalse("KeySource" in matcherSrc || "source" in matcherSrc, "matcher không còn tham số nguồn")
+    }
+
     /** Công tắc chính + "học phím" giữ nguyên vị trí gác trước phần khớp danh sách. */
     @Test
     fun `cong tac chinh va hoc phim van gac truoc`() {
@@ -249,8 +262,8 @@ class VoiceKeyBindingListTest {
      * nối: đuôi học chặn TRƯỚC cờ học (UP tới khi cờ đã tắt), dấu ghi đúng trong nhánh DOWN của lượt học, reset khi nối lại.
      * Thiếu một trong ba ⇒ [ĐO máy ảo `learn88-orphan-up.log` (bằng chứng phiên, ngoài repo)] UP mồ côi của phím media bật YT Music.
      *
-     * 2.88: `onKeyEvent` đọc cờ học MỘT lần (`val learning`) và tính kết quả đuôi học (`val tail`) trước khi rẽ — để biết
-     * đường nào được đọc nguồn đồng bộ (`kachi-288` §4.3). Thứ tự chặn KHÔNG đổi: `if (tail) return true` đứng trước nhánh học.
+     * `onKeyEvent` đọc cờ học MỘT lần (`val learning`) và tính kết quả đuôi học (`val tail`) trước khi rẽ. Thứ tự chặn KHÔNG
+     * đổi: `if (tail) return true` đứng trước nhánh học.
      */
     @Test
     fun `hoc phim nuot ca UP cua lan nhan da hoc`() {
@@ -294,8 +307,8 @@ class VoiceKeyBindingListTest {
     @Test
     fun `nut Them gan ghi vao danh sach va ve lai ngay`() {
         assertTrue(
-            "Prefs.addVoiceKeyBinding(app, keyCode, targetSpec, source)" in keysBridge,
-            "nút Thêm phải ghi vào danh sách (một nguồn chân lý: `voicekey_bindings`), kèm nguồn của nút đã chọn (2.88)",
+            "Prefs.addVoiceKeyBinding(app, keyCode, targetSpec)" in keysBridge,
+            "nút Thêm phải ghi vào danh sách (một nguồn chân lý: `voicekey_bindings`)",
         )
         assertTrue("replaced" in keysBridge, "phải báo cho owner khi ghi đè — cấm im lặng")
         assertTrue("isGeminiVoiceSpec" in keysBridge, "công thức đặt trợ lý hệ thống phải theo sang nút Thêm")
@@ -306,7 +319,7 @@ class VoiceKeyBindingListTest {
     @Test
     fun `danh sach tren man hinh ve tu dung nguon service nghe`() {
         assertTrue("Prefs.voiceKeyBindings(app)" in keysBridge, "vẽ từ nguồn khác = màn hình nói dối")
-        assertTrue("Prefs.removeVoiceKeyBinding(app, keyCode, source)" in keysBridge, "nút xoá trên dòng phải xoá thật — đúng (mã, nguồn)")
+        assertTrue("Prefs.removeVoiceKeyBinding(app, keyCode)" in keysBridge, "nút xoá trên dòng phải xoá thật")
         assertTrue(
             "kachi_keys_no_bindings" in keysSection,
             "danh sách rỗng phải nói rõ là KHÔNG có gì chạy (chuỗi qua tài nguyên, không chữ cứng)",

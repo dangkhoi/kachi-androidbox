@@ -297,14 +297,6 @@ object ProfileScope {
             "V1 pha NÓI · R4 — 'Ưu tiên giọng offline'. Cùng lý do [voice_speak_replies], và còn rõ hơn: nó chỉ " +
                 "có tác dụng khi **gói 61 MB đã nằm trên đĩa của chính xe này**, mà đĩa thì không đi theo hồ sơ",
         )
-        put(
-            "rain_defrost_enabled",
-            "AUTOMATION #1 (1.85, spec kachi-automation R1/R5) — 'Tự sấy kính khi mưa'. Theo XE: nó đọc một CẢM " +
-                "BIẾN của chiếc xe này ([ĐO] SETTING_FRONT_RAIN_WIPER_SPEED) và ghi hai nút sấy của chính nó, " +
-                "tức một quyết định về phần cứng chứ không phải sở thích đi theo người lái. Chép nó theo hồ sơ thì " +
-                "đổi hồ sơ giữa cơn mưa là sấy tự tắt/bật mà không ai hiểu vì sao — cùng họ keep_home_on_boot/" +
-                "voice_wake_enabled: quyết định mức máy, không mức người",
-        )
         // ⚠ 2026-09-28 — `nav_automation_rules` và `nav_automation_fired` ĐÃ RỜI danh sách này, chuyển sang theo
         // HỒ SƠ. Owner quyết: *"lịch theo profile luôn nhé, ví dụ tôi chuyển sang profile Trip Đà Lạt, thì chắc
         // chắn sẽ cần địa chỉ khác, lịch trình khác với việc đi làm hàng ngày chứ?"* — lý lẽ ấy mạnh hơn lý lẽ cũ
@@ -312,18 +304,6 @@ object ProfileScope {
         // `saved_places` theo hồ sơ ⇒ một luật trỏ tới địa chỉ không có trong hồ sơ đang dùng thì BỎ LƯỢT lặng lẽ.
         // Nay cả ba thứ (luật · dấu đã-dẫn · sổ địa chỉ) cùng một phạm vi nên không còn lệch nhau được.
         // Xem [CLUSTERNAV_PROFILE_STATE_KEYS] cho khoá dấu-đã-dẫn (không phải cài đặt nên không nằm ở danh mục).
-        put(
-            "rain_defrost_front",
-            "V7 (owner 2026-09-25), độc lập từ kachi-automation V8 (2026-09-30) — hàng *'Mưa thì tự bật sấy kính trước'*. Theo XE **cùng phạm vi với** " +
-                "`rain_defrost_enabled` mà nó phụ thuộc: để hai khoá của CÙNG một tính năng ở hai phạm vi khác " +
-                "nhau là mời chúng lệch nhau (công tắc theo xe mà lựa chọn kính theo hồ sơ ⇒ đổi hồ sơ giữa cơn " +
-                "mưa là sấy đổi bên mà không ai hiểu vì sao). Nó cũng là một quyết định về PHẦN CỨNG của chiếc xe " +
-                "này (cái nào ăn điện, cái nào cần), không phải sở thích đi theo người lái",
-        )
-        put(
-            "rain_defrost_rear",
-            "V7/V8 — hàng *'Mưa thì tự bật sấy kính sau + gương'*. Cùng lý do [rain_defrost_front]: cùng tính năng thì cùng phạm vi",
-        )
         put(
             "auto_update_enabled",
             "V8 (owner 2026-09-25) — *'Tự động cập nhật'*. Theo XE: nó tải một APK về **đĩa của chính máy này** rồi " +
@@ -339,6 +319,8 @@ object ProfileScope {
         // Android box B2 · W2c — khoá camera / chiếu cụm / VietMap BYD đã gỡ mã: tên + lý do ở hai bảng retired (W4 dọn).
         putAll(RetiredCameraKeys.DEVICE)
         putAll(RetiredClusterKeys.DEVICE_KEYS)
+        // Android box B2 · W2e — ba khoá tự sấy kính khi mưa (theo XE từ 1.85/V7, lý do cũ: phần cứng của chiếc xe).
+        putAll(RetiredComfortKeys.DEVICE)
         put(
             ProfileScopeMigration.FILLED_LEDGER_KEY,
             "2.92 PROFILE-NEW-KEYS — sổ 'khoá theo hồ sơ nào đã rót xuống mọi hồ sơ': dấu của lượt di trú, theo xe",
@@ -400,7 +382,9 @@ object ProfileScope {
                     key !in DEVICE_KEYS && key !in TRANSIENT_KEYS && key !in LAUNCHER_OWNED_CLUSTERNAV_KEYS
                 } + CLUSTERNAV_PROFILE_STATE_KEYS +
                 // Khoá camera BYD theo hồ sơ KHÔNG có mục Cài đặt (mã gỡ ở W2b, khoá còn trong ảnh chụp tới W4).
-                RetiredCameraKeys.PROFILE.keys.associateWith { "clusternav_prefs" }
+                RetiredCameraKeys.PROFILE.keys.associateWith { "clusternav_prefs" } +
+                // Khoá tiện nghi xe BYD theo hồ sơ (mã gỡ ở W2e, khoá còn trong ảnh chụp tới W4).
+                RetiredComfortKeys.PROFILE.keys.associateWith { RetiredComfortKeys.FILE }
             )
             .entries
             .groupBy({ it.value }, { it.key })
@@ -469,7 +453,8 @@ object ProfileScope {
     /**
      * Tiền tố khoá **dựng động** thuộc về hồ sơ → lý do. Sinh từ hai nguồn đã có, không chép tay:
      *  • `slot_` — nội dung từng ô ([SettingsCatalog.SLOT_KEY_PREFIX]);
-     *  • `seat_level_` — mức từng ghế ([SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES]).
+     *  • tiền tố dựng động phía ClusterNav ([SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES] — rỗng từ W2e: `seat_level_`
+     *    gỡ cùng mã ghế, bốn tên đầy đủ ở [RetiredComfortKeys]).
      *
      * ⚠ Khai SAU [scopeOf] không sao (hàm đọc nó lúc **chạy**), nhưng phải khai TRƯỚC bất kỳ `val` nào đọc nó —
      * thân `object` chạy theo thứ tự khai, bài học `TopStripConfig.BUILT_IN` ([ĐO] 27 bài đỏ).

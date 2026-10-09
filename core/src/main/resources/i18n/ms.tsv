@@ -31,11 +31,6 @@ tải thất bại	download failed	muat turun gagal
 đang cài…	installing…	memasang…
 Phím-thoại đang bật	Voice key active	Butang suara aktif
 Tự động hoá đang chạy	Automation running	Automasi sedang berjalan
-Lái	Driver	Pemandu
-Phụ	Front R	Depan Kn
-Sau T	Rear L	Blkg Kr
-Sau P	Rear R	Blkg Kn
-M	L	T
 Đang chuẩn bị model câu gọi… {0}%	Preparing wake model… {0}%	Menyediakan model panggilan… {0}%
 Đang chuẩn bị model câu gọi…	Preparing wake model…	Menyediakan model panggilan…
 Model câu gọi đã sẵn sàng	Wake model ready	Model panggilan sedia
@@ -725,11 +720,6 @@ gạt mưa	the wipers	pengelap
 khoá xe	locking the car	mengunci kereta
 gói rời xe	the leave-car routine	rutin keluar kereta
 âm lượng	the volume	kelantangan
-Rất tốt	Excellent	Cemerlang
-Khá	Low grade	Ringan
-Trung bình	Moderate	Sederhana
-Nặng	Heavy	Teruk
-Nghiêm trọng	Serious	Sangat teruk
 Nhà	Home	Rumah
 Công ty	Work	Pejabat
 Mặc định	Default	Lalai

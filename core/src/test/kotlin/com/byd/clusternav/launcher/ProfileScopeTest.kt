@@ -188,7 +188,9 @@ class ProfileScopeTest {
             ProfileScope.CLUSTERNAV_PROFILE_STATE_KEYS.keys +
             // Khoá camera BYD theo hồ sơ KHÔNG có mục Cài đặt (mã gỡ ở W2b, tên giữ tới W4). Vẫn là phép BẰNG: thêm một
             // khoá ngoài các bảng này vào ảnh chụp thì đỏ.
-            RetiredCameraKeys.PROFILE.keys
+            RetiredCameraKeys.PROFILE.keys +
+            // W2e — khoá tiện nghi xe BYD theo hồ sơ (ghế · lọc bụi · lấy gió) rời danh mục, tên giữ tới W4.
+            RetiredComfortKeys.PROFILE.keys
         assertEquals(expected, ProfileScope.CLUSTERNAV_PROFILE_KEYS)
         assertTrue("voicekey_learn" !in ProfileScope.CLUSTERNAV_PROFILE_KEYS)
     }
@@ -199,6 +201,32 @@ class ProfileScopeTest {
      * Tách chúng ra là mời hỏng theo cả hai chiều: luật theo hồ sơ mà dấu đã-dẫn theo xe ⇒ đổi hồ sơ là dẫn lại
      * lần hai trong cùng khung giờ; ngược lại thì sổ đã-dẫn đọc rỗng ở hồ sơ mới, cũng dẫn hai lần.
      */
+    /**
+     * Android box B2 · W2e — tiện nghi xe + tự sấy kính gỡ mã: khoá rời danh mục Cài đặt ([SettingsCatalog.CLUSTERNAV_KEYS])
+     * nhưng GIỮ phạm vi cũ ([RetiredComfortKeys]) ⇒ tệp hồ sơ cũ không thành "khoá không phân loại", đổi hồ sơ không đổi hành vi
+     * với dữ liệu đang nằm trên máy, tới W4 dọn.
+     */
+    @Test
+    fun `khoa tien nghi xe da go giu pham vi cu`() {
+        RetiredComfortKeys.PROFILE.keys.forEach {
+            assertEquals(ProfileScope.Scope.PROFILE, ProfileScope.scopeOf(it), "khoá $it")
+            assertTrue(it !in SettingsCatalog.CLUSTERNAV_KEYS, "$it phải rời danh mục (mã đã gỡ)")
+            assertTrue(it in ProfileScope.CLUSTERNAV_PROFILE_KEYS, "$it vẫn trong ảnh chụp tới W4")
+        }
+        RetiredComfortKeys.DEVICE.keys.forEach {
+            assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf(it), "khoá $it (tự sấy kính theo XE như 1.85)")
+            assertTrue(it !in SettingsCatalog.CLUSTERNAV_KEYS, "$it phải rời danh mục")
+        }
+        assertEquals(
+            setOf("seat_level_0", "seat_level_1", "seat_level_2", "seat_level_3"),
+            RetiredComfortKeys.PROFILE.keys.filter { it.startsWith("seat_level_") }.toSet(),
+            "bốn mức ghế khai tường minh (tiền tố động `seat_level_` đã gỡ)",
+        )
+        assertTrue(SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES.isEmpty(), "không còn tiền tố dựng động phía ClusterNav")
+        assertEquals(RetiredComfortKeys.PROFILE.keys, RetiredComfortKeys.TYPES.keys, "mọi khoá theo hồ sơ có kiểu khai sẵn")
+        RetiredComfortKeys.TYPES.forEach { (k, t) -> assertEquals(t, ProfileScopeTypes.CLUSTERNAV[k], k) }
+    }
+
     @Test
     fun `luat lich va so da-dan CUNG mot pham vi HO SO`() {
         listOf("nav_automation_rules", "nav_automation_fired").forEach {

@@ -34,7 +34,7 @@ class ClusterNavSettingsWiringContractTest {
     private val sections = listOf(
         // Android box B2 · W2c — `SettingsSectionsNav.kt` (khối cụm/HUD/biển báo/bong bóng, không ai dựng từ W1) + `SettingsSectionsCast*.kt`
         // gỡ; hàng app dẫn đường mặc định (`SettingsSectionsNavApp.kt`) vào thay.
-        "SettingsSectionsNavApp.kt", "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
+        "SettingsSectionsNavApp.kt", "SettingsSectionsKeys.kt",
         // (`SettingsSectionsCamera.kt` 2.76 · R1 — xoá ở Android box B2 · W2b.)
     )
 
@@ -57,9 +57,7 @@ class ClusterNavSettingsWiringContractTest {
         ".coordinator" to "cùng lý do SimpleCastRuntime",
         "VmOverlayPosition" to "ghi vị trí bong bóng phải kèm broadcast sang bản VietMap sửa đổi — cầu giữ cặp đó",
         "ThemeMode." to "chủ đề gương hai store ở tầng lưu bền (`PrefsWorkspaceRepository.persist`), không ở UI",
-        "SeatComfortApplier" to "áp HAL cho ghế có hai đường (applySeat cho từng ghế / applyNow cho cả bộ) và " +
-            "chọn nhầm đường thì không tắt được ghế — cầu đã chốt đường đúng",
-        "Pm25FilterApplier" to "bật/tắt lọc-liên-tục và quick-clean là hai việc khác nhau; cầu giữ đúng cặp",
+        // (`SeatComfortApplier` · `Pm25FilterApplier` — tiện nghi xe BYD — gỡ ở Android box B2 · W2e.)
     )
 
     /**

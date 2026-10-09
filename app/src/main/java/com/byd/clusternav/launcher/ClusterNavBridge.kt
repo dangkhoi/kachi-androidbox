@@ -5,9 +5,6 @@ import android.content.Context
 import android.content.Intent
 import com.byd.clusternav.Prefs
 import com.byd.clusternav.ThemeMode
-import com.byd.clusternav.comfort.Pm25FilterApplier
-import com.byd.clusternav.comfort.SeatComfort
-import com.byd.clusternav.comfort.SeatComfortApplier
 
 /**
  * ═══ CẦU DUY NHẤT giữa Kachi Settings và cấu hình/hành động của ClusterNav ═══════════════════════
@@ -94,93 +91,12 @@ class ClusterNavBridge(
     }
 
     // Quyền hệ thống (`notificationAccessGranted` · `accessibilityBoosterGranted` · `accessibilityBound`) + nhóm *Hệ thống*
-    // (`checkUpdate` · `applyRecircNow`; hai cửa chẩn đoán 0 chỗ gọi gỡ ở 2.93 wave 2C) → `ClusterNavBridgeSystem.kt` (tách THUẦN
+    // (`checkUpdate`; hai cửa chẩn đoán 0 chỗ gọi gỡ ở 2.93 wave 2C) → `ClusterNavBridgeSystem.kt` (tách THUẦN
     // theo trần 500 dòng, L6-debt 2026-09-27; cùng khuôn `ClusterNavBridgeCast.kt` / `ClusterNavBridgeKeys.kt`).
 
     // Android box B2 · W2c — biển báo tốc độ + bong bóng VietMap trên cụm gỡ cùng mã (mục Cài đặt đã gỡ ở W1).
 
-    // ── Tiện nghi xe: ghế + PM2.5 — lặp lại MainActivity.kt:1215–1325 ────────────────────────────
-
-    /** `MainActivity.kt:1221`. */
-    fun seatEnabled(): Boolean = Prefs.seatComfortEnabled(app)
-
-    /** Lặp lại `MainActivity.kt:1222–1225` (chỉ persist; áp HAL đi theo từng ghế/chế độ). */
-    fun setSeatEnabled(on: Boolean) = Prefs.setSeatComfortEnabled(app, on)
-
-    /** 0 = làm mát ([SeatComfort.SeatMode.COOL]), 1 = sưởi — `MainActivity.kt:1248`. */
-    fun seatMode(): Int = Prefs.seatComfortMode(app)
-
-    /**
-     * Lặp lại `MainActivity.kt:1252–1256`: persist chế độ rồi **áp HAL ngay**
-     * ([SeatComfortApplier.applyNow] tự no-op khi công tắc chính tắt — nút "Áp dụng ngay" đã bỏ).
-     */
-    fun setSeatMode(mode: Int) {
-        Prefs.setSeatComfortMode(app, mode)
-        SeatComfortApplier.applyNow(app)
-    }
-
-    /** Mức của một ghế (0 = tắt, 1, 2) — `MainActivity.kt:1238`. */
-    fun seatLevel(seatIndex: Int): Int = Prefs.seatComfortLevel(app, seatIndex)
-
-    /**
-     * Lặp lại `MainActivity.kt:1240–1244`: persist rồi ghi HAL cho **chính ghế đó**
-     * ([SeatComfortApplier.applySeat] — KHÔNG dùng đường bulk `applyNow`, vì đường bulk bỏ qua mức
-     * "Tắt" ⇒ trước v1.34 không tắt được ghế).
-     */
-    fun setSeatLevel(seatIndex: Int, level: Int) {
-        Prefs.setSeatComfortLevel(app, seatIndex, level)
-        SeatComfortApplier.applySeat(app, seatIndex, level)
-    }
-
-    /**
-     * Số ghế theo mẫu xe (2 = Seal / 4 = Han) — `MainActivity.kt:1237` gọi
-     * [SeatComfortApplier.detectSeatCount] **đồng bộ trên luồng vẽ**. Bridge chạy nó trên thread NỀN
-     * rồi post kết quả về (spec N5): hàm đó dò `BydHal` bằng reflection + `SystemProperties`, off-car
-     * trả 2. Đây là khác biệt CÓ CHỦ Ý duy nhất so với màn cũ.
-     */
-    fun seatCount(onCount: (Int) -> Unit) {
-        Thread({
-            val n = runCatching { SeatComfortApplier.detectSeatCount(app) }.getOrDefault(2)
-            ui(Runnable { onCount(n) })
-        }, "bridge-seat-count").start()
-    }
-
-    /** `MainActivity.kt:1290`. */
-    fun pm25Enabled(): Boolean = Prefs.pm25FilterEnabled(app)
-
-    /** Lặp lại `MainActivity.kt:1291–1295`: persist + bật/tắt lọc-liên-tục (không popup). */
-    fun setPm25Enabled(on: Boolean) {
-        Prefs.setPm25FilterEnabled(app, on)
-        if (on) Pm25FilterApplier.enable(app) else Pm25FilterApplier.disable(app)
-    }
-
-    /**
-     * Nút "Lọc ngay" — lặp lại `MainActivity.kt:1303–1307`: quick-clean chủ động **bất kể** công tắc
-     * auto, kèm toast song ngữ.
-     */
-    fun pm25CleanNow() {
-        Pm25FilterApplier.cleanNow(app)
-        toast(BridgeMsg.CLEANING_AIR)
-    }
-
-    /**
-     * Mức bụi hiện tại — lặp lại `MainActivity.kt:1310–1322`: đọc HAL trên thread NỀN rồi post **mức
-     * thô** về luồng vẽ. Nhãn ("Tốt"/"Good"…) do tầng Settings tra tài nguyên theo mức; bảng nhãn
-     * thuần đã có sẵn ở `:core` (`Pm25Filter.levelLabelVi/En`) nếu cần đối chiếu. Mức không rõ /
-     * off-car ⇒ giá trị INVALID của `Pm25Filter`.
-     */
-    fun pm25Level(onLevel: (level: Int) -> Unit) {
-        Thread({
-            val level = Pm25FilterApplier.readLevel(app)
-            ui(Runnable { onLevel(level) })
-        }, "bridge-pm25-read-level").start()
-    }
-
-    /** Lấy gió trong khi nổ máy (khoá đã có sẵn của Kachi, đặt cạnh ghế/PM2.5 cho đủ nhóm "Tiện nghi xe"). */
-    fun recircOnStart(): Boolean = Prefs.recircOnStartEnabled(app)
-
-    /** Xem [recircOnStart]. */
-    fun setRecircOnStart(on: Boolean) = Prefs.setRecircOnStartEnabled(app, on)
+    // Android box B2 · W2e — tiện nghi xe (ghế mát/sưởi · lọc bụi PM2.5 · lấy gió trong) gỡ cùng mã HAL BYD (nhóm Cài đặt đã gỡ ở W1).
 
     // ── Hệ thống ─────────────────────────────────────────────────────────────────────────────────
 

@@ -22,14 +22,8 @@ class StandbyPerfR18WiringContractTest {
         assertTrue(sweep.contains("StackListSnapshot.record(it)"))
     }
 
-    @Test
-    fun `HomeGuard man tat thi khong doc HOME, nhip theo man`() {
-        val guard = code("launcher/HomeGuard.kt")
-        val tick = SourceRoots.body(guard, "private fun tick(")
-        val off = tick.indexOf("if (interactive == false)")
-        assertTrue(off >= 0 && off < tick.indexOf("DefaultHome.currentPackage(app)"), "cổng màn tắt đứng TRƯỚC lượt đọc HOME")
-        assertTrue(SourceRoots.body(guard, "private fun loop(").contains("nextDelayMs(SystemClock.elapsedRealtime() - tripStartMs, prevInteractive)"))
-    }
+    // Android box B2 · W2f — ca `HomeGuard man tat thi khong doc HOME…` xoá cùng `HomeGuard` (nhịp giành HOME BYD): không còn
+    // nhịp `kachi-home-guard` nào để canh lúc màn tắt.
 
     @Test
     fun `boot bo am start khi man chinh da resumed - bo dem noi o vong doi`() {

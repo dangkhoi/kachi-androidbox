@@ -78,10 +78,10 @@ class AppContainer internal constructor(
 
     // ── Lớp DỮ LIỆU + ĐIỀU KHIỂN XE (W1) — registry-driven, off-car trả null ⇒ UI "—" (OQ1: KHÔNG demo) ──
     /**
-     * Gateway HAL DUY NHẤT của tiến trình (một bộ nhớ tay cầm device, một log-một-lần). Phơi ra cho đầu dò nguồn
-     * phím L7 (`KeySourceRecorder`) để nó đọc qua CHÍNH gateway này thay vì dựng `BydHalGateway` thứ hai.
+     * Gateway HAL DUY NHẤT của tiến trình (một bộ nhớ tay cầm device, một log-một-lần). Android box B2 · W2f: đầu dò nguồn
+     * phím L7 (`KeySourceRecorder`) — người đọc duy nhất ngoài lớp này — đã gỡ ⇒ thu về `private` (W3 gỡ cả gateway).
      */
-    val halGateway: HalGateway by lazy { carGatewayInit() }
+    private val halGateway: HalGateway by lazy { carGatewayInit() }
 
     /** Bảng nối HAL dùng CHUNG (1 gateway) cho cả đọc telemetry lẫn ghi control. */
     private val halBindingTable: HalBindingTable by lazy {

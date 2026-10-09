@@ -59,11 +59,7 @@ class ClusterNavBridgeWiringContractTest {
         val expected = listOf(
             // Android box B2 · W2d — `setMarquee` (chạy chữ tên đường trên cụm) gỡ cùng dẫn đường cụm.
             // Android box B2 · W2c — setter biển báo tốc độ + bong bóng VietMap gỡ cùng mã của chúng.
-            "fun setSeatEnabled(on: Boolean)" to "Prefs.setSeatComfortEnabled(app, on)",
-            "fun setSeatMode(mode: Int)" to "Prefs.setSeatComfortMode(app, mode)",
-            "fun setSeatLevel(seatIndex: Int, level: Int)" to "Prefs.setSeatComfortLevel(app, seatIndex, level)",
-            "fun setPm25Enabled(on: Boolean)" to "Prefs.setPm25FilterEnabled(app, on)",
-            "fun setRecircOnStart(on: Boolean)" to "Prefs.setRecircOnStartEnabled(app, on)",
+            // Android box B2 · W2e — setter ghế · lọc bụi · lấy gió gỡ cùng tiện nghi xe (bài `cau khong con tien nghi xe`).
             "fun setHeadlessAutostart(on: Boolean)" to "Prefs.setHeadlessAutostart(app, on)",
         )
         expected.forEach { (signature, call) ->
@@ -88,47 +84,21 @@ class ClusterNavBridgeWiringContractTest {
     }
 
     /**
-     * Ghế: đổi MỨC một ghế phải dùng `applySeat` (đường theo-ghế), KHÔNG phải `applyNow` (đường bulk).
-     * [ĐO] trước v1.34 đường bulk bỏ qua mức "Tắt" ⇒ kéo về Tắt mà ghế vẫn chạy.
+     * Android box B2 · W2e — ghế mát/sưởi, lọc bụi PM2.5 (công tắc · *Lọc ngay* · đọc mức trên thread nền) và lấy gió trong
+     * gỡ khỏi cầu cùng mã HAL BYD. Ba bài cũ (applySeat · ba đường PM2.5 · đọc HAL trên thread nền) xoá cùng mã; bài này
+     * chặn chúng mọc lại.
      */
     @Test
-    fun `doi muc mot ghe dung applySeat khong dung applyNow`() {
-        val level = body(bridge(), "fun setSeatLevel(seatIndex: Int, level: Int)")
-        assertTrue("SeatComfortApplier.applySeat(app, seatIndex, level)" in level, "phải ghi HAL cho chính ghế đó")
-        assertTrue(
-            "applyNow" !in level,
-            "đường bulk applyNow bỏ qua mức Tắt ⇒ dùng ở đây là không tắt được ghế (lỗi đã sửa ở v1.34)",
-        )
-        assertTrue(
-            "SeatComfortApplier.applyNow(app)" in body(bridge(), "fun setSeatMode(mode: Int)"),
-            "đổi CHẾ ĐỘ (mát↔sưởi) mới là đường bulk applyNow",
-        )
-    }
-
-    /** PM2.5: công tắc gọi enable/disable; "Lọc ngay" là quick-clean chủ động, độc lập công tắc. */
-    @Test
-    fun `pm25 noi dung ba duong cua man cu`() {
-        val toggle = body(bridge(), "fun setPm25Enabled(on: Boolean)")
-        assertTrue("Pm25FilterApplier.enable(app)" in toggle && "Pm25FilterApplier.disable(app)" in toggle,
-            "công tắc phải bật/tắt lọc-liên-tục")
-        assertTrue(
-            "Pm25FilterApplier.cleanNow(app)" in body(bridge(), "fun pm25CleanNow()"),
-            "nút Lọc ngay phải gọi quick-clean (popup suông không lọc thật — lỗi owner báo 2026-09-08)",
-        )
-    }
-
-    /**
-     * N5: đọc HAL (mức PM2.5, số ghế) phải chạy trên thread NỀN rồi post về [ClusterNavBridge.ui].
-     * Đọc trên luồng vẽ = reflection + HAL trên main ⇒ khựng màn hình trên xe.
-     */
-    @Test
-    fun `doc HAL chay tren thread nen roi post ve luong ve`() {
-        listOf("fun pm25Level(onLevel: (level: Int) -> Unit)", "fun seatCount(onCount: (Int) -> Unit)")
-            .forEach { sig ->
-                val b = body(bridge(), sig)
-                assertTrue("Thread(" in b, "`$sig` phải đọc HAL trên thread nền (spec N5)")
-                assertTrue("ui(Runnable" in b, "`$sig` phải post kết quả về luồng vẽ qua ui(...)")
-            }
+    fun `cau khong con tien nghi xe`() {
+        val b = bridge()
+        listOf(
+            "SeatComfort", "Pm25Filter", "RecircApplier", "seatEnabled", "seatMode", "seatLevel", "seatCount",
+            "pm25Enabled", "pm25CleanNow", "pm25Level", "recircOnStart", "CLEANING_AIR",
+        ).forEach { assertTrue(it !in b, "cầu còn `$it`") }
+        val system = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeSystem.kt")
+        assertTrue("applyRecircNow" !in system && "RecircApplier" !in system, "cửa áp lấy gió ngay đã gỡ")
+        val msg = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeMsg.kt")
+        assertTrue("CLEANING_AIR" !in msg, "BridgeMsg.CLEANING_AIR đã gỡ")
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────────────────

@@ -7,7 +7,6 @@ import com.byd.clusternav.launcher.BootHomeUp
 import com.byd.clusternav.launcher.DefaultHome
 import com.byd.clusternav.launcher.FreeformLaunch
 import com.byd.clusternav.launcher.HomeActivityCmd
-import com.byd.clusternav.launcher.HomeGuardPolicy
 import com.byd.clusternav.launcher.HomeResumed
 import com.byd.clusternav.launcher.WorkspacePrefs
 import com.byd.clusternav.system.FreeformSeedStore
@@ -106,9 +105,8 @@ object KachiAutostart {
                 //     chính"; lối vào HOME là alias tắt sẵn nên sau nâng cấp/boot phải BẬT alias trước rồi mới
                 //     `set-home-activity` (khôi phục lựa chọn đã bày tỏ, idempotent — không phải đổi state mới).
                 val prefs = WorkspacePrefs(app)
-                //     2.96 · R8: lượt này (~6 s) THUA lượt giành HOME ~17 s của launcher khác [ĐO xe 07/10] — `HomeGuard`
-                //     (nhịp tiến trình) giữ tiếp suốt chuyến, cùng điều kiện [HomeGuardPolicy.wantsKachiHome].
-                if (HomeGuardPolicy.wantsKachiHome(prefs.homeChosen(), prefs.keepHomeOnBoot())) {
+                //     (2.96 · R8 `HomeGuard` — nhịp giành lại HOME từ launcher BYD 5.7.5 — gỡ ở Android box B2 · W1/W2f.)
+                if (HomeActivityCmd.wantsKachiHome(prefs.homeChosen(), prefs.keepHomeOnBoot())) {
                     val enabled = DefaultHome.enableHomeEntry(app)
                     Log.i(TAG, "home entry (alias) enabled=$enabled — reasserting HOME (keepOnBoot=${prefs.keepHomeOnBoot()} chosen=${prefs.homeChosen()})")
                     ensureHomeActivity(seam, comp)

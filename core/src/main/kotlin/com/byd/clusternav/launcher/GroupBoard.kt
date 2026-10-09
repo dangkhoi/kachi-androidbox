@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.comfort.Pm25Filter
 
 /**
  * ═══ G1 · T3 — PHẦN QUYẾT ĐỊNH CỦA Ô NHÓM ════════════════════════════════════════════════════════════════════
@@ -15,7 +14,7 @@ import com.byd.clusternav.comfort.Pm25Filter
  * ## Ngưỡng: chỉ dùng lại, gần như không đặt mới
  * Màu từng bánh lốp lấy **nguyên** từ [TyreBoard] (viết lại ở đây là bản sao thứ hai — lỗi đã xảy ra thật: widget lốp
  * cũ có `t[i] < 2.2` viết tại chỗ, lệch với `:core`); từ 2.88 nó là lời phán của **chính xe** ([TyreJudge]), không còn
- * số ngưỡng nào. Mức bụi lấy từ [Pm25Filter.isDirty]. Không có ngưỡng nào tự nghĩ ra ở đây.
+ * số ngưỡng nào. Mức bụi theo thang 1–6 của HAL (`getPM2p5Level`): ≥ [PM25_HEAVY] bẩn, ≥ [PM25_LOW_GRADE] khá.
  *
  * ⚠ **CỐ Ý KHÔNG gán sắc thái cho các số "sức khoẻ"** (nhiệt pin, điện áp cell, ắc-quy 12V, nhiệt lốp, µg/m³, SOC…):
  * tôi KHÔNG biết ngưỡng đúng cho đời xe owner, và tự nghĩ một con số rồi tô đỏ là **bịa cảnh báo** — nguy hơn là
@@ -313,11 +312,11 @@ object GroupBoard {
             "door_rf" -> alertIf(s.body.doorRfOpen)
             "door_lr" -> alertIf(s.body.doorLrOpen)
             "door_rr" -> alertIf(s.body.doorRrOpen)
-            // Ngưỡng bụi dùng LẠI [Pm25Filter] (đã có, đang chạy trên xe) — không đặt ngưỡng thứ hai.
+            // Ngưỡng bụi = đúng hai mức của bộ lọc PM2.5 cũ (`Pm25Filter`, gỡ ở Android box B2 · W2e; bảng này gỡ ở W3).
             "pm25_level" -> s.climate.pm25Level?.let {
                 when {
-                    Pm25Filter.isDirty(it) -> GroupTone.ALERT
-                    it >= Pm25Filter.LOW_GRADE -> GroupTone.WARN
+                    it in PM25_HEAVY..PM25_SERIOUS -> GroupTone.ALERT
+                    it >= PM25_LOW_GRADE -> GroupTone.WARN
                     else -> GroupTone.NEUTRAL
                 }
             } ?: GroupTone.NEUTRAL
@@ -325,6 +324,11 @@ object GroupBoard {
             else -> GroupTone.NEUTRAL
         }
     }
+
+    /** Thang mức PM2.5 của HAL (`getPM2p5Level()[0]`, 1 rất sạch … 6 nghiêm trọng) — hằng của `Pm25Filter` đã gỡ (W2e). */
+    private const val PM25_LOW_GRADE = 3
+    private const val PM25_HEAVY = 5
+    private const val PM25_SERIOUS = 6
 
     private fun openPct(pct: Int?): GroupTone =
         if (pct != null && pct > 0) GroupTone.ACTIVE else GroupTone.NEUTRAL

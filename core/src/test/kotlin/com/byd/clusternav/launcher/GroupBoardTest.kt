@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.comfort.Pm25Filter
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -190,15 +189,18 @@ class GroupBoardTest {
     // `g_adas` và mọi datum của nó (ESP · điểm mù · chuyển làn · cắt ngang sau · cảnh báo mở cửa) không còn tồn tại.
 
     @Test
-    fun `muc bui dung LAI nguong cua Pm25Filter`() {
+    fun `muc bui giu dung hai nguong cua bo loc PM25 cu`() {
+        // Android box B2 · W2e: `Pm25Filter` gỡ cùng tiện nghi xe; ngưỡng giữ nguyên thang HAL 1–6 (5 nặng · 6 nghiêm
+        // trọng = bẩn, 3 khá = lưu ý) tới khi W3 gỡ bảng nhóm.
         fun tone(level: Int) = GroupBoard
             .of(CapabilityGroups.CLIMATE, CarStatus(climate = CarStatus.Climate(pm25Level = level)))
             .cells.first { it.id == "pm25_level" }.tone
-        assertEquals(GroupTone.ALERT, tone(Pm25Filter.HEAVY), "ngưỡng 'bẩn' đã có sẵn ở :core, không đặt mới")
-        assertEquals(GroupTone.ALERT, tone(Pm25Filter.SERIOUS))
-        assertEquals(GroupTone.WARN, tone(Pm25Filter.LOW_GRADE))
-        assertEquals(GroupTone.NEUTRAL, tone(Pm25Filter.GOOD))
-        assertTrue(Pm25Filter.isDirty(Pm25Filter.HEAVY), "bài trên dựa vào hàm này — khoá luôn giả định")
+        assertEquals(GroupTone.ALERT, tone(5), "nặng = bẩn")
+        assertEquals(GroupTone.ALERT, tone(6))
+        assertEquals(GroupTone.WARN, tone(3))
+        assertEquals(GroupTone.WARN, tone(4))
+        assertEquals(GroupTone.NEUTRAL, tone(2))
+        assertEquals(GroupTone.NEUTRAL, tone(0), "0 = chưa đọc được ⇒ không tô")
     }
 
     @Test
