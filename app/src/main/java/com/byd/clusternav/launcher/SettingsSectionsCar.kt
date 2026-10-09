@@ -67,14 +67,11 @@ class SettingsCarSection(
     fun build(body: LinearLayout) {
         recirc(body)
         rainDefrost(body)
-        cameraSignal(body)
         seats(body)
         pm25(body)
     }
 
-    // ── Camera theo xi-nhan — 2.76 (R1) sang [SettingsCameraSection] (hai tầng người lái / kỹ thuật) ─────────
-    /** Camera là nửa tệp này ở 2.75 (480/500 dòng) và có IA riêng ⇒ một tệp cho một nhóm con, cùng lẽ tệp này. */
-    private fun cameraSignal(body: LinearLayout) = SettingsCameraSection(context, rows, deps).build(body)
+    // Android box B2 · W2b: khối *Camera theo xi-nhan* (`SettingsCameraSection`) gỡ cùng camera BYD.
 
     // ── AUTOMATION #1 · Tự sấy kính khi mưa ──────────────────────────────────────────────────────
 

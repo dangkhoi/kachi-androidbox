@@ -360,9 +360,6 @@
 
     <!-- ── AUTOMATION (1.85) — docs/specs/kachi-automation.html ── -->
     <!-- #1 · Auto-defrost when it rains (Car comfort group) -->
-    <string name="kachi_sub_camera_signal">Camera on turn signal</string>
-    <string name="kachi_camera_signal_title">Camera on turn signal</string>
-    <string name="kachi_camera_signal_sub">Left signal shows left camera; right signal shows right camera.</string>
     <string name="kachi_sub_rain_defrost">Auto-defrost when it rains</string>
     <!-- kachi-automation V8 (owner 2026-09-30) — TWO independent rows, no master switch any more (spec §V8 · D1). -->
     <string name="kachi_rain_defrost_front">Turn on the front defroster when it rains</string>
@@ -824,38 +821,6 @@
     <string name="kachi_captest_logs_where">Logs on the card: %1$s\nPull with: %2$s</string>
     <string name="kachi_captest_snapshot_done">Log snapshot saved: %s</string>
     <string name="kachi_captest_report_saved">Report saved to the card: %s</string>
-    <string name="kachi_camera_cluster_title">Show camera on cluster</string>
-    <string name="kachi_pos_tl">Left</string>
-    <string name="kachi_pos_tr">Right</string>
-    <string name="kachi_camera_rot_none">No rotation</string>
-    <string name="kachi_camera_rot_left">↺ 90°</string>
-    <string name="kachi_camera_rot_right">↻ 90°</string>
-    <string name="kachi_camera_rot_180">180°</string>
-    <string name="kachi_camera_view_sub">If the camera does not show — try each number, the image appears right away. Which number is which camera is unknown.</string>
-    <string name="kachi_camera_view_row_left">Left signal: try camera no.</string>
-    <string name="kachi_camera_view_row_right">Right signal: try camera no.</string>
-    <string name="kachi_camera_pano_sub">Strip inside the stitched frame — 1 rear · 2 left · 3 right · 4 front (measured on the car)</string>
-    <string name="kachi_camera_pano_row_left">Left signal: strip</string>
-    <string name="kachi_camera_pano_row_right">Right signal: strip</string>
-    <string name="kachi_camera_pano_auto">Auto</string>
-    <string name="kachi_camera_pano_none">Whole frame</string>
-    <string name="kachi_camera_mirror_row_sub">Flips the camera picture horizontally before rotation — the car body should sit on the inner edge, as in a real mirror</string>
-    <string name="kachi_camera_shape_sub">Camera window shape (outline only — for the whole picture, not dewarped, pick «Convex mirror» below)</string>
-    <string name="kachi_camera_shape_row">Camera window shape</string>
-    <string name="kachi_camera_shape_rect">Rectangle</string>
-    <string name="kachi_camera_shape_round">Round</string>
-    <string name="kachi_camera_cluster_sub">Camera overlay appears on the cluster instead of the main screen</string>
-    <string name="kachi_camera_left">Left camera</string>
-    <string name="kachi_camera_right">Right camera</string>
-    <string name="kachi_camera_shape_cluster">Cluster band</string>
-    <string name="kachi_camera_projection_sub">Camera view style</string>
-    <string name="kachi_camera_projection_row">View style</string>
-    <string name="kachi_camera_projection_straight">Straight</string>
-    <string name="kachi_camera_projection_wide">Wide straight (see far)</string>
-    <string name="kachi_camera_projection_fisheye">Convex mirror (see all)</string>
-    <string name="kachi_camera_projection_note">Straight: as before, close to the car body. Wide straight: nearly straight, reaches far behind. Convex mirror: the whole fisheye picture, nothing cropped.</string>
-    <string name="kachi_camera_zoom_row">Zoom</string>
-    <string name="kachi_camera_zoom_desc">Camera zoom: %1$s</string>
     <!-- F2/F3 — trip at ignition (spec shortcuts-autostart §4.14, group C 2026-10-02) -->
     <string name="kachi_drawer_title_trip">Pick apps to open at ignition</string>
     <string name="kachi_drawer_hint_trip">Tap to add or remove an app · tap Apply to save · choose how each opens in Settings</string>
@@ -1007,29 +972,6 @@
     <string name="kachi_vn_heard_bad">«%1$s» — a name must be 1–4 words with at least 3 letters</string>
     <string name="kachi_vn_named_reason">Name «%1$s»: %2$s</string>
     <!-- 2.93 · CAMERA-ON-DEMAND + CAMERA-PER-CAM-CONFIG (spec docs/specs/kachi-293-cam.html) -->
-    <string name="kachi_camera_rear">Rear camera</string>
-    <string name="kachi_camera_front">Front camera</string>
-    <string name="kachi_cam_chip_rear">Rear</string>
-    <string name="kachi_cam_chip_left">Left</string>
-    <string name="kachi_cam_chip_right">Right</string>
-    <string name="kachi_cam_chip_front">Front</string>
-    <string name="kachi_camera_percam_sub">Each camera — where it shows, size, look (rear · left · right · front)</string>
-    <string name="kachi_camera_percam_note">Applies to that camera both on the turn signal and when opened on demand. Open/close: the Rear/Left/Right/Front camera buttons on the car bar, a steering-wheel key (Steering keys › Camera on demand) or by voice («open rear camera» / «turn off rear camera»). One camera at a time; it never times out.</string>
-    <string name="kachi_camera_percam_row">Camera</string>
-    <string name="kachi_camera_preview_on">▶ Preview this camera</string>
-    <string name="kachi_camera_preview_off">■ Showing — tap to turn off</string>
-    <string name="kachi_camera_corner_row">Default corner</string>
-    <string name="kachi_camera_place_hint">Drag the frame to place it</string>
-    <string name="kachi_camera_place_reset">Back to the default corner</string>
-    <string name="kachi_camera_size_row">Size</string>
-    <string name="kachi_camera_size_desc">Camera size: %1$s</string>
-    <string name="kachi_camera_follow">Use shared</string>
-    <string name="kachi_camera_shape_own_row">Window shape</string>
-    <string name="kachi_camera_projection_own_row">View style</string>
-    <string name="kachi_camera_rot_own_row">Rotate</string>
-    <string name="kachi_camera_mirror_own_title">Mirror video</string>
-    <string name="kachi_key_cam_toggle">%1$s — on/off</string>
-    <string name="kachi_key_cam_off">Camera off</string>
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->
     <string name="kachi_profile_nav_off">Profile «%1$s» has navigation on the cluster/HUD turned OFF. Turn it on in Settings › Navigation + HUD.</string>
 </resources>

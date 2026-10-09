@@ -178,7 +178,9 @@ android {
             signingConfig = if (hasKeystore) signingConfigs.getByName("release") else null
         }
         create("vehicleTest") {
-            // Same as release but debuggable — for on-car diagnostics with `adb shell run-as`.
+            // Same as release but debuggable — `adb shell run-as` cho QA máy ảo (`scripts/emulator/voice-common.sh` bật chế độ
+            // kiểm thử bằng `run-as` khi máy không cho `adb root`). Android box B2 · W2a gỡ mọi source set riêng của nó
+            // (probe HAL/T10); build type giữ vì còn dùng, không có mã riêng nào.
             initWith(getByName("release"))
             isDebuggable = true
             // Still requires release signing key (no debug fallback).
@@ -252,10 +254,6 @@ tasks.withType<Test>().configureEach {
     inputs.dir(layout.projectDirectory.dir("src/main/cpp"))
         .withPropertyName("appNativeSourceForKachiMemTest")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    // `src/vehicleTest` = bề mặt probe mà `VehicleTestSurfaceContractTest` quét theo VĂN BẢN.
-    inputs.dir(layout.projectDirectory.dir("src/vehicleTest"))
-        .withPropertyName("appVehicleTestSourceForSurfaceContractTest")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
     // `src/release` là source set TÙY CHỌN (hiện KHÔNG tồn tại) — `MainProbeSurfaceAbsenceTest` quét nó
     // nếu có. Dùng `inputs.files` chứ KHÔNG `inputs.dir`: `inputs.dir` nổ khi thư mục chưa tồn tại, còn
     // `inputs.files` chấp nhận rỗng và vẫn đỏ đúng lúc ai đó TẠO thư mục đó kèm bề mặt probe.
@@ -280,11 +278,12 @@ tasks.withType<Test>().configureEach {
     inputs.dir(rootProject.layout.projectDirectory.dir("car-integration/src/main/kotlin"))
         .withPropertyName("carIntegrationSourceTextForLayeringAndProbeTests")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(rootProject.layout.projectDirectory.file("docs/refactor-car-execution/layering-rules.md"))
+    inputs.file(rootProject.layout.projectDirectory.file("docs/layering-rules.md"))
         .withPropertyName("layeringRulesDocForLayeringRulesTest")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.dir(rootProject.layout.projectDirectory.dir("scripts/vehicle"))
-        .withPropertyName("vehicleScriptsForVehicleTestSurfaceContractTest")
+    // Script QA máy ảo — `TestBridgeSafetyContractTest` quét lệnh gọi cầu kiểm thử trong đó theo VĂN BẢN.
+    inputs.dir(rootProject.layout.projectDirectory.dir("scripts/emulator"))
+        .withPropertyName("emulatorScriptsForTestBridgeSafetyContractTest")
         .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 

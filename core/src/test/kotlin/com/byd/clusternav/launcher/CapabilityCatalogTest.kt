@@ -60,7 +60,8 @@ class CapabilityCatalogTest {
         // V1 pha NGHE (R12): +1 — *Nói với xe*. Con số ghim ở đây là bản kê "launcher làm được mấy việc\n        // KHÔNG chạm vào xe"; thêm một việc mà không đọc lại bốn tính chất dưới là cách để một ô mới lọt lên\n        // chip 24dp hoặc mang dấu cảnh báo nói sai.
         // 2.93 · CAMERA-ON-DEMAND: +4 — camera sau/trái/phải/trước theo yêu cầu (overlay của CHÍNH Kachi, không lệnh xe ⇒
         // vẫn đủ bốn tính chất dưới). *Tắt camera* ở `BLOCKS` (không gọi bằng lời — KDoc ở đó).
-        assertEquals(7, LauncherActions.ALL.size, "bảy hành động: Ứng dụng · Cài đặt · Nói với xe · 4 camera theo yêu cầu")
+        // Android box B2 · W2b (2026-10-09): −4 — bốn camera theo yêu cầu gỡ cùng camera BYD.
+        assertEquals(3, LauncherActions.ALL.size, "ba hành động: Ứng dụng · Cài đặt · Nói với xe")
         LauncherActions.ALL.forEach { a ->
             assertEquals(CapabilityKind.LAUNCHER, CapabilityCatalog.kindOf(a.id), "${a.id} phải là loại LAUNCHER")
             assertFalse(CapabilityCatalog.isWrite(a.id), "KHÔNG được coi là hành động ghi vào XE")

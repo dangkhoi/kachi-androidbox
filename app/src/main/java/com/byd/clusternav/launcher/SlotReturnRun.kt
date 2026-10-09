@@ -17,7 +17,6 @@ import com.byd.clusternav.launcher.behind.SlotReturnSequence
 import com.byd.clusternav.modules.navaccess.AccessibilityRebind
 import java.io.IOException
 import com.byd.clusternav.launcher.KachiSpace as Sp
-import com.byd.clusternav.system.CameraPresence
 
 /**
  * ═══ F1 dòng 9 + R1.8 — bên THI HÀNH của Ô ⇄ TOÀN MÀN (K7 / K8) cho [VdAppHost] ═══════════════════════════════════════
@@ -36,19 +35,19 @@ internal object SlotReturnRun {
 
     private const val TAG = "KachiDetach"
 
-    private fun seq(sh: (String) -> String) = SlotReturnSequence(sh, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE))
+    private fun seq(sh: (String) -> String) = SlotReturnSequence(sh, AccessibilityRebind.GO_HOME)
 
     /**
-     * K7 qua rào cho app [pkg] của ô [vd]; [done] (luồng chính) nhận kết quả: `taskId` = đã ra toàn màn; `null` + `back` =
+     * K7 qua cổng màn nhà cho app [pkg] của ô [vd]; [done] (luồng chính) nhận kết quả: `taskId` = đã ra toàn màn; `null` + `back` =
      * app rời ô mà không còn ở trước, chuỗi đã xử lý như lượt về ô; cả hai `null` = không tách được.
      */
     fun detach(
-        host: View, vd: Int, pkg: String, sh: (String) -> String, sig: String?, homeComps: List<String>,
+        host: View, vd: Int, pkg: String, sh: (String) -> String, homeComps: List<String>,
         done: (SlotReturnSequence.Detached) -> Unit,
     ) =
         BehindHomeRunner.execute("detach $pkg") {
             val out = try {
-                seq(sh).detach(vd, pkg, sig, homeComps)
+                seq(sh).detach(vd, pkg, homeComps)
             } catch (e: IOException) {
                 SlotReturnSequence.Detached(null, "detach $pkg -> ${e.javaClass.simpleName}")
             } catch (e: RuntimeException) {
@@ -173,9 +172,9 @@ internal class SlotFullscreen(
     val isDetached: Boolean get() = task != null
 
     /** K7: thôi đo ô TRƯỚC lệnh (app rời ô theo ý người dùng ≠ "app đã đóng"); tách được ⇒ giấu mặt vẽ + thẻ. */
-    fun detach(vd: Int, pkg: String, sh: (String) -> String, sig: String?, homeComps: List<String>, done: (Boolean) -> Unit) {
+    fun detach(vd: Int, pkg: String, sh: (String) -> String, homeComps: List<String>, done: (Boolean) -> Unit) {
         SlotLiveProbe.unwatch(probeKey)
-        SlotReturnRun.detach(host, vd, pkg, sh, sig, homeComps) { out ->
+        SlotReturnRun.detach(host, vd, pkg, sh, homeComps) { out ->
             if (!current(pkg)) return@detach
             val t = out.taskId
             if (t == null) {

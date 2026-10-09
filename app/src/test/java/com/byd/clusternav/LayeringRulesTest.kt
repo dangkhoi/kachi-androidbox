@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Cưỡng chế các quy tắc xếp chỗ trong docs/refactor-car-execution/layering-rules.md.
+ * Cưỡng chế các quy tắc xếp chỗ trong docs/layering-rules.md (Android box B2 · W2a dời từ docs/refactor-car-execution/).
  *
  * Có test này vì trong một ngày tôi xếp sai chuồng bốn lần và mỗi lần chỉ phát hiện khi tình cờ đo lại.
  * Quy tắc viết trong tài liệu mà không ai cưỡng chế thì chỉ là ý định.
@@ -351,8 +351,8 @@ class LayeringRulesTest {
     @Test
     fun `tai lieu quy tac ton tai va liet ke du cot cuong che`() {
         val doc = root(
-            "docs/refactor-car-execution/layering-rules.md",
-            "../docs/refactor-car-execution/layering-rules.md",
+            "docs/layering-rules.md",
+            "../docs/layering-rules.md",
         )
         assertTrue(doc != null, "thiếu tài liệu quy tắc")
         val text = doc!!.toFile().readText()

@@ -175,7 +175,6 @@ object CapabilityDescriptions {
         "media_vol" to Desc("Âm lượng nhạc/giải trí đang đặt ở mức mấy", "Current media (music) volume level"),
 
         // ── INFOTAINMENT (ACT) ──
-        "cam" to Desc("Bật/tắt hiển thị camera 360 độ", "Turn the 360-degree camera view on/off"),
         // ⚠⚠ 1.90 · SÁU nút xoá (owner 2026-09-21): `vol` · `cast` · `screen_rotation` · `camera_view` ·
         // `cluster_music` · `brightness_gear`. Diễn giải gỡ theo — xem nhật ký ở `ControlRegistry`.
         // Datum ĐỌC `media_vol` ở trên **Ở LẠI** (nó trả lời *"đang mức mấy"*, không đổi mức).

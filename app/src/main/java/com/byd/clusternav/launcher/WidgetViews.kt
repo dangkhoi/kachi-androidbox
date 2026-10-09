@@ -60,7 +60,6 @@ object WidgetViews {
         else -> if (CapabilityGroups.byId(id) != null) GroupTiles.build(ctx, id, data) { c, d -> tyreBoard(c, d) }
         // Hành động → ô bấm được; còn lại (đọc) → đường telemetry cũ, KHÔNG đổi một dòng.
         else if (CapabilityCatalog.isWrite(id)) actionTile(ctx, id, data, TileSize.BIG)
-        else if (LauncherActions.isCamera(id)) cameraDemandTile(ctx, id, TileSize.BIG)   // 2.93 CAMERA-WIDGET-TILE (ô tự lo)
         else telemetry(ctx, id, data.car, data.units)
     }
 
@@ -168,7 +167,6 @@ object WidgetViews {
             // G1·T3: nhóm trong ô nén ⇒ TÓM TẮT (xem KDoc GroupTiles.mini), không vẽ dải/bảng thu nhỏ.
             else       -> if (CapabilityGroups.byId(id) != null) GroupTiles.mini(ctx, id, data)
             else if (CapabilityCatalog.isWrite(id)) actionTile(ctx, id, data, TileSize.DOCK)
-            else if (LauncherActions.isCamera(id)) cameraDemandTile(ctx, id, TileSize.DOCK)   // 2.93 CAMERA-WIDGET-TILE (ô tự lo)
             else telemetryMini(ctx, id, car, data.units)
         }
     }

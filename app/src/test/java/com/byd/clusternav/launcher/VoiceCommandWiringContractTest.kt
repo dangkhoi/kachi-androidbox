@@ -63,7 +63,7 @@ class VoiceCommandWiringContractTest {
             "is VoiceIntent.Macro ->" to "runMacro(intent, next)",
             // 2.93 wave 2B · D1: nhánh thứ BA giữ `next` — vế camera theo yêu cầu chờ KẾT QUẢ controller; `rerun` = vế thay thế
             // (*"tắt camera"* trần không có gì để tắt ⇒ nút Camera 360) đi lại qua cổng của `runFrom`.
-            "is VoiceIntent.Launcher ->" to "runLauncher(intent, next, rerun)",
+            "is VoiceIntent.Launcher ->" to "runLauncher(intent, next)",
             "is VoiceIntent.Profile ->" to "onSwitchProfile(intent.name)",
             "is VoiceIntent.Read ->" to "runRead(intent)",
             "is VoiceIntent.Nav ->" to "runNav(intent, labels)",

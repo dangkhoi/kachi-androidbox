@@ -355,11 +355,9 @@ object NavConnect {
         }
         val cur = sh("settings get secure enabled_accessibility_services").output.trim()
         // Bấm tay ⇒ LUÔN về màn nhà; lớp 1/2 ⇒ chỉ khi có cửa sổ mồ côi (KDoc `AccessibilityRebind.HomeTail`).
-        // 2.93 CODE-FIX-AFTER-283 (6) — rào camera theo dấu của ĐỜI XE (ClusterProfile, CLAUDE.md §7); đời chưa đo ⇒ dấu 2.83.
-        // Android box W0 (2026-10-09): máy không có màn camera (`CameraPresence.SIGNATURE` = null) ⇒ đuôi Home TRẦN.
+        // Android box B2 · W2b: không màn camera ⇒ đuôi Home TRẦN (`AccessibilityRebind.GO_HOME`; rào camera BYD đã gỡ).
         val cmd = AccessibilityRebind.forceStopRebindCommand(
             cur, app.packageName, ACC_COMP, homeTail = AccessibilityRebind.homeTailFor(userAsked),
-            cameraSig = com.byd.clusternav.system.CameraPresence.SIGNATURE,
         )
         if (cmd.isBlank()) {
             Log.e(TAG, "a11y KẸT nhưng không dựng được lệnh (gói lệch component?) → không leo")

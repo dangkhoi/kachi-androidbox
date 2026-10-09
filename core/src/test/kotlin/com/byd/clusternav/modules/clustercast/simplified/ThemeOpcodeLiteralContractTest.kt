@@ -18,14 +18,14 @@ import java.nio.file.Path
  *    dựng lệnh thứ hai ngoài [ProjectionRecipe.svcCall] (lệnh thiếu `s16 ""` ⇒ EX_NULL_POINTER [ĐO 05/10]).
  *  • bơm phím 309 — [ĐO `PhoneWindowManager.java:3486-3490`, nghiên cứu 05/10 F8] không thu ADAS mà CÚP cuộc gọi Bluetooth.
  *
- * Ngoại lệ có tên: `ProjectionRecipe.kt` (chỗ dựng duy nhất) và catalog đo tay `CarExec*` (lệnh thô cho buổi đo trên xe,
- * `runCandidate` không có lời gọi nào trong `app/main`). Quét MÃ đã bỏ chú thích ([SourceRoots.codeOf] cùng luật).
+ * Ngoại lệ có tên: `ProjectionRecipe.kt` (chỗ dựng duy nhất). Catalog đo tay `CarExec*` từng được miễn — Android box
+ * B2 · W2a đã xoá nó, nên miễn trừ cũng gỡ. Quét MÃ đã bỏ chú thích ([SourceRoots.codeOf] cùng luật).
  */
 class ThemeOpcodeLiteralContractTest {
 
     private fun allowed(file: Path): Boolean {
         val n = file.fileName.toString()
-        return n == "ProjectionRecipe.kt" || n.startsWith("CarExec")
+        return n == "ProjectionRecipe.kt"
     }
 
     private fun sources(): List<Path> = SourceRoots.moduleSourceRoots().flatMap { root ->
@@ -58,12 +58,12 @@ class ThemeOpcodeLiteralContractTest {
     }
 
     @Test
-    fun `khong literal opcode theme i32 29-30-31 ngoai ProjectionRecipe va catalog CarExec`() {
+    fun `khong literal opcode theme i32 29-30-31 ngoai ProjectionRecipe`() {
         assertEquals(emptyList<String>(), offenders(themeLiteral))
     }
 
     @Test
-    fun `khong chuoi AutoContainer ngoai ProjectionRecipe va catalog CarExec`() {
+    fun `khong chuoi AutoContainer ngoai ProjectionRecipe`() {
         assertEquals(emptyList<String>(), offenders(svcLiteral))
     }
 

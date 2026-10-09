@@ -5,6 +5,7 @@ import com.byd.clusternav.testsupport.SourceRoots
 import java.nio.file.Files
 import java.nio.file.Path
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -316,37 +317,9 @@ class TestBridgeSafetyContractTest {
         assertTrue(gw.contains("HalWriteProbe.record("), "gateway phải ghi kết quả mỗi lượt write control")
     }
 
-    // ── (6) Script sweep tôn trọng DENYLIST ─────────────────────────────────────────────────────
-
-    /**
-     * `71-hal-sweep.sh` phải mang DENYLIST đúng tập [CtlSafetyPolicy.CONFIRM_REQUIRED] và pha WRITE phải bỏ qua nó.
-     *
-     * Đây là bài canh "hai tầng không lệch nhau": policy ở `:core` là nguồn, script bash phải liệt kê CÙNG tập —
-     * một mã mở-thân-xe lọt khỏi denylist của script là một lượt sweep tự mở cửa xe.
-     */
-    @Test
-    fun `script sweep co denylist khop policy`() {
-        val script = repoText("scripts/vehicle/kachi/71-hal-sweep.sh")
-        // Lấy ĐÚNG giá trị biến `DENYLIST="…"` — không quét cả tệp: `lock`/`door`/`window` còn xuất hiện trong
-        // chú thích, nên khớp-ở-bất-kỳ-đâu sẽ vẫn xanh dù dòng DENYLIST bị bỏ sót một mã ⇒ sweep tự mở cửa xe.
-        val declared = Regex("""DENYLIST="([^"]*)"""").find(script)
-            ?.groupValues?.get(1)?.trim()?.split(Regex("""\s+"""))?.filter { it.isNotEmpty() }?.toSet()
-        assertTrue(declared != null && declared.isNotEmpty(), "script phải khai biến DENYLIST=\"…\"")
-        val policy = com.byd.clusternav.launcher.CtlSafetyPolicy.CONFIRM_REQUIRED
-        // Hai chiều: script không thiếu mã policy (thiếu ⇒ sweep tự bắn control mở thân xe), và không dư mã lạ.
-        assertEquals(
-            policy, declared,
-            "DENYLIST của script phải KHỚP HỆT CtlSafetyPolicy.CONFIRM_REQUIRED (thiếu ${policy - declared!!}, dư ${declared - policy})",
-        )
-    }
-
-    @Test
-    fun `script sweep chi chay khi test-mode va bash-n sach`() {
-        val script = repoText("scripts/vehicle/kachi/71-hal-sweep.sh")
-        assertTrue(script.contains("k_test_gate") || script.contains("k_test_alive"),
-            "script phải qua cổng chế độ kiểm thử trước khi bắn")
-        assertTrue(script.contains("_common.sh"), "script phải dùng nền chung _common.sh")
-    }
+    // ── (6) Script sweep HAL — Android box B2 · W2a ─────────────────────────────────────────────────
+    // `scripts/vehicle/kachi/71-hal-sweep.sh` (quét HAL trên xe, DENYLIST khớp `CtlSafetyPolicy`) gỡ cùng bộ script xe BYD;
+    // hai bài canh nó gỡ theo. Cầu kiểm thử không còn lệnh `sweep` (W1 — ra `unknown_cmd`).
 
     /** Mọi lượt chạy đều để lại dấu: một dòng nhật ký lúc NHẬN và một dòng lúc TRẢ LỜI. */
     @Test
@@ -359,136 +332,50 @@ class TestBridgeSafetyContractTest {
     // ── (7) Lệnh gọi cầu phải TƯỜNG MINH ────────────────────────────────────────────────────────
 
     /**
-     * ⚠⚠ [ĐO xe 2026-09-20 §0] Lệnh gọi cầu PHẢI mang **thành phần tường minh** (`-n`), không chỉ `-a`.
+     * ⚠⚠ [ĐO xe 2026-09-20 §0] Lệnh gọi cầu PHẢI TƯỜNG MINH — mang `-n <thành phần>` hoặc `-p <gói>`, không chỉ `-a`.
      *
      * Android 10 chặn broadcast ngầm tới receiver khai trong manifest, và cái chặn đó **im lặng**: `am broadcast
-     * -a com.byd.launcher.TEST …` trả `result=0` **không có `data=`** — đọc giống hệt ca *"cầu chưa bật"* hoặc
-     * *"adb hỏng"*. Mấy buổi test trên xe đã nghi oan cho kết nối (và ghi vào tài liệu là "BUG2") trong khi lỗi
-     * nằm ở đúng một dòng dựng lệnh. Bài canh này để cái nhầm ấy không quay lại được bằng một lượt "dọn dẹp".
+     * -a <gói>.TEST …` trả `result=0` **không có `data=`** — đọc giống hệt ca *"cầu chưa bật"* hoặc *"adb hỏng"*. Mấy buổi
+     * test đã nghi oan cho kết nối (ghi vào tài liệu là "BUG2") trong khi lỗi nằm ở đúng một dòng dựng lệnh.
      *
-     * Vế thứ hai là phép so **ranh giới script ↔ mã**: tên lớp trong chuỗi `-n` phải là tên lớp THẬT. Đổi tên /
-     * dời gói `KachiTestBridge` mà quên script thì mọi lượt gọi trên xe trả `result=0` — cùng một triệu chứng
-     * mù mờ ấy. Lấy tên từ `KachiTestBridge::class.java.name` nên không có bản sao chép tay nào để lệch.
+     * Android box B2 · W2a: bộ script xe `scripts/vehicle/kachi/` (nơi bài này từng canh `_common.sh`) đã gỡ; bộ script còn
+     * gọi cầu là QA máy ảo `scripts/emulator/` ⇒ bài chuyển sang đó. Vế thứ hai là phép so **ranh giới script ↔ mã**: chuỗi
+     * `-n` nào có thì tên lớp trong đó phải là tên lớp THẬT (lấy từ `KachiTestBridge::class.java.name`, không chép tay).
      */
     @Test
-    fun `script goi cau bang thanh phan tuong minh khop ten lop that`() {
-        val common = repoText("scripts/vehicle/kachi/_common.sh")
+    fun `script may ao goi cau bang dich tuong minh khop ten lop that`() {
         val fqn = com.byd.clusternav.launcher.testbridge.KachiTestBridge::class.java.name
-        assertTrue(
-            common.contains("KACHI_TEST_COMP=\"\${KACHI_TEST_COMP:-\$KACHI_PKG/$fqn}\""),
-            "_common.sh phải khai KACHI_TEST_COMP = \$KACHI_PKG/$fqn (tên lớp thật)",
-        )
-        val call = common.lines().single { it.contains("line=\"am broadcast") }
-        assertTrue(call.contains("-n \$KACHI_TEST_COMP"), "k_test phải gửi -n <thành phần>: $call")
-        assertTrue(call.contains("-a \$KACHI_TEST_ACTION"), "vẫn phải mang -a (onReceive rẽ theo action): $call")
+        val calls = bridgeCalls()
+        assertTrue(calls.isNotEmpty(), "bộ quét phải thấy lệnh gọi cầu trong scripts/emulator — bài đang tự tắt")
+        val implicit = calls.filter { (_, l) -> !l.contains("-n ") && !l.contains("-p ") }
+        assertTrue(implicit.isEmpty(), "lệnh gọi cầu thiếu -n/-p (sẽ im lặng rơi trên Android 10): $implicit")
+        val wrongClass = calls.filter { (_, l) -> l.contains("-n ") && !l.contains("/$fqn") }
+        assertTrue(wrongClass.isEmpty(), "chuỗi -n phải trỏ đúng lớp thật $fqn: $wrongClass")
     }
 
-    /** Không script nào trong bộ được dựng lại lệnh gọi cầu bằng đường ngầm của riêng nó. */
+    /** Mọi dòng MÃ (không chú thích) của các tệp `.sh` dưới `scripts/emulator` bắn broadcast vào cầu `<gói>.TEST`. */
+    private fun bridgeCalls(): List<Pair<String, String>> = Files.walk(repoPath("scripts/emulator")).use { s ->
+        s.filter { it.toString().endsWith(".sh") }
+            .toList()
+            .flatMap { p -> Files.readAllLines(p).map { p.fileName.toString() to it.trim() } }
+            .filter { (_, l) -> !l.startsWith("#") && l.contains("am broadcast") && l.contains(".TEST") }
+    }
+
+    // ── (8) Camera BYD — Android box B2 · W2b ───────────────────────────────────────────────────
+    // Ba lệnh camera (`camera` · `camera_frame` · `camera_synth`) cùng mã thi hành (`TestBridgeCamera*` · `TestBridgeSynth` ·
+    // `TestBridgePerCam`) và ba móc camera của `TestBridgeHooks` gỡ hẳn. Bốn bài canh chuỗi dây `camera_frame` gỡ theo.
+
     @Test
-    fun `khong script nao ban broadcast cau ma thieu thanh phan`() {
-        val dirPath = repoPath("scripts/vehicle/kachi")
-        val offenders = Files.walk(dirPath).use { s ->
-            s.filter { it.toString().endsWith(".sh") }
-                .toList()
-                .flatMap { p -> Files.readAllLines(p).map { p.fileName.toString() to it } }
-                .filter { (_, line) ->
-                    val l = line.trim()
-                    !l.startsWith("#") && l.contains("am broadcast") &&
-                        (l.contains("KACHI_TEST_ACTION") || l.contains("com.kachi.box.TEST")) &&
-                        !l.contains("-n ")
-                }
+    fun `cau kiem thu khong con lenh, tep hay moc camera`() {
+        listOf("camera", "camera_frame", "camera_synth").forEach {
+            assertTrue(it !in TestBridgeCommands.NAMES, "`$it` không được quay lại bảng lệnh")
         }
-        assertTrue(offenders.isEmpty(), "lệnh gọi cầu thiếu -n (sẽ im lặng rơi trên xe): $offenders")
-    }
-
-    // ── (8) `camera_frame` — chụp khung camera GỐC ra PNG ───────────────────────────────────────
-
-    /**
-     * ⚠ CLAUDE.md §8: hàm mới phải CÓ chỗ gọi. Bài này đi hết **bốn** mắt của chuỗi dây, vì đúng ba trong bốn mắt
-     * đó là loại "compile xanh mà chưa từng chạy" (`CastShell.evictVd`): bảng lệnh → nhánh điều phối → móc →
-     * controller thật. Rơi một mắt thì `camera_frame` trả `overlay_not_showing` **mãi mãi**, và trên xe nó trông y
-     * như *"chưa bật xi-nhan"* — một câu trả lời sai nhìn giống một câu trả lời đúng.
-     *
-     * Mắt thứ tư nằm ở `TestBridgeHooks` (không ở `KachiHomeActivity` như `cameraTick`): tệp màn chính đã vượt trần
-     * 500 dòng nên không được bồi thêm, và `AppContainer.cameraSignal` là ĐÚNG một controller của cả tiến trình
-     * (BG-15/BG-16) nên lấy ở đâu cũng là cùng cái đang vẽ.
-     */
-    @Test
-    fun `camera_frame da roi cau, moc mo coi van khong tu dung controller`() {
-        // Android box B2 · W1 — `camera_frame` rời bảng lệnh + cửa điều phối (camera BYD); phần móc dưới đây mồ côi tới W2b.
-        assertTrue(TestBridgeCommands.CAMERA_FRAME !in TestBridgeCommands.NAMES, "`camera_frame` đã rời bảng lệnh")
-        assertTrue(!code("KachiTestBridge.kt").contains("TestBridgeCommands.CAMERA_FRAME ->"), "nhánh điều phối `camera_frame` đã gỡ")
-        assertTrue(
-            code("TestBridgeCameraFrame.kt").contains("hooks.cameraFrame("),
-            "thân lệnh phải đi qua móc `cameraFrame` — không dựng overlay/TextureView thứ hai",
-        )
+        listOf("TestBridgeCamera.kt", "TestBridgeCameraFrame.kt", "TestBridgeSynth.kt", "TestBridgePerCam.kt").forEach {
+            assertFalse(SourceRoots.exists("src/main/java/com/byd/clusternav/launcher/testbridge/$it"), "$it đã xoá ở W2b")
+        }
         val hooks = code("TestBridgeHooks.kt")
-        assertTrue(hooks.contains("cameraFrame = { w, h ->"), "`attachTestBridge` phải nối móc `cameraFrame`")
-        assertTrue(
-            hooks.contains("c.cameraSignal.grabFrame(w, h)"),
-            "móc phải trỏ vào ĐÚNG controller đang vẽ (`AppContainer.cameraSignal.grabFrame`)",
-        )
-        assertTrue(
-            hooks.contains("if (c.cameraSignalCreated)"),
-            "một lệnh ĐO không được tự dựng controller nó đang đo — phải qua cổng `cameraSignalCreated`",
-        )
-    }
-
-    /**
-     * Ba tính chất của lượt ghi tệp — cả ba đều là thứ chỉ hỏng trên xe nếu rữa:
-     *  • `getBitmap` gọi trên **main** (op cây view; sai luồng ⇒ ảnh rỗng hoặc ném);
-     *  • nén **PNG** (JPEG thêm nhiễu vào đúng phép đo *"vòng fisheye tròn hay bẹt"*);
-     *  • `recycle` bitmap (hàng chục MB mỗi khung cỡ luồng gốc — bỏ sót là hết bộ nhớ sau vài lượt gọi).
-     */
-    @Test
-    fun `camera_frame chup tren main, ghi PNG vao kachi-logs, va nha bitmap`() {
-        val src = code("TestBridgeCameraFrame.kt")
-        assertTrue(src.contains("Looper.getMainLooper()"), "lượt chụp phải `post` về main thread")
-        // 2.92: nén + đặt tên + dọn tách sang `CameraFrameFiles` (dùng chung với nút *Khung thô* của Chẩn đoán — DRY).
-        assertTrue(src.contains("CameraFrameFiles.savePng(app, bmp)"), "lệnh phải ghi qua MỘT cửa chung")
-        val files = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/camera/CameraFrameFiles.kt")
-        assertTrue(files.contains("CompressFormat.PNG"), "phải nén PNG (không mất mát), không JPEG")
-        assertTrue(files.contains("KachiLog.dir(app)"), "phải ghi vào `kachi-logs/` — chỗ `adb pull` lấy được")
-        assertTrue(src.contains("recycle()"), "phải nhả bitmap sau khi ghi (kể cả nhánh hỏng — `finally`)")
-    }
-
-    /**
-     * Đường kết xuất `SurfaceView` **không bao giờ** chụp được (`TextureView.getBitmap` không tồn tại ở layer đó).
-     *
-     * Lời đáp phải nói ra điều đó, nếu không lượt đo trên xe sẽ đi đúng vòng mò mà CLAUDE.md §15 cấm: chờ thêm, bật
-     * lại xi-nhan, xin cỡ khác — cả ba đều vô ích. Bài canh chính **lý do có mặt trong lời đáp**, không chỉ canh
-     * `null` được trả về.
-     */
-    @Test
-    fun `camera_frame noi ro khi duong ket xuat SurfaceView khong chup duoc`() {
-        val src = code("TestBridgeCameraFrame.kt")
-        assertTrue(src.contains("\"capturable\" to shot.capturable"), "lời đáp phải mang cờ `capturable` đã ĐO")
-        assertTrue(src.contains("\"render\" to shot.render"), "lời đáp phải nói đường kết xuất đang treo")
-        assertTrue(src.contains("if (!shot.capturable)"), "phải rẽ theo phép ĐO, không theo pref")
-        assertTrue(src.contains("SurfaceView"), "`reason` phải nói THẲNG layer nào không chụp được")
-        assertTrue(
-            src.contains("CameraSignalPolicy.RENDER_TEXTURE"),
-            "cách thoát phải lấy mã kết xuất từ hằng `:core`, không chép chuỗi \"TV\"",
-        )
-        val overlay = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/camera/CameraOverlayView.kt")
-        assertTrue(
-            overlay.contains("fun capturable(): Boolean = video is android.view.TextureView"),
-            "`capturable` phải ĐO lớp video đang treo (CLAUDE.md §7), không tra pref",
-        )
-    }
-
-    /**
-     * Bằng chứng AOSP phải NẰM TRONG mã, không nằm trong đầu ai (CLAUDE.md §3).
-     *
-     * Quét `text` (không `codeOf`) **có chủ ý**: thứ cần canh ở đây chính là câu trích dẫn trong KDoc. Cả kết luận
-     * *"ảnh ra là khung gốc"* của lệnh này dựa vào `useLayerTransform = false`; mất trích dẫn thì lần sau không ai
-     * kiểm lại được, và §2 lại bị vi phạm đúng kiểu cũ (suy luận được thăng lên "đã chứng minh").
-     */
-    @Test
-    fun `KDoc captureFrame con giu trich dan AOSP cho getBitmap khong mang transform`() {
-        val doc = SourceRoots.text("src/main/java/com/byd/clusternav/launcher/camera/CameraOverlayView.kt")
-        listOf("TextureView.java", "Readback.cpp", "LayerDrawable.cpp", "useLayerTransform").forEach { token ->
-            assertTrue(doc.contains(token), "KDoc `captureFrame` phải còn trích dẫn `$token`")
+        listOf("cameraTick", "cameraFrame", "cameraSynth", "cameraSignal").forEach {
+            assertFalse(hooks.contains(it), "móc camera `$it` đã gỡ khỏi TestBridgeHooks")
         }
     }
 }

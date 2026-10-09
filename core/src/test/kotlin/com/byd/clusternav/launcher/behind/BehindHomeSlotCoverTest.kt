@@ -57,7 +57,7 @@ class BehindHomeSlotCoverTest {
             override fun cover(vd: Int): Boolean { log += "COVER $vd"; return covers }
             override fun uncover(): Int { log += "UNCOVER"; return 1 }
         }
-        val seq = BehindHomeSequence(sh, anchor, self, k12, sleep = {}, homeComps = homes, cameraSig = "com.byd.avc/")
+        val seq = BehindHomeSequence(sh, anchor, self, k12, sleep = {}, homeComps = homes)
     }
 
     @Test

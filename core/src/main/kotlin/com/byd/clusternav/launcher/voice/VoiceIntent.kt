@@ -45,13 +45,10 @@ sealed interface VoiceIntent {
     data class Macro(val id: String) : VoiceIntent
 
     /**
-     * Hành động của chính launcher ([com.byd.clusternav.launcher.LauncherActions]) — ngăn kéo / Cài đặt / camera.
-     *
-     * @property off 2.93 — câu có động từ TẮT/ĐÓNG cho một việc có trạng thái
-     *   ([com.byd.clusternav.launcher.LauncherActionDef.switchable], camera theo yêu cầu: *"tắt camera sau"*). Mặc định
-     *   `false` ⇒ mọi ý định ≤ 2.92 bằng hệt (`Launcher(id)`), bài cũ không đổi.
+     * Hành động của chính launcher ([com.byd.clusternav.launcher.LauncherActions]) — ngăn kéo / Cài đặt / phiên nghe.
+     * (Trường `off` của 2.93 — TẮT camera theo yêu cầu — gỡ cùng camera BYD ở Android box B2 · W2b.)
      */
-    data class Launcher(val id: String, val off: Boolean = false) : VoiceIntent
+    data class Launcher(val id: String) : VoiceIntent
 
     /** Đổi hồ sơ tài xế. [name] là tên GỐC (khoá lưu bền), không phải nhãn đã dịch — xem `ProfileNames`. */
     data class Profile(val name: String) : VoiceIntent

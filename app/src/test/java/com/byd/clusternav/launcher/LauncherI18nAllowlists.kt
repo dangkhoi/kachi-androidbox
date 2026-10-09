@@ -29,10 +29,6 @@ internal object LauncherI18nAllowlists {
         "ảnh không giải mã được" to "nhật ký (Log.w) của hình nền — không hiện trên màn",
         "không đọc được thư mục ảnh" to "nhật ký (Log.w) của WallpaperStore — không hiện trên màn",
         "không giải mã được ảnh" to "nhật ký (Log.w) của WallpaperStore — không hiện trên màn",
-        // ── CAMERA 2.76 (làn L2 · hình "theo cụm") — hai chuỗi ghép trong dòng nhật ký `overlay show …` của
-        // `CameraOverlayView` (khung/dải/vị trí trên cụm, để grep khi đo xe: `dải=140,136-1780,560 tại=140,136`) ──
-        "dải=" to "nhật ký (Log.i) `overlay show` của CameraOverlayView — dải cụm + toạ độ, để grep khi đo xe; không hiện trên màn",
-        "vùng=" to "nhật ký (Log.i) `overlay show` của CameraOverlayView — cỡ vùng đo; không hiện trên màn",
         // ── ÂM BÁO (1.70) — đi qua `VoiceChime.trip(why)` → `Log.w`; câu chẩn đoán cầu chì, không hiện trên màn ──
         "AudioTrack không khởi tạo được" to "lý do cầu chì âm báo (VoiceChime.trip → Log.w) — không hiện trên màn",
         "play() ném" to "lý do cầu chì âm báo (VoiceChime.trip → Log.w) — không hiện trên màn",

@@ -69,9 +69,7 @@ class PersistentWindowStateWriterGuardTest {
                 "FreeformSeedPolicy.kt",
                 // 2.96 · R13: CastGeometryController.ensureFreeformFlags now routes through the pure
                 //    FreeformSeedPolicy.seedFlagsReadFirst (still marker-LESS) ⇒ no longer a direct writer (pin removed).
-                // ⏳ DEFERRED — :core carexec, T10 probe/operator catalog TEMPLATE (not a runtime writer).
-                //    TODO(on-car): fold restore.globals template onto FreeformSeedPolicy after cluster E2E verify.
-                "CarExecClusterProjectionCatalog.kt",
+                // Android box B2 · W2a: catalog đo tay `CarExecClusterProjectionCatalog.kt` (T10) đã xoá — writer duy nhất.
             ),
             writers,
             "freeform-flag writer set changed. Discovered=$writers. " +
@@ -106,7 +104,7 @@ class PersistentWindowStateWriterGuardTest {
                 "DisplayConfigurator.kt",              // ⏳ DEFERRED — :core cast, apply() density. TODO(on-car).
                 "CastDensityControl.kt",               // ⏳ DEFERRED — :core cast, set()/setForSplit() density. TODO(on-car).
                 // CastShell.kt + ClusterCast.kt XOÁ (quality-review 2026-09-15 Pha 3 — orchestrator cast chết đã gỡ).
-                "CarExecClusterProjectionCatalog.kt",  // ⏳ DEFERRED — :core carexec, probe/operator catalog template. TODO(on-car).
+                // CarExecClusterProjectionCatalog.kt XOÁ (Android box B2 · W2a — catalog đo tay T10).
             ),
             writers,
             "wm-density writer set changed. Discovered=$writers. Cluster-geometry writes are DEFERRED (proven, " +

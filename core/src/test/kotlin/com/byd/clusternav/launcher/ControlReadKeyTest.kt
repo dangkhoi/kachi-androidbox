@@ -148,7 +148,8 @@ class ControlReadKeyTest {
         // getter mới đoán ra: cùng getter đã ĐO của ghế lái, chỉ khác `seatID` 2 (khai ở `HalReadTables.readArg`),
         // và hai datum `seat_*_state_r` đi kèm. Owner xin tách ghế lái/ghế phụ (*"2 ghế nó khác nhau mà"*).
         // Dòng T2 trong `docs/specs/kachi-live-state-ux.html` đã sửa cùng lượt (R2.1).
-        assertEquals(33, ControlRegistry.ALL.size, "số nút đổi ⇒ đếm lại cả hai vế rồi sửa §Tasks T2 của spec")
+        // ⚠ Android box B2 · W2b (2026-10-09): 33 → **32** — `cam` (Camera 360, không có `readKey`) gỡ ⇒ độ phủ giữ 15.
+        assertEquals(32, ControlRegistry.ALL.size, "số nút đổi ⇒ đếm lại cả hai vế rồi sửa §Tasks T2 của spec")
         assertEquals(
             15, wired.size,
             "độ phủ đường đọc đổi (thấy ${wired.size}/29; chưa có đường đọc: ${blind.sorted()}). " +

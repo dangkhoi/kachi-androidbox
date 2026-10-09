@@ -43,7 +43,7 @@ import com.byd.clusternav.system.StackEntry
 class HiddenPark(
     private val sh: (String) -> String,
     private val selfPkg: String,
-    /** K12 — `AccessibilityRebind.GO_HOME_UNLESS_CAMERA` (byte 2.83). */
+    /** K12 — `AccessibilityRebind.GO_HOME`. */
     private val goHomeCmd: String,
     /** Các dạng in của màn nhà Kachi (`DefaultHome.shownComponents`). */
     private val homeComps: Collection<String>,

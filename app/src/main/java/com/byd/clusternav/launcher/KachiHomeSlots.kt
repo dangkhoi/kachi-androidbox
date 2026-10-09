@@ -11,7 +11,6 @@ import com.byd.clusternav.launcher.behind.BehindHomePlan
 import com.byd.clusternav.launcher.behind.BehindHomeRunner
 import com.byd.clusternav.launcher.behind.BehindHomeSequence
 import com.byd.clusternav.launcher.behind.BehindReason
-import com.byd.clusternav.system.CameraPresence
 
 /**
  * ═══ GLUE INTENT THEO-Ô của màn chính — TÁCH KHỎI [KachiHomeActivity] (trần 500 dòng) ═══════════════════════
@@ -122,12 +121,12 @@ internal class KachiHomeSlots(
     fun behindUsable(): Boolean = BehindHomeRunner.disabledReason == null
 
     /**
-     * F1 · R1.5 dòng 9 — lối tắt *Toàn màn* cho app ĐANG ở ô [index]: K7 qua rào (màn nhà Kachi đang hiện; dấu hiệu camera
-     * của đời xe nếu đã biết — `ClusterProfile.cameraSignature`). Về lại ô khi màn nhà hiện lại ([WorkspaceView.returnDetached]).
+     * F1 · R1.5 dòng 9 — lối tắt *Toàn màn* cho app ĐANG ở ô [index]: K7 qua cổng màn nhà (chỉ khi màn nhà Kachi đang
+     * hiện — `HomeGate`). Về lại ô khi màn nhà hiện lại ([WorkspaceView.returnDetached]).
      * `false` = ô chưa sẵn sàng, 0 lệnh. [done] (luồng chính): đã ra toàn màn chưa.
      */
     fun detachToFull(index: Int, done: (Boolean) -> Unit): Boolean = workspace().detachToFull(
-        index, CameraPresence.SIGNATURE, DefaultHome.shownComponents(app), done,   // Android box W0: không camera
+        index, DefaultHome.shownComponents(app), done,
     )
 
     /**

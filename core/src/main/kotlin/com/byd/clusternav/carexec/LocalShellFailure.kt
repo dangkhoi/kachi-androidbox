@@ -24,10 +24,8 @@ package com.byd.clusternav.carexec
  * và máy im lặng chờ người dùng bấm ([AWAITING_APPROVAL] — chỉ lộ ra khi có hạn đọc, xem
  * [LocalShellRetry.socketTimeoutMs]).
  *
- * KHÔNG dùng chung bộ phân loại với `vehicleprobe/DadbVehicleTransport.classifyExpectedFailure`: đó là
- * transport của cổng T10 đang NIÊM PHONG (`docs/specs/seal-hud-sign-vehicle-test-t10.html`), từ vựng của
- * nó (`TransportFailureKind`) mô tả một hợp đồng khác. Gộp lại sẽ phải mở niêm phong để phục vụ một nhu
- * cầu không liên quan.
+ * (Bộ phân loại riêng của transport T10 `vehicleprobe/DadbVehicleTransport` đã gỡ ở Android box B2 · W2a — đây là bộ
+ * phân loại lỗi kênh shell duy nhất.)
  */
 enum class LocalShellFailure {
     /**

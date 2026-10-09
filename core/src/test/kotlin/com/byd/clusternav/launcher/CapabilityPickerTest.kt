@@ -85,8 +85,9 @@ class CapabilityPickerTest {
             // đổi: hai nút ghế phụ đã có từ B10, lượt này chúng chỉ được nối `readKey`.
             // ⚠ 2.88 (04/10): **79** đọc (+13 mã trạng thái THÔ của lốp) — cả 13 cùng vào bảng ẩn ⇒ số mục rời HIỆN
             // không đổi; phép trừ dưới đây nói đúng điều đó thay vì nới con số.
-            79 + 33 + 2 - CapabilityCatalog.HIDDEN_FROM_PICKER.size, after.size,
-            "mục rời theo lĩnh vực phải còn nguyên 79 đọc + 33 nút + 2 gói lệnh (trừ mã ẩn có lý do)",
+            // ⚠ Android box B2 · W2b (09/10): **32** nút (gỡ `cam` Camera 360 cùng camera BYD).
+            79 + 32 + 2 - CapabilityCatalog.HIDDEN_FROM_PICKER.size, after.size,
+            "mục rời theo lĩnh vực phải còn nguyên 79 đọc + 32 nút + 2 gói lệnh (trừ mã ẩn có lý do)",
         )
     }
 

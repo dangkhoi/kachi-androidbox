@@ -33,8 +33,7 @@ class ClusterNavSettingsWiringContractTest {
     /** Bốn section dựng lại điều khiển của màn ClusterNav (IA v2 §4.1 nhóm 5–8). */
     private val sections = listOf(
         "SettingsSectionsNav.kt", "SettingsSectionsCast.kt", "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
-        // 2.76 · R1 — camera tách khỏi `SettingsSectionsCar`; vẫn là section của ClusterNav, 100 % qua cầu.
-        "SettingsSectionsCamera.kt",
+        // (`SettingsSectionsCamera.kt` 2.76 · R1 — xoá ở Android box B2 · W2b.)
         // V-CLUSTER (2026-09-30) — khối khung/DPI tách khỏi `SettingsSectionsCast` (trần 500 dòng): vẫn 100 % qua cầu.
         "SettingsSectionsCastGeometry.kt",
     )

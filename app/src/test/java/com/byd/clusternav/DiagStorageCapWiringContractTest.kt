@@ -96,7 +96,7 @@ class DiagStorageCapWiringContractTest {
         ),
         // ── chỉ đọc: không tạo tệp nào trong cây ngoài ──
         "com/byd/clusternav/launcher/voice/VoiceWavProbe.kt" to Writer(Kind.READER, listOf("File(it, FILE_NAME)"), emptyList()),
-        "com/byd/clusternav/launcher/camera/CameraSignalController.kt" to Writer(Kind.READER, listOf("if (f.isFile) f.absolutePath"), emptyList()),
+        // (`launcher/camera/CameraSignalController.kt` — đọc PNG `camera_synth` — xoá cùng camera BYD ở Android box B2 · W2b.)
         // ── chính bộ dọn ──
         "com/byd/clusternav/DiagStorageCap.kt" to Writer(Kind.CAP, emptyList(), emptyList()),
     )
@@ -107,11 +107,21 @@ class DiagStorageCapWiringContractTest {
     private fun code(p: Path): String = KotlinSource.stripComments(Files.readString(p))
 
     /**
-     * Gốc quét = mã sản phẩm của `:app`/`:core`/`:car-integration` (spec R4) + nguồn RIÊNG của biến thể `vehicleTest`
-     * (`app/src/vehicleTest/java` — cùng `:app`, cùng bộ dọn chạy trong bản ấy; senior review 2.92 Pass 3 [P3]).
+     * Gốc quét = mã sản phẩm của `:app`/`:core`/`:car-integration` (spec R4) + nguồn RIÊNG của MỌI source set phụ của `:app`
+     * (`app/src/<set>/java`, trừ `test*` — cùng `:app`, cùng bộ dọn chạy trong bản ấy; senior review 2.92 Pass 3 [P3]).
+     * Android box B2 · W2a xoá source set `vehicleTest` (probe HAL/T10); quét theo danh sách thư mục thay vì tên cứng ⇒
+     * một source set mới (vd `release`) có bộ ghi riêng vẫn vào lưới, không cần nhớ sửa bài.
      */
-    private fun roots(): List<Path> = SourceRoots.moduleSourceRoots() +
-        listOf("app/src/vehicleTest/java", "../app/src/vehicleTest/java").map { Path.of(it) }.filter { Files.exists(it) }
+    private fun roots(): List<Path> = SourceRoots.moduleSourceRoots() + extraAppSourceSets()
+
+    private fun extraAppSourceSets(): List<Path> =
+        listOf("app/src", "../app/src").map { Path.of(it) }.firstOrNull { Files.isDirectory(it) }?.let { src ->
+            Files.list(src).use { s ->
+                s.filter { Files.isDirectory(it) }
+                    .filter { val n = it.fileName.toString(); n != "main" && !n.startsWith("test") && !n.startsWith("androidTest") }
+                    .map { it.resolve("java") }.filter { Files.isDirectory(it) }.toList()
+            }
+        }.orEmpty()
 
     private fun callSites(): Map<String, String> = roots().flatMap { root ->
         Files.walk(root).use { s ->
@@ -121,7 +131,7 @@ class DiagStorageCapWiringContractTest {
 
     @Test
     fun `moi loi goi getExternalFilesDir deu duoc xep loai chan doan hay nguoi dung`() {
-        assertTrue(roots().any { it.toString().replace('\\', '/').endsWith("app/src/vehicleTest/java") }, "phải quét cả vehicleTest")
+        assertTrue(roots().any { it.toString().replace('\\', '/').endsWith("app/src/main/java") }, "phải quét mã chính của :app")
         val sites = callSites()
         val found = sites.keys
         val unclassified = found - writers.keys

@@ -80,11 +80,8 @@ object ControlRegistry {
             domain = Domain.CLIMATE, tier = EvidenceTier.OVERDRIVE, bindingKey = "501219362",
             readKey = "defrost_front_state",   // T2: đọc `getAcDefrostState(1)` — GHI vẫn là feature-id, khác đường
             labelEn = "Front defrost"),
-        // [ĐO] `setAVMSwitchState(int)` BYDAutoADASDevice.java:348 — AVM_FUNCTION_OFF=1 / ON=2 (:34-35); args ở
-        // HalBindingTable.writeArgs. Cũ pseudo-id `3001` không có trong BYDAutoFeatureIds (bịa) và trùng với camera_view.
-        ControlDef("cam", "Camera 360", "ic-cam", ControlKind.TOGGLE,
-            domain = Domain.INFOTAINMENT, tier = EvidenceTier.OVERDRIVE, bindingKey = "BYDAutoADASDevice.setAVMSwitchState",
-            labelEn = "360 camera"),
+        // Android box B2 · W2b (2026-10-09): nút `cam` (Camera 360, `BYDAutoADASDevice.setAVMSwitchState`) GỠ cùng camera BYD
+        // — mã đã lưu trên thanh nút tự rụng (mã lạ). Giọng nói *"bật camera"* nay ra FEATURE_GONE (`VoiceFeatureGone`).
         // ⚠ [SOÁT P0 · vòng 2] TRƯỚC ĐÂY là TOGGLE nhãn "Mở cửa" — nghĩa là **tắt nó thì KHOÁ xe**, mà nhãn không
         // nói điều đó. Sau khi vá P0 (tắt = gửi 2 = khoá thật) thì đây lại đúng họ lỗi vừa dọn: "nhãn hứa việc A,
         // trạng thái kia làm việc B". Nút BẤM một chiều thì không có mặt-tắt để nói dối: bấm = mở khoá, hết.

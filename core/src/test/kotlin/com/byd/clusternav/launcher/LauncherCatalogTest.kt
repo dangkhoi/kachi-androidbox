@@ -45,8 +45,9 @@ class LauncherCatalogTest {
         // `ControlRegistryExtendedTest.control gom nhieu domain` canh riêng điều này.
         assertTrue(byDomain[Domain.DRIVETRAIN].isNullOrEmpty(), "Động lực không còn nút nào (1.90)")
         // ⚠ WP8 2026-09-20: hai nút HUD (`hud_switch` · `hud_brightness`) purge theo triage owner (#62 · #63).
-        // ⚠ 1.90: mốc INFOTAINMENT `cast` cũng xoá ⇒ dùng `cam` (Camera 360) — nút INFOTAINMENT còn sống.
-        assertTrue(byDomain[Domain.INFOTAINMENT]!!.any { it.id == "cam" }, "cam panel INFOTAINMENT")
+        // ⚠ 1.90: mốc INFOTAINMENT `cast` cũng xoá ⇒ dùng `cam` (Camera 360). Android box B2 · W2b: `cam` gỡ cùng camera BYD
+        // ⇒ lĩnh vực Giải trí KHÔNG còn nút nào (chỉ datum đọc `media_vol`).
+        assertTrue(byDomain[Domain.INFOTAINMENT].isNullOrEmpty(), "Giải trí không còn nút nào (W2b gỡ Camera 360)")
         assertEquals(ControlRegistry.ALL.size, panels.sumOf { it.second.size }, "tổng nút = registry (không sót)")
     }
 

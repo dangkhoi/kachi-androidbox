@@ -19,7 +19,7 @@
 
 ## 🔒 Doc niêm phong (byte-sealed) — ĐỌC TRƯỚC MỌI ĐỢT DỌN DOC
 
-Một số doc là **bằng chứng đã niêm phong**, không phải văn bản sống. Hash SHA-256 từng byte của chúng bị chốt cứng trong test (`offcar-planner .../LegacyBaselineIdentityTest.kt` + `ExpansionTransportFenceTest.kt`) và trong `docs/diagnostics/hud-sign-re/offcar-boundary-revisions.json`. **Thêm dù chỉ một dòng** → digest lệch → `:offcar-planner:test` đỏ, kéo theo cả `:vehicle-contracts`/`:core` ở lượt chạy sau.
+⚠ Android box B2 · W2a (2026-10-09): module niêm phong `:offcar-planner` + `:vehicle-contracts` đã gỡ ⇒ KHÔNG còn bài test nào chốt hash doc. Hai mục dưới là lịch sử của Kachi BYD; doc nhắc tới vẫn chỉ-đọc theo R0 (lineage), nhưng sửa không còn làm test đỏ.
 
 **Phạm vi — mức niêm phong khác nhau, [ĐO] từng cái:**
 - **Chốt hash từng byte** (sửa 1 ký tự = đỏ ngay): 12 file `docs/diagnostics/hud-sign-re/*` + `native/libbydcluster-diff.json` + `docs/specs/seal-nav-hud-speed-sign-offcar.html` = **13 file cha**, hash liệt kê trong `LegacyBaselineIdentityTest.PARENT_ARTIFACT_SHA256` và `ExpansionTransportFenceTest.PARENT_ARTIFACT_HASHES`; digest gộp nằm cả trong `ExpansionRegistry.LegacyBaselineIdentity.PARENT_BASELINE_SHA256` lẫn `offcar-boundary-revisions.json`.
@@ -585,7 +585,7 @@ khi index đang giữ bytes đúng — sau một `git reset` thì index == HEAD 
 - [`design/cluster-cast-evidence.html`](design/cluster-cast-evidence.html) — bằng chứng Stage 2 nhánh Cluster Cast
 - [`research/gps-dead-reckon-tunnel.html`](research/gps-dead-reckon-tunnel.html) — nghiên cứu mất GPS trong hầm (Dead-Reckon đã REMOVE)
 - [`reference/dashcast-projection-recipe.md`](reference/dashcast-projection-recipe.md) — recipe cast lịch sử (ARCHIVED; thay bằng `specs/cluster-cast-rebaseline.html`)
-- [`refactor-car-execution/index.html`](refactor-car-execution/index.html) — workspace refactor car-execution (spec/progress/fixtures/evidence — lịch sử). **Đại diện cho cả thư mục**, gồm: [`spec.html`](refactor-car-execution/spec.html) · [`progress.md`](refactor-car-execution/progress.md) · [`coupling.md`](refactor-car-execution/coupling.md) · [`layering-rules.md`](refactor-car-execution/layering-rules.md) · [`run-on-car.md`](refactor-car-execution/run-on-car.md) · [`scope-review.md`](refactor-car-execution/scope-review.md) · [`evidence/2026-07-27-night-build.md`](refactor-car-execution/evidence/2026-07-27-night-build.md) · [`evidence/2026-07-27-owner-correction.md`](refactor-car-execution/evidence/2026-07-27-owner-correction.md) — tất cả **Historical** (nỗ lực 2026-07-27, thời GPS Dead-Reckon; giữ tại chỗ làm lineage, R0 không authoritative)
+- [`layering-rules.md`](layering-rules.md) — luật xếp chỗ `:core` / `:car-integration` / `:app` + bảng cưỡng chế; `LayeringRulesTest` đọc tệp này. Current · 2026-10-09 (Android box B2 · W2a dời từ `refactor-car-execution/`; phần còn lại của thư mục đó — spec/progress/fixtures/evidence của bộ đo xe 07/2026 — đã gỡ, còn trong lịch sử git)
 - [`prototypes/kachi-workspace.html`](prototypes/kachi-workspace.html) — prototype workspace-launcher ĐÃ DUYỆT (nền của `specs/kachi-workspace-launcher.html`)
 - [`prototypes/kachi-launcher-prototypes.html`](prototypes/kachi-launcher-prototypes.html) — vài hướng bố cục & chức năng cho launcher (lineage, context-only)
 - `images/` — ảnh minh hoạ dùng trong guide/README (assets, không phải doc)

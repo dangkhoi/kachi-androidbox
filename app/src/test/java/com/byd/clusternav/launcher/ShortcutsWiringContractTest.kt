@@ -105,9 +105,9 @@ class ShortcutsWiringContractTest {
         assertTrue(fn.contains("if (!started) { workspace().flashSlot(action.slot)"), "ô chưa sẵn ⇒ chỉ ra chỗ app đang ở")
         val slots = code("KachiHomeSlots.kt")
         val glue = SourceRoots.body(slots, "fun detachToFull(index: Int, done: (Boolean) -> Unit)")
-        // Android box W0 (2026-10-09): K7 nhận `CameraPresence.SIGNATURE` (null = không camera ⇒ chỉ cổng màn nhà).
-        assertTrue(glue.contains("CameraPresence.SIGNATURE") && glue.contains("DefaultHome.shownComponents(app)"),
-            "rào K7: dấu camera của máy (không camera trên Android box) + cả hai dạng màn nhà Kachi")
+        // Android box B2 · W2b (2026-10-09): rào camera gỡ — K7 chỉ còn cổng "màn nhà Kachi đang hiện" (cả hai dạng in).
+        assertTrue(glue.contains("DefaultHome.shownComponents(app)"), "cổng K7: cả hai dạng màn nhà Kachi")
+        assertFalse(glue.contains("CameraPresence") || glue.contains("cameraSignature"), "Android box: không còn dấu camera")
         assertFalse(glue.contains("ClusterProfile"), "Android box: K7 không đọc hồ sơ đời xe BYD")
     }
 
@@ -345,7 +345,7 @@ class ShortcutsWiringContractTest {
             "seq(sh).bringBack(" to "SlotReturnRun.kt",
             "seq(sh).bringBackMarked(" to "SlotReturnRun.kt",
             "SlotReturn.guardedDetachCmd(" to "SlotReturn.kt",
-            "CameraGuard.onHomeUnlessCamera(" to "SlotReturn.kt",
+            "HomeGate.onHome(" to "SlotReturn.kt",
             "SlotReturn.markedBehind(" to "SlotReturn.kt",
             "SlotReturn.afterK8(" to "SlotReturn.kt",
             "BehindHomePlan.mainTasksOf(" to "BehindHomeSequence.kt",

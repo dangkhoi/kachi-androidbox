@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
  *    (`TripMusicPlan.viewCmd`) và chỉ đi qua chuỗi dàn dựng (dấu + K12 khi app thoát lên trước màn nhà — [ĐO `e2e-L4 · m5a` (bằng chứng phiên, ngoài repo)]);
  *  - đọc phiên TRƯỚC khi đụng gì, `null` ⇒ bỏ; L4 · D3(i): nguồn khác đang phát KHÔNG còn chặn khi chọn app cụ thể;
  *  - từ khoá đi qua LÕI giải bài của giọng nói (không đường thứ hai);
- *  - *Mở bình thường* chỉ bằng chuỗi có rào camera (K10).
+ *  - *Mở bình thường* chỉ bằng chuỗi có cổng màn nhà (K10).
  */
 class TripWiringContractTest {
 
@@ -114,7 +114,9 @@ class TripWiringContractTest {
         val normal = SourceRoots.body(start, "private fun normal(host: TripHub.Host, pkg: String): Pair<TripStepCode, String> {")
         // Android box W0 (2026-10-09): không màn camera ⇒ không còn nhánh `CAMERA_UNKNOWN` thoát sớm (0 lệnh).
         assertFalse(normal.contains("CAMERA_UNKNOWN"), "không camera ⇒ Mở bình thường KHÔNG bị chặn")
-        order(normal, "val sig = CameraPresence.SIGNATURE", "BehindHomePlan.safeComponent(", "TripPlan.normalCmd(sig, homeComps, comp)",
+        // Android box B2 · W2b: rào camera gỡ — K10 = cổng màn nhà (`TripPlan.normalCmd(homeComps, comp)`), không dấu camera.
+        assertFalse(normal.contains("CameraPresence") || normal.contains("Normal.CAMERA"), "Mở bình thường không còn nhánh camera")
+        order(normal, "BehindHomePlan.safeComponent(", "TripPlan.normalCmd(homeComps, comp)",
             "BehindHomePlan.LIST_CMD", "TripPlan.normalOutcome(")
         listOf(start, music).forEach { src ->
             assertFalse(src.contains("\"am start") || src.contains("am force-stop") || src.contains("move-task"), "không dựng lệnh cửa sổ tay ở bên thi hành chuyến")
@@ -191,7 +193,7 @@ class TripWiringContractTest {
     fun `A2 - cong o 7, cho o, doc thang deu qua dung cho, khong lenh doi cua so tay`() {
         val park = SourceRoots.body(start, "override fun park(pkg: String): BehindHomeSequence.Outcome = await(pkg) { done ->")
         // Review 2.89 Pass 1 · behaviour-2/5 — ĐỔI GHIM có lý do: `live()` thay `host`; ô 7 không dựng giữ chỗ ⇒ `needsAnchor = false`.
-        order(park, "live().behindChain(\"park X=\$pkg\"", "BehindMarksStore(kit.app)", "HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE)",
+        order(park, "live().behindChain(\"park X=\$pkg\"", "BehindMarksStore(kit.app)", "HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.GO_HOME",
             "marks.add(id, p)", ".park(pkg, kit.park)", "needsAnchor = false")
         order(SourceRoots.body(start, "override fun where(pkg: String): TripMusicPlace.Where? {"), "val h = live()", "h.view()",
             "TripMusicPlace.where(pkg, v.slots, v.stages)")

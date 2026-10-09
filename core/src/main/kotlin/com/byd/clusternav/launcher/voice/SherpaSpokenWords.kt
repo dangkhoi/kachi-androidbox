@@ -95,8 +95,6 @@ object SherpaSpokenWords {
         "chay loc ngay" to "chạy lọc ngay", "chay loc nhanh" to "chạy lọc nhanh", "loc lien" to "lọc liền",
         "loc bui lien" to "lọc bụi liền",
         "xa bang" to "xả băng",
-        "camera" to "camera",
-        "camera quanh xe" to "camera quanh xe",
         "noc xe" to "nóc xe",
         "cua noc" to "cửa nóc",
         "cua so noc" to "cửa sổ nóc",
@@ -184,7 +182,6 @@ object SherpaSpokenWords {
         "do lanh" to "độ lạnh",
         "muc gio" to "mức gió",
         "say kieng" to "sấy kiếng",
-        "cam ba sau muoi" to "cam ba sáu mươi",
         "den cot pha" to "đèn cốt pha",
         "het kieng" to "hết kiếng",
         "bon kinh" to "bốn kính",
@@ -278,7 +275,6 @@ object SherpaSpokenWords {
         "khu bui" to "khử bụi",
         "loc khi" to "lọc khí",
         "loc gap" to "lọc gấp",
-        "camera toan canh" to "camera toàn cảnh",
         "de sac" to "đế sạc",
         // ── thông tin đọc ────────────────────────────────────────────────────────────────────────────────────
         "dung luong pin" to "dung lượng pin",
@@ -358,7 +354,7 @@ object SherpaSpokenWords {
      *
      * Hai loại, cùng một lý do: mô hình VN không phát ra được token đó nên bias vô nghĩa (KDoc [SherpaBiasing]).
      *  • tên/chữ tiếng Anh (*"purifier"*, *"state of charge"*…) — [VoiceIntentParser] khớp chữ lo phần này;
-     *  • cụm mang **chữ số** (*"camera 360 do"*) — [SherpaHotwords] bỏ token số, phần còn lại không còn nghĩa.
+     *  • cụm mang **chữ số** (*"4 kinh"*) — [SherpaHotwords] bỏ token số, phần còn lại không còn nghĩa.
      */
     val NO_VI_FORM: Set<String> = setOf(
         "ac",
@@ -371,14 +367,13 @@ object SherpaSpokenWords {
         "boot",
         "cabin light",
         "cabin temperature",
-        "camera 360 do",
         "clean air now",
         "destination",
         // 1.91 — chữ tắt/chữ Anh của hai nút vừa được mở rộng cách nói: mô hình VN không phát ra token ấy.
         "drl",
         "sunroof",
         // 1.91 — dạng viết bằng CHỮ SỐ của nút gộp 4 kính. [SherpaHotwords] bỏ token số, nên bias chúng vô nghĩa
-        // (cùng luật `camera 360 do` ở trên); tầng CHỮ vẫn khớp, nên *"mở 4 cửa sổ"* gõ vào vẫn ra cả bốn.
+        // (cùng luật cụm chữ số ở trên); tầng CHỮ vẫn khớp, nên *"mở 4 cửa sổ"* gõ vào vẫn ra cả bốn.
         "4 cua so",
         "4 kinh",
         "every window",

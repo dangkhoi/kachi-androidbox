@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.launcher.camera.CameraSettingsIa
 import com.byd.clusternav.modules.clustercast.simplified.CastEnableDeferral
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -15,7 +14,11 @@ import org.junit.jupiter.api.Test
  */
 class ProfileScopeClusterTest {
 
-    private val cameraAll = CameraSettingsIa.ALL_KEYS
+    /**
+     * 56 khoá camera 2.93. Android box B2 · W2b: mã camera (`CameraSettingsIa`) gỡ, nhưng TÊN khoá còn được xếp phạm vi tới
+     * đợt dọn prefs W4 (tệp hồ sơ cũ mang chúng). Nguồn tên = hai bảng của [ProfileScopeCluster] — bài canh giữ số + phân loại.
+     */
+    private val cameraAll = ProfileScopeCluster.CAMERA_PROFILE_KEYS.keys + ProfileScopeCluster.CAMERA_DEVICE_KEYS.keys
 
     @Test
     fun `34 khoa camera = 8 theo ho so + 26 theo xe, khong khoa nao UNKNOWN`() {
@@ -23,17 +26,16 @@ class ProfileScopeClusterTest {
         // lưu hết thành profile") · +`camera_wide_kappa/_focal/_pan_x` (XE — quang học, cùng họ tám núm nắn).
         // 2.93 · CAMERA-PER-CAM-CONFIG: +22 khoá bộ chỉnh *Từng camera* — 18 theo HỒ SƠ (góc sau/trước · vị trí · cỡ · hình ·
         // kiểu ×4) + 4 theo XE (xoay/lật camera sau/trước — sự thật lắp đặt). 34 → 56 · 8 → 26 · 26 → 30.
-        assertEquals(56, cameraAll.size, "CameraSettingsIa đổi số khoá ⇒ xếp loại lại ở ProfileScopeCluster")
+        assertEquals(56, cameraAll.size, "bộ khoá camera đã gỡ phải còn ĐỦ 56 tên tới W4 — mất tên là hồ sơ cũ mất phân loại")
         assertEquals(26, ProfileScopeCluster.CAMERA_PROFILE_KEYS.size)
         assertEquals(30, ProfileScopeCluster.CAMERA_DEVICE_KEYS.size)
-        com.byd.clusternav.launcher.camera.CameraCamConfig.PROFILE_KEYS
+        assertEquals(20, RetiredCameraKeys.PROFILE_KEYS.size, "bốn camera × năm khoá hồ sơ")
+        assertEquals(8, RetiredCameraKeys.DEVICE_KEYS.size, "bốn camera × hai khoá xe")
+        assertEquals(RetiredCameraKeys.PROFILE_KEYS.toSet(), (RetiredCameraKeys.PROFILE_STRING + RetiredCameraKeys.PROFILE_INT).toSet())
+        RetiredCameraKeys.PROFILE_KEYS
             .forEach { assertTrue(it in ProfileScopeCluster.CAMERA_PROFILE_KEYS, "$it là sở thích trình bày ⇒ theo hồ sơ") }
-        com.byd.clusternav.launcher.camera.CameraCamConfig.DEVICE_KEYS
+        RetiredCameraKeys.DEVICE_KEYS
             .forEach { assertTrue(it in ProfileScopeCluster.CAMERA_DEVICE_KEYS, "$it là sự thật lắp đặt ⇒ theo xe") }
-        assertEquals(
-            cameraAll.toSet(), ProfileScopeCluster.CAMERA_PROFILE_KEYS.keys + ProfileScopeCluster.CAMERA_DEVICE_KEYS.keys,
-            "hợp hai bảng phải ĐÚNG bằng tập khoá camera — thêm khoá mà quên xếp loại là đỏ ở đây",
-        )
         assertTrue((ProfileScopeCluster.CAMERA_PROFILE_KEYS.keys intersect ProfileScopeCluster.CAMERA_DEVICE_KEYS.keys).isEmpty())
         assertEquals(emptySet<String>(), ProfileScope.unclassified(cameraAll))
         ProfileScopeCluster.CAMERA_PROFILE_KEYS.keys.forEach {

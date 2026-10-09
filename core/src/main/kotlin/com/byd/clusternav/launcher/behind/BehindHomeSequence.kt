@@ -23,13 +23,11 @@ class BehindHomeSequence(
     private val sh: (String) -> String,
     private val anchor: AnchorPort,
     private val selfPkg: String,
-    /** K12 — `AccessibilityRebind.GO_HOME_UNLESS_CAMERA` (byte 2.83), truyền vào để `:core/launcher` không phụ thuộc navaccess. */
+    /** K12 — `AccessibilityRebind.GO_HOME` (lệnh về màn nhà), truyền vào để `:core/launcher` không phụ thuộc navaccess. */
     private val goHomeCmd: String,
     private val sleep: (Long) -> Unit = { Thread.sleep(it) },
     /** Các dạng in của màn nhà Kachi (`DefaultHome.shownComponents`) — để [BehindHomePlan.homeOnTop] nhận cả màn nhà `standard`. */
     private val homeComps: Collection<String> = emptyList(),
-    /** Dấu hiệu màn camera của đời xe (`ClusterProfile.cameraSignature`, `null` = chưa biết) — chỉ cho K7 lùi của [startBehindHidden]. */
-    private val cameraSig: String? = null,
 ) {
 
     /**
@@ -348,11 +346,11 @@ class BehindHomeSequence(
         val left = settle(vd) ?: return Vacated(null, rescued = false)
         val stuck = left.firstOrNull { it.pkg == x && BehindHomePlan.safeComponent(it.comp) }
         if (stuck == null || homeComps.isEmpty()) return Vacated(left, rescued = false)
-        sh(SlotReturn.guardedDetachCmd(cameraSig, homeComps.toList(), stuck.comp))
+        sh(SlotReturn.guardedDetachCmd(homeComps.toList(), stuck.comp))
         // [P1] Đọc HỎNG sau K7 ≠ "X đã rời": không dấu, không K12 (K7 có thể đã bị rào chặn vì app khác ở trước — K12 lúc đó
         // kéo người dùng khỏi app họ đang dùng), không nhả.
         val after = settle(vd) ?: return Vacated(null, rescued = false)
-        if (after.any { it.pkg == x }) return Vacated(after, rescued = false)      // rào K7 chặn (camera / màn nhà không hiện)
+        if (after.any { it.pkg == x }) return Vacated(after, rescued = false)      // cổng K7 chặn (màn nhà không hiện)
         // Soát vòng 3 [P3] — `after` ĐỌC ĐƯỢC và thấy X đã rời màn ảo ⇒ K7 ĐÃ chạy ⇒ X đang ở TRƯỚC màn nhà. Bản đọc cho DẤU hỏng
         // KHÔNG được chặn K12 (bản vòng 2 trả sớm ⇒ X che màn nhà tới khi người lái tự bấm Home): đưa màn nhà lên quan trọng hơn
         // dấu (luật [markMain]). Đọc lại MỘT lần cho dấu; vẫn hỏng ⇒ 0 dấu, ghi rõ ở dòng kết quả. Nhả màn ảo theo `after`.

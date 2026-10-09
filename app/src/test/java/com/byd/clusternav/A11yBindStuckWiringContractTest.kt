@@ -116,20 +116,17 @@ class A11yBindStuckWiringContractTest {
         val fn = escalate
         // 2.83-B (owner 29/09): lời gọi thêm tham số đuôi về nhà — chuỗi canh giữ NGUYÊN ba đối số cũ (gói lấy từ
         // chính app, component của mình) và khoá thêm tham số mới, không nới.
-        // 2.93 CODE-FIX-AFTER-283 (6): thêm tham số dấu camera của ĐỜI XE — giữ nguyên ba đối số cũ + đuôi, khoá thêm tham số mới.
+        // Android box B2 · W2b (2026-10-09): tham số dấu camera (2.93 CODE-FIX-AFTER-283 (6)) gỡ cùng rào camera BYD — giữ
+        // nguyên ba đối số cũ + đuôi về nhà, không nới.
         assertTrue(
             fn.contains(
                 "AccessibilityRebind.forceStopRebindCommand(\n" +
                     "            cur, app.packageName, ACC_COMP, homeTail = AccessibilityRebind.homeTailFor(userAsked),\n" +
-                    "            cameraSig = com.byd.clusternav.system.CameraPresence.SIGNATURE,\n" +
                     "        )",
             ),
             "phải dựng lệnh qua hàm có chốt cứng gói (lệch gói ⇒ chuỗi rỗng), không tự ghép chuỗi tại chỗ",
         )
-        // Android box W0 (2026-10-09): dấu camera = `CameraPresence.SIGNATURE` (null = không camera ⇒ Home trần); không còn
-        // đọc `ClusterProfile` và KHÔNG còn lùi về dấu BYD `com.byd.avc/` khi null (rào một màn không tồn tại).
-        assertFalse(fn.contains("ClusterProfile.resolveCached(app).cameraSignature"), "Android box: không đọc dấu camera đời xe BYD")
-        assertFalse(fn.contains("?: AccessibilityRebind.CAMERA_SCREEN_SIGNATURE"), "null KHÔNG được lùi về dấu camera BYD")
+        assertFalse(fn.contains("cameraSig"), "Android box: không còn dấu camera ở đường chữa phím")
         assertFalse(
             Regex("\"am force-stop [^$]").containsMatchIn(fn),
             "KHÔNG được có literal `am force-stop <gói cố định>` trong đường này — gói phải lấy từ chính app",

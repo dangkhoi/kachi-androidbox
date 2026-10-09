@@ -55,8 +55,7 @@ class TypeScaleContractTest {
         // phạm vi GỐC của bài này; để ngoài thì một section mới có thể `setTextSize` số tay mà không ai thấy.
         "SettingsSectionsBars.kt", "SettingsSectionsNav.kt", "SettingsSectionsCast.kt",
         "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
-        // 2.76 · R1 — camera tách khỏi `SettingsSectionsCar` (hai tầng người lái / kỹ thuật). Cùng lý do trên.
-        "SettingsSectionsCamera.kt",
+        // (`SettingsSectionsCamera.kt` — camera tách khỏi `SettingsSectionsCar` 2.76 — xoá ở Android box B2 · W2b.)
         // V-CLUSTER (2026-09-30) — khối khung/DPI tách khỏi `SettingsSectionsCast` (trần 500 dòng). Cùng lý do trên.
         "SettingsSectionsCastGeometry.kt",
     )

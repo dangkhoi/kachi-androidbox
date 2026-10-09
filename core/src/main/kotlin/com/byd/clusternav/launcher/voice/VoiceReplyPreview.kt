@@ -23,20 +23,9 @@ import com.byd.clusternav.launcher.Strings
  */
 internal object VoiceReplyPreview {
 
-    /**
-     * 2.93 — câu xem-trước của một việc launcher. Camera theo yêu cầu: câu MỞ là BẬT/TẮT theo thứ đang hiện (nói lại lần
-     * hai thì tắt — `CameraDemand.spoken`), mà phiên `:wake` không biết camera nào đang hiện ⇒ chỉ nói TÊN camera, không
-     * hứa *"Mở"* cho một lượt có thể là tắt; câu TẮT nói *"Tắt …"*; *Tắt camera* — nhãn đã là câu lệnh. Việc khác: *"Mở …"*.
-     */
-    fun launcher(i: VoiceIntent.Launcher, lang: Lang): String {
-        val name = VoiceReply.labelOf(i.id, lang)
-        return when {
-            i.id == LauncherActions.CAM_OFF -> name
-            i.off -> Strings.t("Tắt ", "Turn off ", lang) + mid(name)
-            LauncherActions.switchable(i.id) -> name
-            else -> Strings.t("Mở ", "Open ", lang) + mid(name)
-        }
-    }
+    /** Câu xem-trước của một việc launcher: *"Mở …"* (Android box B2 · W2b gỡ các nhánh camera theo yêu cầu). */
+    fun launcher(i: VoiceIntent.Launcher, lang: Lang): String =
+        Strings.t("Mở ", "Open ", lang) + mid(VoiceReply.labelOf(i.id, lang))
 
     /**
      * 2.96 R12 — nhãn ĐỨNG SAU động từ: hạ chữ đầu (*"Đóng kính lái"*, không *"Đóng Kính lái"*). Chữ viết tắt giữ nguyên

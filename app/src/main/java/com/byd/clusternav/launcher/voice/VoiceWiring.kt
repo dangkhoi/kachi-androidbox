@@ -195,9 +195,6 @@ object VoiceWiring {
         onUi = { block ->
             if (Looper.myLooper() == Looper.getMainLooper()) block() else Handler(Looper.getMainLooper()).post(block)
         },
-        // 2.93 · CAMERA-ON-DEMAND — một đường thi hành cho cả tiến trình chính lẫn `:wake` (tự rẽ theo tiến trình); wave 2B:
-        // kèm KẾT QUẢ thật (`:wake` = broadcast có thứ tự + `resultCode`) để câu trả lời nói đúng việc đã xảy ra.
-        onCamera = { op, done -> com.byd.clusternav.launcher.camera.CameraDemandDispatch.fireForResult(ctx, op, done) },
         // [SOÁT P1-1 · 2026-09-16] Cổng H1 giữ giá trị cũ cho datum ngoài màn ⇒ câu hỏi bằng giọng phải ghim
         // datum đó vào nhu cầu rồi đọc NGAY một lượt. `AppContainer.refreshForRead` tự trả `null` khi ảnh chụp
         // vốn đã tươi, nên chỗ này không phải biết gì về lịch poll.

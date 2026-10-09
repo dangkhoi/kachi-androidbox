@@ -154,7 +154,7 @@ class VoiceIntentParserTest {
      * **chứa** nhãn cái kia. Nhận nhầm ở đây là bấm nhầm một nút ảnh hưởng tầm nhìn ban đêm.
      */
     @Test fun `khong nhan nham giua ba cap nhan long nhau`() = expect(
-        "Bật camera 360" to VoiceIntent.Control("cam", 1),
+        // Android box B2 · W2b: *"Bật camera 360"* gỡ cùng nút `cam` (Camera 360) — bài `VoiceCameraGoneTest`.
         "Bật đèn pha" to VoiceIntent.Control("headl", 1),
         // ⚠⚠ 1.90 — CẢ BA CẶP đã tan (lời giải cuối cho L-RE2): `camera_view` · `headlight_mode` ·
         // `brightness_gear` đều xoá (`hud_brightness` purge ở WP8). Hai câu còn lại vẫn phải trỏ ĐÚNG nút.

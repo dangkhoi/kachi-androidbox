@@ -99,6 +99,13 @@ internal object VoiceFeatureGone {
         // `readAlive` — nút `vol` đã gỡ (1.90) NHƯNG datum ĐỌC `media_vol` còn sống ⇒ chỉ chặn câu LỆNH (xem [Gone.readAlive]).
         Gone(listOf("am", "luong"), "âm lượng", "the volume", removed = true, readAlive = true),
         Gone(listOf("do", "sang", "man"), "độ sáng màn", "the screen brightness", removed = true),
+        // Android box B2 · W2b (2026-10-09) — camera BYD (xi-nhan · 360 · theo yêu cầu) gỡ hẳn: nút `cam` và năm việc
+        // `launcher_cam_*` không còn ⇒ *"bật camera"* / *"mở camera sau"* không còn hiểu được ⇒ dòng này nói đúng tên.
+        // NGOẠI LỆ có chủ ý của luật §1 (cụm ≥ 2 từ): dòng chỉ được hỏi khi câu ĐÃ không hiểu được, và [ĐO grep] không
+        // nhãn/từ-đồng-nghĩa tĩnh nào còn chữ `camera` ⇒ không cướp câu của ai. App đã cài tên *"Camera"* vẫn mở được
+        // (*"mở camera"* khớp nhãn app TRƯỚC khi tới đây — bài `VoiceCameraGoneTest`).
+        Gone(listOf("camera"), "camera", "the camera", removed = true),
+        Gone(listOf("may", "quay"), "camera", "the camera", removed = true),
     ).sortedByDescending { it.words.size }
 
     /**

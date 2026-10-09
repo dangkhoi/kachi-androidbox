@@ -16,7 +16,6 @@ import com.byd.clusternav.modules.navaccess.AccessibilityRebind
 import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
-import com.byd.clusternav.system.CameraPresence
 
 /**
  * ═══ BEHIND-HOME — bên THI HÀNH: luồng + mutex + phần Android của chuỗi ═════════════════════════════════════════════
@@ -141,9 +140,8 @@ class BehindHomeRunner(ctx: Context, private val shell: () -> ((String) -> Strin
         if (needsAnchor) disabledReason?.let { return BehindHomeSequence.Outcome(BehindHomeSequence.Result.DISABLED, "$what -> disabled ($it), 0 cmd") }
         if (sh == null) return BehindHomeSequence.Outcome(BehindHomeSequence.Result.NO_CHANNEL, "$what -> no channel, 0 cmd")
         val seq = BehindHomeSequence(
-            sh, AndroidAnchor(app), app.packageName, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE),
+            sh, AndroidAnchor(app), app.packageName, AccessibilityRebind.GO_HOME,
             homeComps = DefaultHome.shownComponents(app),
-            cameraSig = CameraPresence.SIGNATURE,   // Android box W0: không camera ⇒ K7 lùi chạy trần
         )
         val kit = Kit(seq, hidden, sh, app, park = hidden)
         val out = body(kit)

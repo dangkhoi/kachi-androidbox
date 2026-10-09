@@ -1,7 +1,6 @@
 package com.byd.clusternav.modules.navaccess
 
 import com.byd.clusternav.launcher.HomeActivityCmd
-import com.byd.clusternav.launcher.camera.CameraGuard
 
 /**
  * PURE (no-Android) decision + string logic for FORCE-REBINDING the accessibility service.
@@ -210,8 +209,6 @@ object AccessibilityRebind {
         component: String = ACC_COMP,
         pauseSec: Int = 4,
         homeTail: HomeTail = HomeTail.IF_ORPHANED,
-        /** 2.93: dấu camera ĐỜI XE; mặc định = dấu 2.83; hỏng ⇒ `""`. Android box W0: `null` = không camera ⇒ Home trần. */
-        cameraSig: String? = CAMERA_SCREEN_SIGNATURE,
     ): String {
         val owner = component.substringBefore('/').trim()
         if (pkg.isBlank() || owner.isBlank() || pkg.trim() != owner) return ""
@@ -223,7 +220,8 @@ object AccessibilityRebind {
         if (entries.any { !SAFE_ENTRY.matches(it) }) return ""
         val readd = (entries.filter { !sameComponent(it, component) } + component).joinToString(":")
         val pause = pauseSec.coerceIn(1, 30)
-        val (home, orphan) = try { goHomeUnlessCamera(cameraSig) to returnHomeIfOrphaned(cameraSig) } catch (e: IllegalArgumentException) { return "" }
+        val home = GO_HOME
+        val orphan = RETURN_HOME_IF_ORPHANED
         val tail = when (homeTail) {
             HomeTail.IF_ORPHANED -> orphan
             HomeTail.ALWAYS -> "$home ; sleep $ORPHAN_RECHECK_SEC ; $orphan"
@@ -240,16 +238,16 @@ object AccessibilityRebind {
      */
     enum class HomeTail {
         /**
-         * Lớp 1 (tắt máy) / lớp 2 (mở xe): ĐO rồi mới Home — [RETURN_HOME_IF_ORPHANED]. Hành vi 2.83 gốc, cộng rào
-         * camera ([GO_HOME_UNLESS_CAMERA]) trước lần Home duy nhất của nó.
+         * Lớp 1 (tắt máy) / lớp 2 (mở xe): ĐO rồi mới Home — [RETURN_HOME_IF_ORPHANED]. Hành vi 2.83 gốc (Android box
+         * B2 · W2b: rào camera BYD trước lần Home đã gỡ — [GO_HOME] trần).
          */
         IF_ORPHANED,
 
         /**
-         * Người dùng TỰ BẤM "Kiểm tra / Sửa ngay" (hoặc gạt BẬT phím-thoại): sau khi lắp lại, về màn nhà qua
-         * [GO_HOME_UNLESS_CAMERA] — Home với MỌI đỉnh display 0 (Maps toàn màn, cửa sổ mồ côi, chính màn nhà) TRỪ khi
-         * màn camera của xe đang hiện trên display 0 hoặc không đọc được — rồi sau [ORPHAN_RECHECK_SEC] thêm MỘT lượt
-         * [RETURN_HOME_IF_ORPHANED] (cũng qua rào camera) — tối đa hai lần Home.
+         * Người dùng TỰ BẤM "Kiểm tra / Sửa ngay" (hoặc gạt BẬT phím-thoại): sau khi lắp lại, về màn nhà bằng
+         * [GO_HOME] — Home với MỌI đỉnh display 0 (Maps toàn màn, cửa sổ mồ côi, chính màn nhà) — rồi sau
+         * [ORPHAN_RECHECK_SEC] thêm MỘT lượt [RETURN_HOME_IF_ORPHANED] — tối đa hai lần Home. (Android box B2 · W2b: rào
+         * camera BYD — bỏ Home khi màn camera `com.byd.avc/` hiện — đã gỡ: máy không có màn camera của hãng.)
          *
          * ## Vì sao còn một lượt đo SAU Home (senior review 2 — [P2])
          * [ĐO xe 3/3: 28/09 18:25:43.688 · 29/09 11:25:57.261 · 11:33:26.526] mỗi lần KachiHome được dựng TƯƠI khi kênh
@@ -282,75 +280,23 @@ object AccessibilityRebind {
          * Vẫn chờ [HOME_SETTLE_SEC]: Home phải đến SAU cú mở lại app ô do chính Kachi bắn khi vừa sống lại ([ĐO] tới
          * muộn nhất 3,0 s sau `am_kill`), không thì cửa sổ mồ côi lại nổi lên trên màn nhà vừa mở.
          *
-         * ## Không bao giờ Home đè camera lùi (vá trước OTA 2.83, 29/09)
-         * Bản đầu của nhánh này bấm Home MÙ ~7 s sau khi bấm nút. Người lái vào số lùi trong khoảng đó thì màn nhà có thể
-         * đè lên camera lùi — Home che camera hay không là [CHƯA ĐO], mà chưa đo thì không đánh cược (CLAUDE.md: "đúng
-         * > an toàn > nhanh"). Nên MỌI lần Home của đuôi (cả lần đầu lẫn lần trong [RETURN_HOME_IF_ORPHANED]) đi qua
-         * [GO_HOME_UNLESS_CAMERA]: màn camera ([CAMERA_SCREEN_SIGNATURE]) đang HIỆN ở bất kỳ đâu trên display 0, hoặc
-         * không đọc được ⇒ bỏ Home, dịch vụ Hỗ trợ vẫn đã lắp lại. Camera bật SAU lần Home thì nó tự lên trên màn nhà.
-         *
-         * Senior review rào camera [P2]: bản đầu của rào chỉ nhìn stack TRÊN CÙNG — hụt khi một stack khác nằm trên camera mà
-         * không che nó: cửa sổ PIP (`pinned`, luôn trên cùng — `ActivityDisplay.getTopInsertPosition` `:302-322`) hoặc
-         * chính cửa sổ mồ côi freeform mà lượt đo thứ hai sinh ra để dọn. Home khi đó chèn stack home NGAY DƯỚI PIP /
-         * TRÊN camera ⇒ camera bị che hẳn. [ĐO máy ảo 29/09, Settings đóng vai camera] PIP trên "camera" ⇒ rào cũ bấm
-         * Home ⇒ "camera" `visible=true` → `false`; cửa sổ freeform mồ côi trên "camera" ⇒ đuôi mồ côi cũ bấm Home ⇒
-         * y hệt. Vì vậy rào đọc cờ `visible` của MỌI stack display 0, không chỉ đỉnh — xem KDoc [GO_HOME_UNLESS_CAMERA].
+         * ## Rào camera lùi (Kachi BYD 2.83–2.98) — đã gỡ ở Android box B2 · W2b
+         * Bản BYD bọc mọi lần Home của đuôi trong một lượt đọc `am stack list` và bỏ Home khi màn camera lùi của xe
+         * (`com.byd.avc/`) đang hiện. Android box không có màn camera của hãng ⇒ Home trần; lịch sử ở git.
          */
         ALWAYS,
     }
 
     /**
-     * Dấu hiệu màn CAMERA của xe (lùi / 360) đang hiện trên display 0 — không lần Home nào của lượt chữa được đè lên nó.
+     * Lệnh về màn nhà của MỌI lần Home ở đuôi lượt chữa ([HomeTail.ALWAYS] và [RETURN_HOME_IF_ORPHANED]) — Home mặc định
+     * của hệ trên display 0 ([HomeActivityCmd.GO_HOME]).
      *
-     * [ĐO] `com.byd.avc/com.byd.avc.AutoVideoActivity` là activity camera của BYD trong hai dump SurfaceFlinger chụp từ
-     * xe (`docs/refactor-car-execution/fixtures/sf-FULL-HUMAN-CONFIRMED-cluster-shows-{app,gauges}.txt`); app hệ thống
-     * `/system/app/AutoVideo` = gói `com.byd.avc` [ĐO dịch ngược 28/09]. Khớp theo tiền tố gói (`com.byd.avc/`) để bắt
-     * mọi activity camera của app đó. Đây là RÀO AN TOÀN, không phải rẽ nhánh tính năng theo tên app (CLAUDE.md §7);
-     * đời xe nào dùng app camera khác thì dấu hiệu đó phải vào `ClusterProfile`.
+     * Android box B2 · W2b (2026-10-09): thay `GO_HOME_UNLESS_CAMERA` (rào camera lùi BYD — đọc `visible=true` của mọi
+     * stack display 0, bỏ Home khi `com.byd.avc/` hiện hoặc không đọc được). Máy không có màn camera của hãng ⇒ không còn
+     * gì để rào; W0 đã cho đường chạy thật dùng Home trần, đợt này gỡ cả mã rào. Bốn câu CLAUDE.md §4 như
+     * [HomeTail.ALWAYS]. Không có dấu `'` — cả chuỗi nằm trong `sh -c '…'`.
      */
-    const val CAMERA_SCREEN_SIGNATURE = "com.byd.avc/"
-
-    /**
-     * Home CHỈ KHI đọc được display 0 VÀ không stack nào của display 0 đang HIỆN màn camera ([CAMERA_SCREEN_SIGNATURE])
-     * — cửa duy nhất mà mọi lần Home của đuôi lượt chữa đi qua ([HomeTail.ALWAYS] và [RETURN_HOME_IF_ORPHANED]).
-     *
-     * ## Phép đo
-     * `grep -A2 "displayId=0 "` lấy MỌI stack của display 0, mỗi stack ba dòng: tiêu đề `Stack id=…`, `configuration=…`,
-     * rồi dòng task đầu `taskId=…: <gốc task> … visible=<cờ stack> topActivity=<activity chạy trên cùng của stack>`
-     * [ĐO fixture xe `am-stack-list-oncar-2026-09-29-*`]. Grep thứ hai chỉ giữ các dòng `visible=true`. Cờ `visible` +
-     * `topActivity` là của STACK (`RootActivityContainer.java:1276,1303-1304`), `StackInfo.toString` in lại chúng trên
-     * MỌI dòng task (`ActivityManager.java:2539,2546-2548`; Android 12 `RootTaskInfo` y hệt — `ActivityTaskManager.java:
-     * 553,560-562` tag `android-12.0.0_r34`) ⇒ dòng task đầu là đủ, kể cả khi camera không phải task gốc.
-     *
-     * ## Vì sao đọc cờ `visible` của MỌI stack, không chỉ đỉnh (senior review rào camera — [P2])
-     * Stack chỉ bị tính là khuất khi có stack TOÀN MÀN đục nằm trên (`ActivityStack.java:2014-2034`); PIP (`pinned`)
-     * và cửa sổ freeform nằm trên camera KHÔNG làm camera khuất. Còn Home thì chèn stack home ngay dưới các stack
-     * `alwaysOnTop` (`ActivityDisplay.java:302-322`) ⇒ nằm TRÊN camera và che hẳn nó. Chỉ nhìn đỉnh là bỏ lọt đúng
-     * hai ca đó — [ĐO máy ảo 29/09] cả hai (xem [HomeTail.ALWAYS]). Stack đỉnh có activity đang chạy thì luôn
-     * `visible=true` (`ActivityStack.java:2000-2006`) ⇒ ca "camera ở đỉnh" của bản đầu vẫn được giữ. Camera còn trong
-     * một stack đã khuất (`visible=false`, người lái đã ra khỏi số lùi) KHÔNG chặn Home — rào không được khoá chết nút
-     * "Sửa ngay".
-     *
-     * Đọc hỏng ⇒ KHÔNG Home: không biết màn đang hiện gì thì không đánh cược với camera lùi. "Đọc được" = có ít nhất MỘT
-     * dòng `visible=true` trên display 0 — stack đỉnh có activity chạy luôn in ra dòng đó (trên), nên không có dòng nào
-     * nghĩa là `am stack list` rỗng / không có trên ROM / không có stack display 0 / ROM in dòng task KHÁC định dạng. Ca
-     * cuối là lý do không dùng tiêu đề `Stack id=` làm dấu "đọc được" (senior review lượt 2 — [P3]): tiêu đề khớp mà dòng
-     * task đổi dạng thì cờ `visible` biến mất, rào sẽ thấy "không camera" và Home — hỏng theo chiều MỞ.
-     *
-     * Giới hạn còn lại [SUY]: camera bật TRONG khoảng giữa lúc đọc và lúc `am start` tới hệ (một lần khởi động `am`,
-     * cỡ dưới 1 s) thì vẫn có thể bị che — hẹp hơn nhiều so với ~7 s Home mù của bản đầu; đóng hẳn cần làm trong tiến
-     * trình hệ, không làm được bằng `sh`.
-     *
-     * Bốn câu CLAUDE.md §4 như [HomeTail.ALWAYS] (chỉ display 0 · Home mặc định của hệ · chỉ đưa stack `home` lên ·
-     * không state bền). Không có dấu `'` — cả chuỗi nằm trong `sh -c '…'`. Dựng bằng [CameraGuard] (bộ dựng rào DUY
-     * NHẤT, spec shortcuts-autostart C8); `ForceStopReturnHomeTest` khoá chuỗi trùng từng byte bản 2.83.
-     */
-    val GO_HOME_UNLESS_CAMERA: String = goHomeUnlessCamera(CAMERA_SCREEN_SIGNATURE)
-
-    /** [GO_HOME_UNLESS_CAMERA] với dấu camera [sig] (2.93); không an toàn ⇒ [CameraGuard] ném. Android box W0: `null` =
-     *  máy KHÔNG có màn camera (`CameraPresence.SIGNATURE`) ⇒ Home TRẦN, không đọc `am stack list` — ngược bản BYD, có chủ ý. */
-    fun goHomeUnlessCamera(sig: String?): String =
-        if (sig == null) HomeActivityCmd.GO_HOME else CameraGuard.unlessCamera(sig, null, HomeActivityCmd.GO_HOME)
+    const val GO_HOME: String = HomeActivityCmd.GO_HOME
 
     /** Người dùng tự bấm ⇒ [HomeTail.ALWAYS]; mọi đường TỰ ĐỘNG (lớp 1/2) ⇒ [HomeTail.IF_ORPHANED]. */
     fun homeTailFor(userAsked: Boolean): HomeTail = if (userAsked) HomeTail.ALWAYS else HomeTail.IF_ORPHANED
@@ -383,8 +329,8 @@ object AccessibilityRebind {
     internal const val ORPHAN_SIGNATURE = " mWindowingMode=freeform mDisplayWindowingMode=fullscreen mActivityType=standard "
 
     /**
-     * Đuôi của lệnh tách rời: nếu stack TRÊN CÙNG của display 0 mang [ORPHAN_SIGNATURE] thì về màn nhà QUA RÀO
-     * CAMERA [GO_HOME_UNLESS_CAMERA]; ngược lại không làm gì.
+     * Đuôi của lệnh tách rời: nếu stack TRÊN CÙNG của display 0 mang [ORPHAN_SIGNATURE] thì về màn nhà ([GO_HOME]);
+     * ngược lại không làm gì.
      *
      * ## Triệu chứng và cơ chế
      * [ĐO owner 29/09] Sau "Sửa ngay": YouTube của một Ô hiện thành cửa sổ nổi trên màn chính, launcher không lên
@@ -410,14 +356,10 @@ object AccessibilityRebind {
      * đang `visible=false`.
      *
      * ## Vì sao phải ĐO trước, không bắn Home mù (đường TỰ ĐỘNG; bấm tay xem [HomeTail.ALWAYS])
-     * Đường tự chữa lúc mở xe (lớp 2) cũng có thể dùng lệnh này, đúng lúc tài xế hay lùi xe ra khỏi chỗ đỗ. Camera
-     * lùi của BYD là một ACTIVITY ([ĐO] lớp `com.byd.avc/com.byd.avc.AutoVideoActivity` trong dump SurfaceFlinger của
-     * repo); Home mù có che nó hay không thì [CHƯA ĐO] — chưa đo thì không đánh cược. Khi app khác đang ở đỉnh
-     * display 0 (toàn màn, camera, app người dùng vừa mở) hoặc home đã ở đỉnh, dấu vân tay không khớp ⇒ không làm gì.
-     * Dấu vân tay khớp cũng CHƯA đủ: cửa sổ mồ côi freeform có thể nằm TRÊN camera đang hiện (camera bật trong vài
-     * giây trước khi Kachi mở lại app ô) mà không che nó — Home lúc đó mới che camera [ĐO máy ảo 29/09, KDoc
-     * [HomeTail.ALWAYS]]. Nên lần Home ở đây đi qua [GO_HOME_UNLESS_CAMERA] (đọc lại `am stack list` một lần nữa,
-     * chỉ khi đã thấy mồ côi).
+     * Đường TỰ ĐỘNG (lớp 1/2) chạy khi không ai bấm gì — người dùng có thể vừa tự mở một app toàn màn. Khi app khác đang
+     * ở đỉnh display 0 (toàn màn, app người dùng vừa mở) hoặc home đã ở đỉnh, dấu vân tay không khớp ⇒ không làm gì;
+     * chỉ cửa sổ mồ côi freeform trên đỉnh mới được che bằng Home. (Bản BYD còn đọc lại lần hai qua rào camera lùi —
+     * Android box B2 · W2b đã gỡ.)
      *
      * ## Bốn câu CLAUDE.md §4
      *  1. **Display**: chỉ display 0 — phép đo lấy stack ĐẦU TIÊN có `displayId=0 ` (trong một display,
@@ -436,12 +378,9 @@ object AccessibilityRebind {
      * Android 10 29/09] trên đúng bộ công cụ của ROM: mksh R57 + BSD grep 2.5.1 + toybox `head`, với `am` giả in
      * fixture xe — cùng kết quả. Xe thật: chốt bằng một lượt "Sửa ngay" có app trong Ô, đọc `am stack list` sau ~8 s.
      */
-    val RETURN_HOME_IF_ORPHANED: String = returnHomeIfOrphaned(CAMERA_SCREEN_SIGNATURE)
-
-    /** [RETURN_HOME_IF_ORPHANED] với dấu camera [sig] của một đời xe (2.93) — cùng phép đo, cùng rào. */
-    fun returnHomeIfOrphaned(sig: String?): String =
+    val RETURN_HOME_IF_ORPHANED: String =
         "t=\$(am stack list | grep -A1 \"displayId=0 \" | head -n 2) ; " +
-            "case \"\$t\" in *\"$ORPHAN_SIGNATURE\"*) ${goHomeUnlessCamera(sig)} ;; esac"
+            "case \"\$t\" in *\"$ORPHAN_SIGNATURE\"*) $GO_HOME ;; esac"
 
     /**
      * Cắt đúng khối `{...}` cân bằng ngoặc đi ngay sau tiêu đề [header] trong bản dump. Trả `null` khi không

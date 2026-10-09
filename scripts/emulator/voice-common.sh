@@ -32,7 +32,7 @@ shq() {
 # [SOÁT 2026-09-15 · P0] Bộ ca giọng nói có những ca **thi hành thật, không hỏi lại** (`voice-cases.tsv` cột auto: t109
 # *"mở cốp"*, t111 gói *"mở cốp + đèn đọc"*, mở app / dẫn đường / đổi hồ sơ), harness dạy tên thì gỡ/cài lại app. Trên máy
 # ảo chúng vô hại (không HAL); trên xe là mở khoá cửa một chiếc xe đang đỗ không qua xác nhận — đúng thứ CLAUDE.md §4 cấm.
-# Cùng khuôn `require_emulator` của `scripts/emulator/e2e-smoke.sh`.
+# (Khuôn `require_emulator` từng có ở `e2e-smoke.sh` — script ấy gỡ ở Android box B2 · W2a; đây là bản duy nhất.)
 # $1 (tuỳ chọn) — lý do riêng của script gọi, in kèm lời từ chối (vd bộ ca nào nguy hiểm).
 require_emulator() {
   case "$SERIAL" in

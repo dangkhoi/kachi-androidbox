@@ -19,8 +19,6 @@ import com.byd.clusternav.carexec.LocalShellResult
 import com.byd.clusternav.carexec.LocalShellRetry
 import com.byd.clusternav.core.FloatAppList
 import com.byd.clusternav.launcher.KeyCtlTargets
-import com.byd.clusternav.launcher.camera.CameraDemand
-import com.byd.clusternav.launcher.camera.CameraDemandDispatch
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -79,13 +77,16 @@ object AssistantLauncher {
     }.getOrDefault(false)
 
     /** @param spec package name của app, hoặc [TARGET_ASSIST]/[TARGET_RECOGNIZER]/[TARGET_GEMINI_KEY]. */
+    /** Tiền tố đích camera 2.93 (`cam:`) — chỉ để NHẬN RA dòng gán cũ và bỏ qua (Android box B2 · W2b). */
+    private const val LEGACY_CAMERA_PREFIX = "cam:"
+
     fun launch(ctx: Context, spec: String): Boolean {
         // FIX286 · R-KC — đích là một NÚT XE (`ctl:<nút>:<việc>`): không mở app nào; giao đường thi hành của nút
         // (KeyCtlDispatch — chống dồn, làn nền, cùng cổng an toàn với giọng nói). Tên gói không chứa `:` ⇒ không trùng.
         if (KeyCtlTargets.isCtl(spec)) return KeyCtlDispatch.fire(ctx, spec)
-        // 2.93 · CAMERA-ON-DEMAND — đích là một CAMERA (`cam:<camera>` bật/tắt · `cam:off`): không mở app nào; giao đường
-        // thi hành chung của camera theo yêu cầu (tiến trình chính — dịch vụ Hỗ trợ ở đây). Tên gói không chứa `:`.
-        if (CameraDemand.isKey(spec)) return CameraDemandDispatch.fireKey(ctx, spec)
+        // Android box B2 · W2b — đích camera cũ (`cam:<camera>` · `cam:off`, 2.93) của dòng gán đã lưu: camera BYD gỡ ⇒ không
+        // làm gì (không đoán thành tên gói — tên gói không chứa `:`). Người dùng xoá dòng ở Cài đặt › Phím vô-lăng.
+        if (spec.startsWith(LEGACY_CAMERA_PREFIX)) return false
         // V1 pha NGHE: đích của CHÍNH Kachi — không mở app nào, mở một phiên nghe. Xem [launchKachiVoice].
         if (spec == TARGET_KACHI_VOICE) return launchKachiVoice(ctx)
         // Gemini/Google chỉ có nghĩa dạng ASSISTANT (voice). Mở app home = vô dụng (bug 1.19). → route keyevent 231.

@@ -78,6 +78,17 @@ class MainProbeSurfaceAbsenceTest {
         }
     }
 
+    /**
+     * Android box B2 · W2a: bề mặt probe HAL/T10 sống ở source set `vehicleTest` (receiver `HAL_PROBE` exported, activity
+     * `HudSignProbe` exported, bản manifest riêng) — đã xoá. Build type `vehicleTest` giữ (debuggable cho `run-as` QA máy ảo)
+     * nhưng KHÔNG được có mã/manifest riêng: một receiver exported mọc lại ở đó là cửa ghi HAL từ uid shell.
+     */
+    @Test
+    fun `vehicleTest build type has no source set of its own`() {
+        assertFalse(Files.exists(app("src/vehicleTest")), "src/vehicleTest (probe HAL/T10) đã gỡ ở B2 · W2a — không dựng lại")
+        assertFalse(Files.exists(app("src/testVehicleTest")), "src/testVehicleTest đã gỡ cùng probe")
+    }
+
     private fun app(relative: String): Path {
         val current = Path.of(System.getProperty("user.dir"))
         return if (Files.exists(current.resolve("src"))) current.resolve(relative) else current.resolve("app").resolve(relative)

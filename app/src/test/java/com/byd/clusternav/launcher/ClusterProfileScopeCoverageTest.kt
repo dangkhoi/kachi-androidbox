@@ -1,8 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.launcher.camera.CameraCamConfig
-import com.byd.clusternav.launcher.camera.CameraSettingsIa
-import com.byd.clusternav.launcher.camera.CameraWhich
 import com.byd.clusternav.modules.clustercast.simplified.CastEnableDeferral
 import com.byd.clusternav.testsupport.SourceRoots
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -60,20 +57,20 @@ class ClusterProfileScopeCoverageTest {
         assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf("scale-dpi:a.b"))
     }
 
+    /**
+     * Android box B2 · W2b (2026-10-09): mã camera BYD (đọc/ghi `camera_*`) gỡ khỏi `:app`. TÊN khoá vẫn được xếp phạm vi ở
+     * `:core` ([ProfileScopeCluster], [RetiredCameraKeys]) để tệp hồ sơ cũ không thành "khoá không phân loại" tới W4 — nhưng
+     * KHÔNG một dòng mã `:app` nào còn đọc/ghi chúng (mọc lại một chỗ đọc là mọc lại tính năng camera mà không ai nối).
+     */
     @Test
-    fun `moi khoa camera trong ma deu da xep loai va dung danh sach IA`() {
-        val src = code("PrefsAutomation.kt") + code("PrefsCameraDewarp.kt")
-        val keys = Regex(""""(camera_[a-z_]+)"""").findAll(src).map { it.groupValues[1] }.toSet()
-        assertTrue(keys.size >= 29, "bộ quét camera thấy ${keys.size}")
-        assertEquals(emptySet<String>(), ProfileScope.unclassified(keys))
-        // 2.93: sáu khoá góc/xoay/lật của hai camera gương rời USER_KEYS sang PER_CAMERA_KEYS (bộ chỉnh *Từng camera*) —
-        // vẫn là khoá IA có hàng ⇒ so với hợp ĐỦ ba danh sách (`CameraSettingsIa.ALL_KEYS`).
-        assertEquals(emptySet<String>(), keys - CameraSettingsIa.ALL_KEYS.toSet() - "camera_rotation",
-            "khoá camera ngoài danh sách IA (trừ khoá di trú đời 2.67)")
-        // Khoá SINH (tên dựng ở `:core` CameraCamConfig — không literal nào ở `:app`, bộ quét trên không thấy): cũng phải
-        // xếp loại hết và nằm trong danh sách IA.
-        assertEquals(emptySet<String>(), ProfileScope.unclassified(CameraCamConfig.ALL_KEYS.toSet()), "khoá Từng camera CHƯA xếp loại")
-        assertEquals(emptySet<String>(), CameraCamConfig.ALL_KEYS.toSet() - CameraSettingsIa.ALL_KEYS.toSet())
+    fun `khong con ma app nao doc ghi khoa camera, ten khoa van xep loai`() {
+        val root = SourceRoots.moduleSourceRoots().first { it.endsWith(Paths.get("app", "src", "main", "java")) }
+        val hits = Files.walk(root).use { s -> s.filter { it.toString().endsWith(".kt") }.toList() }.filter { p ->
+            Regex(""""camera_[a-z_]+"""").containsMatchIn(SourceRoots.codeOf("src/main/java/" + root.relativize(p).joinToString("/")))
+        }.map { it.fileName.toString() }
+        assertEquals(emptyList<String>(), hits, "mã :app còn literal khoá camera")
+        val names = ProfileScopeCluster.CAMERA_PROFILE_KEYS.keys + ProfileScopeCluster.CAMERA_DEVICE_KEYS.keys
+        assertEquals(emptySet<String>(), ProfileScope.unclassified(names), "tên khoá camera cũ phải còn xếp loại tới W4")
     }
 
     /** Khoá theo hồ sơ KHÔNG có mục Cài đặt phải có mặt NGUYÊN VĂN ở tệp khai nó (chặt ngang `ClusterNavKeysContractTest`). */
@@ -81,15 +78,6 @@ class ClusterProfileScopeCoverageTest {
     fun `khoa them theo ho so co nguyen van o tep khai`() {
         assertTrue(catalog.contains("\"${ProfileScopeCluster.CAST_CATALOG_FILE}\""), "tên tệp ảnh chụp phải khớp tệp thật")
         listOf("bubbleX", "bubbleY").forEach { assertTrue(catalog.contains("\"$it\""), it) }
-        val cam = code("PrefsAutomation.kt") + code("PrefsCameraDewarp.kt")
-        // 2.93: khoá *Từng camera* MỚI không có literal — tên SINH ở `:core` [CameraCamConfig] (một chỗ khai, có test), và
-        // tệp đọc/ghi của chúng phải đi qua ĐÚNG các hàm tên khoá ấy (không tự ghép chuỗi lần hai).
-        val generated = CameraCamConfig.NEW_KEYS.toSet()
-        ProfileScopeCluster.CAMERA_PROFILE_KEYS.keys.filterNot { it in generated }.forEach { assertTrue(cam.contains("\"$it\""), it) }
-        val perCam = code("PrefsCameraPerCam.kt")
-        listOf("cornerKey(w)", "placeKey(w)", "sizeKey(w)", "shapeKey(w)", "projectionKey(w)", "rotationKey(w)", "mirrorKey(w)")
-            .forEach { assertTrue(perCam.contains("CameraCamConfig.$it"), "PrefsCameraPerCam phải dùng tên khoá `:core` $it") }
-        assertFalse(Regex(""""camera_[a-z_]+"""").containsMatchIn(perCam), "không literal khoá camera nào ở PrefsCameraPerCam")
         assertTrue(code("PrefsAutomation.kt").contains("getSharedPreferences(\"${ProfileScopeCluster.CLUSTERNAV_FILE}\""))
     }
 
@@ -253,46 +241,19 @@ class ClusterProfileScopeCoverageTest {
      * mang kiểu + tệp + đoạn mã ghi thật làm bằng chứng. Bài dưới đòi bảng này khớp ĐÚNG tập khoá quét hụt (không mục).
      */
     private val indirect: Map<String, Pair<PrefType, List<Pair<String, String>>>> = mapOf(
-        "camera_pos_left" to (PrefType.STRING to listOf("PrefsAutomation.kt" to "putString(cameraPosKey(left), v)")),
-        "camera_pos_right" to (PrefType.STRING to listOf("PrefsAutomation.kt" to "putString(cameraPosKey(left), v)")),
-        "camera_dewarp_amount" to (
-            PrefType.INT to listOf(
-                "PrefsCameraDewarp.kt" to "put(ctx, K_DEWARP_AMOUNT, v)",
-                "PrefsCameraDewarp.kt" to "private fun Prefs.put(ctx: Context, key: String, v: Int) = autoPrefs(ctx).edit().putInt(key, v)",
-            )
-        ),
-        // 2.92 · CAMERA-FULL-VIEW — thu phóng ghi qua cùng hàm `put` riêng của PrefsCameraDewarp (Int).
-        "camera_zoom" to (
-            PrefType.INT to listOf(
-                "PrefsCameraDewarp.kt" to "put(ctx, K_ZOOM, v)",
-                "PrefsCameraDewarp.kt" to "private fun Prefs.put(ctx: Context, key: String, v: Int) = autoPrefs(ctx).edit().putInt(key, v)",
-            )
-        ),
         "voicekey_bindings" to (
             PrefType.STRING to listOf(
                 "Prefs.kt" to "VoiceKeyBindingStore.write(p, K_VK_BINDINGS",
                 "modules/voicekey/VoiceKeyBindingStore.kt" to "sp.edit().putString(key, encode(bindings))",
             )
         ),
-    ) + perCamIndirect()
+    )
 
     /**
-     * 2.93 · CAMERA-PER-CAM-CONFIG — khoá theo hồ sơ của bộ chỉnh *Từng camera* ghi bằng TÊN SINH (`CameraCamConfig.xKey(w)`)
-     * ⇒ bộ quét literal không nối được; bằng chứng là đúng lời ghi trong `PrefsCameraPerCam.kt` (một lời cho mỗi loại khoá,
-     * dùng chung cho bốn camera). Hai khoá góc của camera gương (`camera_pos_left/right`) đã có mục riêng ở trên.
+     * Android box B2 · W2b — khoá camera đã gỡ mã ghi (tên còn khai kiểu ở [ProfileScopeCluster.DECLARED_TYPES] để tệp hồ sơ
+     * cũ còn đọc đúng kiểu tới W4). Bộ quét không thấy lời ghi nào ⇒ đúng tập này nằm ngoài `seen`, và chỉ nó.
      */
-    private fun perCamIndirect(): Map<String, Pair<PrefType, List<Pair<String, String>>>> {
-        val f = "PrefsCameraPerCam.kt"
-        return CameraWhich.ALL.flatMap { w ->
-            listOfNotNull(
-                if (w.side) null else CameraCamConfig.cornerKey(w) to (PrefType.STRING to listOf(f to "putString(CameraCamConfig.cornerKey(w), v)")),
-                CameraCamConfig.placeKey(w) to (PrefType.STRING to listOf(f to "e.putString(CameraCamConfig.placeKey(w), p.encode())")),
-                CameraCamConfig.sizeKey(w) to (PrefType.INT to listOf(f to "putInt(CameraCamConfig.sizeKey(w), v)")),
-                CameraCamConfig.shapeKey(w) to (PrefType.STRING to listOf(f to "putString(CameraCamConfig.shapeKey(w), v)")),
-                CameraCamConfig.projectionKey(w) to (PrefType.STRING to listOf(f to "putString(CameraCamConfig.projectionKey(w), v)")),
-            )
-        }.toMap()
-    }
+    private val retiredNoWriter: Set<String> by lazy { ProfileScopeCluster.DECLARED_TYPES.keys.filter { it.startsWith("camera_") }.toSet() }
 
     /**
      * Khai SAI kiểu thì lượt đổi hồ sơ bỏ đúng giá trị HỢP LỆ của người lái ở mọi lượt — mất cấu hình im lặng, đắt
@@ -330,7 +291,9 @@ class ClusterProfileScopeCoverageTest {
             emptyMap<String, Set<PrefType>>(), seen.filter { (k, types) -> types != setOf(declared.getValue(k)) },
             "kiểu khai ≠ kiểu mã ghi ⇒ đổi hồ sơ bỏ giá trị hợp lệ",
         )
-        assertEquals(indirect.keys, declared.keys - seen.keys, "khoá quét hụt phải nằm ở `indirect` (và chỉ chúng)")
+        assertTrue(retiredNoWriter.size >= 20, "bộ khoá camera đã gỡ phải còn khai kiểu (đang thấy ${retiredNoWriter.size})")
+        assertTrue(retiredNoWriter.none { it in seen }, "khoá camera đã gỡ mà vẫn có lời ghi: ${retiredNoWriter.filter { it in seen }}")
+        assertEquals(indirect.keys + retiredNoWriter, declared.keys - seen.keys, "khoá quét hụt phải nằm ở `indirect`/đã gỡ (và chỉ chúng)")
         indirect.forEach { (key, ev) ->
             val (type, evidence) = ev
             assertEquals(type, declared.getValue(key), key)

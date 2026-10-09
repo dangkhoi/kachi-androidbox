@@ -2,62 +2,6 @@ package com.byd.clusternav.launcher.testbridge
 
 import android.content.Context
 import com.byd.clusternav.Prefs
-import com.byd.clusternav.setCameraSignalEnabled
-import com.byd.clusternav.cameraSignalEnabled
-import com.byd.clusternav.cameraOnCluster
-import com.byd.clusternav.cameraCamId
-import com.byd.clusternav.cameraPos
-import com.byd.clusternav.setCameraOnCluster
-import com.byd.clusternav.setCameraCamId
-import com.byd.clusternav.setCameraPos
-import com.byd.clusternav.setCameraRotation
-import com.byd.clusternav.cameraRotation
-import com.byd.clusternav.setCameraRender
-import com.byd.clusternav.cameraRender
-import com.byd.clusternav.setCameraSpan
-import com.byd.clusternav.cameraSpan
-import com.byd.clusternav.setCameraShape
-import com.byd.clusternav.cameraShape
-import com.byd.clusternav.setCameraStrip
-import com.byd.clusternav.cameraView
-import com.byd.clusternav.setCameraView
-import com.byd.clusternav.cameraPano
-import com.byd.clusternav.setCameraPano
-import com.byd.clusternav.cameraStrip
-import com.byd.clusternav.setCameraCirclePct
-import com.byd.clusternav.cameraCirclePct
-import com.byd.clusternav.cameraDewarpAmount
-import com.byd.clusternav.cameraDewarpCx
-import com.byd.clusternav.cameraDewarpPanX
-import com.byd.clusternav.cameraDewarpPanY
-import com.byd.clusternav.cameraDewarpCy
-import com.byd.clusternav.cameraDewarpFocal
-import com.byd.clusternav.cameraDewarpK
-import com.byd.clusternav.cameraDewarpScale
-import com.byd.clusternav.cameraGlTexMatrix
-import com.byd.clusternav.setCameraDewarpAmount
-import com.byd.clusternav.setCameraDewarpCx
-import com.byd.clusternav.setCameraDewarpPanX
-import com.byd.clusternav.setCameraDewarpPanY
-import com.byd.clusternav.setCameraDewarpCy
-import com.byd.clusternav.setCameraDewarpFocal
-import com.byd.clusternav.setCameraDewarpK
-import com.byd.clusternav.setCameraDewarpScale
-import com.byd.clusternav.setCameraGlTexMatrix
-import com.byd.clusternav.cameraProjection
-import com.byd.clusternav.cameraZoom
-import com.byd.clusternav.cameraWideKappa
-import com.byd.clusternav.setCameraWideKappa
-import com.byd.clusternav.cameraWideFocal
-import com.byd.clusternav.setCameraWideFocal
-import com.byd.clusternav.cameraWidePanX
-import com.byd.clusternav.setCameraWidePanX
-import com.byd.clusternav.launcher.camera.CameraViewMode
-import com.byd.clusternav.launcher.camera.CameraCamConfig
-import com.byd.clusternav.launcher.camera.CameraReapply
-import com.byd.clusternav.launcher.camera.CameraDewarpPrefs
-import com.byd.clusternav.launcher.camera.CameraPanoCrop
-import com.byd.clusternav.launcher.camera.CameraSignalPolicy
 import com.byd.clusternav.launcher.WorkspacePrefs
 import com.byd.clusternav.launcher.voice.SherpaModelCatalog
 import com.byd.clusternav.launcher.voice.VoiceEndpointer
@@ -92,8 +36,6 @@ import com.byd.clusternav.voiceMicSource
 import com.byd.clusternav.voiceVadMinSilenceMs
 import com.byd.clusternav.voiceVadMinSpeechMs
 import com.byd.clusternav.voiceVadThreshold
-import com.byd.clusternav.cameraMirror
-import com.byd.clusternav.setCameraMirror
 
 /**
  * ═══ T-BRIDGE · LỆNH `prefs_set` — GHI một khoá trong danh sách trắng ════════════════════════════════════════
@@ -198,109 +140,21 @@ internal object TestBridgePrefsSet {
             // production dọn hết bề mặt dev/log), nên ĐÂY là đường chỉnh duy nhất còn lại. Ghi thẳng prefs như ba
             // khoá theo-xe kia: `VoiceUtteranceLog.enabled` đọc lại ở mỗi lượt ghi, không cache.
             "voice_keep_log" -> bool(raw)?.let { Prefs.setVoiceKeepLog(app, it); it.toString() }
-            // Camera theo xi-nhan (findings 2026-09-23): bật/tắt + chọn cam + chọn GÓC hiện từng bên.
-            "camera_signal_enabled" -> bool(raw)?.let { Prefs.setCameraSignalEnabled(app, it); it.toString() }
-            "camera_on_cluster" -> bool(raw)?.let { Prefs.setCameraOnCluster(app, it); it.toString() }
-            // Góc nhìn TỪNG BÊN: CHỈ nhận tên có thật trong `CamView` — cùng lẽ với hai khoá góc hiện, để một
-            // ca E2E gõ tên sai không PASS trong khi máy đang mở góc khác hẳn thứ nó tưởng.
-            "camera_pano_left" -> raw.trim().uppercase().takeIf { CameraPanoCrop.isPanoMode(it) }
-                ?.let { Prefs.setCameraPano(app, left = true, v = it); it }
-            "camera_pano_right" -> raw.trim().uppercase().takeIf { CameraPanoCrop.isPanoMode(it) }
-                ?.let { Prefs.setCameraPano(app, left = false, v = it); it }
-            "camera_view_left" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isView(it) }
-                ?.let { Prefs.setCameraView(app, left = true, v = it); it }
-            "camera_view_right" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isView(it) }
-                ?.let { Prefs.setCameraView(app, left = false, v = it); it }
-            "camera_cam_left" -> raw.trim().toIntOrNull()?.let { Prefs.setCameraCamId(app, left = true, it); it.toString() }
-            "camera_cam_right" -> raw.trim().toIntOrNull()?.let { Prefs.setCameraCamId(app, left = false, it); it.toString() }
-            // Góc hiện overlay: CHỈ nhận "TL"/"TR" ([CameraSignalPolicy.isCorner]). Từ chối chuỗi lạ thay vì ghi
-            // rồi để lượt đọc âm thầm rơi về mặc định — nếu không, một ca E2E gõ "TOPLEFT" sẽ PASS trong khi
-            // overlay nằm ở góc khác hẳn thứ nó tưởng mình đang đo (cùng lẽ `voice_confirm_ids`).
-            "camera_pos_left" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isCorner(it) }
-                ?.let { Prefs.setCameraPos(app, left = true, v = it); it }
-            "camera_pos_right" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isCorner(it) }
-                ?.let { Prefs.setCameraPos(app, left = false, v = it); it }
-            // Xoay video TỪNG BÊN (R7 · 2.71): CHỈ nhận mã trong `CameraSignalPolicy.ROTATIONS` — cùng lẽ hai khoá góc.
-            "camera_rot_left" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isRotation(it) }
-                ?.let { Prefs.setCameraRotation(app, left = true, v = it); it }
-            "camera_rot_right" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isRotation(it) }
-                ?.let { Prefs.setCameraRotation(app, left = false, v = it); it }
-            // Lật gương TỪNG BÊN (2.76 L7): bool, cùng khuôn `camera_on_cluster`.
-            "camera_mirror_left" -> bool(raw)?.let { Prefs.setCameraMirror(app, left = true, v = it); it.toString() }
-            "camera_mirror_right" -> bool(raw)?.let { Prefs.setCameraMirror(app, left = false, v = it); it.toString() }
-            // Đường KẾT XUẤT (CLOSE-14): CHỈ nhận mã trong `CameraSignalPolicy.RENDERS` — cùng lẽ hai khoá xoay.
-            "camera_render" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isRender(it) }
-                ?.let { Prefs.setCameraRender(app, v = it); it }
-            // R8-A (2.74): VÙNG GƯƠNG + HÌNH KHUNG + KÊNH HAL. Dải hợp lệ lấy từ `:core` ([CameraSignalPolicy] /
-            // [CameraPanoCrop]), KHÔNG viết số ở đây — bản sao thứ hai của một con số sẽ lệch đúng vào lần ai đó nới
-            // dải. Ngoài dải ⇒ `bad_prefs_value:`, không kẹp im lặng: một lượt dò gõ `camera_strip_left 7` rồi được
-            // kẹp về 1 sẽ báo "đã ghi" trong khi owner đang nhìn đúng dải cũ và kết luận sai về hướng của dải.
-            "camera_span" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isSpan(it) }
-                ?.let { Prefs.setCameraSpan(app, v = it); it }
-            "camera_shape" -> raw.trim().uppercase().takeIf { CameraSignalPolicy.isShape(it) }
-                ?.let { Prefs.setCameraShape(app, v = it); it }
-            "camera_strip_left" -> int(raw)?.takeIf { CameraPanoCrop.isStrip(it) }
-                ?.let { Prefs.setCameraStrip(app, left = true, v = it); it.toString() }
-            "camera_strip_right" -> int(raw)?.takeIf { CameraPanoCrop.isStrip(it) }
-                ?.let { Prefs.setCameraStrip(app, left = false, v = it); it.toString() }
-            "camera_circle_scale" -> int(raw)?.takeIf { CameraSignalPolicy.isCirclePct(it) }
-                ?.let { Prefs.setCameraCirclePct(app, v = it); it.toString() }
-            // ── R8-B (2.74): SÁU NÚM NẮN MÉO + công tắc `uTexMatrix` của đường kết xuất `GL` ────────────────
-            // Miền hợp lệ lấy từ `:core` ([CameraDewarpPrefs]) — KHÔNG viết số ở đây, cùng lẽ bộ `camera_span/strip`
-            // ngay trên. Ngoài miền ⇒ `bad_prefs_value:`, **không kẹp im lặng**: owner gõ `camera_dewarp_k 800` rồi
-            // được kẹp về 400 sẽ nhìn khung mà kết luận sai về `K` — và đó là núm *"đúng/sai"*, không phải thẩm mỹ.
-            "camera_dewarp_amount" -> int(raw)?.takeIf { CameraDewarpPrefs.isAmountPct(it) }
-                ?.let { Prefs.setCameraDewarpAmount(app, v = it); it.toString() }
-            "camera_dewarp_focal" -> int(raw)?.takeIf { CameraDewarpPrefs.isPct(it) }
-                ?.let { Prefs.setCameraDewarpFocal(app, v = it); it.toString() }
-            "camera_dewarp_k" -> int(raw)?.takeIf { CameraDewarpPrefs.isPct(it) }
-                ?.let { Prefs.setCameraDewarpK(app, v = it); it.toString() }
-            "camera_dewarp_scale" -> int(raw)?.takeIf { CameraDewarpPrefs.isPct(it) }
-                ?.let { Prefs.setCameraDewarpScale(app, v = it); it.toString() }
-            "camera_dewarp_cx" -> int(raw)?.takeIf { CameraDewarpPrefs.isCenterPct(it) }
-                ?.let { Prefs.setCameraDewarpCx(app, v = it); it.toString() }
-            "camera_dewarp_cy" -> int(raw)?.takeIf { CameraDewarpPrefs.isCenterPct(it) }
-                ?.let { Prefs.setCameraDewarpCy(app, v = it); it.toString() }
-            "camera_dewarp_pan_x" -> int(raw)?.takeIf { CameraDewarpPrefs.isPanPct(it) }
-                ?.let { Prefs.setCameraDewarpPanX(app, v = it); it.toString() }
-            "camera_dewarp_pan_y" -> int(raw)?.takeIf { CameraDewarpPrefs.isPanPct(it) }
-                ?.let { Prefs.setCameraDewarpPanY(app, v = it); it.toString() }
-            // Công tắc, không phải núm — nó là một PHÉP ĐO cho RE §7 Q17 (xem KDoc `Prefs.cameraGlTexMatrix`).
-            "camera_gl_texmatrix" -> bool(raw)?.let { Prefs.setCameraGlTexMatrix(app, it); it.toString() }
-            // 2.92 · CAMERA-FULL-VIEW: kiểu hình (mã `:core`) + thu phóng + ba núm *Thẳng rộng* — miền ở `:core`, ngoài
-            // miền ⇒ `bad_prefs_value:` (không kẹp im lặng), cùng lẽ sáu núm nắn ngay trên. 2.93 wave 2C ·
-            // PREFS-SET-CAM-GLOBAL-REAPPLY: hai khoá CHUNG đi ĐÚNG hàm của chip/thanh kéo Cài đặt ([CameraReapply.setProjection]
-            // · `setZoom`) ⇒ khung đang hiện dựng lại như Cài đặt (và *Nắn thẳng* lúc amount 0 ⇒ nắn đủ, cùng luật `:core`).
-            "camera_projection" -> raw.trim().uppercase().takeIf { CameraViewMode.isMode(it) }
-                ?.let { CameraReapply.setProjection(app, it); it }
-            "camera_zoom" -> int(raw)?.takeIf { CameraViewMode.isZoomPct(it) }
-                ?.let { CameraReapply.setZoom(app, it); it.toString() }
-            "camera_wide_kappa" -> int(raw)?.takeIf { CameraDewarpPrefs.isKappaPct(it) }
-                ?.let { Prefs.setCameraWideKappa(app, v = it); it.toString() }
-            "camera_wide_focal" -> int(raw)?.takeIf { CameraDewarpPrefs.isPct(it) }
-                ?.let { Prefs.setCameraWideFocal(app, v = it); it.toString() }
-            "camera_wide_pan_x" -> int(raw)?.takeIf { CameraDewarpPrefs.isPanPct(it) }
-                ?.let { Prefs.setCameraWidePanX(app, v = it); it.toString() }
+            // Android box B2 · W2b: mọi nhánh ghi khoá camera (`camera_*`, 2.67–2.93) gỡ cùng camera BYD.
             KEY_TOP_STRIP_LABELS -> {
                 val on = bool(raw) ?: return reply.fail(ERR_BAD_VALUE + raw, "key" to cmd.key)
                 val h = hooks ?: return reply.fail(KachiTestBridge.ERR_NO_HOME, "key" to cmd.key)
                 h.setTopStripLabels(on)
                 on.toString()
             }
-            // 2.93 — 22 khoá mới của bộ chỉnh *Từng camera*: một nhánh THEO LOẠI ([TestBridgePerCam], tên khoá ở `:core`).
-            // Không thể tới phần còn lại: `:core` đã chặn khoá lạ ở tầng phân tích. Giữ nhánh để lượt thêm khoá mới mà quên
-            // nối dây trả về một mã lỗi thay vì báo "đã ghi" cho một việc chưa xảy ra.
-            else -> if (TestBridgePerCam.owns(cmd.key)) TestBridgePerCam.write(app, cmd.key, raw)
-            else return reply.fail(TestBridgeCommands.ERR_BAD_PREFS_KEY + cmd.key)
+            // Không thể tới: `:core` đã chặn khoá lạ ở tầng phân tích. Giữ nhánh để lượt thêm khoá mới mà quên nối dây trả về
+            // một mã lỗi thay vì báo "đã ghi" cho một việc chưa xảy ra.
+            else -> return reply.fail(TestBridgeCommands.ERR_BAD_PREFS_KEY + cmd.key)
         }
         if (applied == null) {
             reply.fail(ERR_BAD_VALUE + raw, "key" to cmd.key)
             return
         }
-        // 2.93 wave 2B · D2 — khoá của MỘT camera (28 khoá *Từng camera*, kể cả sáu khoá cũ của hai camera gương) ⇒ áp ngay
-        // nếu đúng camera ấy đang hiện: CÙNG cửa với Cài đặt ([CameraReapply.ifShowing]) — spec §6 *"áp ngay nếu đang hiện"*.
-        // Hai khoá CHUNG `camera_projection` · `camera_zoom` đã áp NGAY trong nhánh ghi của chúng (wave 2C — cửa chung với Cài đặt).
-        CameraCamConfig.cameraOf(cmd.key)?.let { CameraReapply.ifShowing(app, it) }
         reply.ok("key" to cmd.key, "value" to applied, "read_back" to readBack(app, cmd.key, hooks))
     }
 
@@ -325,45 +179,9 @@ internal object TestBridgePrefsSet {
             "voice_hotword_score" -> Prefs.voiceHotwordScore(app).toString()
             "voice_tts_speed" -> Prefs.voiceTtsSpeed(app).toString()
             "voice_keep_log" -> Prefs.voiceKeepLog(app).toString()
-            // [ĐO harness 2026-09-27] sáu khoá này ghi được nhưng `read_back` trả RỖNG — một lời đáp nói "đã ghi"
-            // mà không nói ghi được gì, đúng thứ KDoc [readBack] sinh ra để chặn. Vá luôn trong lượt R8-B.
-            "camera_signal_enabled" -> Prefs.cameraSignalEnabled(app).toString()
-            "camera_on_cluster" -> Prefs.cameraOnCluster(app).toString()
-            "camera_pano_left" -> Prefs.cameraPano(app, left = true)
-            "camera_pano_right" -> Prefs.cameraPano(app, left = false)
-            "camera_view_left" -> Prefs.cameraView(app, left = true)
-            "camera_view_right" -> Prefs.cameraView(app, left = false)
-            "camera_cam_left" -> Prefs.cameraCamId(app, left = true, default = -1).toString()
-            "camera_cam_right" -> Prefs.cameraCamId(app, left = false, default = -1).toString()
-            "camera_pos_left" -> Prefs.cameraPos(app, left = true)
-            "camera_pos_right" -> Prefs.cameraPos(app, left = false)
-            "camera_rot_left" -> Prefs.cameraRotation(app, left = true)
-            "camera_rot_right" -> Prefs.cameraRotation(app, left = false)
-            "camera_mirror_left" -> Prefs.cameraMirror(app, left = true).toString()
-            "camera_mirror_right" -> Prefs.cameraMirror(app, left = false).toString()
-            "camera_render" -> Prefs.cameraRender(app)
-            "camera_span" -> Prefs.cameraSpan(app)
-            "camera_shape" -> Prefs.cameraShape(app)
-            "camera_strip_left" -> Prefs.cameraStrip(app, left = true).toString()
-            "camera_strip_right" -> Prefs.cameraStrip(app, left = false).toString()
-            "camera_circle_scale" -> Prefs.cameraCirclePct(app).toString()
-            "camera_dewarp_amount" -> Prefs.cameraDewarpAmount(app).toString()
-            "camera_dewarp_focal" -> Prefs.cameraDewarpFocal(app).toString()
-            "camera_dewarp_k" -> Prefs.cameraDewarpK(app).toString()
-            "camera_dewarp_scale" -> Prefs.cameraDewarpScale(app).toString()
-            "camera_dewarp_cx" -> Prefs.cameraDewarpCx(app).toString()
-            "camera_dewarp_cy" -> Prefs.cameraDewarpCy(app).toString()
-            "camera_dewarp_pan_x" -> Prefs.cameraDewarpPanX(app).toString()
-            "camera_dewarp_pan_y" -> Prefs.cameraDewarpPanY(app).toString()
-            "camera_gl_texmatrix" -> Prefs.cameraGlTexMatrix(app).toString()
-            "camera_projection" -> Prefs.cameraProjection(app)
-            "camera_zoom" -> Prefs.cameraZoom(app).toString()
-            "camera_wide_kappa" -> Prefs.cameraWideKappa(app).toString()
-            "camera_wide_focal" -> Prefs.cameraWideFocal(app).toString()
-            "camera_wide_pan_x" -> Prefs.cameraWidePanX(app).toString()
             KEY_TOP_STRIP_LABELS -> (hooks?.state()?.topStrip?.showLabels ?: WorkspacePrefs(app).topStrip().showLabels)
                 .toString()
-            else -> if (TestBridgePerCam.owns(key)) TestBridgePerCam.read(app, key) else ""
+            else -> ""
         }
     }.getOrDefault("")
 

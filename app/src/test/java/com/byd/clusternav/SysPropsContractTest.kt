@@ -37,7 +37,7 @@ class SysPropsContractTest {
     @Test
     fun `ba noi cu uy quyen xuong SysProps get`() {
         mapOf(
-            "src/main/java/com/byd/clusternav/launcher/camera/AvmCamera.kt" to "fun systemProp(key: String): String = SysProps.get(key)",
+            // (`AvmCamera.kt` — nơi cũ thứ ba — xoá cùng camera BYD ở Android box B2 · W2b.)
             "src/main/java/com/byd/clusternav/comfort/SeatComfortApplier.kt" to "SysProps.get(key).takeIf { it.isNotBlank() }",
             "src/main/java/com/byd/clusternav/modules/clustercast/ClusterProfile.kt" to "private fun getProp(key: String): String = SysProps.get(key)",
         ).forEach { (rel, call) ->

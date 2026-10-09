@@ -23,7 +23,7 @@ import com.byd.clusternav.system.StackParse
  */
 class TripMusicView(
     private val sh: (String) -> String,
-    /** K12 — `AccessibilityRebind.GO_HOME_UNLESS_CAMERA`. */
+    /** K12 — `AccessibilityRebind.GO_HOME`. */
     private val goHomeCmd: String,
     /** `DefaultHome.shownComponents` — "màn nhà ở đỉnh" nhận cả hai dạng in. */
     private val homeComps: Collection<String>,

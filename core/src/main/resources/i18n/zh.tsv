@@ -66,10 +66,6 @@ Kéo để đặt biển báo	Drag to place the badge	拖动以放置限速标�
 Chiếu {0}…	Casting {0}…	正在投屏{0}…
 Không cast màn hình chính	Won't cast the launcher/home screen	不会投屏启动器/主屏幕
 Nhấn để mở điều khiển	Tap to open controls	点按打开控制面板
-Khắc phục sự cố	Troubleshooting	故障排除
-Khắc phục sự cố — đang mở	Troubleshooting — open	故障排除——已展开
-Đóng nhóm hành động khắc phục sự cố	Close troubleshooting actions	收起故障排除操作
-Mở nhóm hành động khắc phục sự cố	Open troubleshooting actions	展开故障排除操作
 ⬇ Kiểm tra cập nhật	⬇ Check update	⬇ 检查更新
 Thử badge 50	TEST BADGE 50	测试标志50
 Đã buộc badge 50 trên cụm (display 1)	Forced badge 50 on cluster (display 1)	已在仪表上强制显示标志50（display 1）
@@ -416,7 +412,6 @@ Mát ghế lái	Driver seat ventilation	主驾座椅通风
 Nhiệt độ	Temperature	温度
 Gió	Fan	风量
 Sấy kính trước	Front defrost	前除霜
-Camera 360	360 camera	360全景影像
 Đèn pha	Headlights	大灯
 Sưởi ghế lái	Driver seat heating	主驾座椅加热
 Lấy gió trong	Recirculation	内循环
@@ -719,7 +714,6 @@ Bật/tắt đèn chạy ban ngày	Turn the daytime running lights on/off	开启
 Số khung nhận dạng xe (VIN)	Vehicle identification number (VIN)	车辆识别代号（VIN）
 Phần trăm dầu động cơ còn lại	Engine oil level remaining (%)	剩余机油量（%）
 Âm lượng nhạc/giải trí đang đặt ở mức mấy	Current media (music) volume level	当前媒体（音乐）音量
-Bật/tắt hiển thị camera 360 độ	Turn the 360-degree camera view on/off	开启/关闭360度全景影像
 ACC	ACC	ACC
 Sẵn sàng	Ready	就绪
 Sẵn sàng (giả)	Ready (fake)	就绪（模拟）
@@ -783,29 +777,10 @@ Tên app đã dạy	Taught app names	已教的应用名称
 Nếu đó là tên app, hãy dạy Kachi trong Cài đặt, Giọng nói	If that is an app name, teach Kachi in Settings, Voice	如果那是应用名称，请在设置、语音中教 Kachi
 Dạy tên app	Teach app names	教应用名称
 # 2.92 CAMERA-FULL-VIEW — màn Chẩn đoán › 📷 Khung thô trái/phải (spec docs/specs/kachi-292-camera-full-view.html R8).
-Bật «Bật camera khi xi-nhan» trong Cài đặt trước	Turn on «Camera on turn signal» in Settings first	请先在设置中开启«打转向灯时显示摄像头»
-Chụp hỏng: {0}	Capture failed: {0}	拍摄失败：{0}
-Không có khung nào trong 3 giây — camera chưa lên	No frame within 3 s — the camera did not start	3 秒内没有画面——摄像头未启动
-Đường vẽ SurfaceView không chụp được — đổi sang TextureView hoặc GL	The SurfaceView path cannot be captured — switch to TextureView or GL	SurfaceView 绘制方式无法截取——请改用 TextureView 或 GL
-Đã lưu khung thô {0}×{1}: {2}	Saved raw frame {0}×{1}: {2}	已保存原始画面 {0}×{1}：{2}
-Thư viện ảnh: {0}	Gallery: {0}	相册：{0}
-(không chép được vào Thư viện ảnh)	(could not copy to the gallery)	（无法复制到相册）
-📷 Khung thô trái	📷 Raw frame left	📷 左侧原始画面
-📷 Khung thô phải	📷 Raw frame right	📷 右侧原始画面
-Đang chụp khung thô…	Capturing raw frame…	正在拍摄原始画面…
 # 2.93 · CAMERA-ON-DEMAND (spec docs/specs/kachi-293-cam.html) — bốn camera theo yêu cầu + Tắt camera (LauncherActions)
-Camera sau	Rear camera	后摄像头
-Camera trái	Left camera	左摄像头
-Camera phải	Right camera	右摄像头
-Camera trước	Front camera	前摄像头
-Tắt camera	Camera off	关闭摄像头
-Camera theo yêu cầu	Camera on demand	按需摄像头
-Chạm để bật/tắt camera đó; mở camera khác thì thay camera đang mở. Không tự tắt.	Tap to turn that camera on/off; opening another camera replaces the one showing. It never times out.	点按以开启/关闭该摄像头；打开另一个摄像头会替换当前显示的摄像头。不会自动关闭。
-Không có camera nào đang mở	No camera is open	没有正在打开的摄像头
-{0} đang không mở	{0} is not open	{0}未打开
-chưa liên lạc được màn hình chính	couldn't reach the home screen	无法连接主屏幕
 # Android box B2 · W1 (2026-10-09) — rail Cài đặt sau khi gỡ nhóm BYD.
 Hiển thị	Display	显示
 Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Theme light/dark, colours, transparency, bar size, language	浅色/深色主题、颜色、透明度、车控栏大小、语言
 Sổ địa chỉ, app mặc định, lịch tự dẫn	Address book, default app, scheduled navigation	地址簿、默认应用、定时导航
 Gán nút vật lý cho app hoặc trợ lý	Bind physical buttons to apps or the assistant	将实体按键绑定到应用或语音助手
+camera	the camera	摄像头

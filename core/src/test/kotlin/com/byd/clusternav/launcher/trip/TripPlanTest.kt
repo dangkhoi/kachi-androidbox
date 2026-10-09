@@ -23,7 +23,6 @@ class TripPlanTest {
     private val home = "com.byd.launcher/com.byd.clusternav.launcher.KachiHome"
     /** Đúng hai dạng `DefaultHome.shownComponents` trả: alias HOME + activity thật. */
     private val homes = listOf(home, "com.byd.launcher/com.byd.clusternav.launcher.KachiHomeActivity")
-    private val sig = "com.byd.avc/"
 
     private fun fixture(name: String): String =
         javaClass.getResourceAsStream("/diagnostics/$name.txt")?.bufferedReader()?.readText()
@@ -195,7 +194,7 @@ class TripPlanTest {
         assertTrue(e.none { it.displayId == 0 && it.activityType == "home" }, "stack home RỖNG (không task nào) trong bản đọc này")
         assertTrue(TripPlan.homeTopVisible(e, homes), "màn nhà Kachi (dạng activity) đang hiện trên cùng ⇒ yên")
         assertFalse(TripPlan.homeTopVisible(e, listOf(home)), "chỉ nhận alias ⇒ không bao giờ yên (lỗi E2E 5)")
-        assertEquals(TripPlan.Normal.UNREAD, TripPlan.normalOutcome("", e, sig, homes), "HOME vẫn ở trước ⇒ thử lại, không bỏ")
+        assertEquals(TripPlan.Normal.UNREAD, TripPlan.normalOutcome("", e, homes), "HOME vẫn ở trước ⇒ thử lại, không bỏ")
     }
 
     // ── R2.5 — Mở bình thường (K10) ──────────────────────────────────────────────────────────────────────────
@@ -228,10 +227,10 @@ class TripPlanTest {
     }
 
     @Test
-    fun `K10 chay that - mo khi HOME hien, khong mo khi camera hay app khac o truoc, dola den nguyen chu`(@TempDir dir: Path) {
+    fun `K10 chay that - mo khi HOME hien, khong mo khi app khac o truoc, dola den nguyen chu`(@TempDir dir: Path) {
         if (!File("/bin/sh").canExecute()) return
         val yt = "com.google.android.youtube/com.google.android.youtube.app.honeycomb.Shell\$HomeActivity"
-        val cmd = TripPlan.normalCmd(sig, homes, yt)
+        val cmd = TripPlan.normalCmd(homes, yt)
         val opened = runSh(cmd, fixture("am-stack-list-oncar-2026-09-29-stuck-home-top"), dir.resolve("a"))
         assertEquals(2, opened.size, "$opened")
         assertTrue(opened[1].endsWith("-n $yt"), "shell phải đưa tới `am` ĐÚNG chữ `\$HomeActivity`: ${opened[1]}")
@@ -245,21 +244,21 @@ class TripPlanTest {
     }
 
     /**
-     * Android box W0 (2026-10-09): máy KHÔNG có màn camera (`CameraPresence.SIGNATURE` = null) ⇒ K10 TRẦN — không `case`
-     * camera, không chặn (trước đây `null` = "đời xe chưa biết" ⇒ bước bị loại, 0 lệnh). Cổng "màn nhà Kachi ở trước" GIỮ.
+     * Android box W0/W2b (2026-10-09): máy KHÔNG có màn camera ⇒ K10 TRẦN — không `case` camera, không chặn; cổng "màn
+     * nhà Kachi ở trước" GIỮ. Một app bất kỳ ở đỉnh (fixture `camera-top-derived` — activity camera BYD đứng đỉnh) chỉ còn
+     * là "app khác ở trước" ⇒ bỏ, không thử lại 60 s vì một màn "camera" không tồn tại.
      */
     @Test
     fun `K10 khong camera - lenh tran, van mo khi HOME hien, khong bi chan`(@TempDir dir: Path) {
         val yt = "com.google.android.youtube/com.google.android.youtube.app.honeycomb.Shell\$HomeActivity"
-        val cmd = TripPlan.normalCmd(com.byd.clusternav.system.CameraPresence.SIGNATURE, homes, yt)
+        val cmd = TripPlan.normalCmd(homes, yt)
         assertFalse(cmd.contains("com.byd.avc"), "không camera ⇒ không bọc case camera: $cmd")
         assertFalse(cmd.contains('\''), cmd)
         val homeTop = StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-stuck-home-top"))
-        assertEquals(TripPlan.Normal.OPENED, TripPlan.normalOutcome("Starting: Intent { cmp=x/y }", homeTop, null, homes))
-        // Không dấu camera ⇒ không bao giờ ra CAMERA (không thử lại 60 s vì một màn "camera" không tồn tại).
+        assertEquals(TripPlan.Normal.OPENED, TripPlan.normalOutcome("Starting: Intent { cmp=x/y }", homeTop, homes))
         assertEquals(
             TripPlan.Normal.OTHER_FRONT,
-            TripPlan.normalOutcome("", StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-camera-top-derived")), null, homes),
+            TripPlan.normalOutcome("", StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-camera-top-derived")), homes),
         )
         if (!File("/bin/sh").canExecute()) return
         val opened = runSh(cmd, fixture("am-stack-list-oncar-2026-09-29-stuck-home-top"), dir.resolve("a"))
@@ -268,12 +267,11 @@ class TripPlanTest {
     }
 
     @Test
-    fun `ket qua K10 - mo, camera (thu lai), app khac o truoc (bo), doc hong (thu lai)`() {
+    fun `ket qua K10 - mo, app khac o truoc (bo), doc hong (thu lai)`() {
         val homeTop = StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-stuck-home-top"))
-        assertEquals(TripPlan.Normal.OPENED, TripPlan.normalOutcome("Starting: Intent { cmp=x/y }", homeTop, sig, homes))
-        assertEquals(TripPlan.Normal.CAMERA, TripPlan.normalOutcome("", StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-camera-top-derived")), sig, homes))
-        assertEquals(TripPlan.Normal.OTHER_FRONT, TripPlan.normalOutcome("", StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-fullscreen-app-top")), sig, homes))
-        assertEquals(TripPlan.Normal.UNREAD, TripPlan.normalOutcome("", emptyList(), sig, homes))
-        assertEquals(TripPlan.Normal.UNREAD, TripPlan.normalOutcome("Starting: Intent\nError: Activity not started", homeTop, sig, homes))
+        assertEquals(TripPlan.Normal.OPENED, TripPlan.normalOutcome("Starting: Intent { cmp=x/y }", homeTop, homes))
+        assertEquals(TripPlan.Normal.OTHER_FRONT, TripPlan.normalOutcome("", StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-fullscreen-app-top")), homes))
+        assertEquals(TripPlan.Normal.UNREAD, TripPlan.normalOutcome("", emptyList(), homes))
+        assertEquals(TripPlan.Normal.UNREAD, TripPlan.normalOutcome("Starting: Intent\nError: Activity not started", homeTop, homes))
     }
 }

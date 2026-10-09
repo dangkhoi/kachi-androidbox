@@ -119,7 +119,7 @@ class VoiceDictionary0921Test {
         "mở rèm trời" to VoiceIntent.Control("sunshade", 1),
         "mở che nắng" to VoiceIntent.Control("sunshade", 1),
         "bật đế sạc" to VoiceIntent.Control("wireless_charge", 1),
-        "bật camera toàn cảnh" to VoiceIntent.Control("cam", 1),
+        // Android box B2 · W2b: *"bật camera toàn cảnh"* (Camera 360) nay ra FEATURE_GONE — bài `VoiceCameraGoneTest`.
         // ⚠ cụm ĐÃ ĐO `MỞ KÍNH TRƯỚC TRÁI` phải sống.
         "mở kính trước trái" to VoiceIntent.Control("win_lf", 1),
     )

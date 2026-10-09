@@ -235,12 +235,10 @@ class ControlWriteArgsTest {
         assertArrayEquals(intArrayOf(2), args("wireless_charge", 0))
     }
 
-    @Test fun `camera 360 setAVMSwitchState ON=2 OFF=1 va tach khoi camera_view`() {
-        assertEquals("BYDAutoADASDevice.setAVMSwitchState", ControlRegistry.byId("cam")!!.bindingKey)
-        assertArrayEquals(intArrayOf(2), args("cam", 1), "bật camera → AVM_FUNCTION_ON=2")
-        assertArrayEquals(intArrayOf(1), args("cam", 0), "tắt camera → AVM_FUNCTION_OFF=1")
-        // ⚠ 1.90: vế `camera_view` gỡ cùng nút (owner 2026-09-21) ⇒ `cam` nay là nút camera DUY NHẤT, không còn
-        // ai để "tách khỏi". Vế enum ON=2/OFF=1 của `cam` ở trên là phần còn giá trị của bài này.
+    /** Android box B2 · W2b: nút Camera 360 (`cam`, `setAVMSwitchState`) gỡ cùng camera BYD — không được mọc lại. */
+    @Test fun `camera 360 da go khoi registry`() {
+        assertEquals(null, ControlRegistry.byId("cam"), "Camera 360 đã gỡ")
+        assertTrue(ControlRegistry.ALL.none { it.bindingKey.contains("setAVMSwitchState") }, "không nút nào còn ghi AVM")
     }
 
     @Test fun `headl van la NEEDS-ONCAR va khong gui mu, sau khi headlight_mode bi xoa`() {

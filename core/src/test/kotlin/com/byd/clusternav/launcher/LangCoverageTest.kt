@@ -70,7 +70,8 @@ class LangCoverageTest {
     fun `moi nut co nhan EN, dung 39 nut`() {
         // 39 (UX-OVERHAUL WP8 2026-09-20 owner purge 8 nút BỎ: gạt mưa · 4 đèn viền · mức tái tạo · 2 HUD).
         // 38 (gỡ `seat_memory`) → 29 (1.90: 9 nút xe-thuần-điện; danh sách ở `WorkspaceStateTest`).
-        assertEquals(33, ControlRegistry.ALL.size, "số nút đổi ⇒ xem lại bản dịch trước khi ghim số mới")
+        // Android box B2 · W2b (2026-10-09): 33 → **32** (gỡ `cam` Camera 360 cùng camera BYD).
+        assertEquals(32, ControlRegistry.ALL.size, "số nút đổi ⇒ xem lại bản dịch trước khi ghim số mới")
         val missing = ControlRegistry.ALL.filter { it.labelEn.isNullOrBlank() }.map { it.id }
         assertTrue(missing.isEmpty(), "nút thiếu nhãn tiếng Anh: $missing")
     }
@@ -192,7 +193,7 @@ class LangCoverageTest {
      * `Localized` khỏi một lớp sẽ làm lớp đó không còn ở đây mà **không bài nào đỏ** nếu không ghim tổng.
      */
     @Test
-    fun `tong so nhan co ban EN dung 233`() {
+    fun `tong so nhan co ban EN dung 227`() {
         val all: List<Localized> = TelemetryRegistry.ALL + ControlRegistry.ALL + CapabilityGroups.ALL +
             WidgetRegistry.ALL + ActionMacros.ALL + SettingsCatalog.GROUPS + SettingsCatalog.ENTRIES +
             Domain.values().toList() + Quantity.values().toList() + TyreCorner.values().toList() +
@@ -264,7 +265,8 @@ class LangCoverageTest {
         // 2.93 · CAMERA-ON-DEMAND (2026-10-06): **264 → 269 (+5)** = bốn việc *"Camera sau/trái/phải/trước"* + *"Tắt camera"*
         // (`LauncherActions`), EN tại chỗ khai + dòng zh/th/ms trong `i18n/*.tsv`.
         // Android box B2 · W1 (2026-10-09): **269 → 233 (−36)** = −34 mục Cài đặt chỉ-BYD − 2 nhóm (CAST · CAR).
-        assertEquals(233, all.size, "số nhãn đổi — thêm mã mới thì phải dịch, rồi mới ghim số mới")
+        // Android box B2 · W2b (2026-10-09): **233 → 227 (−6)** = năm việc camera theo yêu cầu (`launcher_cam_*`) + nút `cam`.
+        assertEquals(227, all.size, "số nhãn đổi — thêm mã mới thì phải dịch, rồi mới ghim số mới")
         val missing = all.filter { it.labelEn.isNullOrBlank() }.map { it.label }
         assertTrue(missing.isEmpty(), "còn nhãn chưa có bản EN: $missing")
     }

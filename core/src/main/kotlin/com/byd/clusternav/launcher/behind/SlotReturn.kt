@@ -1,7 +1,7 @@
 package com.byd.clusternav.launcher.behind
 
 import com.byd.clusternav.launcher.FreeformLaunch
-import com.byd.clusternav.launcher.camera.CameraGuard
+import com.byd.clusternav.system.HomeGate
 import com.byd.clusternav.system.StackEntry
 import com.byd.clusternav.system.StackParse
 
@@ -31,7 +31,7 @@ object SlotReturn {
     enum class Where { IN_SLOT, FRONT_MAIN, HIDDEN_MAIN, ELSEWHERE, GONE }
 
     /**
-     * K7 — ĐÚNG chuỗi đã đo ở T-M2(b) (`-f 0x20000000` = SINGLE_TOP, chế độ cửa sổ 1). Không nháy đơn: rào [CameraGuard] cấm
+     * K7 — ĐÚNG chuỗi đã đo ở T-M2(b) (`-f 0x20000000` = SINGLE_TOP, chế độ cửa sổ 1). Không nháy đơn: cổng [HomeGate] cấm
      * `'` (chuỗi có thể nằm trong `sh -c '…'`); component lọc bằng [BehindHomePlan.safeComponent], `$` của lớp lồng thoát
      * thành `\$` (cùng luật `TripPlan.launchCmd`).
      */
@@ -42,12 +42,13 @@ object SlotReturn {
     }
 
     /**
-     * K7 qua rào: chỉ chạy khi màn nhà Kachi ([homeComps]) đang hiện trên display 0; dấu hiệu camera [sig] đã biết ⇒ thấy
-     * camera thì không chạy ([CameraGuard.onHomeUnlessCamera]). Bốn câu CLAUDE.md §4: display 0 · đúng app của ô người dùng
-     * vừa chạm · task `standard` sẵn có của app đó (reparentToDisplay, không stack hệ thống) · hoàn tác = K8.
+     * K7 qua cổng: chỉ chạy khi màn nhà Kachi ([homeComps]) đang hiện trên display 0 ([HomeGate.onHome]). Android box
+     * B2 · W2b: rào camera BYD (dấu `com.byd.avc/`) đã gỡ — máy không có màn camera của hãng. Bốn câu CLAUDE.md §4:
+     * display 0 · đúng app của ô người dùng vừa chạm · task `standard` sẵn có của app đó (reparentToDisplay, không stack
+     * hệ thống) · hoàn tác = K8.
      */
-    fun guardedDetachCmd(sig: String?, homeComps: List<String>, comp: String): String =
-        CameraGuard.onHomeUnlessCamera(sig, homeComps, detachCmd(comp))
+    fun guardedDetachCmd(homeComps: List<String>, comp: String): String =
+        HomeGate.onHome(homeComps, detachCmd(comp))
 
     /** Task `standard` của [pkg] trên màn ảo ô [vd] — đối tượng của K7. */
     fun slotTask(entries: List<StackEntry>, vd: Int, pkg: String): StackEntry? =
@@ -119,12 +120,12 @@ class SlotReturnSequence(
 
     private fun read(): List<StackEntry> = StackParse.parse(runCatching { sh(BehindHomePlan.LIST_CMD) }.getOrDefault(""))
 
-    /** Bảng chạm dòng 9 — K7 (qua rào) cho app [pkg] của ô [vd], rồi đọc lại tới khi thấy task trước display 0. */
-    fun detach(vd: Int, pkg: String, sig: String?, homeComps: List<String>): Detached {
+    /** Bảng chạm dòng 9 — K7 (qua cổng màn nhà) cho app [pkg] của ô [vd], rồi đọc lại tới khi thấy task trước display 0. */
+    fun detach(vd: Int, pkg: String, homeComps: List<String>): Detached {
         val tag = "detach vd=$vd $pkg"
         val t = SlotReturn.slotTask(read(), vd, pkg) ?: return Detached(null, "$tag → không thấy task của app trên ô, 0 lệnh")
         if (!BehindHomePlan.safeComponent(t.comp) || homeComps.isEmpty()) return Detached(null, "$tag → component/HOME lạ, 0 lệnh")
-        sh(SlotReturn.guardedDetachCmd(sig, homeComps, t.comp))
+        sh(SlotReturn.guardedDetachCmd(homeComps, t.comp))
         var where = SlotReturn.Where.IN_SLOT
         var last: List<StackEntry> = emptyList()
         for (i in 0 until DETACH_READS) {

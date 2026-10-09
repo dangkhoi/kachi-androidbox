@@ -66,10 +66,6 @@ Kéo để đặt biển báo	Drag to place the badge	ลากเพื่อ�
 Chiếu {0}…	Casting {0}…	กำลังฉาย {0}…
 Không cast màn hình chính	Won't cast the launcher/home screen	ไม่ฉายภาพหน้าจอหลัก (ลันเชอร์)
 Nhấn để mở điều khiển	Tap to open controls	แตะเพื่อเปิดการควบคุม
-Khắc phục sự cố	Troubleshooting	การแก้ไขปัญหา
-Khắc phục sự cố — đang mở	Troubleshooting — open	การแก้ไขปัญหา — เปิดอยู่
-Đóng nhóm hành động khắc phục sự cố	Close troubleshooting actions	ปิดกลุ่มคำสั่งแก้ไขปัญหา
-Mở nhóm hành động khắc phục sự cố	Open troubleshooting actions	เปิดกลุ่มคำสั่งแก้ไขปัญหา
 ⬇ Kiểm tra cập nhật	⬇ Check update	⬇ ตรวจหาอัปเดต
 Thử badge 50	TEST BADGE 50	ทดสอบป้าย 50
 Đã buộc badge 50 trên cụm (display 1)	Forced badge 50 on cluster (display 1)	บังคับแสดงป้าย 50 บนหน้าปัด (display 1)
@@ -416,7 +412,6 @@ Mát ghế lái	Driver seat ventilation	ระบายอากาศที่�
 Nhiệt độ	Temperature	อุณหภูมิ
 Gió	Fan	พัดลม
 Sấy kính trước	Front defrost	ไล่ฝ้าหน้า
-Camera 360	360 camera	กล้อง 360 องศา
 Đèn pha	Headlights	ไฟหน้า
 Sưởi ghế lái	Driver seat heating	ทำความร้อนที่นั่งคนขับ
 Lấy gió trong	Recirculation	หมุนเวียนอากาศภายใน
@@ -719,7 +714,6 @@ Bật/tắt đèn chạy ban ngày	Turn the daytime running lights on/off	เป
 Số khung nhận dạng xe (VIN)	Vehicle identification number (VIN)	หมายเลขตัวถังรถ (VIN)
 Phần trăm dầu động cơ còn lại	Engine oil level remaining (%)	ระดับน้ำมันเครื่องคงเหลือ (%)
 Âm lượng nhạc/giải trí đang đặt ở mức mấy	Current media (music) volume level	ระดับเสียงมีเดีย (เพลง) ปัจจุบัน
-Bật/tắt hiển thị camera 360 độ	Turn the 360-degree camera view on/off	เปิด/ปิดภาพกล้อง 360 องศา
 ACC	ACC	ACC
 Sẵn sàng	Ready	พร้อม
 Sẵn sàng (giả)	Ready (fake)	พร้อม (จำลอง)
@@ -783,29 +777,10 @@ Tên app đã dạy	Taught app names	ชื่อแอปที่สอนแ�
 Nếu đó là tên app, hãy dạy Kachi trong Cài đặt, Giọng nói	If that is an app name, teach Kachi in Settings, Voice	ถ้านั่นคือชื่อแอป ให้สอน Kachi ใน การตั้งค่า, เสียง
 Dạy tên app	Teach app names	สอนชื่อแอป
 # 2.92 CAMERA-FULL-VIEW — màn Chẩn đoán › 📷 Khung thô trái/phải (spec docs/specs/kachi-292-camera-full-view.html R8).
-Bật «Bật camera khi xi-nhan» trong Cài đặt trước	Turn on «Camera on turn signal» in Settings first	เปิด «เปิดกล้องเมื่อเปิดไฟเลี้ยว» ในการตั้งค่าก่อน
-Chụp hỏng: {0}	Capture failed: {0}	ถ่ายไม่สำเร็จ: {0}
-Không có khung nào trong 3 giây — camera chưa lên	No frame within 3 s — the camera did not start	ไม่มีภาพภายใน 3 วินาที — กล้องยังไม่เริ่มทำงาน
-Đường vẽ SurfaceView không chụp được — đổi sang TextureView hoặc GL	The SurfaceView path cannot be captured — switch to TextureView or GL	การวาดแบบ SurfaceView ถ่ายภาพไม่ได้ — เปลี่ยนเป็น TextureView หรือ GL
-Đã lưu khung thô {0}×{1}: {2}	Saved raw frame {0}×{1}: {2}	บันทึกภาพดิบ {0}×{1} แล้ว: {2}
-Thư viện ảnh: {0}	Gallery: {0}	คลังภาพ: {0}
-(không chép được vào Thư viện ảnh)	(could not copy to the gallery)	(คัดลอกไปคลังภาพไม่ได้)
-📷 Khung thô trái	📷 Raw frame left	📷 ภาพดิบซ้าย
-📷 Khung thô phải	📷 Raw frame right	📷 ภาพดิบขวา
-Đang chụp khung thô…	Capturing raw frame…	กำลังถ่ายภาพดิบ…
 # 2.93 · CAMERA-ON-DEMAND (spec docs/specs/kachi-293-cam.html) — bốn camera theo yêu cầu + Tắt camera (LauncherActions)
-Camera sau	Rear camera	กล้องหลัง
-Camera trái	Left camera	กล้องซ้าย
-Camera phải	Right camera	กล้องขวา
-Camera trước	Front camera	กล้องหน้า
-Tắt camera	Camera off	ปิดกล้อง
-Camera theo yêu cầu	Camera on demand	กล้องตามสั่ง
-Chạm để bật/tắt camera đó; mở camera khác thì thay camera đang mở. Không tự tắt.	Tap to turn that camera on/off; opening another camera replaces the one showing. It never times out.	แตะเพื่อเปิด/ปิดกล้องนั้น เปิดกล้องอื่นจะแทนที่กล้องที่กำลังแสดง ไม่ปิดเองอัตโนมัติ
-Không có camera nào đang mở	No camera is open	ไม่มีกล้องที่เปิดอยู่
-{0} đang không mở	{0} is not open	{0} ไม่ได้เปิดอยู่
-chưa liên lạc được màn hình chính	couldn't reach the home screen	ติดต่อหน้าจอหลักไม่ได้
 # Android box B2 · W1 (2026-10-09) — rail Cài đặt sau khi gỡ nhóm BYD.
 Hiển thị	Display	การแสดงผล
 Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Theme light/dark, colours, transparency, bar size, language	ธีมสว่าง/มืด สี ความโปร่งใส ขนาดแถบปุ่ม ภาษา
 Sổ địa chỉ, app mặc định, lịch tự dẫn	Address book, default app, scheduled navigation	สมุดที่อยู่ แอปเริ่มต้น การนำทางตามเวลา
 Gán nút vật lý cho app hoặc trợ lý	Bind physical buttons to apps or the assistant	กำหนดปุ่มกายภาพให้แอปหรือผู้ช่วย
+camera	the camera	กล้อง

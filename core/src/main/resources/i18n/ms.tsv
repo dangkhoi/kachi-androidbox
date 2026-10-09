@@ -66,10 +66,6 @@ Kéo để đặt biển báo	Drag to place the badge	Seret untuk meletakkan tan
 Chiếu {0}…	Casting {0}…	Memancarkan {0}…
 Không cast màn hình chính	Won't cast the launcher/home screen	Tidak memancarkan pelancar/skrin utama
 Nhấn để mở điều khiển	Tap to open controls	Ketik untuk membuka kawalan
-Khắc phục sự cố	Troubleshooting	Penyelesaian masalah
-Khắc phục sự cố — đang mở	Troubleshooting — open	Penyelesaian masalah — terbuka
-Đóng nhóm hành động khắc phục sự cố	Close troubleshooting actions	Tutup tindakan penyelesaian masalah
-Mở nhóm hành động khắc phục sự cố	Open troubleshooting actions	Buka tindakan penyelesaian masalah
 ⬇ Kiểm tra cập nhật	⬇ Check update	⬇ Semak kemas kini
 Thử badge 50	TEST BADGE 50	UJI TANDA 50
 Đã buộc badge 50 trên cụm (display 1)	Forced badge 50 on cluster (display 1)	Tanda 50 dipaksa pada panel instrumen (paparan 1)
@@ -416,7 +412,6 @@ Mát ghế lái	Driver seat ventilation	Pengudaraan pemandu
 Nhiệt độ	Temperature	Suhu
 Gió	Fan	Kipas
 Sấy kính trước	Front defrost	Penyahbeku depan
-Camera 360	360 camera	Kamera 360
 Đèn pha	Headlights	Lampu hadapan
 Sưởi ghế lái	Driver seat heating	Pemanasan pemandu
 Lấy gió trong	Recirculation	Peredaran dalaman
@@ -719,7 +714,6 @@ Bật/tắt đèn chạy ban ngày	Turn the daytime running lights on/off	Hidupk
 Số khung nhận dạng xe (VIN)	Vehicle identification number (VIN)	Nombor pengenalan kenderaan (VIN)
 Phần trăm dầu động cơ còn lại	Engine oil level remaining (%)	Baki paras minyak enjin (%)
 Âm lượng nhạc/giải trí đang đặt ở mức mấy	Current media (music) volume level	Tahap kelantangan media (muzik) semasa
-Bật/tắt hiển thị camera 360 độ	Turn the 360-degree camera view on/off	Hidupkan/matikan paparan kamera 360 darjah
 ACC	ACC	ACC
 Sẵn sàng	Ready	Sedia
 Sẵn sàng (giả)	Ready (fake)	Sedia (palsu)
@@ -783,29 +777,10 @@ Tên app đã dạy	Taught app names	Nama aplikasi yang diajar
 Nếu đó là tên app, hãy dạy Kachi trong Cài đặt, Giọng nói	If that is an app name, teach Kachi in Settings, Voice	Jika itu nama aplikasi, ajar Kachi dalam Tetapan, Suara
 Dạy tên app	Teach app names	Ajar nama aplikasi
 # 2.92 CAMERA-FULL-VIEW — màn Chẩn đoán › 📷 Khung thô trái/phải (spec docs/specs/kachi-292-camera-full-view.html R8).
-Bật «Bật camera khi xi-nhan» trong Cài đặt trước	Turn on «Camera on turn signal» in Settings first	Hidupkan «Kamera semasa isyarat membelok» dalam Tetapan dahulu
-Chụp hỏng: {0}	Capture failed: {0}	Gagal menangkap: {0}
-Không có khung nào trong 3 giây — camera chưa lên	No frame within 3 s — the camera did not start	Tiada bingkai dalam 3 saat — kamera tidak bermula
-Đường vẽ SurfaceView không chụp được — đổi sang TextureView hoặc GL	The SurfaceView path cannot be captured — switch to TextureView or GL	Laluan SurfaceView tidak boleh ditangkap — tukar kepada TextureView atau GL
-Đã lưu khung thô {0}×{1}: {2}	Saved raw frame {0}×{1}: {2}	Bingkai mentah {0}×{1} disimpan: {2}
-Thư viện ảnh: {0}	Gallery: {0}	Galeri: {0}
-(không chép được vào Thư viện ảnh)	(could not copy to the gallery)	(tidak dapat menyalin ke galeri)
-📷 Khung thô trái	📷 Raw frame left	📷 Bingkai mentah kiri
-📷 Khung thô phải	📷 Raw frame right	📷 Bingkai mentah kanan
-Đang chụp khung thô…	Capturing raw frame…	Sedang menangkap bingkai mentah…
 # 2.93 · CAMERA-ON-DEMAND (spec docs/specs/kachi-293-cam.html) — bốn camera theo yêu cầu + Tắt camera (LauncherActions)
-Camera sau	Rear camera	Kamera belakang
-Camera trái	Left camera	Kamera kiri
-Camera phải	Right camera	Kamera kanan
-Camera trước	Front camera	Kamera hadapan
-Tắt camera	Camera off	Matikan kamera
-Camera theo yêu cầu	Camera on demand	Kamera atas permintaan
-Chạm để bật/tắt camera đó; mở camera khác thì thay camera đang mở. Không tự tắt.	Tap to turn that camera on/off; opening another camera replaces the one showing. It never times out.	Ketik untuk menghidupkan/mematikan kamera itu; membuka kamera lain akan menggantikan kamera yang sedang dipaparkan. Ia tidak tamat masa.
-Không có camera nào đang mở	No camera is open	Tiada kamera yang dibuka
-{0} đang không mở	{0} is not open	{0} tidak dibuka
-chưa liên lạc được màn hình chính	couldn't reach the home screen	tidak dapat menghubungi skrin utama
 # Android box B2 · W1 (2026-10-09) — rail Cài đặt sau khi gỡ nhóm BYD.
 Hiển thị	Display	Paparan
 Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Theme light/dark, colours, transparency, bar size, language	Tema cerah/gelap, warna, ketelusan, saiz bar, bahasa
 Sổ địa chỉ, app mặc định, lịch tự dẫn	Address book, default app, scheduled navigation	Buku alamat, apl lalai, navigasi berjadual
 Gán nút vật lý cho app hoặc trợ lý	Bind physical buttons to apps or the assistant	Petakan butang fizikal kepada apl atau pembantu
+camera	the camera	kamera

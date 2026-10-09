@@ -1,7 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.launcher.camera.CameraCamConfig
-import com.byd.clusternav.launcher.camera.CameraWhich
 import com.byd.clusternav.modules.clustercast.simplified.CastEnableDeferral
 import com.byd.clusternav.modules.clustercast.simplified.CastGeometryGuard
 
@@ -82,7 +80,7 @@ object ProfileScopeCluster {
         // 2.93 · CAMERA-PER-CAM-CONFIG (spec kachi-293-cam R2) — góc · vị trí kéo-thả · cỡ · hình · kiểu RIÊNG từng camera:
         // cùng họ camera_pos_left / camera_shape / camera_projection (chỗ người lái muốn nhìn). Khoá mới rót xuống hồ sơ
         // cũ bằng sổ 2.92 PROFILE-NEW-KEYS (ProfileScopeMigration.fillNewKeys) — không cần lượt di trú riêng.
-        CameraCamConfig.PROFILE_KEYS.filterNot { it in this }
+        RetiredCameraKeys.PROFILE_KEYS.filterNot { it in this }
             .forEach { put(it, R_PER_CAM) }
     }
 
@@ -97,13 +95,13 @@ object ProfileScopeCluster {
 
     /**
      * 30 khoá camera theo XE → lý do (2.93: +4 xoay/lật camera sau·trước). Hợp với [CAMERA_PROFILE_KEYS] phải bằng ĐÚNG
-     * `CameraSettingsIa.ALL_KEYS` (56) — `ProfileScopeClusterTest` đỏ khi `CameraSettingsIa` thêm khoá mà quên xếp loại ở đây.
+     * bộ khoá camera 2.93 (56). Android box B2 · W2b: mã camera gỡ, TÊN khoá giữ ở [RetiredCameraKeys] tới đợt dọn prefs W4.
      */
     val CAMERA_DEVICE_KEYS: Map<String, String> = buildMap {
         listOf("camera_rot_left", "camera_rot_right", "camera_mirror_left", "camera_mirror_right")
             .forEach { put(it, R_MOUNT) }
         // 2.93 — xoay/lật của hai camera GIỮA (sau/trước): cùng lý do lắp đặt (chiều ghép dải trong ảnh 4-in-1 của xe này).
-        CameraCamConfig.DEVICE_KEYS.filterNot { it in this }.forEach { put(it, R_MOUNT) }
+        RetiredCameraKeys.DEVICE_KEYS.filterNot { it in this }.forEach { put(it, R_MOUNT) }
         listOf(
             "camera_view_left", "camera_view_right", "camera_pano_left", "camera_pano_right",
             "camera_cam_left", "camera_cam_right",
@@ -190,11 +188,8 @@ object ProfileScopeCluster {
         listOf("camera_pos_left", "camera_pos_right", "camera_shape", "camera_projection").forEach { put(it, PrefType.STRING) }
         listOf("camera_dewarp_amount", "camera_zoom").forEach { put(it, PrefType.INT) }
         // 2.93 — cấu hình riêng từng camera (`PrefsCameraPerCam`): góc/vị trí/hình/kiểu `putString`, cỡ `putInt`.
-        CameraWhich.ALL.forEach { w ->
-            listOf(CameraCamConfig.cornerKey(w), CameraCamConfig.placeKey(w), CameraCamConfig.shapeKey(w),
-                CameraCamConfig.projectionKey(w)).forEach { put(it, PrefType.STRING) }
-            put(CameraCamConfig.sizeKey(w), PrefType.INT)
-        }
+        RetiredCameraKeys.PROFILE_STRING.forEach { put(it, PrefType.STRING) }
+        RetiredCameraKeys.PROFILE_INT.forEach { put(it, PrefType.INT) }
         // cast-v2-app-catalog — CastAppCatalog.bubblePosition (`getInt`).
         listOf("bubbleX", "bubbleY").forEach { put(it, PrefType.INT) }
         // clusternav_prefs — nhóm "lên cụm" đã theo hồ sơ từ S4 (senior review V-CLUSTER Pass 1). Chỗ đọc là DỊCH VỤ đang

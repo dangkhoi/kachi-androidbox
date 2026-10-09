@@ -111,7 +111,6 @@ object VoiceSynonyms {
         "defrost" to listOf("say kinh truoc", "xa bang", "say kieng", "tan suong", "khu suong",
             // [ĐO golden 2026-09-22] "sấy kính" (không "trước") rơi nhầm win_lf ⇒ khai tường minh về defrost trước.
             "say kinh", "say kieng truoc"),
-        "cam" to listOf("camera", "camera 360 do", "camera quanh xe", "cam ba sau muoi", "camera toan canh"),
         "sunroof" to listOf("noc xe", "cua noc", "cua so noc", "kinh noc", "sunroof"),
         "headl" to listOf("den chieu xa", "high beam", "den cot pha", "chieu xa", "den lon"),
         // ⚠ 1.91 · CỐ Ý **KHÔNG** nhận *"gió ngoài"* / *"lấy gió ngoài"* (owner có nêu): chúng là **chiều NGƯỢC**

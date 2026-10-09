@@ -1,9 +1,6 @@
 package com.byd.clusternav.modules.clustercast
 
 import android.content.Context
-import com.byd.clusternav.launcher.camera.CameraProfileDefaults
-import com.byd.clusternav.launcher.camera.ClusterBandSpec
-import com.byd.clusternav.modules.navaccess.AccessibilityRebind
 import com.byd.clusternav.SysProps
 import com.byd.clusternav.modules.clustercast.simplified.CastStyle
 import com.byd.clusternav.modules.clustercast.simplified.ClusterCarType
@@ -25,10 +22,8 @@ import com.byd.clusternav.modules.clustercast.simplified.ProjectionRecipe
  * cũ gửi lúc mở chiếu; svcName vắng = AutoContainer.
  * Phần companion PURE (parse/export/detectSeed) không đụng Context → unit-test off-device được; [resolve] mới cần ctx.
  *
- * ## [camera] — mặc định CAMERA theo đời xe (2.76 · spec `kachi-276-closing.html` R2)
- * KHÔNG nằm trong chuỗi export/parse: bản đồ kênh HAL, bộ nắn ống kính, chiều ảnh là **số đo của một đời DiLink**,
- * không phải thứ anh em chỉnh tay rồi share (chuỗi share vốn là *"chiếu cụm thế nào"*). [parse] gán nó theo `id` của
- * seed đã đo ([cameraFor]); id lạ ⇒ [CameraProfileDefaults.NEUTRAL] = đúng hành vi 2.75.
+ * Android box B2 · W2b (2026-10-09): ba trường camera theo đời xe (`camera` — mặc định camera · `band` — dải cụm cho hình
+ * camera · `cameraSignature` — dấu màn camera cho rào HOME) gỡ cùng camera BYD; phần chiếu cụm còn lại gỡ ở W2c.
  */
 data class ClusterProfile(
     val id: String,
@@ -58,30 +53,6 @@ data class ClusterProfile(
      * chưa biết ⇒ RECT ẩn. Trường export thứ 10 chỉ để chuỗi share mang theo thông tin (round-trip), không đè được dò thật.
      */
     val nativeStyle: CastStyle? = null,
-    /**
-     * Mặc định camera của đời xe này — pref VẮNG mới lấy ở đây, pref đã đặt tường minh luôn thắng
-     * (`Prefs.camera*`). Seal DL3 = bộ [ĐO 27/09] owner duyệt; mọi đời khác = [CameraProfileDefaults.NEUTRAL].
-     */
-    val camera: CameraProfileDefaults = CameraProfileDefaults.NEUTRAL,
-    /**
-     * Số đo DẢI GIỮA của cụm cho hình camera *theo cụm* (2.76 R4; nợ chéo L2 → L7). **Không** vào [export]/[parse] —
-     * chuỗi override do owner chia sẻ chỉ mang thứ đã đo được bằng tay trên xe (cụm, chuỗi lệnh, tên VD); dải cụm là
-     * số của bộ vẽ, đổi theo seed đời xe, không phải thứ ai gõ vào. `CameraSignalController` đọc qua
-     * `CameraDefaults.band`; đời xe chọn bộ nào thì [bandFor] nói.
-     *
-     * ⚠ 2.77 — mặc định là [ClusterBandSpec.SEAL_DL3_NO_CURVE] (**không** đường cong), không phải
-     * [ClusterBandSpec.SEAL_DL3]: từ 2.77 bảng `leftEdge` không chỉ đặt cửa sổ mà còn **CẮT** điểm ảnh theo miếng
-     * kính của Seal, nên đời cụm chưa đo phải rơi về tường thẳng của 2.76 chứ không được xén theo kính xe khác
-     * (CLAUDE.md §7). Xem KDoc [ClusterBandSpec.SEAL_DL3_NO_CURVE].
-     */
-    val band: ClusterBandSpec = ClusterBandSpec.SEAL_DL3_NO_CURVE,
-    /**
-     * Dấu hiệu MÀN CAMERA (lùi/360) của đời xe trong `am stack list` — đầu vào của rào `CameraGuard.unlessCamera` cho
-     * mọi lệnh đưa app lên TRƯỚC display 0 (spec shortcuts-autostart §4.8). Không vào [export]/[parse], gán theo id như
-     * [camera]. Seal DL3 = `com.byd.avc/` [ĐO dump SurfaceFlinger + dịch ngược 28/09]; đời khác `null` [CHƯA BIẾT] ⇒
-     * tính năng mới KHÔNG mở gì lên trước display 0 (CLAUDE.md §7 — khác biệt đời xe nằm ở đây, không rải trong mã).
-     */
-    val cameraSignature: String? = null,
     /**
      * CLUSTER-THEME-SAFE: cho phép gửi theme khi màn ảo cụm CÒN mà trống (mức B). Mặc định `false`; [forCarType] bật cho mọi đời
      * service `AutoContainer` (DiLink3 — 2.95, trước đó chỉ mã 138; DiLink5 không có opcode theme): [ĐO xe Seal 06/10] màn ảo cụm có từ lúc đầu máy
@@ -152,35 +123,6 @@ data class ClusterProfile(
 
     companion object {
         /**
-         * ═══ Camera Seal DL3 — bộ owner DUYỆT trên xe [ĐO 27/09 10:30–11:30, backlog `ONCAR-2026-09-27` F1/CAM-B1] ═══
-         *
-         *  • `span = STRIP` (trọn dải 0,25 — vệt hẹp 0,10 của 2.73 là rìa vòng fisheye, méo như ống — RE Electro K10);
-         *  • `render = GL` (đường nắn; Adreno 610 `GL_MAX_TEXTURE_SIZE = 16384` — CAM-B1 chốt Q13);
-         *  • `amount 100 · focal 55 · k 100 · scale 130 · cx 0 · cy 0` — owner: *"thẳng, tự nhiên, thấy 2 bánh"*;
-         *    bác bỏ tại chỗ: `cx/cy ≠ 0` (cong), `scale ≥ 140` ("heavy");
-         *  • `pan 0/0` — núm 2.75, chiều tuyệt đối còn 🚗 G7;
-         *  • `rot 0/0` — khung HAL vốn ĐỨNG (F1: 4 dải fisheye đứng, mặt đất dưới) và research
-         *    `research-side-camera-orientation-2026-09-27.md` §6.1: 18/20 hệ [ĐO] hiện ĐỨNG ⇒ mặc định đứng.
-         *    ⚠ Pref `↺90` owner đã đặt trên xe **không** bị ghi đè (pref thắng) — chốt bằng 🚗 CAM-C2;
-         *  • ⚠ 2.77: **không còn** bản đồ kênh HAL. [ĐO 11:16] `addPreviewSurface(surface, n)` cho `trái = 2 ·
-         *    phải = 3` (bản đồ đầy đủ: 1 = sau · 2 = trái · 3 = phải · 4 = trước, owner xác nhận từng kênh) — số đo
-         *    ấy giữ ở `camera-ia-profile.md` §7 làm **kiến thức**, nhưng nguồn *Một camera* đã bỏ hẳn: cùng cỡ cảnh,
-         *    dải ghép có năng lượng cạnh **686 vs 351** và tỉ lệ chi tiết ngang/dọc **0,30 vs 0,19** ⇒ một kênh chỉ
-         *    bị kéo ngang, không nét hơn.
-         *
-         * Mọi số ở đây là **số đo**, không phải phép suy. Đời xe khác KHÔNG chép bộ này (KDoc [CameraProfileDefaults]).
-         */
-        // ⚠ Khai TRƯỚC [SEAL_DL3]: companion khởi tạo theo thứ tự khai, một `val` tham chiếu tới cái đứng SAU là null lúc chạy.
-        val SEAL_DL3_CAMERA = CameraProfileDefaults(
-            span = com.byd.clusternav.launcher.camera.CameraSignalPolicy.SPAN_STRIP,
-            render = com.byd.clusternav.launcher.camera.CameraSignalPolicy.RENDER_GL,
-            amountPct = 100, focalPct = 55, kPct = 100, scalePct = 130,
-            centerXPct = 0, centerYPct = 0, panXPct = 0, panYPct = 0,
-            rotLeft = com.byd.clusternav.launcher.camera.CameraSignalPolicy.ROTATE_NONE,
-            rotRight = com.byd.clusternav.launcher.camera.CameraSignalPolicy.ROTATE_NONE,
-        )
-
-        /**
          * Mặc định opcode kiểu (DiLink 3): 30 = cong 12.3" (đường đã chạy từ 08/02), 31 = chữ nhật 10.25" [ĐO xe 05/10]. Khai
          * TRƯỚC các seed (companion khởi tạo theo thứ tự khai).
          */
@@ -199,25 +141,7 @@ data class ClusterProfile(
         val SEAL_DL3 = ClusterProfile(
             id = "seal_dl3", diLink = 3, clusterW = 1920, clusterH = 720,
             castSeq = listOf(16, 35), teardownSeq = listOf(18, 0), vdNameHint = "xdja",
-            camera = SEAL_DL3_CAMERA,
-            // ĐỜI DUY NHẤT đã đo đường cong kính (2.77) ⇒ đời duy nhất được mang bảng `leftEdge`.
-            band = ClusterBandSpec.SEAL_DL3,
-            cameraSignature = AccessibilityRebind.CAMERA_SCREEN_SIGNATURE,
         )
-
-        /** Dấu hiệu màn camera theo `id` seed — cùng luật với [cameraFor]: chỉ đời ĐÃ ĐO mới có; khác ⇒ `null`. */
-        fun cameraSignatureFor(id: String): String? = if (id == SEAL_DL3.id) SEAL_DL3.cameraSignature else null
-
-        /** Mặc định camera theo `id` seed: chỉ seed ĐÃ ĐO mới có bộ riêng; id lạ/đời khác ⇒ trung tính. */
-        fun cameraFor(id: String): CameraProfileDefaults =
-            if (id == SEAL_DL3.id) SEAL_DL3_CAMERA else CameraProfileDefaults.NEUTRAL
-
-        /**
-         * Dải cụm theo `id` seed — cùng luật với [cameraFor]: chỉ đời **ĐÃ ĐO đường cong kính** mới mang bảng
-         * `leftEdge`; id lạ/đời khác ⇒ [ClusterBandSpec.SEAL_DL3_NO_CURVE] = tường thẳng, đúng hành vi 2.76.
-         */
-        fun bandFor(id: String): ClusterBandSpec =
-            if (id == SEAL_DL3.id) ClusterBandSpec.SEAL_DL3 else ClusterBandSpec.SEAL_DL3_NO_CURVE
 
         /**
          * DiLink 5 (Android 12) — RE từ DashCast: service đổi thành `auto_container`, VD tên
@@ -290,10 +214,7 @@ data class ClusterProfile(
                 if (curved != null && rect != null) put(CastStyle.RECT, rect)
             }
             val native = f.getOrNull(9)?.trim()?.let { raw -> CastStyle.entries.firstOrNull { it.name.equals(raw, ignoreCase = true) } }
-            return ClusterProfile(
-                id, diLink, w, h, castLeft, tear, hint, svc, style, native,
-                camera = cameraFor(id), band = bandFor(id), cameraSignature = cameraSignatureFor(id),
-            )
+            return ClusterProfile(id, diLink, w, h, castLeft, tear, hint, svc, style, native)
         }
 
         /**
@@ -377,8 +298,8 @@ data class ClusterProfile(
         private fun prefs(ctx: Context) = ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
         /**
-         * [resolve] có nhớ đệm — cho tầng prefs camera hỏi *"mặc định của xe này"* ở **mỗi** lượt đọc khoá vắng
-         * (vài lần mỗi lượt xi-nhan) mà không mở prefs + reflection `getprop` lại từng lần. Build.* không đổi trong
+         * [resolve] có nhớ đệm — cho bên gọi hỏi hồ sơ đời xe nhiều lần mà không mở prefs + reflection `getprop` lại
+         * từng lần. Build.* không đổi trong
          * một tiến trình; override chỉ đổi qua [saveOverride]/[clearOverride] ⇒ hai chỗ ấy xoá đệm. `@Volatile`:
          * đọc từ luồng socket xi-nhan lẫn main.
          */

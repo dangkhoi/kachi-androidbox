@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
  *  2. chuỗi màn ảo ẩn đúng thứ tự đã đo (`e2e-L4 · e6c-hidden` (bằng chứng phiên, ngoài repo), fixture `l4-hidden-*` nguyên văn): tạo → K4 → lớp che → giữ
  *     chỗ → move-task → gỡ che → NHẢ màn ảo chỉ khi đọc thấy trống; 0 lệnh `--display 0`;
  *  3. X thoát lên display 0 trong lúc dàn (trung chuyển VIEW, [ĐO `e2e-L4 · m5a` (bằng chứng phiên, ngoài repo)]) ⇒ K12 NGAY, không dựng lớp che;
- *  4. rào nhả: X kẹt màn ảo ẩn ⇒ K7 (rào màn nhà + camera) + dấu + K12 rồi mới nhả; K7 bị rào chặn ⇒ GIỮ màn ảo;
+ *  4. rào nhả: X kẹt màn ảo ẩn ⇒ K7 (cổng màn nhà) + dấu + K12 rồi mới nhả; K7 bị rào chặn ⇒ GIỮ màn ảo;
  *  5. D4 — task KHÔNG tiến trình ([ĐO `e2e-L4 · m1-stale-task-k4` (bằng chứng phiên, ngoài repo)]) là NGUỘI ⇒ K4 chạy (K4 kéo task cũ vào màn ảo).
  */
 class BehindHomeHiddenStageTest {
@@ -62,7 +62,7 @@ class BehindHomeHiddenStageTest {
             override fun uncover(): Int { log += "UNCOVER"; return 1 }
             override fun release(vd: Int) { log += "RELEASE $vd" }
         }
-        val seq = BehindHomeSequence(sh, anchor, self, k12, sleep = {}, homeComps = homes, cameraSig = "com.byd.avc/")
+        val seq = BehindHomeSequence(sh, anchor, self, k12, sleep = {}, homeComps = homes)
     }
 
     /** DẪN XUẤT từ `l4-hidden-covered`: bỏ khối stack của lớp che (690) ⇒ "X một mình trên màn ảo ẩn" (lớp che chưa lên). */
@@ -135,7 +135,9 @@ class BehindHomeHiddenStageTest {
         assertEquals(Result.X_FRONT_HOME_RESTORED, out.result, out.line)
         val k7 = r.log.indexOfFirst { it.contains("--display 0") && it.contains("com.waze/com.waze.FreeMapAppActivity") }
         assertTrue(k7 > r.log.indexOf("UNCOVER"), "K7 chỉ sau khi gỡ che: ${r.log}")
-        assertTrue(r.log[k7].contains("com.byd.avc/") && r.log[k7].contains("KachiHome "), "K7 ĐI QUA rào camera + màn nhà: ${r.log[k7]}")
+        assertTrue(r.log[k7].contains("KachiHome "), "K7 ĐI QUA cổng màn nhà: ${r.log[k7]}")
+        // Android box B2 · W2b: rào camera BYD gỡ — K7 không còn nhắc dấu `com.byd.avc/`.
+        assertFalse(r.log[k7].contains("com.byd.avc/"), "K7 không còn rào camera BYD: ${r.log[k7]}")
         val mark = r.log.indexOf("MARK 3267 $waze")
         val k12At = r.log.lastIndexOf(k12)
         assertTrue(mark in (k7 + 1) until k12At, "dấu sau K7, trước K12: ${r.log}")

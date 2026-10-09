@@ -3,9 +3,6 @@ package com.byd.clusternav.launcher
 import com.byd.clusternav.testsupport.KotlinSource
 import com.byd.clusternav.testsupport.SourceRoots
 import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.Path
-import java.security.MessageDigest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -25,24 +22,11 @@ import org.junit.jupiter.api.Test
  * Ba đường đó đưa dự án về đúng trạng thái mà đợt này sinh ra để chấm dứt: hai bề mặt cấu hình song song,
  * ghi cùng một bộ khoá, lệch nhau dần.
  *
- * ## Hai tệp niêm phong: PHẢI còn, và phải NGUYÊN BYTE
- * `res/layout/activity_main.xml` + `res/values/strings.xml` nằm trong `T11_PATHS` của
- * `ExpansionTransportFenceTest` (offcar-planner) kèm hash. Chúng ở lại như **hiện vật**: không màn nào inflate,
- * không mã nào tham chiếu. Bài này đọc hằng hash **từ chính tệp nguồn của bài niêm phong** thay vì chép số sang
- * đây — chép là tạo bản sao thứ hai của một hằng, mà bản thứ hai thì trôi (đúng lỗi mà cả đợt này đang dọn).
+ * ## Layout cũ `activity_main.xml` — đã XOÁ (Android box B2 · W2a, 2026-10-09)
+ * Trước đây tệp ở lại như hiện vật niêm phong T11 (hash ở `ExpansionTransportFenceTest` của `:offcar-planner`). Module
+ * niêm phong gỡ cùng bộ đo xe BYD ⇒ tệp mồ côi bị xoá; bài [layout cu da bi xoa va khong ai inflate] canh nó không mọc lại.
  */
 class LegacyScreenAbsenceContractTest {
-
-    /** Hằng `T11_HASHES` ở tệp fixtures từ L6-debt 2026-09-27 (tách thuần khỏi bài niêm phong, trần 500 dòng). */
-    private val fence = "offcar-planner/src/test/kotlin/com/byd/clusternav/offcar/ExpansionTransportFenceFixtures.kt"
-
-    /** Gốc repo = thư mục tổ tiên gần nhất có `.git` (working dir của test tuỳ module). */
-    private fun repoRoot(): Path? =
-        generateSequence(SourceRoots.path("src/main/AndroidManifest.xml").toAbsolutePath()) { it.parent }
-            .firstOrNull { Files.exists(it.resolve(".git")) }
-
-    private fun sha256(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
     // ── R1: không còn lớp, không còn khai báo, không còn intent ─────────────────────────────────────────────
 
@@ -92,51 +76,18 @@ class LegacyScreenAbsenceContractTest {
         )
     }
 
-    // ── R5: hai tệp niêm phong còn nguyên byte ──────────────────────────────────────────────────────────────
-
     /**
-     * Hash ĐỌC TỪ HẰNG của `ExpansionTransportFenceTest` (module khác, `private`) bằng cách quét nguồn của
-     * chính bài đó — nên nếu ai đổi hằng để "chữa" một lần sửa lén thì bài này KHÔNG đỏ, nhưng bài niêm phong
-     * gốc sẽ đỏ và lịch sử git ghi lại lần đổi hằng. Ở đây canh đúng một việc: **đợt gỡ màn cũ không đụng vào
-     * hai tệp đó** (R5), kể cả khi có người sửa hằng cùng lúc.
+     * Layout cũ đã xoá (W2a) — không được khôi phục, và không mã nào được tham chiếu `R.layout.activity_main`
+     * (nếu tệp mọc lại, màn cũ sống dậy mà không cần tệp `MainActivity.kt` nào).
      */
     @Test
-    fun `hai tep niem phong con ton tai va dung hash cua bai T11`() {
-        val root = repoRoot() ?: return  // không phải checkout git (CI tarball) ⇒ bỏ qua
-        val fenceSource = root.resolve(fence)
-        assertTrue(Files.isRegularFile(fenceSource, LinkOption.NOFOLLOW_LINKS), "thiếu bài niêm phong T11: $fence")
-
-        val expected = Regex(""""(app/src/main/res/[^"]+)" to "([0-9a-f]{64})"""")
-            .findAll(fenceSource.toFile().readText())
-            .associate { it.groupValues[1] to it.groupValues[2] }
-        assertEquals(
-            setOf("app/src/main/res/layout/activity_main.xml", "app/src/main/res/values/strings.xml"),
-            expected.keys,
-            "đọc hụt hằng `T11_HASHES` — regex của bài này hỏng, hoặc danh sách niêm phong vừa đổi",
-        )
-        expected.forEach { (relative, hash) ->
-            val file = root.resolve(relative)
-            assertTrue(
-                Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS),
-                "$relative phải Ở LẠI trên đĩa như hiện vật niêm phong — xoá nó là phá T11",
-            )
-            assertEquals(hash, sha256(Files.readAllBytes(file)), "$relative đã đổi byte — đợt gỡ màn cũ cấm đụng")
-        }
-    }
-
-    /**
-     * Hiện vật thì phải **mồ côi**: không mã nào tham chiếu `R.layout.activity_main`.
-     *
-     * Đây là nửa còn lại của bài trên. Tệp còn nằm đó vì hash, KHÔNG phải vì còn dùng; một ngày nào đó ai đó
-     * inflate lại nó là màn cũ sống dậy mà không cần tệp `MainActivity.kt` nào.
-     */
-    @Test
-    fun `layout niem phong khong con ai inflate`() {
+    fun `layout cu da bi xoa va khong ai inflate`() {
+        assertFalse(SourceRoots.exists("src/main/res/layout/activity_main.xml"), "layout màn cũ đã xoá ở B2 · W2a — không khôi phục")
         val users = SourceRoots.moduleSourceRoots().flatMap { root ->
             Files.walk(root).use { paths ->
                 paths.filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }.toList()
             }.filter { "R.layout.activity_main" in it.toFile().readText() }.map { it.fileName.toString() }
         }
-        assertEquals(emptyList<String>(), users.sorted(), "layout niêm phong phải mồ côi, nhưng đang bị dùng ở: $users")
+        assertEquals(emptyList<String>(), users.sorted(), "không mã nào được dùng layout màn cũ, nhưng đang có ở: $users")
     }
 }

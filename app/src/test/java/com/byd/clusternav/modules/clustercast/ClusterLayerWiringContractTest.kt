@@ -85,13 +85,7 @@ class ClusterLayerWiringContractTest {
         assertTrue(st.contains("bridge.castThemeBubbleOldMod()") && st.contains("R.string.kachi_cast_style_bubble_old_mod"))
     }
 
-    @Test
-    fun `display cum cua camera dung chung bo chon - khong VD rieng tu, khong id 0 dau tien`() {
-        val cam = code("src/main/java/com/byd/clusternav/launcher/camera/CameraOverlayView.kt")
-        assertTrue(cam.contains("ClusterOverlayDisplays.resolve(dm)"))
-        assertTrue(cam.contains("if (ClusterOverlayDisplays.paused) return null"), "đang dọn cụm ⇒ camera mới rơi về màn chính")
-        assertFalse(cam.contains("dm.displays.firstOrNull { it.displayId != 0 }"), "đường rơi về display bất kỳ ≠ 0 (có thể là ô Kachi) đã gỡ")
-    }
+    // Android box B2 · W2b: bài "display cụm của camera dùng chung bộ chọn" gỡ cùng `CameraOverlayView` (camera BYD).
 
     @Test
     fun `widget VietMap tu lanh - luat thuan + dung lai khi goi doi`() {

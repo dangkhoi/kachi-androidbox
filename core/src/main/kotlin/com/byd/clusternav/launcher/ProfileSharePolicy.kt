@@ -81,7 +81,7 @@ object ProfileSharePolicy {
         ).forEach { put(it, R_CAMERA) }
         // 2.93 — cấu hình riêng từng camera: góc (TL/TR) · vị trí = phần nghìn của vùng trên MÀN (không toạ độ địa lý) · cỡ ·
         // hình · kiểu — cùng họ camera_pos_left/camera_shape.
-        com.byd.clusternav.launcher.camera.CameraCamConfig.PROFILE_KEYS.forEach { put(it, R_CAMERA) }
+        RetiredCameraKeys.PROFILE_KEYS.forEach { put(it, R_CAMERA) }
         listOf(
             "cast_enabled", "cast_bubble_visible", "split_ratio_left_pct", "autostart_enabled", "autostart_package",
             "autostart_split_enabled", "autostart_left_package", "autostart_right_package", "cast_style",

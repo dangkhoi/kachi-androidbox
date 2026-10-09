@@ -10,7 +10,6 @@ kotlin {
 }
 
 dependencies {
-    api(project(":vehicle-contracts"))
     // W1b: StateFlow cho CarStatusRepository (poll 2 nhịp). kotlinx-coroutines-core = JVM THUẦN (không android) →
     // hợp luật Q1 :core. Version 1.11.0 khớp :app (kotlinx-coroutines-android) — CLOSE-8 2026-09-26, Context7: 1.11.0 = bản mới nhất, runTest/StateFlow/delay không đổi.
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
@@ -24,18 +23,14 @@ dependencies {
 /**
  * ⚠⚠ `:core:test` ĐỌC CÂY NGUỒN CỦA MODULE KHÁC — phải khai, không thì bài canh cho dấu xanh GIẢ.
  *
- * Ba bài ở đây quét mã của module khác (`SourceRoots` / `moduleSourceRoots()` giải sang `app/`, `car-integration/`):
+ * Các bài ở đây quét mã của module khác (`SourceRoots` / `moduleSourceRoots()` giải sang `app/`, `car-integration/`):
  * `LauncherWindowingGuardTest` (cấm `:app` chạm display ≥ 1), `PersistentWindowStateWriterGuardTest`
- * (một-nơi-ghi-duy-nhất), `CarExecCommandsTest` (`:app` không được dùng shell thô). `PreflightTest` còn đọc
- * `CarExecCli.kt` của `:car-integration` + sổ `verdicts.tsv`, `T10SessionSafetyTest` đọc kế hoạch phiên trong `docs/`.
+ * (một-nơi-ghi-duy-nhất). `:core` KHÔNG phụ thuộc `:car-integration`/`:app` (chiều ngược lại) nên classpath của nó
+ * không có gì động khi văn bản ở đó đổi.
  *
- * [ĐO] 2026-09-12, TRƯỚC khi vá — hai phép, cả hai xanh giả:
- *  - đổi chuỗi `"--pkg"` → `"--pkgZ"` trong `car-integration/src/main/kotlin/.../CarExecCli.kt` (đúng ca
- *    `PreflightTest` đòi mọi placeholder có cờ CLI) ⇒ `:core:test` **UP-TO-DATE / BUILD SUCCESSFUL**;
- *    ép chạy ⇒ **BUILD FAILED**. Đây là đổi BYTECODE mà vẫn không rerun, vì `:core` KHÔNG phụ thuộc
- *    `:car-integration` (chiều ngược lại) nên classpath của nó không có gì động.
- *  - thêm một dòng vào `docs/refactor-car-execution/verdicts.tsv` (phá `startsWith(HEADER)`) ⇒ **UP-TO-DATE /
- *    BUILD SUCCESSFUL**; ép chạy ⇒ **BUILD FAILED**.
+ * [ĐO] 2026-09-12: đổi một chuỗi trong `car-integration/src/main/kotlin` mà bài `:core` canh ⇒ `:core:test`
+ * **UP-TO-DATE / BUILD SUCCESSFUL**; ép chạy ⇒ **BUILD FAILED** — lý do các `inputs` dưới đây tồn tại.
+ * (Android box B2 · W2a: gỡ hai đầu vào của bộ đo xe — sổ `verdicts.tsv` và kế hoạch phiên T10 — cùng các bài đọc chúng.)
  *
  * `src/main/kotlin` của chính `:core` cũng khai tường minh: đường gián tiếp qua classpath chỉ bắt thay đổi
  * làm ĐỔI BYTECODE, còn các bài này quét văn bản gốc (kể cả chú thích/KDoc).
@@ -53,19 +48,10 @@ tasks.withType<Test>().configureEach {
         .withPropertyName("appSourceTextForCoreGuardTests")
         .withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.dir(rootProject.layout.projectDirectory.dir("car-integration/src/main/kotlin"))
-        .withPropertyName("carIntegrationSourceTextForPreflightAndGuardTests")
+        .withPropertyName("carIntegrationSourceTextForGuardTests")
         .withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.dir(layout.projectDirectory.dir("src/main/kotlin"))
         .withPropertyName("coreSourceTextForCoreGuardTests")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(rootProject.layout.projectDirectory.file("docs/refactor-car-execution/verdicts.tsv"))
-        .withPropertyName("verdictLedgerForPreflightTest")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(
-        rootProject.layout.projectDirectory
-            .file("docs/diagnostics/hud-sign-re/expansion/vehicle-session-plan.json"),
-    )
-        .withPropertyName("vehicleSessionPlanForT10SessionSafetyTest")
         .withPathSensitivity(PathSensitivity.RELATIVE)
     // 2.89 · B2 VM-PREREQ-TRUTH — đầu ra nguyên văn máy ảo (`AppPrereqReadTest` · `VietMapBubbleWaitTest` đọc qua clusternav.root).
     inputs.dir(rootProject.layout.projectDirectory.dir("docs/diagnostics/vm-prereq-emulator-2026-10-05"))

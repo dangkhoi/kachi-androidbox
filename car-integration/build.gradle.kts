@@ -1,12 +1,7 @@
-// :car-integration — JVM module talking to head unit via adb (no Android).
+// :car-integration — JVM module talking to the device's own adbd via dadb (no Android).
 plugins {
     id("java-library")
-    id("application")
     id("org.jetbrains.kotlin.jvm")
-}
-
-application {
-    mainClass.set("com.byd.clusternav.carexec.CarExecCli")
 }
 
 kotlin {
@@ -22,17 +17,11 @@ dependencies {
 }
 
 /**
- * ⚠⚠ `:car-integration:test` ĐỌC SCRIPT + TÀI LIỆU TỪ CÂY NGUỒN — phải khai, không thì xanh GIẢ.
+ * ⚠⚠ Test của module này quét VĂN BẢN gốc của chính `src/main/kotlin` — phải khai, không thì xanh GIẢ
+ * (đường gián tiếp qua classpath chỉ bắt thay đổi làm đổi bytecode; sửa chú thích thì không).
  *
- * `WrapperContractTest` là hợp đồng giữa vỏ shell `scripts/vehicle/carexec.sh` và CLI; `DadbVehicleTransportTest`
- * đọc kế hoạch phiên trong `docs/`. Không tệp nào trong số đó nằm trên classpath của task test.
- *
- * [ĐO] 2026-09-12, TRƯỚC khi vá: đổi `LEDGER=` → `LEDGERX=` trong `scripts/vehicle/carexec.sh` (đúng ca
- * `WrapperContractTest` đòi sổ verdict neo vào `$ROOT`) ⇒ `:car-integration:test` **UP-TO-DATE /
- * BUILD SUCCESSFUL**; ép chạy (`--rerun`) ⇒ **BUILD FAILED**.
- *
- * `src/main/kotlin` khai tường minh vì `CarExecCliTest`/`WrapperContractTest` quét VĂN BẢN gốc của `CarExecCli.kt`
- * (đường gián tiếp qua classpath chỉ bắt thay đổi làm đổi bytecode).
+ * Android box B2 · W2a (2026-10-09): gỡ CLI đo xe (`CarExecCli` + vỏ `scripts/vehicle/carexec.sh` + `run-on-car.md`) và
+ * bộ chạy phiên T10 (gói `vehicleprobe`, task `runHudSignT10`, plugin `application`) cùng các đầu vào test của chúng.
  */
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
@@ -40,26 +29,4 @@ tasks.withType<Test>().configureEach {
     inputs.dir(layout.projectDirectory.dir("src/main/kotlin"))
         .withPropertyName("carIntegrationSourceTextForContractTests")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(rootProject.layout.projectDirectory.file("scripts/vehicle/carexec.sh"))
-        .withPropertyName("carexecWrapperScriptForWrapperContractTest")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(rootProject.layout.projectDirectory.file("docs/refactor-car-execution/run-on-car.md"))
-        .withPropertyName("runOnCarDocForWrapperContractTest")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.file(
-        rootProject.layout.projectDirectory
-            .file("docs/diagnostics/hud-sign-re/expansion/vehicle-session-plan.json"),
-    )
-        .withPropertyName("vehicleSessionPlanForDadbTransportTest")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
-}
-
-// Fixed no-argument T10 host entry. Tests must never execute this dadb-capable task.
-tasks.register<JavaExec>("runHudSignT10") {
-    group = "verification"
-    description = "Run the fixed-path, no-argument HUD/sign T10 host gate"
-    classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("com.byd.clusternav.vehicleprobe.T10RunnerMain")
-    workingDir = rootProject.projectDir
-    args(emptyList<String>())
 }

@@ -124,8 +124,6 @@ object HalWriteArgs {
         "sunroof" -> intArrayOf(if (primary > 0) MOONROOF_OPEN else MOONROOF_CLOSED)
         // sạc không dây `setWirelessChargingSwitchState` — CHARGE_WIRELESS_CHARGING_ON=1 / OFF=2 (:61/:60).
         "wireless_charge" -> intArrayOf(if (primary > 0) 1 else 2)
-        // camera 360 `setAVMSwitchState` — AVM_FUNCTION_ON=2 / OFF=1 (BYDAutoADASDevice.java:35/:34).
-        "cam" -> intArrayOf(if (primary > 0) 2 else 1)
         // ═══ 1.85 · HAI BẪY GIÁ TRỊ **NGƯỢC**, cả hai [ĐO trên xe 2026-09-20 §3] ═════════════════════════════
         //
         // (a) **gió tự động** `AC_CTRL_MODE_SET`: [ĐO] **0 → AUTO** · **1 → chỉnh tay** (rc=0, thử cả hai chiều,

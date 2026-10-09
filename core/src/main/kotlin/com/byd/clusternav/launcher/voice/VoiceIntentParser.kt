@@ -171,9 +171,6 @@ object VoiceIntentParser {
         if (t.isEmpty()) return VoiceIntent.Unknown(VoiceUnknownReason.EMPTY, original)
         // WP8 · [VoiceFeatureGone.HARD_BLOCK] — từ chặn cứng, xét TRƯỚC mọi phép khớp (lý do ở KDoc bên đó).
         if (VoiceFeatureGone.blocked(t)) return VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, original)
-        // 2.93 · CAMERA-ON-DEMAND — nhiều cách nói (*"cam trái"* · *"tắt máy quay sau"* · *"tắt cam"*): chỉ khi CẢ vế là câu
-        // camera, không thì `null` ⇒ vế đi tiếp y như cũ (KDoc [VoiceCameraPhrases]).
-        VoiceCameraPhrases.parse(t)?.let { return it }
         // «mở … một nửa / 50%» ⇒ cờ NỬA cho kính (COVER). Dò cả câu vì «một nửa» đứng TRƯỚC object («một nửa kính»).
         val half = VoiceControlParse.mentionsHalf(t)
 
@@ -231,9 +228,6 @@ object VoiceIntentParser {
             if (verbHit == null && after.isNotEmpty() && !VoiceGrammar.readsTail(head)) return@let
             // 2.93 — tên-việc KHÔNG đọc đuôi mà đuôi nói NỬA (*"mở hết kính một nửa"*) ⇒ để đường động từ hiểu ⇒ nút nửa ([VoiceHalfButton]).
             if ((verbHit?.second == VoiceVerb.OPEN || verbHit?.second == VoiceVerb.ON) && VoiceHalfButton.markedNear(emptyList(), after) && !VoiceGrammar.readsTail(head)) return@let
-            // 2.93 OQ5 — tên camera trần (không động từ, không phía) KHÔNG nhận động từ ngầm "mở": động từ có thể đã mất
-            // trong ồn (*"tắt camera"* + nhạc ⇒ *"camera"* từng BẬT camera) ⇒ hỏi lại — [VoiceCameraPhrases.bareName].
-            if (verbHit == null && VoiceCameraPhrases.bareName(head.words)) return VoiceIntent.Unknown(VoiceUnknownReason.NO_VERB, original)
             // 2.93 VOICE-BARE-NOUN-IMPLICIT-VERB — bộ phận CHUYỂN ĐỘNG (kính·nóc·rèm·cốp) nói trần ⇒ hỏi lại — [VoiceBareCover].
             if (VoiceBareCover.bare(t, head, verbHit?.first?.size ?: 0)) return VoiceIntent.Unknown(VoiceUnknownReason.NO_VERB, original)
             return build(head, implicitVerb(head), aloud = false, after, terms, places, original, half)
@@ -442,11 +436,7 @@ object VoiceIntentParser {
                 else -> VoiceTailClause.appInTail(after, terms)?.let { (app, tail) ->
                     if (VoiceTailClause.closesApp(verb)) VoiceIntent.Unknown(VoiceUnknownReason.APP_CLOSE, original)
                     else VoiceIntent.OpenApp(app, VoiceTailClause.slotAt(tail))
-                    // 2.93 — việc có trạng thái (camera theo yêu cầu): TẮT/ĐÓNG ⇒ `off`; việc khác giữ nguyên nghĩa ≤ 2.92.
-                } ?: VoiceIntent.Launcher(
-                    term.id,
-                    off = (verb == VoiceVerb.OFF || verb == VoiceVerb.CLOSE) && LauncherActions.switchable(term.id),
-                )
+                } ?: VoiceIntent.Launcher(term.id)
             }
 
             VoiceTermKind.PROFILE -> VoiceIntent.Profile(term.id)

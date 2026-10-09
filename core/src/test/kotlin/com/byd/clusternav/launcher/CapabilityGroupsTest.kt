@@ -327,7 +327,8 @@ class CapabilityGroupsTest {
         // ⚠ 2.88 (owner 04/10): 66 → **79** = +13 mã trạng thái THÔ của lốp (`TyreIds.RAW_STATES` — màu cụm · áp ·
         // rò khí ×4 + hệ thống). Cả 13 đều nằm trong `HIDDEN_FROM_PICKER` nên phép đếm `all()` dưới đây không đổi.
         assertEquals(79, TelemetryRegistry.ALL.size, "mục đọc rời: 66 + 13 mã trạng thái lốp (2.88)")
-        assertEquals(33, ControlRegistry.ALL.size, "1.94: kính tường minh (5 full + 5 half + 1 close-all)")
+        // Android box B2 · W2b (2026-10-09): 33 → **32** (gỡ `cam` Camera 360 cùng camera BYD).
+        assertEquals(32, ControlRegistry.ALL.size, "1.94: kính tường minh (5 full + 5 half + 1 close-all); W2b: −cam")
         assertEquals(10, WidgetRegistry.ALL.size, "widget dựng tay: 9 + `w_apps` (F1 lối tắt, 2026-10-02)")
         assertEquals(2, ActionMacros.ALL.size, "1.94: 2 gói (mở/đóng hết kính)")
         // Và tổng khả năng = 4 bộ cũ + nhóm, không mất không nhân đôi.
@@ -337,7 +338,7 @@ class CapabilityGroupsTest {
             // S4 · R12 thêm nguồn thứ SÁU (hành động của chính launcher — [LauncherActions]). Kể nó vào ĐÂY chứ
             // không nới con số: bài này canh *"gom nhóm chỉ CỘNG THÊM"*, nên mọi nguồn phải hiện tên ra.
             // F1 (2026-10-02): widget 9 → 10 (`w_apps`) + nguồn `LauncherActions.BLOCKS` (khối lối tắt thanh nút).
-            79 + 33 + 10 + 2 + CapabilityGroups.ALL.size + LauncherActions.ALL.size + LauncherActions.BLOCKS.size -
+            79 + 32 + 10 + 2 + CapabilityGroups.ALL.size + LauncherActions.ALL.size + LauncherActions.BLOCKS.size -
                 CapabilityCatalog.HIDDEN_FROM_PICKER.size,
             CapabilityCatalog.all().size,
             "gộp nhóm vào catalog không được làm mất hay nhân đôi mục nào",

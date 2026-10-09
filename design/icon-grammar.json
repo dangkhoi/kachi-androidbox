@@ -93,10 +93,6 @@
    "domain": "CLIMATE",
    "note": "ĐIỀU HOÀ (`ac_on` · `ac_auto`)"
   },
-  "adv_g": {
-   "domain": "COCKPIT",
-   "note": "NÂNG CAO (cockpit, ô tile_adv)"
-  },
   "air_fresh": {
    "domain": "CLIMATE",
    "note": "LẤY GIÓ NGOÀI (`ac_cycle` mã 0 — cặp đôi của recirc)"
@@ -110,10 +106,6 @@
    "note": "CẢNH BÁO KHẨN (`emergency_alarm`)",
    "family": "alert"
   },
-  "badge_g": {
-   "domain": "COCKPIT",
-   "note": "BIỂN TỐC ĐỘ (cockpit, ô tile_badge)"
-  },
   "battery": {
    "domain": "ENERGY",
    "note": "PIN (mức sạc · SOH)"
@@ -122,34 +114,6 @@
    "domain": "ENERGY",
    "note": "TIA SÉT",
    "large": true
-  },
-  "bubble_g": {
-   "domain": "COCKPIT",
-   "note": "NÚT NỔI (cockpit, ô tile_bubble)"
-  },
-  "cam": {
-   "domain": "INFOTAINMENT",
-   "note": "CAMERA 360 (`cam` · `camera_view`)"
-  },
-  "cam_off": {
-   "domain": "INFOTAINMENT",
-   "note": "TẮT CAMERA theo yêu cầu (`launcher_cam_off`, 2.93 wave 2B · D4) — thân máy + thấu kính của ic_cam, gạch chéo một nét chính (khuôn ic_sensor_off)"
-  },
-  "cam_view_front": {
-   "domain": "INFOTAINMENT",
-   "note": "CAMERA TRƯỚC theo yêu cầu (`launcher_cam_front`, 2.93) — quạt tầm nhìn phía trước thân xe"
-  },
-  "cam_view_lf": {
-   "domain": "INFOTAINMENT",
-   "note": "CAMERA TRÁI theo yêu cầu (`launcher_cam_left`, 2.93) — camera dưới gương TRƯỚC-trái, quạt tầm nhìn bên trái thân xe"
-  },
-  "cam_view_rear": {
-   "domain": "INFOTAINMENT",
-   "note": "CAMERA SAU theo yêu cầu (`launcher_cam_rear`, 2.93) — quạt tầm nhìn phía đuôi thân xe"
-  },
-  "cam_view_rf": {
-   "domain": "INFOTAINMENT",
-   "note": "CAMERA PHẢI theo yêu cầu (`launcher_cam_right`, 2.93) — camera dưới gương TRƯỚC-phải, quạt tầm nhìn bên phải thân xe"
   },
   "car": {
    "domain": "IDENTITY",
@@ -160,10 +124,6 @@
   "cast": {
    "domain": "INFOTAINMENT",
    "note": "CHIẾU CỤM (`cast` · `hud_switch` · `screen_rotation`; nhận dạng nhóm Giải trí)"
-  },
-  "cast_g": {
-   "domain": "COCKPIT",
-   "note": "MÀN CHIẾU (cockpit, ô tile_cast)"
   },
   "cell_volt": {
    "domain": "ENERGY",
@@ -201,10 +161,6 @@
   "dust": {
    "domain": "CLIMATE",
    "note": "BỤI MỊN (`pm25_*`)"
-  },
-  "dust_g": {
-   "domain": "COCKPIT",
-   "note": "LỌC KHÍ (cockpit, ô tile_dust)"
   },
   "fan": {
    "domain": "CLIMATE",
@@ -271,18 +227,10 @@
    "domain": "BODY",
    "note": "CA-PÔ (nút `hood`)"
   },
-  "lang_g": {
-   "domain": "COCKPIT",
-   "note": "NGÔN NGỮ (cockpit, hàng ngôn ngữ tile_sys)"
-  },
   "leaf": {
    "domain": "CLIMATE",
    "note": "ION ÂM / KHÔNG KHÍ SẠCH (`anion_state` · nút Ion âm; widget Không khí)",
    "large": true
-  },
-  "left_g": {
-   "domain": "COCKPIT",
-   "note": "CHIẾU NỬA TRÁI (cockpit, cast_zone_left)"
   },
   "light": {
    "domain": "LIGHTS",
@@ -296,10 +244,6 @@
   "mic": {
    "domain": "LAUNCHER",
    "note": "MICRO (`ic-mic`"
-  },
-  "mic_g": {
-   "domain": "COCKPIT",
-   "note": "MICRO (cockpit, ô tile_mic)"
   },
   "mode": {
    "domain": "DRIVETRAIN",
@@ -317,10 +261,6 @@
    "domain": "INFOTAINMENT",
    "note": "NHẠC (`cluster_music`; widget Nhạc)",
    "large": true
-  },
-  "nav_g": {
-   "domain": "COCKPIT",
-   "note": "DẪN ĐƯỜNG (cockpit, ô tile_nav)"
   },
   "next": {
    "domain": "INFOTAINMENT",
@@ -351,10 +291,6 @@
    "domain": "CLIMATE",
    "note": "LẤY GIÓ TRONG (`ac_cycle` · nút Lấy gió trong)"
   },
-  "right_g": {
-   "domain": "COCKPIT",
-   "note": "CHIẾU NỬA PHẢI (cockpit, cast_zone_right)"
-  },
   "road": {
    "domain": "ENERGY",
    "note": "QUÃNG ĐƯỜNG ĐÃ ĐI (`odometer` · `trip_km` · `ev_mileage_km`)"
@@ -362,10 +298,6 @@
   "seat": {
    "domain": "CLIMATE",
    "note": "GHẾ TRƠN, ghế PHỤ (chip gộp ghế phụ lúc tắt/chưa biết · ô chọn) — ghế lái là seat_left (lật + chấm vô-lăng)"
-  },
-  "seat_g": {
-   "domain": "COCKPIT",
-   "note": "GHẾ (cockpit, ô tile_seat)"
   },
   "seat_heat_left": {
    "domain": "CLIMATE",
@@ -425,10 +357,6 @@
   "swap": {
    "domain": "LAUNCHER",
    "note": "ĐỔI CHỖ Ô (⇄)"
-  },
-  "sys_g": {
-   "domain": "COCKPIT",
-   "note": "HỆ THỐNG (cockpit, ô tile_sys)"
   },
   "target": {
    "domain": "ENERGY",

@@ -177,9 +177,9 @@ object VoiceGrammar {
      * hơn thì ba họ câu ấy chết theo; siết hẹp hơn thì ba câu đo được ở trên vẫn bắn lệnh.
      */
     fun readsTail(term: VoiceTerm): Boolean = when (term.kind) {
-        // *"Mở ứng dụng VTV Go"* — đuôi quyết định app nào (nhánh LAUNCHER của `build`). 2.93: việc có trạng thái
-        // (camera theo yêu cầu) KHÔNG đọc đuôi — *"camera sau bẩn quá"* không được mở camera (cùng họ *"cốp xe bẩn quá"*).
-        VoiceTermKind.LAUNCHER -> !LauncherActions.switchable(term.id)
+        // *"Mở ứng dụng VTV Go"* — đuôi quyết định app nào (nhánh LAUNCHER của `build`). (≤ 2.98 BYD: việc có trạng thái —
+        // camera theo yêu cầu — không đọc đuôi; Android box B2 · W2b gỡ camera ⇒ mọi việc launcher đọc đuôi.)
+        VoiceTermKind.LAUNCHER -> true
         VoiceTermKind.CONTROL -> when (ControlRegistry.byId(term.id)?.kind) {
             // SELECT tra nhãn lựa chọn trong đuôi; STEP tra con số. Cả hai tự trả MISMATCH khi đuôi không cho
             // gì dùng được, nên chúng không bao giờ lặng lẽ bắn một hành động.

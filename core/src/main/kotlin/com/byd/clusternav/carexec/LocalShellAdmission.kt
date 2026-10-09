@@ -8,7 +8,7 @@ package com.byd.clusternav.carexec
  * phủ mọi bên gọi hôm nay và mai sau — guard ở tầng THI HÀNH, không ở UI (CLAUDE.md §5).
  *
  * Thuần (`:core`): chỉ giữ móc + luật báo kết quả; ba cửa ở `:car-integration`/`:app` gọi vào đây. Mặc định = [ALLOW_ALL]
- * ⇒ test và đường T10 niêm phong (`vehicleprobe`, không đi qua đây) không đổi.
+ * ⇒ test không đổi. (Đường T10 `vehicleprobe` từng nối adbd ngoài ba cửa này — Android box B2 · W2a đã gỡ.)
  * `:app` cài móc thật (`ShellReadiness`) ở `KachiApplication.onCreate`, TRƯỚC mọi lượt tự chữa có thể mở phiên.
  *
  * Bên gọi được nhận diện bằng NHÃN [labeled] nếu có (`early`, `f4`), không thì TÊN LUỒNG (rẻ, không dựng stack):

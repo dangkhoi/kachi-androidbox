@@ -98,7 +98,7 @@ class BehindHomeWiringContractTest {
         order(ready, "ranThisProcess.compareAndSet(false, true)) return", ".read().isEmpty()) return", "BehindHomeRunner.execute(", "run(app)")
         assertTrue(ready.contains("if (!measured) ranThisProcess.set(false)"), "không đọc được ⇒ lượt sau của cùng tiến trình đo lại")
         val fn = SourceRoots.body(recovery, "private fun run(app: Context): Boolean {")
-        order(fn, "if (marks.isEmpty()) return", "LocalDeviceShell.run(", "BehindMarks.surfaced(", "AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE)")
+        order(fn, "if (marks.isEmpty()) return", "LocalDeviceShell.run(", "BehindMarks.surfaced(", "AccessibilityRebind.GO_HOME")
     }
 
     /**
@@ -188,13 +188,13 @@ class BehindHomeWiringContractTest {
      */
     @Test
     fun `o toan man - thoi do truoc K7, ve o khi man nha hien, khong ve duoc thi golden`() {
-        val detach = SourceRoots.body(host, "fun detachToFull(sig: String?, homeComps: List<String>, done: (Boolean) -> Unit): Boolean {")
+        val detach = SourceRoots.body(host, "fun detachToFull(homeComps: List<String>, done: (Boolean) -> Unit): Boolean {")
         order(detach, "if (released || !launched) return false", "full.detach(")
         assertTrue(host.contains("SlotFullscreen(this, surface, probeKey, { p -> !released && pkg == p }, ::onAppClosed, ::reopen)"),
             "trạng thái toàn màn nối đúng thẻ 'đã đóng' + đường golden của CHÍNH host")
         assertTrue(SourceRoots.body(host, "fun returnFromFull() {").contains("if (!released) full.bringBack(id, p, sh)"))
         val run = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/SlotReturnRun.kt")
-        val full = SourceRoots.body(run, "fun detach(vd: Int, pkg: String, sh: (String) -> String, sig: String?, homeComps: List<String>, done: (Boolean) -> Unit) {")
+        val full = SourceRoots.body(run, "fun detach(vd: Int, pkg: String, sh: (String) -> String, homeComps: List<String>, done: (Boolean) -> Unit) {")
         order(full, "SlotLiveProbe.unwatch(probeKey)", "SlotReturnRun.detach(", "if (task != null) { done(true); return@detach }", "SlotLiveProbe.watch(")
         // Review lượt 4 [P2]: K7 đưa app rời ô rồi nó ẩn (HOME/camera trước lần đọc) ⇒ chuỗi đã về ô bằng K8; bên host chỉ đo
         // lại ô khi app THẬT ở ô (`null`/IN_SLOT), app đóng ⇒ thẻ "đã đóng", K8 không ăn ⇒ golden — không bao giờ ô đen câm.
@@ -212,7 +212,7 @@ class BehindHomeWiringContractTest {
         val act = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/KachiHomeActivity.kt")
         assertTrue(SourceRoots.body(act, "override fun onStart() {").contains("workspace.returnDetached()"))
         // Chuỗi K7 tách ô chỉ dựng ở :core (SlotReturn), host + lớp keo không tự viết lệnh display 0.
-        listOf(host, slots).forEach { assertFalse(it.contains("--display 0"), "lệnh display 0 phải đi qua SlotReturn (rào camera)") }
+        listOf(host, slots).forEach { assertFalse(it.contains("--display 0"), "lệnh display 0 phải đi qua SlotReturn (cổng màn nhà)") }
     }
 
     @Test

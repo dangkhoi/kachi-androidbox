@@ -46,7 +46,7 @@ done
 
 mkdir -p "$OUT"
 # Bằng chứng chứa `boot_id` của máy + tên hồ sơ do người dùng đặt ⇒ không để ngỏ trong /tmp dùng chung
-# (cùng lệ `scripts/vehicle/common.sh`).
+# (lệ của bộ script xe cũ, nay gỡ).
 chmod 700 "$OUT" 2>/dev/null || true
 T1_TSV="$OUT/t1-results.tsv"
 T2_TSV="$OUT/t2-results.tsv"

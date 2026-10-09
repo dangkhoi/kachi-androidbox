@@ -2,7 +2,7 @@ package com.byd.clusternav.launcher.behind
 
 import com.byd.clusternav.launcher.behind.SlotReturn.Back
 import com.byd.clusternav.launcher.behind.SlotReturn.Where
-import com.byd.clusternav.launcher.camera.CameraGuard
+import com.byd.clusternav.system.HomeGate
 import com.byd.clusternav.system.StackParse
 import java.io.File
 import java.nio.file.Files
@@ -59,37 +59,34 @@ class SlotReturnTest {
         assertThrows(IllegalArgumentException::class.java) { SlotReturn.detachCmd("x y/z") }
     }
 
+    /** Android box B2 · W2b: rào camera BYD gỡ — K7 chỉ còn cổng "màn nhà Kachi đang hiện" ([HomeGate.onHome]). */
     @Test
-    fun `rao K7 - camera da biet thi dung dang K10, chua biet thi chi cong man nha dang hien`() {
+    fun `cong K7 - chi cong man nha dang hien, khong nhanh camera`() {
         val k7 = SlotReturn.detachCmd(vmComp)
-        assertEquals(CameraGuard.unlessCameraOnHome("com.byd.avc/", homes, k7), SlotReturn.guardedDetachCmd("com.byd.avc/", homes, vmComp))
-        val noSig = SlotReturn.guardedDetachCmd(null, homes, vmComp)
-        assertFalse(noSig.contains(";; *) "), "không có nhánh 'mọi thứ khác' chạy lệnh: $noSig")
-        assertTrue(noSig.contains(homes.joinToString("|") { "*\"$it \"*" } + ") $k7 ;;"), noSig)
-        assertThrows(IllegalArgumentException::class.java) { CameraGuard.onHomeUnlessCamera(null, emptyList(), k7) }
-        assertThrows(IllegalArgumentException::class.java) { CameraGuard.onHomeUnlessCamera(null, homes, "echo 'x'") }
+        val cmd = SlotReturn.guardedDetachCmd(homes, vmComp)
+        assertEquals(HomeGate.onHome(homes, k7), cmd)
+        assertFalse(cmd.contains(";; *) "), "không có nhánh 'mọi thứ khác' chạy lệnh: $cmd")
+        assertFalse(cmd.contains("com.byd.avc"), "không còn dấu camera BYD: $cmd")
+        assertTrue(cmd.contains(homes.joinToString("|") { "*\"$it \"*" } + ") $k7 ;;"), cmd)
+        assertThrows(IllegalArgumentException::class.java) { HomeGate.onHome(emptyList(), k7) }
+        assertThrows(IllegalArgumentException::class.java) { HomeGate.onHome(homes, "echo 'x'") }
     }
 
-    /** Chạy THẬT trên `/bin/sh` với `am` giả in fixture máy ảo — cùng khuôn `CameraGuardTest`. */
+    /** Chạy THẬT trên `/bin/sh` với `am` giả in fixture máy ảo. */
     @Test
     fun `rao K7 chay that - man nha dang hien thi mo, app dang o truoc hay doc hong thi khong`(@TempDir dir: Path) {
         if (!File("/bin/sh").canExecute()) return
-        val cmd = SlotReturn.guardedDetachCmd(null, homes, vmComp)
+        val cmd = SlotReturn.guardedDetachCmd(homes, vmComp)
         val k7 = SlotReturn.detachCmd(vmComp)
         assertEquals(listOf("am stack list", k7), run(cmd, text("tm2-in-slot"), dir.resolve("a")), "màn nhà đang hiện ⇒ K7 chạy")
         assertEquals(listOf("am stack list"), run(cmd, text("tm2-detached"), dir.resolve("b")), "app đang toàn màn ⇒ màn nhà ẩn ⇒ không chạy")
         assertEquals(listOf("am stack list"), run(cmd, "", dir.resolve("c")), "đọc hỏng ⇒ không chạy")
-        // [ĐO máy ảo 02/10] màn camera ĐỨNG THAY (`com.byd.avc/android.app.Activity`, APK không mã chỉ có trên máy ảo) ở
-        // đỉnh display 0 ⇒ màn nhà `visible=false` ⇒ không chạy, dù biết hay chưa biết dấu hiệu camera.
+        // [ĐO máy ảo 02/10] một app khác (fixture `cam-standin-top`: APK đứng thay ở đỉnh display 0) ⇒ màn nhà `visible=false`
+        // ⇒ không chạy.
         val cam = text("cam-standin-top")
         assertEquals(listOf("am stack list"), run(cmd, cam, dir.resolve("d")))
-        val dl3 = SlotReturn.guardedDetachCmd("com.byd.avc/", homes, vmComp)
-        assertEquals(listOf("am stack list"), run(dl3, cam, dir.resolve("e")))
-        // DẪN XUẤT: camera là lớp phủ TRONG SUỐT (màn nhà vẫn `visible=true` dưới nó). Dấu hiệu đã biết (DL3) ⇒ nhánh camera
-        // đứng trước ⇒ không chạy. Chưa biết (DL5/hồ sơ chung) ⇒ CHẠY — giới hạn ghi rõ ở spec (cú chạm diễn ra trên màn nhà,
-        // cùng mức với đường Intent của ngăn kéo) [CHƯA BIẾT trên ROM BYD: OC-7].
+        // DẪN XUẤT: lớp phủ TRONG SUỐT (màn nhà vẫn `visible=true` dưới nó) ⇒ CHẠY — Android box không có màn camera để rào.
         val overlay = cam.lines().joinToString("\n") { l -> if ("launcher.KachiHome bounds" in l) l.replace("visible=false", "visible=true") else l }
-        assertEquals(listOf("am stack list"), run(dl3, overlay, dir.resolve("f")))
         assertEquals(listOf("am stack list", k7), run(cmd, overlay, dir.resolve("g")))
     }
 
@@ -157,15 +154,15 @@ class SlotReturnTest {
     @Test
     fun `tach ra toan man - doc, K7 qua rao, doc lai thay app truoc display 0`() {
         val r = Rig(listOf("tm2-in-slot", "tm2-detached").map(::text))
-        val out = r.seq.detach(173, vm, null, homes)
+        val out = r.seq.detach(173, vm, homes)
         assertEquals(2613, out.taskId, out.line)
-        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(null, homes, vmComp), list), r.log)
+        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(homes, vmComp), list), r.log)
     }
 
     @Test
     fun `tach khong len (rao chan) - khong lap lenh, khong K12, bao that bai`() {
         val r = Rig(listOf(text("tm2-in-slot")))
-        val out = r.seq.detach(173, vm, null, homes)
+        val out = r.seq.detach(173, vm, homes)
         assertNull(out.taskId, out.line)
         assertEquals(1, r.log.count { it.contains("-f 0x20000000") }, "K7 bắn đúng MỘT lần: ${r.log}")
         assertFalse(r.log.contains(k12))
@@ -180,13 +177,13 @@ class SlotReturnTest {
     @Test
     fun `K7 xong ma app an sau man nha truoc lan doc thay toan man - K8 ve o ngay, khong o den`() {
         val r = Rig(listOf(text("tm2-in-slot")) + List(SlotReturnSequence.DETACH_READS) { text("tm2-detached-home") } + text("tm2-returned"))
-        val out = r.seq.detach(173, vm, null, homes)
+        val out = r.seq.detach(173, vm, homes)
         assertNull(out.taskId, out.line)
         assertEquals(Back.IN_SLOT, out.back, out.line)
-        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(null, homes, vmComp)) + List(SlotReturnSequence.DETACH_READS) { list } + listOf(k8, list), r.log)
+        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(homes, vmComp)) + List(SlotReturnSequence.DETACH_READS) { list } + listOf(k8, list), r.log)
         // K8 không ăn (vẫn ẩn display 0) ⇒ bên gọi đi golden; không K12 (app không ở trước).
         val stuck = Rig(listOf(text("tm2-in-slot"), text("tm2-detached-home")))
-        val o2 = stuck.seq.detach(173, vm, null, homes)
+        val o2 = stuck.seq.detach(173, vm, homes)
         assertEquals(Back.GOLDEN, o2.back, o2.line)
         assertFalse(stuck.log.contains(k12))
     }
@@ -196,13 +193,13 @@ class SlotReturnTest {
         // DẪN XUẤT từ `tm2-detached-home`: bỏ dòng task VietMap (2613) — app đóng trong lúc đọc lại.
         val gone = text("tm2-detached-home").lines().filterNot { "taskId=2613" in it }.joinToString("\n")
         val r = Rig(listOf(text("tm2-in-slot"), gone))
-        val out = r.seq.detach(173, vm, null, homes)
+        val out = r.seq.detach(173, vm, homes)
         assertNull(out.taskId)
         assertEquals(Back.GONE, out.back, out.line)
         assertFalse(r.log.any { it.startsWith("am start --display 173") }, r.log.toString())
         // Đọc hỏng toàn bộ sau K7 ⇒ KHÔNG đoán là đã đóng (back = null — giữ hành vi đo lại ô).
         val unread = Rig(listOf(text("tm2-in-slot"), ""))
-        assertNull(unread.seq.detach(173, vm, null, homes).back)
+        assertNull(unread.seq.detach(173, vm, homes).back)
     }
 
     /**
@@ -217,16 +214,16 @@ class SlotReturnTest {
             .joinToString("\n") { if ("taskId=2613" in it) it.replace("visible=true", "visible=false") else it }
         assertEquals(Where.ELSEWHERE, SlotReturn.whereIs(StackParse.parse(topHidden), 2613, 173))
         val r = Rig(listOf(text("tm2-in-slot"), topHidden))
-        val out = r.seq.detach(173, vm, null, homes)
+        val out = r.seq.detach(173, vm, homes)
         assertEquals(2613, out.taskId, out.line)
         assertNull(out.back, out.line)
-        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(null, homes, vmComp)) + List(SlotReturnSequence.DETACH_READS) { list }, r.log)
+        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(homes, vmComp)) + List(SlotReturnSequence.DETACH_READS) { list }, r.log)
         // Về sau: màn nhà hiện lại (app ẩn đúng hình S) ⇒ bringBack K8 như mọi lượt toàn màn.
         val back = Rig(listOf(text("tm2-detached-home"), text("tm2-returned")))
         assertEquals(Back.IN_SLOT, back.seq.bringBack(173, 2613, homes).result)
         // Rời sang display KHÁC (không phải 0, không phải ô) ⇒ không nhận là toàn màn (giữ hành vi đo lại ô).
         val other = text("tm2-detached").lines().joinToString("\n") { it.replace("displayId=0", "displayId=5") }
-        val o2 = Rig(listOf(text("tm2-in-slot"), other)).seq.detach(173, vm, null, homes)
+        val o2 = Rig(listOf(text("tm2-in-slot"), other)).seq.detach(173, vm, homes)
         assertNull(o2.taskId, o2.line)
         assertNull(o2.back, o2.line)
     }
@@ -245,10 +242,10 @@ class SlotReturnTest {
         assertEquals(Where.HIDDEN_MAIN, SlotReturn.whereIs(e, 2613, 173))
         assertFalse(BehindHomePlan.homeOnTop(e, homes), "camera đứng thay ở đỉnh ⇒ màn nhà không ở đỉnh")
         val r = Rig(listOf(text("tm2-in-slot"), camTop))
-        val out = r.seq.detach(173, vm, null, homes)
+        val out = r.seq.detach(173, vm, homes)
         assertEquals(2613, out.taskId, out.line)
         assertNull(out.back, out.line)
-        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(null, homes, vmComp)) + List(SlotReturnSequence.DETACH_READS) { list }, r.log)
+        assertEquals(listOf(list, SlotReturn.guardedDetachCmd(homes, vmComp)) + List(SlotReturnSequence.DETACH_READS) { list }, r.log)
         assertFalse(r.log.any { it.startsWith("am start --display 173") }, "K8 dưới camera: ${r.log}")
         assertFalse(r.log.contains(k12), "K12 khi camera đang hiện: ${r.log}")
     }
@@ -256,7 +253,7 @@ class SlotReturnTest {
     @Test
     fun `app khong o o - 0 lenh doi cua so`() {
         val r = Rig(listOf(text("tm2-detached-home")))
-        assertNull(r.seq.detach(173, vm, null, homes).taskId)
+        assertNull(r.seq.detach(173, vm, homes).taskId)
         assertEquals(listOf(list), r.log)
     }
 

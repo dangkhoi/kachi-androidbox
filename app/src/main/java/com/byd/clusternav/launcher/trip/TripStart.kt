@@ -27,7 +27,6 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import com.byd.clusternav.system.CameraPresence
 
 /**
  * ═══ F2/F3 — CHUYẾN LÊN XE: lối vào DUY NHẤT (dòng CUỐI `EarlyShellChannel.readyChain`) ═══════════════════════════════
@@ -126,7 +125,7 @@ object TripStart {
 /**
  * MỘT lượt chuyến trên luồng `kachi-trip`: cổng [TripGate] → claim → chờ bằng sự thật (R2.3) → các bước [TripPlan]
  * theo thứ tự → đóng sổ. Mọi lệnh đổi cửa sổ đi qua đường đã đo: chạy nền = `BehindHomeRunner` của màn chính (R0.3) — ô
- * sống trước, màn ảo ẩn SAU (L4 · D2); mở bình thường = K10 ([TripPlan.normalCmd], rào camera trong CÙNG một chuỗi shell);
+ * sống trước, màn ảo ẩn SAU (L4 · D2); mở bình thường = K10 ([TripPlan.normalCmd], cổng màn nhà trong CÙNG một chuỗi shell);
  * nhạc = [TripMusicRun] (phiên nhạc, K4-VIEW khi phiên không nhận link — L4 · D3).
  *
  * L4 · D1: mỗi bước để lại MỘT [TripStep] (mã bền, Cài đặt dịch thành câu) và mã chuyến suy từ các bước
@@ -326,7 +325,7 @@ internal class TripRun(private val app: Context, private val sleep: (Long) -> Un
         override fun park(pkg: String): BehindHomeSequence.Outcome = await(pkg) { done ->
             live().behindChain("park X=$pkg", { kit ->
                 val marks = BehindMarksStore(kit.app)
-                HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE), homeComps, ::isSystem, { id, p -> marks.add(id, p) }, sleep)
+                HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.GO_HOME, homeComps, ::isSystem, { id, p -> marks.add(id, p) }, sleep)
                     .park(pkg, kit.park)
             }, done, needsAnchor = false)
             true
@@ -379,7 +378,7 @@ internal class TripRun(private val app: Context, private val sleep: (Long) -> Un
     /** K4-VIEW vào ô của app ([TripMusicView]) — kết quả đổi sang dạng chung của bên thi hành (chỉ để log + bộ đếm). */
     private fun viewInSlot(kit: BehindHomeRunner.Kit, pkg: String, vd: Int, url: String, fullscreenExtra: String?): BehindHomeSequence.Outcome {
         val marks = BehindMarksStore(kit.app)
-        val o = TripMusicView(kit.sh, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE), homeComps, { id, p -> marks.add(id, p) }, sleep).inSlot(pkg, vd, url, fullscreenExtra)
+        val o = TripMusicView(kit.sh, AccessibilityRebind.GO_HOME, homeComps, { id, p -> marks.add(id, p) }, sleep).inSlot(pkg, vd, url, fullscreenExtra)
         val r = when (o.result) {
             TripMusicView.Result.STAYED, TripMusicView.Result.RETURNED -> BehindHomeSequence.Result.MOVED   // app ở ô: không phải lùi
             TripMusicView.Result.BEHIND -> BehindHomeSequence.Result.X_FRONT_HOME_RESTORED
@@ -389,27 +388,24 @@ internal class TripRun(private val app: Context, private val sleep: (Long) -> Un
     }
 
     /**
-     * R2.5 — *Mở bình thường* (K10): một chuỗi shell đọc display 0 rồi mới mở (camera ⇒ không; HOME của Kachi không ở trước
-     * ⇒ không giành màn). Camera / đọc hỏng ⇒ thử lại mỗi [TripPlan.CAMERA_RETRY_MS] trong [TripPlan.NORMAL_DEADLINE_MS].
+     * R2.5 — *Mở bình thường* (K10): một chuỗi shell đọc display 0 rồi mới mở (HOME của Kachi không ở trước ⇒ không giành
+     * màn). Đọc hỏng ⇒ thử lại mỗi [TripPlan.NORMAL_RETRY_MS] trong [TripPlan.NORMAL_DEADLINE_MS].
      */
     private fun normal(host: TripHub.Host, pkg: String): Pair<TripStepCode, String> {
-        // Android box W0 (2026-10-09): không màn camera ⇒ K10 chỉ còn cổng "màn nhà Kachi ở trước" (không `case` camera);
-        // trước đây đời xe chưa biết dấu camera ⇒ bước bị bỏ, 0 lệnh.
-        val sig = CameraPresence.SIGNATURE
         val comp = app.packageManager.getLaunchIntentForPackage(pkg)?.component?.flattenToString()
             ?.takeIf { BehindHomePlan.safeComponent(it) } ?: return TripStepCode.NOT_STAGED to "NO_COMPONENT"
         val until = now + TripPlan.NORMAL_DEADLINE_MS
         var last = TripPlan.Normal.UNREAD
         while (now < until) {
             val sh = host.shell() ?: return TripStepCode.NO_CHANNEL to "NO_CHANNEL"
-            val out = runCatching { sh(TripPlan.normalCmd(sig, homeComps, comp)) }.getOrDefault("")
+            val out = runCatching { sh(TripPlan.normalCmd(homeComps, comp)) }.getOrDefault("")
             val after = StackParse.parse(runCatching { sh(BehindHomePlan.LIST_CMD) }.getOrDefault(""))
-            last = TripPlan.normalOutcome(out, after, sig, homeComps)
+            last = TripPlan.normalOutcome(out, after, homeComps)
             if (last == TripPlan.Normal.OPENED) return TripStepCode.OPENED to last.name
             if (last == TripPlan.Normal.OTHER_FRONT) return TripStepCode.OTHER_FRONT to last.name
-            sleep(TripPlan.CAMERA_RETRY_MS)
+            sleep(TripPlan.NORMAL_RETRY_MS)
         }
-        return (if (last == TripPlan.Normal.CAMERA) TripStepCode.CAMERA else TripStepCode.TIMEOUT) to "TIMEOUT_$last"
+        return TripStepCode.TIMEOUT to "TIMEOUT_$last"
     }
 
     /** R0.6 — CÙNG phép với chip *Chạy nền* của Cài đặt (L4 · D5): [InstalledApps.isSystem]. */

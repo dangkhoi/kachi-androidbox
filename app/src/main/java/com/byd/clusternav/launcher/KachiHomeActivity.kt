@@ -116,7 +116,6 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
     /** T4 — chủ DUY NHẤT của widget Android bên thứ ba (host + id + bind-grant). Xem `AppWidgetSlotHost`. */
     internal val appWidgets by lazy { AppWidgetSlotHost(this, { shell }, { submitBg(it) }, { drawerController.say(it) }) }
     private val appOpener by lazy { AppOpener(this) }      // U3: mở app toàn màn (đường "mở app kiểu thường")
-    internal val cameraSignal by lazy { container.cameraSignal }   // BG-15: MỘT controller cả tiến trình (AppContainer)
 
     /**
      * Glue intent theo-ô (gắn app/widget · mở · xoá · đổi chỗ) — thân ở [KachiHomeSlots] (trần 500 dòng). Nhận
@@ -355,7 +354,7 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
         startVoiceIfRequested(intent, voice)
         // T-BRIDGE — móc cho cầu kiểm thử qua adb; lượt tháo tự nối theo vòng đời (xem KDoc `attachTestBridge`).
         // Gắn móc KHÔNG mở cửa nào: mọi lệnh vẫn bị chặn bởi công tắc ở Cài đặt (`KachiTestBridge`).
-        attachTestBridge(viewModel, { slots }, { voice }, { drawerController }, { panels }, { shell }, container.carControl) { l, r -> cameraSignal.tick(l, r) }
+        attachTestBridge(viewModel, { slots }, { voice }, { drawerController }, { panels }, { shell }, container.carControl)
     }
 
     /** `singleTask` ⇒ lời gọi thứ hai về ĐÂY, không phải [onCreate] (bấm bong bóng khi Kachi đang mở sẵn). */

@@ -133,41 +133,9 @@ object TestBridgeCommands {
     const val WAV = "wav"
     const val KWS = "kws"
 
-    // ⚠ Android box B2 · W1 — chín mã dưới ([CAMERA] · [CAMERA_FRAME] · [CAMERA_SYNTH] · [CTL] · [HAL] · [SWEEP] · [FEATMAP] ·
-    // [CAPTEST] · [CTLLOG]) KHÔNG còn trong [SPECS] ⇒ [parse] trả `unknown_cmd`, `KachiTestBridge` không dựng nhánh nào. Hằng
-    // còn ở đây chỉ vì mã thi hành mồ côi (`TestBridgeCamera` · `TestBridgeCtl` · `TestBridgeHal`…) còn nhắc tên — W2 xoá cùng.
-    const val CAMERA = "camera"
-
-    /**
-     * `camera_frame [--es name <W>x<H>]` — chụp khung camera ĐANG hiện ra PNG ở cỡ **luồng gốc**, không phải cỡ
-     * ô vuông đã crop/xoay của overlay.
-     *
-     * Vì sao cần một lệnh riêng thay vì đọc ảnh chụp màn: câu hỏi cần trả lời là *"vòng ảnh fisheye tròn hay đã
-     * kín khung"* — ảnh chụp màn chỉ cho thấy **kết quả sau** ma trận crop+xoay của [CameraOverlayTransform], tức
-     * đúng thứ đang bị nghi là sai. Cỡ mặc định = 5120×960 ([TestBridgeFrameSize.DEFAULT_W] × `DEFAULT_H`) = cỡ
-     * ảnh fisheye 4-in-1 [ĐO xe 2026-09-25], xem KDoc `CameraSignalPolicy.CamView`.
-     */
-    const val CAMERA_FRAME = "camera_frame"
-
-    /**
-     * `camera_synth --es name on|off` — bơm **ảnh fisheye TỔNG HỢP** vào đường camera thay cho HAL (R8-B, 2.74).
-     *
-     * ## Vì sao một lệnh, và vì sao nó KHÔNG phải một "chế độ demo"
-     * Đường kết xuất `GL` ([CameraSignalPolicy.RENDER_GL]) là hơn 600 dòng GL mới — và trên **máy ảo không có
-     * `android.hardware.AVMCamera`** nên không một khung nào chạy qua nó được, tức toàn bộ tầng ấy sẽ lên xe mà
-     * chưa từng vẽ một pixel. Đó đúng là điều CLAUDE.md §14 cấm (*"tầng sau chỉ được bắt đầu khi tầng trước đã xanh
-     * với bằng chứng THẬT"*) và §8 cảnh báo (*"compile xanh không có nghĩa là code chạy"*).
-     *
-     * Lệnh này cấp một **producer giả**: `CameraDewarpTestPattern.pano()` đẩy vào đúng `Surface` mà HAL lẽ ra đẩy
-     * vào, qua `Surface.lockCanvas` ([ĐO] AOSP `android-10.0.0_r47`
-     * `graphics/java/android/graphics/SurfaceTexture.java:232-237`: `setDefaultBufferSize` có mặt **chính vì** ca
-     * `lockCanvas`). Mọi thứ sau đó — texture OES, shader, uniform, `eglSwapBuffers`, `getBitmap` — là **đường thật**.
-     *
-     * ⚠ Ảnh tổng hợp chứng minh **cài đặt** đúng, **không** nói gì về ống kính thật: nó được sinh bằng chính mô hình
-     * đang kiểm (`camera-dewarp-math.md` §6 mục 5). Tham số chốt bằng một khung `5120×960` chụp từ xe. Vì vậy đây là
-     * một **lệnh của cầu kiểm thử** (chỉ chạy khi chế độ kiểm thử mở), không phải một chip trong Cài đặt.
-     */
-    const val CAMERA_SYNTH = "camera_synth"
+    // ⚠ Android box B2 · W1 — sáu mã [CTL] · [HAL] · [SWEEP] · [FEATMAP] · [CAPTEST] · [CTLLOG] KHÔNG còn trong [SPECS] ⇒
+    // [parse] trả `unknown_cmd`. Hằng còn chỉ vì mã thi hành mồ côi (`TestBridgeCtl` · `TestBridgeHal`…) còn nhắc tên — W3 xoá
+    // cùng. Ba mã camera (`camera` · `camera_frame` · `camera_synth`) gỡ hẳn ở W2b cùng mã thi hành của chúng.
     const val TTS = "tts"
     const val LISTEN = "listen"
     const val PROFILE = "profile"

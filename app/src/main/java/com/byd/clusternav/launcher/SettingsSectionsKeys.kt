@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.KeyEvent
 import android.widget.LinearLayout
 import com.byd.clusternav.R
-import com.byd.clusternav.launcher.camera.CameraDemand
 import com.byd.clusternav.voicekey.KeySourceKind
 
 /**
@@ -152,13 +151,6 @@ class SettingsKeysSection(
      */
     private fun pickTarget(onSpec: (String) -> Unit) = pickApp(onSpec)
 
-    /** Nhãn một đích camera ĐÃ GÁN (dữ liệu cũ): *"Camera sau — bật/tắt"* · *"Tắt camera"*. */
-    private fun camOpLabel(op: CameraDemand.Op): String = when (op) {
-        is CameraDemand.Op.Toggle ->
-            context.getString(R.string.kachi_key_cam_toggle, CameraSettingsLabels.cameraName(context, op.which))
-        else -> context.getString(R.string.kachi_key_cam_off)
-    }
-
     private fun pickApp(onSpec: (String) -> Unit) {
         val targets = bridge.targetOptions()
         SettingsDialogs.pick(
@@ -297,8 +289,7 @@ class SettingsKeysSection(
      */
     private fun targetLabel(spec: String, targets: List<TargetOption>): String = when {
         KeyCtlTargets.isCtl(spec) -> KeyCtlTargets.displayLabelOf(spec)
-        // 2.93 — đích camera (`cam:…`): nhãn theo mã; mã hỏng ⇒ nguyên chuỗi (vẫn nhận ra dòng để xoá).
-        CameraDemand.isKey(spec) -> CameraDemand.parseKey(spec)?.let { camOpLabel(it) } ?: spec
+        // Android box B2 · W2b: đích camera cũ (`cam:…`, 2.93) không còn bộ đọc nhãn ⇒ nguyên chuỗi (vẫn nhận ra dòng để xoá).
         else -> targets.firstOrNull { it.spec == spec }?.let { targetOptionLabel(it, targets) } ?: spec
     }
 

@@ -376,9 +376,6 @@
 
     <!-- ── AUTOMATION (1.85) — docs/specs/kachi-automation.html ── -->
     <!-- #1 · Tự sấy kính khi mưa (nhóm Tiện nghi xe) -->
-    <string name="kachi_sub_camera_signal">Camera theo xi-nhan</string>
-    <string name="kachi_camera_signal_title">Bật camera khi xi-nhan</string>
-    <string name="kachi_camera_signal_sub">Xi-nhan trái → hiện camera trái; xi-nhan phải → camera phải.</string>
     <string name="kachi_sub_rain_defrost">Tự sấy kính khi mưa</string>
     <!-- kachi-automation V8 (owner 2026-09-30) — HAI hàng độc lập, không còn công tắc chính (spec §V8 · D1). -->
     <string name="kachi_rain_defrost_front">Mưa thì tự bật sấy kính trước</string>
@@ -852,38 +849,6 @@
     <string name="kachi_captest_logs_where">Log ghi ở thẻ nhớ: %1$s\nLấy về bằng: %2$s</string>
     <string name="kachi_captest_snapshot_done">Đã chụp log: %s</string>
     <string name="kachi_captest_report_saved">Đã lưu báo cáo ra thẻ: %s</string>
-    <string name="kachi_camera_cluster_title">Hiện camera lên màn cụm</string>
-    <string name="kachi_pos_tl">Trái</string>
-    <string name="kachi_pos_tr">Phải</string>
-    <string name="kachi_camera_rot_none">Không xoay</string>
-    <string name="kachi_camera_rot_left">↺ 90°</string>
-    <string name="kachi_camera_rot_right">↻ 90°</string>
-    <string name="kachi_camera_rot_180">180°</string>
-    <string name="kachi_camera_view_sub">Nếu camera không hiện — thử từng số, hình bật lên ngay. Chưa biết số nào là camera nào.</string>
-    <string name="kachi_camera_view_row_left">Xi-nhan trái: thử camera số</string>
-    <string name="kachi_camera_view_row_right">Xi-nhan phải: thử camera số</string>
-    <string name="kachi_camera_pano_sub">Dải hình trong khung ghép — 1 sau · 2 trái · 3 phải · 4 trước (đo trên xe)</string>
-    <string name="kachi_camera_pano_row_left">Xi-nhan trái: dải hình</string>
-    <string name="kachi_camera_pano_row_right">Xi-nhan phải: dải hình</string>
-    <string name="kachi_camera_pano_auto">Tự động</string>
-    <string name="kachi_camera_pano_none">Nguyên khung</string>
-    <string name="kachi_camera_mirror_row_sub">Lật ngang ảnh camera trước khi xoay — thân xe phải ở mép trong như gương thật</string>
-    <string name="kachi_camera_shape_sub">Hình khung camera (chỉ đổi viền — muốn thấy trọn ảnh, chưa nắn méo, thì chọn kiểu «Gương cầu» bên dưới)</string>
-    <string name="kachi_camera_shape_row">Hình khung camera</string>
-    <string name="kachi_camera_shape_rect">Chữ nhật</string>
-    <string name="kachi_camera_shape_round">Tròn</string>
-    <string name="kachi_camera_cluster_sub">Overlay camera hiện trên cụm đồng hồ thay màn chính</string>
-    <string name="kachi_camera_left">Camera trái</string>
-    <string name="kachi_camera_right">Camera phải</string>
-    <string name="kachi_camera_shape_cluster">Theo cụm</string>
-    <string name="kachi_camera_projection_sub">Kiểu hình camera</string>
-    <string name="kachi_camera_projection_row">Kiểu hình</string>
-    <string name="kachi_camera_projection_straight">Nắn thẳng</string>
-    <string name="kachi_camera_projection_wide">Thẳng rộng (thấy xa)</string>
-    <string name="kachi_camera_projection_fisheye">Gương cầu (thấy hết)</string>
-    <string name="kachi_camera_projection_note">Nắn thẳng: như cũ, sát thân xe. Thẳng rộng: gần thẳng, thấy tới phía sau xa. Gương cầu: trọn ảnh mắt cá, không cắt gì.</string>
-    <string name="kachi_camera_zoom_row">Thu phóng</string>
-    <string name="kachi_camera_zoom_desc">Thu phóng camera: %1$s</string>
     <!-- F2/F3 — chuyến lên xe (spec shortcuts-autostart §4.14, nhóm C 02/10) -->
     <string name="kachi_drawer_title_trip">Chọn app mở khi nổ máy</string>
     <string name="kachi_drawer_hint_trip">Chạm để chọn hoặc bỏ một ứng dụng · bấm Áp dụng để lưu · kiểu mở chọn trong Cài đặt</string>
@@ -1035,29 +1000,6 @@
     <string name="kachi_vn_heard_bad">«%1$s» — tên phải 1–4 từ, ít nhất 3 chữ cái</string>
     <string name="kachi_vn_named_reason">Tên «%1$s»: %2$s</string>
     <!-- 2.93 · CAMERA-ON-DEMAND + CAMERA-PER-CAM-CONFIG (spec docs/specs/kachi-293-cam.html) -->
-    <string name="kachi_camera_rear">Camera sau</string>
-    <string name="kachi_camera_front">Camera trước</string>
-    <string name="kachi_cam_chip_rear">Sau</string>
-    <string name="kachi_cam_chip_left">Trái</string>
-    <string name="kachi_cam_chip_right">Phải</string>
-    <string name="kachi_cam_chip_front">Trước</string>
-    <string name="kachi_camera_percam_sub">Từng camera — chỗ hiện, cỡ, kiểu hình (sau · trái · phải · trước)</string>
-    <string name="kachi_camera_percam_note">Áp cho camera ấy cả khi xi-nhan lẫn khi mở theo yêu cầu. Mở/tắt: nút Camera sau/trái/phải/trước trên thanh nút, phím vô-lăng (Phím vô-lăng › Camera theo yêu cầu) hoặc nói «mở camera sau» / «tắt camera sau». Một camera một lúc; không tự tắt.</string>
-    <string name="kachi_camera_percam_row">Camera</string>
-    <string name="kachi_camera_preview_on">▶ Xem thử camera này</string>
-    <string name="kachi_camera_preview_off">■ Đang mở — chạm để tắt</string>
-    <string name="kachi_camera_corner_row">Góc mặc định</string>
-    <string name="kachi_camera_place_hint">Kéo khung để đặt chỗ</string>
-    <string name="kachi_camera_place_reset">Về góc mặc định</string>
-    <string name="kachi_camera_size_row">Cỡ</string>
-    <string name="kachi_camera_size_desc">Cỡ camera: %1$s</string>
-    <string name="kachi_camera_follow">Theo chung</string>
-    <string name="kachi_camera_shape_own_row">Hình khung</string>
-    <string name="kachi_camera_projection_own_row">Kiểu hình</string>
-    <string name="kachi_camera_rot_own_row">Xoay</string>
-    <string name="kachi_camera_mirror_own_title">Lật gương</string>
-    <string name="kachi_key_cam_toggle">%1$s — bật/tắt</string>
-    <string name="kachi_key_cam_off">Tắt camera</string>
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->
     <string name="kachi_profile_nav_off">Hồ sơ «%1$s» đang TẮT dẫn đường lên cụm đồng hồ/HUD. Bật lại ở Cài đặt › Dẫn đường + HUD.</string>
 </resources>

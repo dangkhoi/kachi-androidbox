@@ -290,31 +290,6 @@ class ClusterNavBridgeWiringContractTest {
         )
     }
 
-    /**
-     * S3 (2026-09-13): `MainActivity.kt` đã bị **xoá** cùng cả màn cũ, nên nó rời khỏi danh sách này —
-     * hai tệp tài nguyên byte-seal T11 thì Ở LẠI trên đĩa như hiện vật và vẫn không được đụng một byte
-     * (spec `kachi-remove-legacy-screen.html` R5; `LegacyScreenAbsenceContractTest` canh hash của chúng).
-     */
-    @Test
-    fun `khong dung vao hai tep niem phong`() {
-        val sealed = listOf(
-            "app/src/main/res/layout/activity_main.xml",
-            "app/src/main/res/values/strings.xml",
-        )
-        // Gốc repo = thư mục tổ tiên gần nhất có `.git` (working dir của test tuỳ module — xem SourceRoots).
-        val root = generateSequence(SourceRoots.path(BRIDGE).toAbsolutePath()) { it.parent }
-            .firstOrNull { java.nio.file.Files.exists(it.resolve(".git")) }
-            ?: return  // không phải checkout git (CI tarball) ⇒ bỏ qua, các bài khác vẫn canh
-
-        val out = ProcessBuilder(listOf("git", "diff", "--stat", "HEAD", "--") + sealed)
-            .directory(root.toFile())
-            .redirectErrorStream(true)
-            .start()
-            .inputStream.bufferedReader().readText()
-
-        assertTrue(
-            out.isBlank(),
-            "hai tệp niêm phong T11 KHÔNG được sửa, nhưng `git diff` thấy:\n$out",
-        )
-    }
+    // Android box B2 · W2a: bài "không đụng vào hai tệp niêm phong T11" gỡ cùng module niêm phong `:offcar-planner`
+    // (layout `activity_main.xml` đã xoá; `LegacyScreenAbsenceContractTest` canh nó không mọc lại).
 }

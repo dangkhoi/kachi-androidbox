@@ -305,13 +305,13 @@ class VdAppHost(
     /** F1 dòng 9 — Ô ⇄ TOÀN MÀN (K7 ra, K8 về; T-M2/T-M6 [ĐO]): trạng thái + thẻ + lệnh ở [SlotFullscreen]. */
     private val full = SlotFullscreen(this, surface, probeKey, { p -> !released && pkg == p }, ::onAppClosed, ::reopen) { returnFromFull() }
 
-    /** Kéo app của ô ra toàn màn display 0 (K7 qua rào). `false` = ô chưa sẵn, 0 lệnh. [done] (luồng chính): đã tách được? */
-    fun detachToFull(sig: String?, homeComps: List<String>, done: (Boolean) -> Unit): Boolean {
+    /** Kéo app của ô ra toàn màn display 0 (K7 qua cổng màn nhà). `false` = ô chưa sẵn, 0 lệnh. [done] (luồng chính): đã tách được? */
+    fun detachToFull(homeComps: List<String>, done: (Boolean) -> Unit): Boolean {
         val id = vd?.display?.displayId ?: return false
         val sh = shell ?: return false
         val p = pkg ?: return false
         if (released || !launched) return false
-        full.detach(id, p, sh, sig, homeComps, done)
+        full.detach(id, p, sh, homeComps, done)
         return true
     }
 

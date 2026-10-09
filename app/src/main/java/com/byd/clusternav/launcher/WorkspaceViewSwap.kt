@@ -106,11 +106,11 @@ internal fun WorkspaceView.stagingCandidates(slots: List<SlotContent>, count: In
     (0 until count).mapNotNull { i -> if (slots.getOrNull(i) is SlotContent.App) hostAt(i)?.stage() else null }
 
 /**
- * F1 · R1.5 dòng 9 — kéo app của ô [i] ra TOÀN MÀN (K7 qua rào; T-M2 [ĐO]: Intent từ HOME không tách được app khỏi màn ảo,
+ * F1 · R1.5 dòng 9 — kéo app của ô [i] ra TOÀN MÀN (K7 qua cổng màn nhà; T-M2 [ĐO]: Intent từ HOME không tách được app khỏi màn ảo,
  * K7 tách được 4/4, pid giữ). `false` = ô không có host sẵn sàng (0 lệnh). [done] trên luồng chính: đã tách được không.
  */
-internal fun WorkspaceView.detachToFull(i: Int, sig: String?, homeComps: List<String>, done: (Boolean) -> Unit): Boolean =
-    hostAt(i)?.detachToFull(sig, homeComps, done) ?: false
+internal fun WorkspaceView.detachToFull(i: Int, homeComps: List<String>, done: (Boolean) -> Unit): Boolean =
+    hostAt(i)?.detachToFull(homeComps, done) ?: false
 
 /**
  * F1 · R1.5 dòng 9 — màn nhà hiện lại (`KachiHomeActivity.onStart`) ⇒ ô nào đang có app mở toàn màn thì đưa nó về ô (K8,

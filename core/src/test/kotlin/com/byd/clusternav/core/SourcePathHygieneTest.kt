@@ -72,7 +72,8 @@ class SourcePathHygieneTest {
     @Test
     fun `ma test script khong ghi duong dan thu muc nhap ngoai repo`() {
         val mods = modules()
-        assertTrue(mods.size >= 5 && mods.containsAll(listOf("app", "core", "car-integration", "vehicle-contracts", "offcar-planner")),
+        // Android box B2 · W2a: `:vehicle-contracts` + `:offcar-planner` (bộ đo xe BYD) đã gỡ khỏi settings.gradle.kts.
+        assertTrue(mods.size >= 3 && mods.containsAll(listOf("app", "core", "car-integration")),
             "đọc thiếu mô-đun ở settings.gradle.kts: $mods")
         val roots = mods.map { "$it/src" } + EXTRA_ROOTS
         roots.forEach { assertTrue(repo.resolve(it).isDirectory(), "gốc quét '$it' không tồn tại — mô-đun đổi tên? sửa bài này") }
@@ -114,7 +115,8 @@ class SourcePathHygieneTest {
         val QA_SESSION_PATH = Regex("""`(?:qa\d+|[lp]\d)/[^`\s]*""")
 
         /** Cây có mã/script ngoài mô-đun Gradle. */
-        val EXTRA_ROOTS = listOf("scripts", "voice", "tools", "hal-helper")
+        // Android box B2 · W2b: `hal-helper/` (helper HAL uid shell của camera BYD) đã xoá.
+        val EXTRA_ROOTS = listOf("scripts", "voice", "tools")
 
         /**
          * [ĐO 2026-10-04, `git ls-files -co --exclude-standard -- docs`] số lần dạng đường dẫn trong các tệp tài liệu CŨ — chỉ được

@@ -138,7 +138,6 @@ class ProfileScopeMigrationTest {
         assertTrue(edit.writes.containsKey("camera_projection") && edit.writes["camera_projection"] == null)
         assertTrue(edit.writes.containsKey("camera_zoom") && edit.writes["camera_zoom"] == null)
         assertEquals(0, edit.writes["camera_dewarp_amount"])
-        assertEquals("FISHEYE", com.byd.clusternav.launcher.camera.CameraViewMode.resolve(null, 0), "vắng + Nắn hình 0 ⇒ Gương cầu")
     }
 
     @Test

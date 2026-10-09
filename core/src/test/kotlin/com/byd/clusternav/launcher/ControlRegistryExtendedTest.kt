@@ -30,11 +30,12 @@ class ControlRegistryExtendedTest {
         // "hai mã một lệnh"). `win_lf` kế thừa chỗ dock mặc định (enabledByDefault) nhưng nằm ở khối kính (không ở
         // 15 nút gốc đầu). Khối gốc nay còn **15**.
         // ⚠ 1.94 · 2026-09-22 · gỡ thêm `lock`+`door` (NOT_PROVISIONED, owner "bỏ hẳn") ⇒ khối gốc còn **13**.
+        // ⚠ Android box B2 · W2b · 2026-10-09: `cam` (Camera 360) gỡ cùng camera BYD ⇒ khối gốc còn **12**.
         val original = listOf(
             "trunk", "readl", "pm25", "seatc", "temp", "fan",
-            "defrost", "cam", "sunroof", "headl", "seath", "recirc", "drl",
+            "defrost", "sunroof", "headl", "seath", "recirc", "drl",
         )
-        assertEquals(original, ControlRegistry.ALL.take(13).map { it.id })
+        assertEquals(original, ControlRegistry.ALL.take(12).map { it.id })
     }
 
     @Test fun `thanh mac dinh khong con lay tu co enabledByDefault cua nut xe`() {
@@ -77,10 +78,12 @@ class ControlRegistryExtendedTest {
         // ⚠ 1.90 · sàn hạ **6 → 5**: `powertrain_mode` là nút DUY NHẤT của `Domain.DRIVETRAIN`, và owner xoá nó
         // 2026-09-21 (xe thuần điện) ⇒ lĩnh vực Động lực nay **không có nút nào**, chỉ có datum ĐỌC (`speed`,
         // `gear`). Đó là kết luận đúng, không phải lỗ hổng: launcher không đổi chế độ lái/hệ truyền động nữa.
-        assertTrue(domains.size >= 5, "control chi phu $domains")
+        // ⚠ Android box B2 · W2b · sàn hạ **5 → 4**: `cam` (Camera 360) là nút DUY NHẤT còn lại của `Domain.INFOTAINMENT`.
+        assertTrue(domains.size >= 4, "control chi phu $domains")
         assertTrue(Domain.DRIVETRAIN !in domains, "Động lực KHÔNG còn nút nào — nếu có nút mới thì phải nói ra ở đây")
+        assertTrue(Domain.INFOTAINMENT !in domains, "Giải trí KHÔNG còn nút nào (W2b gỡ Camera 360)")
         // (`Domain.SAFETY` da go 2026-09-16 cung toan bo ADAS/an toan.)
-        listOf(Domain.ENERGY, Domain.INFOTAINMENT, Domain.BODY, Domain.LIGHTS, Domain.CLIMATE)
+        listOf(Domain.ENERGY, Domain.BODY, Domain.LIGHTS, Domain.CLIMATE)
             .forEach { d -> assertTrue(ControlRegistry.byDomain(d).isNotEmpty(), "domain $d khong co control") }
     }
 

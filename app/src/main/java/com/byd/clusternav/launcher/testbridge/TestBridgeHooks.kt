@@ -83,38 +83,6 @@ internal class TestBridgeHooks(
     val shellUsable: () -> Boolean,
     /** Cầu ClusterNav (cho lệnh `reapply`). */
     val bridge: () -> ClusterNavBridge,
-    /** Camera theo xi-nhan: ép một nhịp với xi-nhan giả (trái,phải) — verify E2E overlay off-car (HAL null). */
-    val cameraTick: (Boolean, Boolean) -> Unit = { _, _ -> },
-    /**
-     * Chụp MỘT khung của overlay camera đang hiện, cỡ `(w, h)` — CÙNG cây view mà màn hình đang vẽ
-     * (`CameraSignalController.grabFrame`), không dựng bản thứ hai của overlay. Chỉ ĐỌC.
-     *
-     * Mặc định trả `null` (không có controller) để mọi bài test dựng móc bằng tay không phải khai thêm một lambda —
-     * cùng khuôn [cameraTick].
-     */
-    val cameraFrame: (Int, Int) -> com.byd.clusternav.launcher.camera.CameraFrameShot? = { _, _ -> null },
-    /**
-     * `camera_synth` — bật/tắt bơm ảnh TỔNG HỢP **hoặc một PNG THẬT** thay HAL (R8-B; tệp từ 2.75). Trả cờ **đọc
-     * lại** sau lượt đặt.
-     *
-     * Tham số thứ hai = **tên tệp đã lọc** trong `getExternalFilesDir(null)` (rỗng = ảnh sinh bằng mô hình). Nó có
-     * mặt để một lượt kiểm chạy được trên **khung fisheye thật chụp từ xe** chứ không chỉ trên ảnh do chính mô hình
-     * đang kiểm vẽ ra — CLAUDE.md §14 (ảnh sinh chỉ nói *"cài đặt đúng"*, không nói gì về ống kính thật).
-     *
-     * Đi qua controller (`CameraSignalController.setSynth`) chứ không tự dựng producer: producer phải gắn vào ĐÚNG
-     * `Surface` mà tầng vẽ đang giao cho HAL, và chỉ controller biết `Surface` ấy. Mặc định trả `false` để mọi bài
-     * test dựng móc bằng tay không phải khai thêm lambda — cùng khuôn [cameraTick].
-     */
-    val cameraSynth: (Boolean, String) -> Boolean = { _, _ -> false },
-    /**
-     * `camera_frame --es name raw` — chụp một khung **THÔ** (chưa nắn) qua FBO của đường GL, ARGB hàng-trên-trước.
-     *
-     * Vì sao một móc RIÊNG thay vì một cờ của [cameraFrame]: hai đường đi khác nhau hẳn — [cameraFrame] đọc **layer
-     * của `TextureView`** (`getBitmap`, main thread), còn đường này vẽ **một lượt thứ hai** vào FBO trên luồng vẽ GL
-     * rồi `glReadPixels`. Gộp vào một lambda là một hàm có hai nghĩa tuỳ cờ, và chỗ gọi sẽ không biết mình đang chờ
-     * bao lâu (một lượt `getBitmap` ~10 ms; một lượt FBO 5120×960 + đọc 20 MB thì không).
-     */
-    val cameraFrameRaw: (Int, Int) -> IntArray? = { _, _ -> null },
     /** 2.91 VOICE-APP-NAMES · A7 — CÙNG cổng ViewModel mà trang *Dạy tên app* ghi qua. Không mặc định: quên nối ⇒ không biên dịch. */
     val voiceNames: () -> com.byd.clusternav.launcher.VoiceNamesPort,
 ) {
@@ -182,7 +150,6 @@ internal fun Activity.attachTestBridge(
     shell: () -> ((String) -> String)?,
     /** Cổng điều khiển xe của [com.byd.clusternav.AppContainer] — CÙNG cổng mà thanh nút bắn. */
     carControl: CarControlPort,
-    cameraTick: (Boolean, Boolean) -> Unit,
 ) {
     val hooks =
         TestBridgeHooks(
@@ -227,28 +194,6 @@ internal fun Activity.attachTestBridge(
             listen = { voice().start() },
             shellUsable = { shell() != null },
             bridge = { clusterNavBridge() },
-            cameraTick = cameraTick,
-            // `camera_frame` — chụp khung camera GỐC (cỡ luồng fisheye) để đo vòng ảnh; CÙNG controller đang vẽ.
-            //
-            // Lambda nằm ở ĐÂY chứ không ở `KachiHomeActivity` (như `cameraTick`) vì tệp đó đã 572 dòng — quá trần
-            // 500 của CLAUDE.md §4.1, nên không được bồi thêm. Lấy cùng MỘT controller: `AppContainer.cameraSignal`
-            // là `lazy` của cả tiến trình và chính là thứ màn chính giữ (`KachiHomeActivity.cameraSignal`).
-            //
-            // `cameraSignalCreated` là cổng **chỉ-đọc**: chưa ai dựng controller ⇒ không có overlay nào treo, và
-            // chạm `.cameraSignal` ở đây sẽ **dựng** nó — một lệnh ĐO không được phép tạo ra thứ nó đang đo.
-            cameraFrame = { w, h ->
-                val c = com.byd.clusternav.AppContainer.get(this)
-                if (c.cameraSignalCreated) c.cameraSignal.grabFrame(w, h) else null
-            },
-            // `camera_synth` PHẢI dựng controller nếu chưa có (khác hai móc chỉ-ĐỌC trên): nó là một lệnh **đổi**
-            // trạng thái, và câu trả lời đúng cho *"bật ảnh tổng hợp"* khi chưa ai bật camera không phải là im lặng.
-            cameraSynth = { on, file ->
-                com.byd.clusternav.AppContainer.get(this).cameraSignal.setSynth(on, file)
-            },
-            cameraFrameRaw = { w, h ->
-                val c = com.byd.clusternav.AppContainer.get(this)
-                if (c.cameraSignalCreated) c.cameraSignal.grabRawFrame(w, h) else null
-            },
             voiceNames = { viewModel.voiceNamesPort() },
         )
     KachiTestHooks.attach(hooks)
