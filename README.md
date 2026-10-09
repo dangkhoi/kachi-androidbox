@@ -1,3 +1,7 @@
+> **KACHI ANDROID BOX — repo RIÊNG (`github.com/dangkhoi/kachi-androidbox`).** Bản launcher Kachi cho xe KHÔNG phải BYD chạy Android box / đầu Android: chỉ lấy phần launcher (màn chính theo ô, widget, hồ sơ, giọng nói offline, nhạc). Tách từ `byd-kachi` bản 2.98 — **không dùng chung mã, kênh OTA hay APK** với Kachi BYD. Đang ở giai đoạn spec: `docs/specs/androidbox-plan.html`. Nội dung bên dưới là README kế thừa từ Kachi BYD, sẽ viết lại.
+>
+> **KACHI ANDROID BOX — SEPARATE repo.** Kachi launcher for non-BYD cars running an Android box / Android head unit: launcher features only. Split from `byd-kachi` 2.98 — **no shared code, OTA channel or APK** with Kachi for BYD. Currently at the spec stage (`docs/specs/androidbox-plan.html`). The text below is inherited from Kachi BYD and will be rewritten.
+
 # Kachi launcher (byd-launcher)
 
 > [!IMPORTANT]
