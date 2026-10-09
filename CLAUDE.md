@@ -107,5 +107,4 @@ phương án cuối (mỗi thao tác một ảnh chụp mới, đọc ảnh qua 
 `project-context.md` · `documentation-and-backlog.md` · `product-team-workflow.md` cùng hiệu lực với file này
 (`trace-den-tan-cung.md` · `conversation-protocol.md` của bản BYD là tệp CỤC BỘ — `.kiro/` bị gitignore cho tệp mới —
 và CHƯA có trong repo này; máy nào có thì cũng áp); mâu thuẫn thì lấy cái **nghiêm hơn** và ghi vào backlog để
-owner chốt. ⚠ `project-context.md` hiện vẫn là tóm tắt của Kachi BYD (kế thừa) — phần HAL/cụm/HUD/camera chỉ là lịch
-sử, không áp dụng cho box; viết lại khi xong B2.
+owner chốt. `project-context.md` đã viết lại cho Android box (2026-10-09, B5).
