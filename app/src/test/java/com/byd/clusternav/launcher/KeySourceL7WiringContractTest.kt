@@ -113,9 +113,10 @@ class KeySourceL7WiringContractTest {
     }
 
     @Test
-    fun `L4 - hop hoc phim hien dong chi tiet nguon phim`() {
+    fun `L4 - hop hoc phim KHONG con dong chi tiet nguon phim (Android box W1)`() {
+        // Android box B2 · W1 — hộp học phím KHÔNG còn dòng số đo nguồn phím (HAL BYD); phần bộ dựng chữ dưới đây mồ côi tới W2f.
         val learn = SourceRoots.body(section, "private fun learn()")
-        assertTrue(learn.contains("detail = { tv -> KeySourceDetailText.bind(tv, code) { bridge.learnedKeySource(code) } }"))
+        assertTrue("KeySourceDetailText.bind(" !in learn && "learnedKeySource" !in learn, "học phím không đọc nguồn HAL nữa")
         assertTrue(SourceRoots.body(bridgeKeys, "fun ClusterNavBridge.learnedKeySource(code: Int): KeySourceEntry?")
             .contains("KeySourceRecorder.journal.lastLearned(code)"))
         val ask = SourceRoots.body(dialogs, "fun askName(")
@@ -162,8 +163,9 @@ class KeySourceL7WiringContractTest {
         fun callers(token: String, defFile: String) = all.filter { (name, src) -> name != defFile && src.contains(token) }.map { it.first }.distinct()
         assertEquals(listOf("NavAccessibilityService.kt"), callers("KeySourceRecorder.sampleOf(", "KeySourceRecorder.kt"))
         assertEquals(listOf("NavAccessibilityService.kt"), callers("keySource?.onDown(sample", "KeySourceRecorder.kt"))
-        assertEquals(listOf("SettingsSectionsKeys.kt"), callers("bridge.learnedKeySource(", "ClusterNavBridgeKeys.kt"))
-        assertEquals(listOf("SettingsSectionsKeys.kt"), callers("KeySourceDetailText.bind(", "SettingsKeySourceDetail.kt"))
+        // Android box B2 · W1 — hai lời gọi của hộp học phím gỡ (bài L4).
+        assertEquals(emptyList<String>(), callers("bridge.learnedKeySource(", "ClusterNavBridgeKeys.kt"))
+        assertEquals(emptyList<String>(), callers("KeySourceDetailText.bind(", "SettingsKeySourceDetail.kt"))
         assertTrue("KeySourceProbe.kt" in callers("gateway.featureRead(", "HalRoutes.kt"))
         // SOÁT vòng 1 · P2: lượt đọc nay đi qua bộ đo thuần `:core`; bộ ghi gọi bộ đo.
         assertTrue("KeySourceMeter.kt" in callers("KeySourceProbes.read(", "KeySourceProbe.kt"))

@@ -218,8 +218,8 @@ internal fun Activity.controlDock(
             LauncherActions.APPS -> openAppList()
             LauncherActions.SETTINGS -> openSettings()
             LauncherActions.VOICE -> onVoice()
-            // 2.93 · CAMERA-ON-DEMAND — nút camera = BẬT/TẮT camera ấy (owner *"các nút đều là toggle"*); mã lạ ⇒ không làm gì.
-            else -> com.byd.clusternav.launcher.camera.CameraDemandDispatch.tap(this@controlDock, id)
+            // Android box B2 · W1 — nút camera theo yêu cầu (`launcher_cam_*`) gỡ khỏi đường thi hành; mã lạ ⇒ không làm gì.
+            else -> Unit
         }
     }
 }
@@ -362,29 +362,7 @@ internal fun Activity.goImmersiveWindow() {
         )
 }
 
-/**
- * Bật lại **nút nổi chiếu cụm** khi màn chính lên, nếu Cluster Cast đang bật và quyền overlay đã có —
- * chuyển từ `MainActivity.onResume` (màn cũ đã gỡ 2026-09-13).
- *
- * ## Vì sao đường tự chữa này phải sống tiếp
- * Nút nổi là **lối vào chính** của việc chiếu trên xe. Dịch vụ của nó có thể chết mà không ai biết (hệ thống
- * thu hồi, force-stop, một bản cập nhật). Đường bật duy nhất còn lại là bật/tắt lại công tắc trong Cài đặt —
- * nghĩa là người dùng phải ĐOÁN ra cách chữa. Màn cũ chữa việc đó bằng "mở app là bóng quay lại"; ở đây là
- * "về màn chính là bóng quay lại", rẻ hơn và cùng ý.
- *
- * Hai cổng, đúng thứ tự của bản cũ: `castEnabled` (không tự dựng gì khi người dùng đã tắt Cast) rồi
- * `canDrawOverlays` (thiếu quyền thì service chỉ khởi động để tự tắt). `startForegroundService` bọc
- * `runCatching`: nền bị chặn khởi động dịch vụ ở vài trạng thái, và đây là việc **tuỳ chọn**.
- */
-internal fun Activity.ensureCastBubble(bridge: ClusterNavBridge) {
-    if (!runCatching { bridge.castEnabled() }.getOrDefault(false)) return
-    if (!android.provider.Settings.canDrawOverlays(this)) return
-    runCatching {
-        startForegroundService(
-            Intent(this, com.byd.clusternav.modules.clustercast.FloatingBubbleService::class.java),
-        )
-    }
-}
+// Android box B2 · W1 — `ensureCastBubble` (bật lại nút nổi chiếu cụm mỗi lần về màn chính) gỡ: chiếu cụm là phần chỉ-BYD.
 
 /**
  * Hai vòng THU của màn chính, tách khỏi [KachiHomeActivity] (trần 500 dòng — CLAUDE.md §4.1).

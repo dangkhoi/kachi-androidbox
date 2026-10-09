@@ -31,30 +31,29 @@ class HealCastWaitWiringContractTest {
     }
 
     /**
-     * 2.93 wave 2A · HEAL-DEFER-GATE-RECHECK — ĐỔI GHIM có lý do (spec `kachi-293-wave2a.html` §4.5): lượt chờ và nấc leo nay đi
-     * CHUNG một cửa `HealCastWait.escalate` — cổng cuối của nấc leo (trao vào dạng `gate`) hỏi lại mối nguy ở lượt tắt-máy; thứ tự
-     * SAU kẹt bền → dòng keys ESCALATE → nấc leo → dòng keys kết quả GIỮ NGUYÊN; pha qua trong lúc chờ ⇒ `null` ⇒ CẮT (return true).
+     * Android box B2 · W1 (2026-10-09) — ĐỔI GHIM có lý do: lượt chữa phím KHÔNG còn chờ chiếu cụm yên (không còn chiếu cụm). Sau
+     * kẹt bền → dòng keys ESCALATE → nấc leo với cổng cuối = ĐÚNG cổng pha (`stillInPhase`, như `HealCastDeferral.escalate` khi
+     * không có mối nguy) → dòng keys kết quả. Thân `HealCastWait` còn trong cây tới W2c nhưng 0 chỗ gọi.
      */
     @Test
-    fun `luot chua phim hoi chieu cum SAU ket ben, TRUOC nac leo - pha qua thi CAT nhu nhanh cho do lai`() {
+    fun `luot chua phim leo thang thang sau ket ben, khong cho chieu cum`() {
         val fn = SourceRoots.body(heal, "private fun healIfStuck(")
         order(
             fn,
             "AccessibilityHealGates.stuckPersistent(first, second)",
-            "val r = HealCastWait.escalate(phase, screenOnAt, note, { stillInPhase(app, phase, screenOnAt) }) { gate ->",
             "KachiReadyLog.keys(\"STUCK(\$note)->ESCALATE\")",
-            "NavConnect.escalateOnLifecycle(app, phase) { gate() }",
-            "} ?: return true",
+            "val r = NavConnect.escalateOnLifecycle(app, phase) { stillInPhase(app, phase, screenOnAt) }",
             "KachiReadyLog.keys(\"STUCK(\$note)->\$r\")",
         )
+        assertTrue("HealCastWait" !in fn, "lượt chữa phím không còn đi qua cửa chờ chiếu cụm")
     }
 
     @Test
-    fun `MOT cua duy nhat, va chi luot vong doi di qua no`() {
+    fun `khong con cho goi HealCastWait`() {
         val calls = SourceRoots.moduleSourceRoots().flatMap { root ->
             Files.walk(root).use { s -> s.filter { it.toString().endsWith(".kt") }.toList() }
         }.sumOf { p -> Regex("HealCastWait\\.(await|escalate)\\(").findAll(KotlinSource.stripComments(p.toFile().readText())).count() }
-        assertEquals(1, calls, "chỉ healIfStuck (lớp 1/2/khởi động) được chờ — nút Sửa ngay / watchdog không đổi")
+        assertEquals(0, calls, "Android box B2 · W1: không lượt chữa phím nào chờ chiếu cụm")
     }
 
     @Test

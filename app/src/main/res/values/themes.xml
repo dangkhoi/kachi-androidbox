@@ -7,7 +7,7 @@
   all pointing at @color NAMES that resolve per mode, so the theme adapts light/dark automatically
   (default "Theo xe" = follow system) and ThemeMode.wrap() can force either mode.
   Only android: attributes are set (android:colorSurface is not a framework attr → omitted).
-  Style NAMES (AppTheme, ClusterTheme) are unchanged so AndroidManifest + activities keep resolving.
+  Style NAME AppTheme is unchanged (ClusterTheme removed with ClusterNavActivity, Android box B2 · W1) so AndroidManifest + activities keep resolving.
   windowLightStatusBar/windowLightNavigationBar are TRUE here (dark icons on the light bars); the dark
   variant sets them FALSE. This is the only non-@color per-mode override — required for legible bar icons.
 -->
@@ -49,8 +49,4 @@
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 
-    <style name="ClusterTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowBackground">@android:color/black</item>
-    </style>
 </resources>

@@ -148,13 +148,11 @@ class KachiTestBridge : BroadcastReceiver() {
         when (cmd.name) {
             TestBridgeCommands.STATE -> reply.ok("state" to TestBridgeState.build(app, hooks))
             TestBridgeCommands.SAY -> runSay(cmd, hooks, reply)
-            // Thân ở [TestBridgeWav] (trần 500 dòng, CLAUDE.md §4.1) — cùng cách tách với `ctl`/`hal`/`sweep`.
+            // Thân ở [TestBridgeWav] (trần 500 dòng, CLAUDE.md §4.1).
             TestBridgeCommands.WAV -> TestBridgeWav.run(app, cmd, hooks, reply)
             TestBridgeCommands.TTS -> TestBridgeTts.run(app, cmd, reply)
             TestBridgeCommands.KWS -> TestBridgeKws.run(app, cmd, reply)
-            TestBridgeCommands.CAMERA -> TestBridgeCamera.run(app, cmd, hooks, reply)
-            TestBridgeCommands.CAMERA_FRAME -> TestBridgeCameraFrame.run(app, cmd, hooks, reply)
-            TestBridgeCommands.CAMERA_SYNTH -> TestBridgeSynth.run(cmd, hooks, reply)
+            // Android box B2 · W1 — nhánh `camera` · `camera_frame` · `camera_synth` · `ctl` gỡ (lệnh đã rời SPECS).
             TestBridgeCommands.LISTEN -> runListen(hooks, reply)
             TestBridgeCommands.PROFILES -> reply.ok(
                 "active" to hooks.state().activeProfile,
@@ -165,9 +163,6 @@ class KachiTestBridge : BroadcastReceiver() {
             TestBridgeCommands.SLOT -> runSlot(app, cmd, hooks, reply)
             TestBridgeCommands.SLOT_CLEAR -> runSlotClear(cmd, hooks, reply)
             TestBridgeCommands.OPEN -> runOpen(app, cmd, hooks, reply)
-            // Thân ở [TestBridgeCtl] (trần 500 dòng, CLAUDE.md §4.1) — cùng cách tách với `state`→[TestBridgeState].
-            TestBridgeCommands.CTL -> TestBridgeCtl.run(cmd, hooks, reply)
-            // `hal` đã xử lý sớm (không cần hooks) — không thể tới đây.
             TestBridgeCommands.REAPPLY -> runReapply(hooks, reply)
             TestBridgeCommands.DIAG -> runDiag(app, hooks, reply)
             in TestBridgeTeachCommands.NAMES -> TestBridgeTeach.run(app, cmd, hooks, reply)   // 2.91 · A7 (tệp riêng)

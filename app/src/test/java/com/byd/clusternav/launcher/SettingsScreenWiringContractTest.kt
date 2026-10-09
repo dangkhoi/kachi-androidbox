@@ -121,7 +121,8 @@ class SettingsScreenWiringContractTest {
             assertTrue(sections.contains(it), "trang phải dựng từ một thực thể MỚI mỗi lượt: $it")
         }
         assertFalse(panel.contains("TopStripPicker("), "vỏ bảng không được giữ bộ chọn")
-        assertTrue(bars.contains("TopStripPicker("), "bộ chọn chip thuộc về nhóm Thanh trạng thái & thanh nút")
+        // Android box B2 · W1 — bộ chọn chip gỡ hẳn khỏi nhóm Thanh (mọi chip là chip xe BYD).
+        assertFalse(bars.contains("TopStripPicker("), "bộ chọn chip không còn dựng ở nhóm Thanh")
     }
 
     // ── R6 · tầng UI 0 lần ghi bền trực tiếp ─────────────────────────────────────────────────────
@@ -439,16 +440,17 @@ class SettingsScreenWiringContractTest {
     fun `noi dung bang cu chuyen du sang man Cai dat`() {
         // R4: 6 mục của bảng cũ đều còn dùng được (lưới ô nay ở bộ chọn ngăn kéo — R-UI (m)).
         // T4 · R-UI (a): chip thanh trạng thái tách sang nhóm "Thanh trạng thái & thanh nút".
-        assertTrue(bars.contains("stripPicker.section("), "chip thanh trạng thái")
+        // Android box B2 · W1 — chip thanh trạng thái (chip dữ liệu xe BYD) gỡ khỏi nhóm Thanh.
+        assertFalse(bars.contains("stripPicker"), "chip thanh trạng thái đã gỡ")
         // T4 · R-UI (m): lưới 123 ô KHÔNG còn ở Settings — nó mở bộ chọn của ngăn kéo. Cùng chức năng, một bề mặt.
         assertTrue(bars.contains("deps.openDockPicker("), "đường chọn nút cho thanh nút xe")
         assertTrue(home.contains("rows.checkRow("), "hình nền: ô tick")
         assertTrue(home.contains("Slideshow.INTERVAL_CHOICES_SEC"), "hình nền: chu kỳ đổi ảnh")
         assertTrue(home.contains("ImageFit.values()"), "hình nền: cách phủ")
         assertTrue(home.contains("deps.onOpenLayoutEditor()"), "đường mở bảng vẽ bố cục")
-        assertTrue(sections.contains("rows.unitRow("), "đơn vị hiển thị")
-        // T4: ô tick lấy gió trong theo nhóm "Tiện nghi xe" sang tệp riêng khi nhóm đó nhận thêm ghế + lọc bụi mịn.
-        assertTrue(car.contains("R.string.kachi_recirc_title"), "lấy gió trong khi nổ máy")
+        // Android box B2 · W1 — đơn vị hiển thị + cả nhóm Tiện nghi xe (lấy gió trong · ghế · lọc bụi) gỡ khỏi Cài đặt.
+        assertFalse(sections.contains("rows.unitRow("), "đơn vị hiển thị đã gỡ")
+        assertFalse(sections.contains("SettingsCarSection("), "nhóm Tiện nghi xe không còn được dựng")
         assertTrue(sections.contains("rows.permissionRow("), "quyền còn thiếu")
         assertTrue(rows.contains("fun note(") && rows.contains("fun button("), "hai hàng dùng chung mới")
         // Và đường mở bảng vẽ phải ĐÓNG màn Cài đặt trước: hai lớp phủ chồng nhau thì Back mất nghĩa.

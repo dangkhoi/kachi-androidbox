@@ -67,30 +67,14 @@ class HeadlessAutostartContractTest {
     }
 
     /**
-     * ⚠ S3 (soát 2026-09-13) — ba khoá `HIDDEN_KEYS` không có nút (`hud` ép false · `interpolate`/`acc_booster`
-     * ép true) trước đây được màn ClusterNav cũ ghi đè **mỗi lần mở app**. Màn đó đã gỡ, nên nơi ghi duy nhất
-     * còn lại là lúc nổ máy — mà lúc nổ máy có **HAI** nhánh: bật *"Tự khởi động nền"* → [BootSetupService],
-     * tắt → `launchHome`. Chỉ đặt ở một nhánh thì máy dùng nhánh kia đóng băng giá trị cũ vĩnh viễn: với
-     * `interpolate=false` (bản 2026-07-13 từng ép TẮT) là cụm mất phần bù cự ly theo tốc độ, đúng triệu chứng
-     * *"cụm trễ khi tới ngã rẽ"* — một hồi quy câm, không báo lỗi gì.
+     * Android box B2 · W1 (2026-10-09) — ĐỔI GHIM có lý do: `forcedPrefs` (ép `hud`=false · `interpolate`/`acc_booster`=true
+     * mỗi lần nổ máy) chỉ phục vụ dẫn đường lên cụm/HUD BYD ⇒ gỡ khỏi CẢ HAI nhánh boot và khỏi `BootSetupService`.
      */
     @Test
-    fun `ca hai nhanh boot deu ep ba khoa khong co nut`() {
-        val forced = functionBody(bootSetup, "fun forcedPrefs(ctx: Context)")
-        assertTrue(forced.contains("Prefs.setHud(ctx, false)"), "hud ép FALSE — không có nút bật, output chưa có thật")
-        assertTrue(forced.contains("Prefs.setInterpolate(ctx, true)"), "interpolate ép TRUE — di cư máy từng bị ép tắt")
-        assertTrue(forced.contains("Prefs.setAccBooster(ctx, true)"), "acc_booster ép TRUE — bộ đọc màn GMaps")
-        // Nhánh HEADLESS (toggle BẬT).
-        assertTrue(
-            bootSetup.contains("forcedPrefs(applicationContext)"),
-            "nhánh headless phải gọi forcedPrefs trong chuỗi setup nền",
-        )
-        // Nhánh KHÔNG headless (toggle TẮT) — đây là nhánh KHÔNG chạy BootSetupService.
-        assertTrue(
-            functionBody(receiver, "private fun launchHome(context: Context)")
-                .contains("BootSetupService.forcedPrefs("),
-            "tắt \"Tự khởi động nền\" thì không có dịch vụ nào chạy ⇒ launchHome phải tự ép ba khoá đó",
-        )
+    fun `khong nhanh boot nao con ep khoa HUD`() {
+        assertTrue("forcedPrefs" !in bootSetup, "BootSetupService không còn ép khoá HUD / bù cự ly")
+        assertTrue("forcedPrefs" !in receiver, "nhánh launchHome không còn ép khoá HUD / bù cự ly")
+        assertTrue("Prefs.setHud(" !in bootSetup)
     }
 
     // ── RebindReceiver: gate launchHome → BootSetupService on both boot entries ──
@@ -106,7 +90,8 @@ class HeadlessAutostartContractTest {
         assertTrue(boot.contains("launchHome(context)"), "BOOT_COMPLETED falls back to launchHome when OFF")
         // Untouched behaviour that must remain.
         assertTrue(boot.contains("scheduleWatchdog(context)"), "watchdog still scheduled")
-        assertTrue(boot.contains("castBootWork(context"), "auto-cast (castBootWork) still runs — untouched")
+        // Android box B2 · W1 — auto-cast (castBootWork: SimpleCastRuntime · nút nổi · CastAutomationService) GỠ.
+        assertTrue(!boot.contains("castBootWork("), "auto-cast removed on Android box")
     }
 
     @Test
@@ -116,7 +101,7 @@ class HeadlessAutostartContractTest {
         assertTrue(replaced.contains("Prefs.headlessAutostart(context)"), "MY_PACKAGE_REPLACED reads the toggle")
         assertTrue(replaced.contains("startBootSetup(context)"), "MY_PACKAGE_REPLACED starts the headless setup when ON")
         assertTrue(replaced.contains("launchHome(context)"), "MY_PACKAGE_REPLACED falls back to launchHome when OFF")
-        assertTrue(replaced.contains("castBootWork(context"), "auto-cast (castBootWork) still runs — untouched")
+        assertTrue(!replaced.contains("castBootWork("), "auto-cast removed on Android box (B2 · W1)")
     }
 
     @Test
@@ -136,9 +121,14 @@ class HeadlessAutostartContractTest {
             onStart.indexOf("startForegroundOnce()") < onStart.indexOf("Thread("),
             "startForeground happens BEFORE the background work (5 s startForegroundService budget)",
         )
-        assertTrue(onStart.contains("Prefs.enabled(applicationContext)"), "setup gated on Nav+HUD being enabled")
+        // Android box B2 · W1 — grant gated ONLY on the physical-key switch (the GMaps screen-read for the cluster is gone),
+        // and the BYD-only boot work (cluster-lane / HUD outputs, speed sign, VietMap, seat / PM2.5 / recirc) is not here.
+        assertTrue(onStart.contains("if (Prefs.voiceKeyEnabled(applicationContext))"), "setup gated on the physical-key switch")
+        assertTrue(!onStart.contains("Prefs.enabled(applicationContext)"), "no longer gated on Nav+HUD")
         assertTrue(onStart.contains("NavConnect.grantAccessibility(applicationContext)"), "relocated accessibility grant + force-bind")
-        assertTrue(onStart.contains("NavigationOutputTarget.CLUSTER_LANE"), "re-asserts the cluster-lane output")
+        assertTrue(onStart.contains("VoiceKeyKeepAliveService.sync(applicationContext)"), "voice-key keep-alive still synced")
+        listOf("NavRepository", "NavigationSpeedSignOwner", "VietMapAutostartService", "SeatComfortApplier",
+            "Pm25FilterApplier", "RecircApplier").forEach { assertTrue(!onStart.contains(it), "BYD boot work '$it' removed") }
         assertTrue(onStart.contains("runCatching"), "wrapped so it never crashes the process")
     }
 

@@ -72,8 +72,10 @@ class TopStripWiringContractTest {
     }
 
     @Test
-    fun `nguoi dung co duong sua danh sach chip`() {
-        assertTrue(panel.contains("stripPicker.section("), "màn Cài đặt phải bày mục chọn chip")
+    fun `muc chon chip da go khoi Cai dat - bo chon mo coi giu luat`() {
+        // Android box B2 · W1 — ĐỔI GHIM: màn Cài đặt KHÔNG còn bày mục chọn chip (mọi chip là chip dữ liệu xe BYD; W3 gỡ cả
+        // khối chip). Phần dưới canh bộ chọn mồ côi `TopStripPicker` vẫn đúng luật tới lúc nó bị xoá.
+        assertFalse(panel.contains("stripPicker"), "màn Cài đặt không còn bày mục chọn chip")
         assertTrue(picker.contains("TopStripConfig.choices()") || picker.contains("TopStripConfig.picks("),
             "màn chọn phải lấy từ `:core`, không tự liệt kê")
         // ⚠⚠ S4 · R11 (c) — ĐƯỜNG ĐẶT DATUM BẤT KỲ ĐỔI HÌNH LẦN THỨ HAI, VẪN KHÔNG BIẾN MẤT.

@@ -101,8 +101,9 @@ class LangCoverageTest {
     }
 
     @Test
-    fun `moi muc cai dat co nhan EN — 11 nhom va 76 muc`() {
-        assertEquals(11, SettingsCatalog.GROUPS.size)   // +VOICE (owner 2026-09-21 tách menu Giọng nói riêng)
+    fun `moi muc cai dat co nhan EN — 9 nhom va 50 muc`() {
+        // +VOICE (owner 2026-09-21 tách menu Giọng nói riêng) · Android box B2 · W1: −CAST −CAR ⇒ 11 → 9.
+        assertEquals(9, SettingsCatalog.GROUPS.size)
         // 54 = 20 (IA v1) + 36 mục dựng lại từ màn ClusterNav (IA v2 §4.3: nav 11 · cast 9 · keys 5 · car 5 thêm ·
         // system 6 thêm · about 1 thêm), trừ `clusternav_open` (IA v2), trừ `system_advanced_screen` (S3 2026-09-13:
         // màn cũ gỡ hẳn), rồi S4 · R1/R6: **−3** mục cảnh (`home_scenes` · `home_scene_boot` · `home_scene_save`)
@@ -150,7 +151,10 @@ class LangCoverageTest {
         // *"Auto-open VietMap for the bubble"* — tách nghĩa cũ của `vm_bubble_enabled` khỏi công tắc hiện bóng.
         // 2.91 VOICE-APP-NAMES (owner 06/10, spec kachi-290-voice-app-names §4.5): **83 → 84 (+1)** = `voice_app_names_list`
         // *"Dạy tên app"* / *"Teach app names"* (khoá `voice_app_names` theo hồ sơ).
-        assertEquals(84, SettingsCatalog.ENTRIES.size)
+        // Android box B2 · W1 (2026-10-09): **84 → 50 (−34)** = mục chỉ-BYD gỡ khỏi danh mục — BARS 2 (chip thanh trạng thái +
+        // nhãn chip) · DISPLAY 1 (đơn vị) · NAV 12 (dẫn đường cụm/HUD 4 · biển báo 5 · bong bóng VietMap 3) · CAST 11 · CAR 7 ·
+        // SYSTEM 1 (`system_nav_stop`). Danh sách + lý do: `SettingsCatalogRetired`, `SettingsCatalogRetiredTest`.
+        assertEquals(50, SettingsCatalog.ENTRIES.size)
         val badGroups = SettingsCatalog.GROUPS.filter { it.labelEn.isBlank() || it.subEn.isBlank() }.map { it.id }
         assertTrue(badGroups.isEmpty(), "nhóm cài đặt thiếu labelEn/subEn: $badGroups")
         val badEntries = SettingsCatalog.ENTRIES.filter { it.labelEn.isNullOrBlank() }.map { it.id }
@@ -188,7 +192,7 @@ class LangCoverageTest {
      * `Localized` khỏi một lớp sẽ làm lớp đó không còn ở đây mà **không bài nào đỏ** nếu không ghim tổng.
      */
     @Test
-    fun `tong so nhan co ban EN dung 239`() {
+    fun `tong so nhan co ban EN dung 233`() {
         val all: List<Localized> = TelemetryRegistry.ALL + ControlRegistry.ALL + CapabilityGroups.ALL +
             WidgetRegistry.ALL + ActionMacros.ALL + SettingsCatalog.GROUPS + SettingsCatalog.ENTRIES +
             Domain.values().toList() + Quantity.values().toList() + TyreCorner.values().toList() +
@@ -259,7 +263,8 @@ class LangCoverageTest {
         // "Teach app names"), EN tại chỗ khai + dòng zh/th/ms trong `i18n/*.tsv`.
         // 2.93 · CAMERA-ON-DEMAND (2026-10-06): **264 → 269 (+5)** = bốn việc *"Camera sau/trái/phải/trước"* + *"Tắt camera"*
         // (`LauncherActions`), EN tại chỗ khai + dòng zh/th/ms trong `i18n/*.tsv`.
-        assertEquals(269, all.size, "số nhãn đổi — thêm mã mới thì phải dịch, rồi mới ghim số mới")
+        // Android box B2 · W1 (2026-10-09): **269 → 233 (−36)** = −34 mục Cài đặt chỉ-BYD − 2 nhóm (CAST · CAR).
+        assertEquals(233, all.size, "số nhãn đổi — thêm mã mới thì phải dịch, rồi mới ghim số mới")
         val missing = all.filter { it.labelEn.isNullOrBlank() }.map { it.label }
         assertTrue(missing.isEmpty(), "còn nhãn chưa có bản EN: $missing")
     }

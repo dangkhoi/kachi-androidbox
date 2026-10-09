@@ -64,7 +64,6 @@
     <string name="kachi_slot_needs_access">Perlu kebenaran</string>
     <string name="kachi_slot_no_channel">Tiada saluran kawalan</string>
     <string name="kachi_access_feature_blocked">Perlu kebenaran kawalan tetingkap — buka skrin utama untuk memberikannya</string>
-    <string name="kachi_sec_units">Unit paparan</string>
     <string name="kachi_sec_theme">Tema cerah / gelap</string>
     <string name="kachi_row_palette">Palet warna</string>
     <string name="kachi_theme_note">“Automatik” bermaksud gelap dari 18:00 hingga 06:00. Menukar palet berkuat kuasa serta-merta; apl dalam petak terus berjalan.</string>
@@ -486,9 +485,6 @@
     <string name="kachi_keys_add">Tambah pemetaan…</string>
     <string name="kachi_keys_pick_button">Langkah 1 — pilih butang</string>
     <string name="kachi_keys_pick_target">Langkah 3 — pilih apl / pembantu</string>
-    <string name="kachi_keys_pick_kind">Langkah 2 — fungsi butang ini</string>
-    <string name="kachi_keys_kind_apps">Buka apl · pembantu</string>
-    <string name="kachi_keys_pick_action">Langkah 3 — %1$s: pilih tindakan</string>
     <string name="kachi_keys_no_buttons">Belum ada butang untuk dipetakan.</string>
     <string name="kachi_keys_no_targets">Belum ada apl pada peranti ini yang boleh dibuka dari butang.</string>
     <string name="kachi_sub_keys_custom">Butang dipelajari</string>
@@ -538,13 +534,12 @@
     <string name="kachi_pm25_middle">Sederhana</string>
     <string name="kachi_pm25_heavy">Teruk</string>
     <string name="kachi_pm25_serious">Sangat teruk</string>
-    <string name="kachi_headless_title">Jalankan perkhidmatan navigasi/panel instrumen di latar belakang semasa kereta dihidupkan</string>
+    <string name="kachi_headless_title">Jalankan perkhidmatan latar belakang semasa kereta dihidupkan (butang fizikal · navigasi berjadual)</string>
     <string name="kachi_headless_sub">BERBEZA daripada baris di atas: baris itu membuka skrin Kachi, baris ini hanya memulakan perkhidmatan tanpa sebarang skrin.</string>
     <string name="kachi_sub_maint">Penyelenggaraan</string>
     <string name="kachi_auto_update_title">Kemas kini automatik</string>
     <string name="kachi_auto_update_sub">Menyemak versi lebih baharu setiap kali Kachi dibuka; jika ada, ia bertanya dahulu sebelum memuat turun dan memasangnya di atas versi sedia ada. Senyap jika anda sudah menggunakan versi terkini.</string>
     <string name="kachi_check_update">Semak kemas kini</string>
-    <string name="kachi_nav_stop">Hentikan semua navigasi</string>
     <string name="kachi_restart_launcher">Mulakan semula pelancar</string>
     <string name="kachi_sub_advanced">Lanjutan</string>
     <string name="kachi_test_bridge_title">Mod ujian ADB</string>
@@ -635,8 +630,6 @@
     <string name="kachi_voice_wav_failed">Tidak dapat dijalankan: %1$s</string>
     <string name="kachi_voice_wav_where">Letak kachi-voice-test.wav (16 kHz · mono · PCM 16-bit) dalam salah satu: %1$s</string>
     <string name="kachi_pill_voice">Cakap dengan kereta</string>
-    <string name="kachi_top_strip_labels_title">Tunjukkan label cip</string>
-    <string name="kachi_top_strip_labels_sub">Jika mati, hanya ikon dan nombor dipaparkan — lebih ruang pada bar</string>
     <string name="kachi_voice_confirm_sec">Tanya sebelum menjalankan</string>
     <string name="kachi_voice_confirm_note">Secara lalai Kachi terus menjalankan arahan, kecuali membuka bumbung matahari, yang akan ditanya dahulu. Tandakan apa-apa yang anda mahu ia tanya dahulu.</string>
     <string name="kachi_voice_ask_aloud_title">Bacakan soalan pengesahan dengan kuat</string>
@@ -908,8 +901,6 @@
     <string name="kachi_camera_projection_own_row">Gaya paparan</string>
     <string name="kachi_camera_rot_own_row">Putar</string>
     <string name="kachi_camera_mirror_own_title">Cerminkan video</string>
-    <string name="kachi_keys_kind_camera">Kamera atas permintaan</string>
-    <string name="kachi_keys_pick_camera">Langkah 3 — kamera mana</string>
     <string name="kachi_key_cam_toggle">%1$s — hidup/mati</string>
     <string name="kachi_key_cam_off">Matikan kamera</string>
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->

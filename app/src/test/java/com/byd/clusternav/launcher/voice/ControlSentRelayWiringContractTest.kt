@@ -28,10 +28,9 @@ class ControlSentRelayWiringContractTest {
     fun `gui o phien wake, nhan o tien trinh chinh sau cong nen`() {
         assertTrue(SourceRoots.body(factory, "internal fun VoiceWakeService.buildSession(): VoiceSession {")
             .contains("ControlSentRelay.forwardFromWake(app)"), "phiên `:wake` (phím vô-lăng · nút mic · Hey Kachi) phải nối cầu")
+        // Android box B2 · W1 — tiến trình chính không còn đăng ký đầu nhận (xem bài trên).
         val onCreate = SourceRoots.body(application, "override fun onCreate()")
-        val gate = onCreate.indexOf("if (isBackgroundVoiceProcess()) return")
-        val recv = onCreate.indexOf("ControlSentRelay.receiveInMain(this)")
-        assertTrue(gate >= 0 && recv > gate, "đầu nhận chỉ ở tiến trình CHÍNH — sau cổng `:tts`/`:wake`")
+        assertTrue("ControlSentRelay.receiveInMain(" !in onCreate, "Android box không nhận bảng lệnh cuối nút xe")
     }
 
     @Test
@@ -84,7 +83,8 @@ class ControlSentRelayWiringContractTest {
         }
         fun callers(token: String) = all.filter { (name, src) -> name != "ControlSentRelay.kt" && src.contains(token) }.map { it.first }
         assertEquals(listOf("VoiceWakeSessionFactory.kt"), callers("ControlSentRelay.forwardFromWake("))
-        assertEquals(listOf("KachiApplication.kt"), callers("ControlSentRelay.receiveInMain("))
+        // Android box B2 · W1 — đầu NHẬN ở tiến trình chính gỡ (bảng lệnh cuối chỉ cho nút xe BYD); W3 gỡ cả cầu.
+        assertEquals(emptyList<String>(), callers("ControlSentRelay.receiveInMain("))
         assertEquals(listOf("ControlSentRelay.kt"), all.filter { it.second.contains(".forwardTo {") }.map { it.first },
             "chỉ cầu `:wake` được nối nơi chuyển tiếp của bảng")
     }

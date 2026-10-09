@@ -6,7 +6,7 @@
   sibling (@android:style/Theme.Material.Light). Both files carry the SAME attribute overrides pointing
   at @color NAMES that resolve per mode. Only the parent + windowLightStatusBar/windowLightNavigationBar
   differ from the light file (here FALSE = light icons on the dark bars).
-  Style NAMES (AppTheme, ClusterTheme) are unchanged so AndroidManifest + activities keep resolving.
+  Style NAME AppTheme is unchanged (ClusterTheme removed with ClusterNavActivity, Android box B2 · W1) so AndroidManifest + activities keep resolving.
 -->
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.Material">
@@ -46,8 +46,4 @@
         <item name="android:windowLightNavigationBar">false</item>
     </style>
 
-    <style name="ClusterTheme" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:windowBackground">@android:color/black</item>
-    </style>
 </resources>

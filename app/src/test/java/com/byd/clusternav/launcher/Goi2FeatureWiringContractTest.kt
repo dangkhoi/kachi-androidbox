@@ -237,10 +237,9 @@ class Goi2FeatureWiringContractTest {
 
     @Test
     fun `ap luc khoi dong va suy giam an toan`() {
-        assertTrue(boot.contains("RecircApplier.applyOnStart"), "phải được gọi trong chuỗi khởi động")
-        val pos = boot.indexOf("RecircApplier.applyOnStart")
-        val pm25 = boot.indexOf("Pm25FilterApplier.applyOnStart")
-        assertTrue(pm25 in 0 until pos, "phải đặt SAU hai bộ đã proven để nếu nó hỏng thì không ảnh hưởng chúng")
+        // Android box B2 · W1 — lượt nổ máy KHÔNG còn áp lấy gió trong / lọc bụi / ghế (HAL BYD); applier mồ côi tới W2e.
+        listOf("RecircApplier.applyOnStart", "Pm25FilterApplier.applyOnStart", "SeatComfortApplier.applyOnStart")
+            .forEach { assertTrue(!boot.contains(it), "'$it' đã gỡ khỏi chuỗi khởi động") }
         assertTrue(applier.contains("runCatching"), "phải bắt mọi lỗi — không được kéo sập chuỗi khởi động")
         assertTrue(applier.contains("recircOnStartEnabled"), "phải có cổng theo công tắc (mặc định TẮT)")
     }
@@ -248,11 +247,11 @@ class Goi2FeatureWiringContractTest {
     // ── R11–R13 · chọn đơn vị ────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `bang chon don vi chi bay loai thuc su co dung`() {
-        assertTrue(panel.contains("UnitFormat.quantitiesInUse()"),
-            "chỉ bày loại đại lượng có mục thật, không bày lựa chọn giả (R13)")
-        assertTrue(rows.contains("Units.options("), "danh sách lựa chọn phải lấy từ bảng tra")
-        assertTrue(panel.contains("unitRow("), "phải có hàng chọn cho từng loại")
+    fun `bang chon don vi da go khoi trang Hien thi`() {
+        // Android box B2 · W1 — đơn vị chỉ cho dữ liệu xe BYD ⇒ trang Hiển thị không còn bày hàng chọn đơn vị.
+        assertTrue(!panel.contains("unitRow("), "trang Hiển thị không còn hàng chọn đơn vị")
+        assertTrue(!panel.contains("UnitFormat.quantitiesInUse()"))
+        assertTrue(rows.contains("Units.options("), "bộ dựng hàng còn (mồ côi tới W3)")
     }
 
     @Test

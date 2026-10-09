@@ -30,16 +30,11 @@ internal object TestBridgeNoHome {
         when (cmd.name) {
             TestBridgeCommands.PREFS ->
                 reply.ok("file" to cmd.file, "values" to TestBridgeState.prefsSnapshot(app, cmd.file))
-            TestBridgeCommands.HAL -> TestBridgeHal.run(app, cmd, reply)
-            TestBridgeCommands.SWEEP -> TestBridgeSweep.run(app, cmd, reply)
-            TestBridgeCommands.FEATMAP -> TestBridgeFeatMap.run(app, reply)
+            // Android box B2 · W1 — nhánh `hal` · `sweep` · `featmap` · `captest` · `ctllog` · `diag_screen` gỡ (lệnh đã rời SPECS).
             TestBridgeCommands.VOICE_DUMP -> TestBridgeVoiceDump.run(app, cmd, reply)
             TestBridgeCommands.PREFS_SET -> TestBridgePrefsSet.run(app, cmd, KachiTestHooks.get(), reply)
-            TestBridgeCommands.CAPTEST -> TestBridgeCapTest.run(app, cmd, reply)
             TestBridgeCommands.A11YLOG -> TestBridgeA11yLog.run(app, cmd, reply)
-            TestBridgeCommands.CTLLOG -> TestBridgeCtlLog.run(app, cmd, reply)
             TestBridgeCommands.WAKELOG -> TestBridgeWakeLog.run(app, cmd, reply)
-            TestBridgeScreenCommands.DIAG_SCREEN -> TestBridgeScreens.run(app, cmd, reply)
             else -> return false
         }
         return true

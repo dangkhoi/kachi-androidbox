@@ -8,21 +8,18 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.byd.clusternav.AppContainer
 import com.byd.clusternav.Lang
 import com.byd.clusternav.Prefs
 import com.byd.clusternav.R
 import com.byd.clusternav.launcher.automation.NavAutomationBook
 import com.byd.clusternav.navAutomationRules
-import com.byd.clusternav.cameraSignalEnabled
 
 /**
- * ═══ MỘT ĐỘNG CƠ NỀN CHO CẢ HAI AUTOMATION ═══════════════════════════════════════════════════════════════════
+ * ═══ ĐỘNG CƠ NỀN CỦA LỊCH TỰ DẪN ĐƯỜNG ═══════════════════════════════════════════════════════════════════
  *
  * Spec `docs/specs/kachi-automation.html` R4. Foreground service, nhịp [TICK_MS]; mỗi nhịp gọi
- * [ScheduledNavApplier.tick], còn nhịp mưa đi qua [RainDefrostApplier.tickIfDue] mỗi lượt thức và tự gác: ngay ở
- * đầu vòng, rồi mỗi [RAIN_EVERY_TICKS] nhịp (≈5 phút, R1.2) theo thời gian trôi — hoặc ở lượt thức kế sau khi người
- * dùng đổi lựa chọn kính (V8 · R-V8.5), hoặc 60 s sau một nhịp đọc HAL lỗi, tối đa 5 lần (V8.1 · R-V8.8).
+ * [ScheduledNavApplier.tick]. Android box B2 · W1 (2026-10-09): nhịp mưa (`RainDefrostApplier`) và đồng bộ camera theo
+ * xi-nhan đã gỡ khỏi vòng (HAL BYD) — engine chỉ còn lịch tự dẫn đường. [RAIN_EVERY_TICKS] còn lại cho mã mồ côi tới W2e.
  *
  * ## Vì sao FGS + `Thread.sleep`, KHÔNG WorkManager / AlarmManager
  * Spec §Quyết định thiết kế: Kachi vốn **thường trú** (nó là HOME, autostart mỗi lần nổ máy), IVI khoá nhiều
@@ -141,15 +138,8 @@ class AutomationService : Service() {
          */
         fun anyEnabled(ctx: Context): Boolean {
             val app = ctx.applicationContext
-            // kachi-automation V8: hỏi đúng lựa chọn HIỆU LỰC (`enabled && ô con`, `RainDefrostChoice.fromKeys`) —
-            // không chọn kính nào = không còn việc gì. Hỏi công tắc cũ một mình thì FGS thường trú với một thông báo
-            // mà nhịp mưa không làm gì — đúng thứ KDoc lớp này gọi là "chi phí ròng". Đổi ô đi qua
-            // `ClusterNavBridge.setRainDefrostGlass`, mà hàm đó gọi `sync` ⇒ service tự dừng/dựng lại ngay lượt đó.
-            // Bọc như hai dòng dưới (soát V8 Pass 3 · P3): V8 đọc cả 3 khoá mỗi lần (V7 chỉ đọc hai khoá con khi công
-            // tắc chính bật). Hàm này chạy ở `onStartCommand` và ở điều kiện `while` của vòng nền — ném ở đó là
-            // `onStartCommand` nổ / luồng daemon chết vì ngoại lệ không bắt. Đọc lỗi ⇒ "không có việc mưa" = hướng an toàn.
-            if (runCatching { RainDefrostApplier.choice(app).any }.getOrDefault(false)) return true
-            if (runCatching { Prefs.cameraSignalEnabled(app) }.getOrDefault(false)) return true
+            // Android box B2 · W1 — vòng chỉ còn LỊCH TỰ DẪN ĐƯỜNG: tự sấy kính khi mưa (HAL BYD) và camera theo xi-nhan (HAL
+            // helper BYD) không còn là lý do giữ FGS — cả hai đã rời Cài đặt nên người dùng không còn công tắc nào để tắt chúng.
             return runCatching {
                 NavAutomationBook.decode(Prefs.navAutomationRules(app)).any { it.enabled }
             }.getOrDefault(false)
@@ -166,9 +156,6 @@ class AutomationService : Service() {
         fun sync(ctx: Context) {
             val app = ctx.applicationContext
             runCatching {
-                // BG-15: công tắc camera đổi ⇒ controller dùng chung phản ứng NGAY (bật: nối socket; tắt: đóng
-                // overlay + dừng luồng), không chờ nhịp 60 s. Tắt mà chưa từng dựng ⇒ không dựng chỉ để dừng.
-                syncCamera(app)
                 if (!anyEnabled(app)) {
                     // TẮT: vô hiệu vòng NGAY (không chờ service chết) rồi mới xin dừng. Thiếu bước này thì thread
                     // đang ngủ còn chạy thêm một nhịp và có thể ghi HAL sau khi người dùng đã tắt công tắc.
@@ -176,7 +163,6 @@ class AutomationService : Service() {
                         generation++
                         running = false
                     }
-                    RainDefrostApplier.forgetAll()
                     app.stopService(Intent(app, AutomationService::class.java))
                     Log.i(TAG, "sync: không còn automation nào bật ⇒ dừng")
                     return
@@ -185,14 +171,6 @@ class AutomationService : Service() {
                 if (Build.VERSION.SDK_INT >= 26) app.startForegroundService(intent) else app.startService(intent)
                 Log.i(TAG, "sync: có automation bật ⇒ đảm bảo engine đang chạy")
             }.onFailure { Log.w(TAG, "sync thất bại (degrade-safe, thử lại lần sau)", it) }
-        }
-
-        /** Xem [sync]. Tách riêng để nhịp vòng và `finally` của vòng cũng đi đúng một đường. */
-        private fun syncCamera(app: Context) {
-            val container = AppContainer.get(app)
-            val enabled = runCatching { Prefs.cameraSignalEnabled(app) }.getOrDefault(false)
-            if (!enabled && !container.cameraSignalCreated) return
-            runCatching { container.cameraSignal.tick() }.onFailure { Log.w(TAG, "sync camera lỗi", it) }
         }
 
         /**
@@ -214,27 +192,14 @@ class AutomationService : Service() {
                 try {
                     // Nhịp ĐẦU chạy ngay (không ngủ trước): bật công tắc lúc 7h05 mà phải chờ tới 7h06 mới đánh
                     // giá là một phút không giải thích được với người vừa bấm.
-                    // kachi-automation V8.1 · R-V8.8: nhịp MƯA đầu cũng ngay — [ĐO git] `79be642` so với `lastRainMs = 0L`
-                    // nên nó chỉ chạy khi uptime ≥ 5′. Nhịp mưa nay do `RainDefrostCadence` của applier gác.
-                    RainDefrostApplier.loopStarted()
                     while (myGen == generation && anyEnabled(app)) {
                         val nowMs = android.os.SystemClock.elapsedRealtime()
-                        // Camera theo xi-nhan — đồng bộ công tắc mỗi nhịp (controller DÙNG CHUNG qua AppContainer, BG-15).
-                        // Chạy Ở ĐÂY (FGS nền) chứ không ở render của HOME: [ĐO xe 2026-09-24] lái xe thì app bản-đồ
-                        // trên tiền cảnh ⇒ HOME stopped ⇒ render KHÔNG chạy ⇒ xi-nhan không lên camera. FGS chạy bất
-                        // kể tiền cảnh. Sự kiện ON/OFF + HOLD hết hạn KHÔNG đi qua nhịp này (socket + postDelayed, BG-13).
-                        syncCamera(app)
-                        // Nav theo THỜI GIAN TRÔI (giữ mốc elapsed — không phụ thuộc số nhịp); mưa ngay dưới, cùng bất biến.
+                        // Nav theo THỜI GIAN TRÔI (giữ mốc elapsed — không phụ thuộc số nhịp). Android box B2 · W1: nhịp mưa
+                        // (`RainDefrostApplier.tickIfDue`) và đồng bộ camera xi-nhan (`syncCamera`) gỡ khỏi vòng.
                         if (nowMs - lastNavMs >= TICK_MS) {
                             lastNavMs = nowMs
                             runCatching { ScheduledNavApplier.tick(app) }.onFailure { Log.w(TAG, "tick nav lỗi", it) }
                         }
-                        // Mưa: gọi MỖI lượt thức, không điều kiện — `tickIfDue` tự gác (kachi-automation V8.1 · R-V8.8):
-                        // đầu vòng ngay · đọc HAL lỗi ⇒ thử lại 60 s, tối đa 5 lần · sàn 60 s giữa hai nhịp · còn lại
-                        // TICK_MS × RAIN_EVERY_TICKS (≈5′) theo THỜI GIAN TRÔI `nowMs` (bất biến `79be642`: không đếm
-                        // lượt thức). Đổi lựa chọn kính (R-V8.5) ⇒ `requestSoon()` ⇒ `consumeDue()` là ĐỐI SỐ trong
-                        // `tickIfDue` nên luôn được đọc-và-xoá; cờ, không `interrupt()` (spec V8 · D6).
-                        runCatching { RainDefrostApplier.tickIfDue(app, nowMs) }.onFailure { Log.w(TAG, "tick mưa lỗi", it) }
                         ticks++
                         runCatching { Thread.sleep(TICK_MS) }
                         // Kiểm LẠI sau khi ngủ: công tắc có thể đã tắt trong lúc đó. KHÔNG đọc [running] ở đây —
@@ -242,7 +207,6 @@ class AutomationService : Service() {
                         if (myGen != generation) break
                     }
                 } finally {
-                    syncCamera(app)   // nhịp cuối: công tắc vừa tắt ⇒ đóng overlay + dừng luồng socket (BG-15)
                     // CHỈ thế hệ hiện tại được nhả cờ — tránh `finally` của thread cũ xoá cờ của thread mới.
                     synchronized(GUARD) { if (myGen == generation) running = false }
                     Log.i(TAG, "vòng automation (gen $myGen) kết thúc sau $ticks nhịp")

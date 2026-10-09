@@ -90,11 +90,9 @@ class LauncherActionTileWiringContractTest {
         assertTrue(fn.contains("LauncherActions.VOICE -> onVoice()"), "mã Nói với xe phải mở phiên nghe")
         // 2.93 · CAMERA-ON-DEMAND: nhánh còn lại đi về MỘT đường camera (cùng đường của phím vật lý · giọng nói) — và
         // đường ấy tự bỏ qua mã không phải camera ⇒ mã launcher lạ vẫn KHÔNG làm gì (mở nhầm một màn còn khó hiểu hơn).
-        assertTrue(fn.contains("else -> com.byd.clusternav.launcher.camera.CameraDemandDispatch.tap(this@controlDock, id)"),
-            "ô camera phải đi về đường camera chung, không dựng đường thứ hai")
-        val tap = SourceRoots.body(code("src/main/java/com/byd/clusternav/launcher/camera/CameraDemandDispatch.kt"), "fun tap(")
-        assertTrue(tap.contains("if (!LauncherActions.isCamera(launcherId)) return false"),
-            "mã launcher lạ ⇒ không làm gì; mở nhầm một màn còn khó hiểu hơn")
+        // Android box B2 · W1 — nhánh còn lại KHÔNG còn đi về đường camera BYD: mã lạ (kể cả `launcher_cam_*` đã lưu) ⇒ không làm gì.
+        assertTrue(fn.contains("else -> Unit"), "mã launcher lạ ⇒ không làm gì; mở nhầm một màn còn khó hiểu hơn")
+        assertFalse(fn.contains("CameraDemandDispatch"), "thanh nút không còn bắn camera BYD")
 
         // Và Activity truyền vào ĐÚNG ba biểu thức mà thanh trên đang dùng — so từng chữ, vì đây chính là chỗ một
         // "đường thứ hai" (vd `startActivity(...)` riêng cho Cài đặt) sẽ len vào mà không ai thấy.
@@ -159,8 +157,8 @@ class LauncherActionTileWiringContractTest {
         assertEquals(3, LauncherActions.ALL.count { !LauncherActions.isCamera(it.id) },
             "khối này cố ý NHỎ — thêm mục thì phải xét lại chỗ đứng của nó")
         assertTrue(CapabilityPicker.launcherPicks().none { LauncherActions.isCamera(it.id) }, "camera không lẫn vào khối Launcher")
-        assertEquals(5, CapabilityPicker.cameraPicks().size, "khối camera: bốn camera + Tắt camera")
-        assertTrue(launcherAt in 0 until cameraAt && cameraAt < groupAt, "khối camera đứng giữa khối Launcher và 187 ô")
+        // Android box B2 · W1 — khối camera không còn trong bộ chọn nút thanh.
+        assertTrue(cameraAt < 0, "bộ chọn nút thanh không còn khối camera BYD")
     }
 
     /**
@@ -172,13 +170,10 @@ class LauncherActionTileWiringContractTest {
     fun `ngan keo gan o bay khoi camera, luoi ve bang bo dung o chung`() {
         val init = SourceRoots.body(drawer, "    init {")
         val assignBranch = init.substringAfter("} else if (assign) {").substringBefore("} else if (pick) {")
-        assertTrue(assignBranch.indexOf("groupSection(body)") in 0 until assignBranch.indexOf("cameraSection(body)"),
-            "khối camera ở phần *Thông tin khác*, sau mục Nhóm")
+        // Android box B2 · W1 — khối camera theo yêu cầu gỡ khỏi CẢ hai bộ chọn của ngăn kéo (gán-ô + chọn nút thanh).
+        assertTrue("cameraSection" !in drawer && "cameraPicks()" !in drawer, "ngăn kéo không còn bày camera BYD")
+        assertTrue(assignBranch.contains("groupSection(body)"))
         assertFalse(assignBranch.contains("launcherPicks()"), "ba việc Launcher (ngăn kéo · Cài đặt · phiên nghe) vẫn không bày ở gán-ô")
-        val section = SourceRoots.body(drawer, "private fun cameraSection(body: LinearLayout)")
-        listOf("CapabilityPicker.CAMERA_TITLE", "CapabilityPicker.CAMERA_NOTE", "CapabilityPicker.cameraPicks()").forEach {
-            assertTrue(section.contains(it), "khối camera lấy mã + chữ từ `:core`: $it")
-        }
         val widgets = code("src/main/java/com/byd/clusternav/launcher/WidgetViews.kt")
         assertTrue(SourceRoots.body(widgets, "fun build(").contains("cameraDemandTile(ctx, id, TileSize.BIG)"), "ô widget đơn")
         assertTrue(SourceRoots.body(widgets, "private fun mini(").contains("cameraDemandTile(ctx, id, TileSize.DOCK)"), "ô lưới nén")

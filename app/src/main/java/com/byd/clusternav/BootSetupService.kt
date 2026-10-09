@@ -8,9 +8,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import com.byd.clusternav.modules.navaccess.NavAccessibilitySource
-import com.byd.clusternav.navigation.NavigationOutputTarget
-import com.byd.clusternav.navigation.SpeedSignOutput
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -20,18 +17,13 @@ import java.util.concurrent.TimeUnit
  * app performs its boot setup WITHOUT foregrounding any screen (bonus: dodges the dudu size-compat
  * letterbox — no activity auto-foregrounds on boot).
  *
- * Relocates the ONLY boot-setup that was tied to the old ClusterNav screen's onCreate (that screen was
- * removed 2026-09-13 — docs/specs/kachi-remove-legacy-screen.html; what is left of it lives here and in
- * [com.byd.clusternav.launcher.ClusterNavBridge]):
- *   1. accessibility grant + force-bind ([NavConnect.grantAccessibility] — includes the 1.20 force-bind), and
- *   2. re-assert the cluster-lane output ([NavRepository.setOutputEnabled] CLUSTER_LANE=true) — covers an
- *      OLD persisted `lane=false` pref for a user who upgraded and never opens the app in headless mode
- *      (the old screen's Prefs.setLane(true) migration would otherwise never run for them).
- * Both are ADDITIVE and idempotent; the same setup also runs from the Nav master switch in the bridge.
- *
- * NOT touched here (already headless): the nav pipeline (NavNotificationListener.onListenerConnected →
- * NavRepository.setPermission(GRANTED) → connect()) and auto-cast (the cast bubble service is the sole
- * autostart driver, started by RebindReceiver.castBootWork when Cast is enabled).
+ * Android box B2 · W1 (2026-10-09): the boot setup is now just
+ *   1. accessibility grant + force-bind ([NavConnect.grantAccessibility]) when the physical-key feature is ON,
+ *   2. the voice-key keep-alive ([VoiceKeyKeepAliveService.sync]),
+ *   3. the scheduled-navigation engine ([com.byd.clusternav.automation.AutomationService.sync]) and the Gemini
+ *      assistant re-apply for a hold-mic binding.
+ * Everything BYD-only that used to run here (cluster-lane / HUD outputs, speed sign, VietMap autostart, seat / PM2.5 /
+ * recirculation apply, forced HUD prefs) is removed from this entry point (docs/specs/androidbox-plan.html §4.1).
  *
  * Safety:
  *  • [startForeground] is called FIRST (well within the ~5 s startForegroundService() budget) so a
@@ -59,7 +51,9 @@ class BootSetupService : Service() {
                 // service CHƯA bound (idempotent: grantAccessibility verify dumpsys trước khi toggle → no-op/no
                 // flicker nếu đã bound). Async trên thread riêng, báo về main looper → đếm latch; giữ FGS sống tới
                 // khi grant xong (bounded GRANT_TIMEOUT_MS).
-                if (Prefs.enabled(applicationContext) || Prefs.voiceKeyEnabled(applicationContext)) {
+                // Android box B2 · W1: chỉ phím vật lý cần trợ năng (bộ đọc màn GMaps cho cụm là phần BYD đã gỡ khỏi
+                // lối vào) ⇒ cổng chỉ còn công tắc phím, không còn công tắc "Dẫn đường lên cụm" (`Prefs.enabled`).
+                if (Prefs.voiceKeyEnabled(applicationContext)) {
                     if (!NavConnect.isAccessibilityBound(applicationContext)) {
                         val latch = CountDownLatch(1)
                         NavConnect.grantAccessibility(applicationContext) { latch.countDown() }
@@ -68,35 +62,8 @@ class BootSetupService : Service() {
                 }
                 // #3 (deep-pass 2026-09-23): giữ tiến trình sống khi phím-thoại bật (ssc_skip không DROP watchdog).
                 runCatching { VoiceKeyKeepAliveService.sync(applicationContext) }
-                // S3 (2026-09-13) — HUD kính lái ép TẮT, chuyển từ `MainActivity.onCreate` (màn cũ đã gỡ:
-                // docs/specs/kachi-remove-legacy-screen.html R2). Khoá `hud` mặc định FALSE và KHÔNG còn nơi nào
-                // ghi TRUE, nhưng máy đã từng bật ở bản trước 08 thì pref đó còn nguyên — mà đường ép tắt duy
-                // nhất trước đây là mở màn cũ. Ép ở đây: boot chạy mỗi lần nổ máy, tức mỗi chuyến.
-                forcedPrefs(applicationContext)
-                NavRepository.setOutputEnabled(applicationContext, NavigationOutputTarget.HUD, false)
-                NavigationSpeedSignOwner.get(applicationContext).onOutputEnabled(SpeedSignOutput.HUD, false)
-                if (Prefs.enabled(applicationContext)) {
-                    // Re-assert the cluster-lane output (belt-and-suspenders for an old lane=false pref). Nav+HUD only.
-                    NavRepository.setOutputEnabled(
-                        applicationContext, NavigationOutputTarget.CLUSTER_LANE, true,
-                    )
-                }
-                // BOOT headless: auto-start VietMap chạy trong FGS RIÊNG ([VietMapAutostartService]) — KHÔNG
-                // block chuỗi setup này (ghế / lọc bụi / Gemini phía dưới chạy NGAY, không đợi VietMap). Nhánh
-                // bóng poll tới khi VietMap vào map (tuỳ network) nên tách ra service riêng; boot → về HOME sau.
-                // Gate (badge / bóng / cast) + chống-loop nằm trong runNow của service.
-                VietMapAutostartService.startForBoot(applicationContext)
-                // Ghế: áp mức làm-mát/sưởi lên HAL ~5s sau boot nếu công tắc BẬT (headless boot cũng tự áp,
-                // giống app tham chiếu). Gate seatComfortEnabled + degrade-safe nằm trong applyOnStart.
-                com.byd.clusternav.comfort.SeatComfortApplier.applyOnStart(applicationContext)
-                // Lọc bụi mịn PM2.5: bật lọc-liên-tục (không popup) ~5s sau boot nếu công tắc BẬT. Gate
-                // pm25FilterEnabled + degrade-safe nằm trong applyOnStart.
-                com.byd.clusternav.comfort.Pm25FilterApplier.applyOnStart(applicationContext)
-                // W3 — Tự lấy gió trong: xe QUÊN chế độ này mỗi lần khởi động. Gate recircOnStartEnabled
-                // (mặc định TẮT) + degrade-safe nằm trong applyOnStart. ⚠ mã "recirc" CHƯA kiểm trên xe owner
-                // (tier OVERDRIVE) ⇒ có thể xe không nhận; đặt SAU 2 bộ đã proven để nếu nó hỏng thì không
-                // ảnh hưởng ghế/lọc bụi.
-                com.byd.clusternav.comfort.RecircApplier.applyOnStart(applicationContext)
+                // Android box B2 · W1 — gỡ phần chỉ-BYD của lượt nổ máy: ép prefs HUD, đầu ra dẫn đường lên cụm/HUD,
+                // biển tốc độ, tự mở VietMap, áp ghế / lọc bụi / lấy gió trong (docs/specs/androidbox-plan.html §4.1).
                 // AUTOMATION (1.85, spec kachi-automation R4/R5) — dựng lại động cơ nền khi nổ máy nếu có
                 // automation nào BẬT. Phải có mặt ở CẢ HAI đường boot: `KachiAutostart` chỉ chạy khi *"Tự mở
                 // Kachi"* (`launcher_autostart`) BẬT, còn dịch vụ này chạy theo *"Chạy dịch vụ nền"*
@@ -156,31 +123,6 @@ class BootSetupService : Service() {
     }
 
     companion object {
-        /**
-         * Ba khoá **ép giá trị mỗi lần nổ máy** — ba khoá `HIDDEN_KEYS` không có nút nào trên giao diện
-         * (`SettingsCatalogClusterNav.HIDDEN_KEYS`: `hud` ép false, `interpolate`/`acc_booster` ép true).
-         *
-         * ## Vì sao phải còn một nơi ghi, không thể dựa vào giá trị mặc định
-         * Cả ba đều có mặc định ĐÚNG (`hud` = false, hai khoá kia = true), nên máy cài mới không cần gì. Nhưng
-         * máy CŨ thì đã có giá trị ghi trong prefs: `hud=true` từ thời còn ô tích `cb_hud`, và
-         * `interpolate/acc_booster=false` từ bản 2026-07-13 từng ép TẮT. Đường "di cư" duy nhất cho hai nhóm đó
-         * là màn ClusterNav cũ ghi đè mỗi lần mở — mà màn đó **đã gỡ 2026-09-13**
-         * (`docs/specs/kachi-remove-legacy-screen.html` R2). Bỏ luôn việc ghi thì hai khoá kia đóng băng ở
-         * `false` vĩnh viễn trên chính những máy đó: `ClusterBroadcaster` tắt phần bù cự ly theo tốc độ và
-         * `NavAccessibilityService` tắt bộ đọc màn GMaps ⇒ đúng triệu chứng *"cụm trễ khi tới ngã rẽ"*.
-         *
-         * ## Vì sao gọi từ HAI chỗ
-         * Dịch vụ này CHỈ chạy khi *"Tự khởi động nền"* BẬT ([Prefs.headlessAutostart], mặc định bật). Khi người
-         * dùng TẮT nó, [RebindReceiver] mở thẳng màn chính thay vì gọi dịch vụ này — nên nhánh đó gọi hàm này
-         * trực tiếp. Thuần SharedPreferences (không đụng nav runtime) nên chạy trong `onReceive` cũng rẻ; phần
-         * áp lại OUTPUT thì vẫn ở lại luồng nền của dịch vụ này, nơi nó vốn thuộc về.
-         */
-        fun forcedPrefs(ctx: Context) {
-            Prefs.setHud(ctx, false)
-            Prefs.setInterpolate(ctx, true)
-            Prefs.setAccBooster(ctx, true)
-        }
-
         private const val TAG = "BootSetup"
         // Distinct from the cast bubble service (1042) / CastAutomationService so the two can coexist on boot.
         private const val NOTIFICATION_ID = 1043

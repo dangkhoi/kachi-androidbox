@@ -325,7 +325,7 @@ class CameraGlWiringContractTest {
         )
         keys.forEach {
             assertTrue("\"$it\"" in prefs, "khoá $it chưa khai ở PrefsCameraDewarp")
-            assertTrue(it in TestBridgeCommands.WRITABLE_PREFS_KEYS, "khoá $it chưa vào danh sách trắng")
+            assertTrue(it !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "Android box B2 · W1: khoá $it rời danh sách trắng")
             assertTrue("\"$it\" ->" in prefsSet, "prefs_set thiếu nhánh ghi cho $it")
             assertTrue("\"$it\" -> Prefs." in prefsSet, "read_back phải đọc LẠI $it từ nơi lưu bền")
         }
@@ -384,7 +384,7 @@ class CameraGlWiringContractTest {
         // Chín khoá vẫn ghi được qua cầu kiểm thử — gỡ UI KHÔNG được biến thành gỡ đường chẩn đoán.
         listOf("camera_dewarp_cx", "camera_dewarp_cy", "camera_dewarp_k", "camera_dewarp_focal", "camera_dewarp_scale",
             "camera_dewarp_pan_x", "camera_dewarp_pan_y", "camera_gl_texmatrix").forEach {
-            assertTrue(it in TestBridgeCommands.WRITABLE_PREFS_KEYS && "\"$it\" ->" in prefsSet, "$it phải còn ghi được để dò trên xe")
+            assertTrue(it !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "Android box B2 · W1: $it rời danh sách trắng")
         }
     }
 
@@ -413,8 +413,8 @@ class CameraGlWiringContractTest {
 
     /** `camera_synth` là một lệnh THẬT: có trong bảng `:core`, có nhánh dispatch, có móc, có đường vào producer. */
     @Test fun `camera_synth la lenh that va noi day den producer`() {
-        assertTrue(TestBridgeCommands.CAMERA_SYNTH in TestBridgeCommands.NAMES, "chưa khai trong SPECS ⇒ unknown_cmd")
-        assertTrue("TestBridgeCommands.CAMERA_SYNTH -> TestBridgeSynth.run(" in bridge, "thiếu nhánh dispatch")
+        // Android box B2 · W1 — `camera_synth` rời SPECS + dispatch; phần nối producer dưới đây mồ côi tới W2b.
+        assertTrue(TestBridgeCommands.CAMERA_SYNTH !in TestBridgeCommands.NAMES && "TestBridgeCommands.CAMERA_SYNTH ->" !in bridge)
         val hooks = app("launcher/testbridge/TestBridgeHooks.kt")
         assertTrue("cameraSynth = { on, file ->" in hooks, "móc phải nối tới controller thật, KÈM tên tệp (2.75)")
         assertTrue("cameraFrameRaw = { w, h ->" in hooks)

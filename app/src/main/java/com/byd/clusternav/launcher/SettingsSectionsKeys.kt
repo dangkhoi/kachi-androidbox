@@ -6,8 +6,6 @@ import android.widget.LinearLayout
 import com.byd.clusternav.R
 import com.byd.clusternav.launcher.camera.CameraDemand
 import com.byd.clusternav.voicekey.KeySourceKind
-import com.byd.clusternav.voicekey.KeySourceProbes
-import com.byd.clusternav.voicekey.KeySourceVerdict
 
 /**
  * Nhóm **"Phím vô-lăng"** (IA v2 §4.1 nhóm 7) — công tắc nhận nút vật lý · trạng thái dịch vụ Hỗ trợ · danh sách
@@ -148,43 +146,13 @@ class SettingsKeysSection(
     }
 
     /**
-     * FIX286 · R-KC — bước 2 chọn **loại đích**: *"Ứng dụng · trợ lý"* (danh sách cũ, y nguyên) hoặc một NHÓM nút xe;
-     * nhóm ⇒ bước 3 chọn việc (*"Gió +1"*, *"Bật Kính lái"*…). Nhóm + việc SINH từ `ControlRegistry` qua
-     * [KeyCtlTargets.groups] (`:core`) — không chép tay, thêm nút vào registry là có mặt ở đây.
+     * Bước 2 chọn ĐÍCH: app hoặc trợ lý (danh sách cầu `targetOptions`). Android box B2 · W1 (2026-10-09): bỏ hai loại đích
+     * BYD của bước này — NHÓM nút xe (`ctl:<nút>:<việc>`, FIX286 · R-KC) và *Camera theo yêu cầu* (`cam:…`, 2.93). Dòng gán
+     * cũ mang hai mã ấy vẫn hiện tên ([targetLabel]) để người dùng nhận ra và xoá.
      */
-    private fun pickTarget(onSpec: (String) -> Unit) {
-        val groups = KeyCtlTargets.groups()
-        // 2.93 · CAMERA-ON-DEMAND — loại đích thứ hai *"Camera theo yêu cầu"* (owner 06/10 *"trigger từ bind phím vật lý"*).
-        SettingsDialogs.pick(
-            context,
-            context.getString(R.string.kachi_keys_pick_kind),
-            listOf(context.getString(R.string.kachi_keys_kind_apps), context.getString(R.string.kachi_keys_kind_camera)) +
-                groups.map { it.displayLabel },
-            context.getString(R.string.kachi_keys_no_targets),
-        ) { kind ->
-            when (kind) {
-                0 -> pickApp(onSpec)
-                1 -> pickCamera(onSpec)
-                else -> pickControl(groups[kind - 2], onSpec)
-            }
-        }
-    }
+    private fun pickTarget(onSpec: (String) -> Unit) = pickApp(onSpec)
 
-    /**
-     * 2.93 — năm đích camera: bốn camera (mỗi phím = BẬT/TẮT camera ấy — owner *"các nút đều là toggle"*) + *Tắt camera*.
-     * Danh sách + mã bền sinh từ `:core` [CameraDemand.KEY_OPS] / [CameraDemand.keySpec] — không chép tay mã nào.
-     */
-    private fun pickCamera(onSpec: (String) -> Unit) {
-        val ops = CameraDemand.KEY_OPS
-        SettingsDialogs.pick(
-            context,
-            context.getString(R.string.kachi_keys_pick_camera),
-            ops.map { camOpLabel(it) },
-            context.getString(R.string.kachi_keys_no_targets),
-        ) { i -> CameraDemand.keySpec(ops[i])?.let(onSpec) }
-    }
-
-    /** Nhãn một đích camera: *"Camera sau — bật/tắt"* · *"Tắt camera"*. */
+    /** Nhãn một đích camera ĐÃ GÁN (dữ liệu cũ): *"Camera sau — bật/tắt"* · *"Tắt camera"*. */
     private fun camOpLabel(op: CameraDemand.Op): String = when (op) {
         is CameraDemand.Op.Toggle ->
             context.getString(R.string.kachi_key_cam_toggle, CameraSettingsLabels.cameraName(context, op.which))
@@ -199,15 +167,6 @@ class SettingsKeysSection(
             targets.map { targetOptionLabel(it, targets) },
             context.getString(R.string.kachi_keys_no_targets),
         ) { targetIndex -> onSpec(targets[targetIndex].spec) }
-    }
-
-    private fun pickControl(group: KeyCtlGroup, onSpec: (String) -> Unit) {
-        SettingsDialogs.pick(
-            context,
-            context.getString(R.string.kachi_keys_pick_action, group.displayLabel),
-            group.targets.map { KeyCtlTargets.displayLabel(it) },
-            context.getString(R.string.kachi_keys_no_targets),
-        ) { i -> onSpec(group.targets[i].spec) }
     }
 
     // ── Nút TỰ HỌC ───────────────────────────────────────────────────────────────────────────────
@@ -239,9 +198,7 @@ class SettingsKeysSection(
      * nên khuôn ấy nay là tài nguyên `kachi_key_custom_name` của launcher. Lệch khuôn thì cùng một nút hiện hai
      * tên khác nhau ở hai màn.
      *
-     * 2.88 · R1 — lúc bấm Lưu đọc lại số đo nguồn của CHÍNH lần học ([learnedSource]): ra nguồn rõ (núm / vô-lăng) ⇒
-     * lưu nút kèm nguồn, tên theo khuôn `kachi_key_custom_name_src` (`"<tên> (mã <code> · <nguồn>)"`); chưa xong / hụt /
-     * giá trị lạ / phím không đo ⇒ lưu y như 2.87.
+     * Android box B2 · W1 — không còn đọc số đo nguồn phím lúc Lưu (2.88 · R1): nút học luôn lưu KHÔNG kèm nguồn.
      *
      * [ClusterNavBridge.stopLearn] gọi ngay sau khi nhận được mã: bus chỉ giữ **một** listener, để treo là
      * phiên Settings sau (hoặc màn cũ) không học được nữa.
@@ -261,25 +218,14 @@ class SettingsKeysSection(
                 context,
                 context.getString(R.string.kachi_keys_learn_name),
                 bridge.defaultLearnName(code),
-                // L7 tầng 1 — chỉ HIỆN số đo nguồn phím (mã · scan · thiết bị · nguồn HAL) để chụp màn hình; tên/gán y nguyên.
-                detail = { tv -> KeySourceDetailText.bind(tv, code) { bridge.learnedKeySource(code) } },
             ) { name ->
-                val source = learnedSource(code)
-                val label = if (source == null) context.getString(R.string.kachi_key_custom_name, name, code)
-                else context.getString(R.string.kachi_key_custom_name_src, name, code, KeySourceDetailText.kindLabel(context, source))
-                bridge.addCustomButton(label, code, source)
+                // Android box B2 · W1 — bỏ dòng số đo nguồn phím (HAL BYD `AUDIO_VOLUME_CTRL_MODE`, L7/2.88) và lưu nút KHÔNG
+                // kèm nguồn: Android box không tách núm bệ giữa / vô-lăng. Nút đã lưu kèm nguồn vẫn đọc + xoá được.
+                bridge.addCustomButton(context.getString(R.string.kachi_key_custom_name, name, code), code, null)
                 rebuildButtons()
             }
         }
     }
-
-    /**
-     * 2.88 · R1 — nguồn RÕ của lần học [code] (dòng nhật ký tầng 1 của lần bấm vừa học), hoặc `null` khi chưa đo xong /
-     * đọc hụt / giá trị ngoài bảng / phím không thuộc đầu dò. Cùng [KeySourceProbes.verdict] mà dòng chi tiết hiện, nên
-     * nút được lưu kèm nguồn ⟺ hộp vừa ghi đúng nguồn đó.
-     */
-    private fun learnedSource(code: Int): KeySourceKind? =
-        (KeySourceProbes.verdict(bridge.learnedKeySource(code)?.reading) as? KeySourceVerdict.Source)?.kind
 
     /**
      * Bảng Cài đặt đóng ⇒ đóng nốt phiên học còn treo.

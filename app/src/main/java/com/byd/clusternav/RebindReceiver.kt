@@ -27,8 +27,8 @@ import com.byd.clusternav.modules.navaccess.AccessibilityHealGates
  *     binding CHƯA TỪNG lên (case "sáng nay đi không lên") mà không cần thao tác tay.
  *
  * ⚠ ĐÍNH CHÍNH FIX286 (03/10, [ĐO nguồn AOSP]): lớp 1–3 ở trên đều là `requestRebind` — chỉ gỡ "snooze", KHÔNG gắn lại
- * một bộ nghe đã CẤP mà chưa GẮN (r47 NMS `:3127-3139` → `ManagedServices.java:707-711`). Ca đó chỉ chữa được bằng
- * disallow → allow; nhịp watchdog nay gọi thêm [NlsHeal.onWatchdog] (hỏi dump Live của NMS, cổng công tắc Dẫn đường).
+ * một bộ nghe đã CẤP mà chưa GẮN (r47 NMS `:3127-3139` → `ManagedServices.java:707-711`). Android box B2 · W1: đường
+ * chữa disallow → allow của HUD (`NlsHeal`) đã gỡ khỏi nhịp này; giữ watchdog trợ năng (phím vật lý).
  *
  * Đăng ký trong AndroidManifest (manifest-declared, để nhận được kể cả khi process đã chết).
  */
@@ -37,10 +37,7 @@ class RebindReceiver : BroadcastReceiver() {
         val action = intent?.action ?: return
         Log.i(TAG, "rebind trigger: $action")
         rebind(context)
-        // FIX286 R-HUD: `rebind()` ở trên là `requestRebind` — chỉ gỡ "snooze", KHÔNG gắn lại bộ nghe đã cấp mà chưa gắn
-        // (AOSP r47 NMS `:3127-3139` → `ManagedServices.java:707-711`). Nhịp watchdog nay hỏi sự thật NMS (dump Live) và
-        // chỉ chữa khi công tắc Dẫn đường BẬT + đã cấp quyền + màn sáng (cổng `NlsHealPolicy.step`, luồng riêng).
-        if (action == ACTION_WATCHDOG) NlsHeal.onWatchdog(context)
+        // Android box B2 · W1 — `NlsHeal.onWatchdog` (gắn lại bộ nghe thông báo cho HUD kính lái BYD) gỡ khỏi nhịp này.
         // B2 · BIND-SELFHEAL (owner 2026-09-22): vòng NỀN định kỳ tự chữa binding PHÍM VÔ-LĂNG (accessibility)
         // khi enabled-nhưng-chưa-BOUND — ca "phím chết giữa lúc lái do CPU cao" mà người dùng KHÔNG mở app.
         // `rebind()` ở trên chỉ lo notification-listener; phím vô-lăng đi qua NavAccessibilityService, cần đường
@@ -92,23 +89,17 @@ class RebindReceiver : BroadcastReceiver() {
                 // 1.21 Item 1 (owner): HEADLESS auto-start — do the boot setup in a background
                 // foreground-service (BootSetupService) WITHOUT foregrounding any screen on the main
                 // display (also dodges the dudu size-compat letterbox). Toggle defaults ON; when OFF, fall
-                // back to the 1.14 I5 behaviour (auto-open Home on start). Auto-cast (castBootWork below) is
-                // unchanged either way — the bubble/cast track is already headless and self-driven.
+                // back to the 1.14 I5 behaviour (auto-open Home on start).
                 if (Prefs.headlessAutostart(context)) startBootSetup(context) else launchHome(context)
-                castBootWork(context, automation = true)
                 // B6 (launcher): surface-independent boot orchestration (seed freeform + set-home + ensure the
                 // Kachi HOME activity is up so it restores + mounts the saved workspace). Independent of the
                 // ClusterNav headlessAutostart toggle above — the launcher should come up ready regardless; its
                 // own pref + anti-loop gate live in KachiAutostart.runBoot. Best-effort (never throws).
                 KachiAutostartService.startForBoot(context)
             }
-            Intent.ACTION_LOCKED_BOOT_COMPLETED -> {
-                scheduleWatchdog(context)
-                castBootWork(context, automation = false)
-            }
+            Intent.ACTION_LOCKED_BOOT_COMPLETED -> scheduleWatchdog(context)
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 scheduleWatchdog(context)   // #4: alarm mất sau replace/force-stop; đặt lại (idempotent FLAG_UPDATE_CURRENT)
-                castBootWork(context, automation = false)
                 // OTA auto-reopen (owner 2026-08-12): the installer kills us on update and does NOT
                 // relaunch. Bring the app back to the foreground so the user lands on Home after an
                 // update instead of a blank screen. Manifest-declared receiver ⇒ delivered even though
@@ -126,55 +117,8 @@ class RebindReceiver : BroadcastReceiver() {
         }
     }
 
-    /**
-     * One bounded background pass: read-only Cast rehydration, optional opted-in Bubble presentation
-     * and, only for post-unlock BOOT_COMPLETED, the durable-first boot automation record.
-     *
-     * 2026-08-03: V2 lifecycle rehydrate removed — simplified coordinator owns projection.
-     * Only bubble presentation and boot automation remain.
-     */
-    private fun castBootWork(context: Context, automation: Boolean) {
-        val pending = goAsync()
-        Thread {
-            try {
-                val app = context.applicationContext
-                // V2 CastAndroidLifecycle.rehydrate removed — simplified coordinator active
-                // I5 (1.14): nút nổi chỉ khi Cast BẬT (owner: "nếu có enable cast cluster thì mới start nút nổi").
-                // Trước đây start vô điều kiện rồi FloatingBubbleService tự đứng xuống nếu Cast off — nay gate hẳn.
-                runCatching {
-                    if (com.byd.clusternav.modules.clustercast.simplified.SimpleCastRuntime
-                            .coordinator(app).prefs.castEnabled()
-                    ) {
-                        startOptedInBubble(app)
-                    }
-                }.onFailure { Log.e(TAG, "bubble restore failed", it) }
-                if (automation) {
-                    runCatching {
-                        com.byd.clusternav.modules.clustercast.CastAutomationService.recordAndEnqueue(app)
-                    }.onFailure { Log.e(TAG, "boot automation record failed", it) }
-                    Log.i(TAG, "Cast boot automation: disabled (simplified coordinator)")
-                }
-            } finally {
-                pending.finish()
-            }
-        }.start()
-    }
-
-    /**
-     * Presentation-only restore of the always-on Bubble; it never dispatches Cast work.
-     *
-     * v0.72: the bubble no longer has an enable/disable toggle (docs/specs/cast-simplified-active-app-toggle.html)
-     * -- it starts on every boot as long as the overlay permission is already granted. If it is not,
-     * `FloatingBubbleService.onStartCommand` itself sends the user to the one system screen that can
-     * grant it, so starting the service unconditionally here is what lets that happen on first boot too.
-     */
-    private fun startOptedInBubble(app: Context) {
-        runCatching {
-            app.startForegroundService(
-                Intent(app, com.byd.clusternav.modules.clustercast.FloatingBubbleService::class.java),
-            )
-        }.onFailure { Log.e(TAG, "auto-start bubble failed", it) }
-    }
+    // Android box B2 · W1 — gỡ `castBootWork` (dựng lại phiên chiếu cụm `SimpleCastRuntime`, nút nổi chiếu
+    // `FloatingBubbleService`, ghi lượt tự chiếu `CastAutomationService`): chiếu cụm là phần chỉ-BYD.
 
     /**
      * 1.21 Item 1: start the short-lived headless [BootSetupService] instead of foregrounding a screen.
@@ -182,7 +126,7 @@ class RebindReceiver : BroadcastReceiver() {
      * grant + force-bind takes ~3–5 s over dadb — longer than a BroadcastReceiver's execution budget — so
      * it needs the FGS to keep the process alive. Best-effort: startForegroundService can throw in some
      * background-start-restricted states, so it is wrapped; the nav pipeline + auto-cast still self-heal via
-     * their own headless paths (listener bind, castBootWork), and the same setup re-runs when the app is
+     * their own headless paths (listener bind), and the same setup re-runs when the app is
      * opened (the old ClusterNav screen carried it until it was removed on 2026-09-13; it now lives in
      * [BootSetupService] and [com.byd.clusternav.launcher.KachiHomeActivity]'s startup path).
      */
@@ -205,15 +149,9 @@ class RebindReceiver : BroadcastReceiver() {
      * [KachiHomeActivity], and so does the fallback below — the old ClusterNav screen was removed on
      * 2026-09-13, so Kachi is the only screen this can open. It only fires when the `headless_autostart`
      * toggle is OFF; the default-ON path still starts [BootSetupService] with no UI.
-     *
-     * NOTE 2 (S3 · soát 2026-09-13): nhánh này là nhánh KHÔNG chạy [BootSetupService], nên nó phải tự gọi
-     * [BootSetupService.forcedPrefs] — ba khoá ép-mỗi-lần-nổ-máy (`hud`=false · `interpolate`/`acc_booster`=true)
-     * trước 2026-09-13 do màn ClusterNav cũ ghi đè mỗi lần mở; gỡ màn mà chỉ đặt lại ở nhánh headless thì máy
-     * nào TẮT *"Tự khởi động nền"* sẽ đóng băng giá trị cũ vĩnh viễn (xem KDoc của hàm đó).
+
      */
     private fun launchHome(context: Context) {
-        runCatching { BootSetupService.forcedPrefs(context.applicationContext) }
-            .onFailure { Log.w(TAG, "forced prefs failed", it) }
         runCatching {
             val app = context.applicationContext
             val launch = app.packageManager.getLaunchIntentForPackage(app.packageName)

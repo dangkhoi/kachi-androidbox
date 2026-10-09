@@ -56,7 +56,8 @@ class PerfR6FollowupWiringContractTest {
         assertTrue(hk.contains("Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)"))
         assertTrue(hk.contains("step(\"diag-cap\") { DiagStorageCap.enforce(app) }"), "G")
         assertTrue(hk.contains("step(\"ota-apk\") { UpdateApkHousekeeping.sweep(app) }"), "H")
-        assertTrue(hk.contains("step(\"cast-prefs\") { CastPrefsHousekeeping.prune(app) }"), "E")
+        // Android box B2 · W1 — E (khoá hình học chiếu cụm) gỡ khỏi lượt dọn: không còn chiếu cụm.
+        assertFalse(hk.contains("CastPrefsHousekeeping"), "E đã gỡ")
         assertFalse(Regex("""scheduleAtFixedRate|postDelayed|AlarmManager""").containsMatchIn(hk), "không nhịp định kỳ mới")
     }
 

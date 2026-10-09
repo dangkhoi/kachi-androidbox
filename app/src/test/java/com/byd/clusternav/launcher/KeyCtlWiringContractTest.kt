@@ -87,28 +87,21 @@ class KeyCtlWiringContractTest {
     }
 
     @Test
-    fun `KC5 - Cai dat sinh nhom va viec tu core, nhan ctl khong hien ma tho`() {
+    fun `KC5 - Cai dat chi con dich app, dong ctl cu van hien ten`() {
+        // Android box B2 · W1 (2026-10-09) — ĐỔI GHIM có lý do: bộ chọn đích phím không còn bày NHÓM nút xe (`ctl:`) lẫn camera
+        // (`cam:`) — bước 2 đi thẳng danh sách app/trợ lý. Dòng gán cũ mang `ctl:` vẫn hiện tên ('Gió +1') để người dùng xoá.
         val add = SourceRoots.body(section, "private fun addBinding()")
-        assertTrue(add.contains("pickTarget {"), "bước 2 phải qua bộ chọn loại đích")
-        val pick = SourceRoots.body(section, "private fun pickTarget(onSpec: (String) -> Unit)")
-        assertTrue(pick.contains("KeyCtlTargets.groups()"), "nhóm SINH từ registry, không chép tay")
-        // 2.93 · CAMERA-ON-DEMAND: loại đích thứ hai là *Camera theo yêu cầu* ⇒ nhóm xe dời một chỉ số (kind − 2).
-        assertTrue(pick.contains("pickApp(onSpec)") && pick.contains("pickControl(groups[kind - 2], onSpec)"))
-        assertTrue(pick.contains("1 -> pickCamera(onSpec)"), "loại đích camera phải nối vào bộ chọn camera")
-        val cam = SourceRoots.body(section, "private fun pickCamera(onSpec: (String) -> Unit)")
-        assertTrue(cam.contains("CameraDemand.KEY_OPS") && cam.contains("CameraDemand.keySpec(ops[i])"),
-            "đích camera SINH từ `:core` (danh sách + mã bền), không chép tay `cam:…`")
-        assertTrue("\"cam:" !in section, "mã `cam:` không được chép trần trong Cài đặt")
-        val ctl = SourceRoots.body(section, "private fun pickControl(group: KeyCtlGroup, onSpec: (String) -> Unit)")
-        assertTrue(ctl.contains("KeyCtlTargets.displayLabel(it)") && ctl.contains("onSpec(group.targets[i].spec)"))
+        assertTrue(add.contains("pickTarget {"), "bước 2 vẫn qua một cửa chọn đích")
+        assertTrue(section.contains("private fun pickTarget(onSpec: (String) -> Unit) = pickApp(onSpec)"), "chỉ còn đích app/trợ lý")
+        listOf("KeyCtlTargets.groups()", "pickCamera(", "pickControl(", "CameraDemand.KEY_OPS").forEach {
+            assertTrue(it !in section, "'$it' đã gỡ khỏi bộ chọn đích phím")
+        }
+        assertTrue("\"cam:" !in section && "\"ctl:" !in section, "không chép trần mã đích")
         val lbl = SourceRoots.body(section, "private fun targetLabel(spec: String, targets: List<TargetOption>): String")
         assertTrue(lbl.contains("KeyCtlTargets.displayLabelOf(spec)"), "dòng đã gán hiện 'Gió +1', không 'ctl:fan:+1'")
         val vi = SourceRoots.text("src/main/res/values/strings_kachi.xml")
-        val en = SourceRoots.text("src/main/res/values-en/strings_kachi.xml")
-        listOf("kachi_keys_pick_kind", "kachi_keys_kind_apps", "kachi_keys_pick_action").forEach { k ->
-            assertTrue("name=\"$k\"" in vi && "name=\"$k\"" in en, "thiếu chuỗi $k ở vi hoặc en")
-        }
-        assertEquals(1, Regex("%1\\\$s").findAll(Regex("name=\"kachi_keys_pick_action\">([^<]*)<").find(en)!!.value).count())
+        listOf("kachi_keys_pick_kind", "kachi_keys_kind_apps", "kachi_keys_kind_camera", "kachi_keys_pick_action", "kachi_keys_pick_camera")
+            .forEach { k -> assertTrue("name=\"$k\"" !in vi, "chuỗi $k mồ côi — hàng của nó đã gỡ") }
     }
 
     @Test
@@ -155,7 +148,8 @@ class KeyCtlWiringContractTest {
             }.toList()
         }.joinToString("\n")
         mapOf(
-            "KeyCtlDispatch.fire(" to 1, "KeyCtlTargets.groups(" to 1, "KeyCtlTargets.displayLabelOf(" to 1,
+            // Android box B2 · W1: `KeyCtlTargets.groups(` không còn chỗ gọi (bộ chọn đích nút xe gỡ khỏi Cài đặt — bài KC5).
+            "KeyCtlDispatch.fire(" to 1, "KeyCtlTargets.displayLabelOf(" to 1,
             // 2.87 · R-FL2: `KeyCtlPlan.unreadableReply` GỠ cùng ca `Unreadable` (Đảo/Kế tiếp lùi về lệnh cuối) ⇒ bỏ khỏi
             // danh sách; `invalidReply` nay thêm một chỗ gọi (`Outcome.Invalid`).
             "KeyCtlPlan.of(" to 1, "KeyCtlPlan.invalidReply(" to 3,

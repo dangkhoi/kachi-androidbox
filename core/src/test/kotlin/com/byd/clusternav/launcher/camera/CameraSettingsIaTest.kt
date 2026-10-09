@@ -120,7 +120,7 @@ class CameraSettingsIaTest {
     }
 
     /** 15 khoá còn lại: không hàng nào trên màn, nhưng `prefs_set` vẫn ghi/đọc (đường chẩn đoán CLAUDE.md §15). */
-    @Test fun `19 khoa khong co UI van ghi doc duoc qua cau kiem thu`() {
+    @Test fun `19 khoa khong co UI - Android box W1 khong con ghi qua cau`() {
         // 15 → 19 (2.92): +`camera_dewarp_amount` (ô tích gỡ, khoá vẫn đọc) + ba núm `camera_wide_*` của *Thẳng rộng*.
         assertEquals(19, CameraSettingsIa.NO_UI_KEYS.size, "đổi số ⇒ đổi doc camera-ia-profile.md §IA")
         listOf(
@@ -128,26 +128,26 @@ class CameraSettingsIaTest {
             "camera_dewarp_amount", "camera_wide_kappa", "camera_wide_focal", "camera_wide_pan_x",
         ).forEach {
             assertTrue(it in CameraSettingsIa.NO_UI_KEYS, "$it không còn hàng ⇒ phải ở danh sách không-UI")
-            assertTrue(it in TestBridgeCommands.WRITABLE_PREFS_KEYS, "$it phải còn ghi được để dò trên xe")
+            assertTrue(it !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "Android box B2 · W1: $it rời danh sách trắng prefs_set")
         }
     }
 
     /** Hai danh sách rời nhau và hợp lại = ĐÚNG tập `camera_*` của danh sách trắng `prefs_set`. */
-    @Test fun `hai danh sach roi nhau va phu tron danh sach trang camera`() {
+    @Test fun `hai danh sach roi nhau, danh sach trang khong con khoa camera`() {
         val user = CameraSettingsIa.USER_KEYS.toSet()
         val perCam = CameraSettingsIa.PER_CAMERA_KEYS.toSet()
         val noUi = CameraSettingsIa.NO_UI_KEYS.toSet()
         assertTrue((user intersect noUi).isEmpty(), "một khoá không được ở hai danh sách: ${user intersect noUi}")
         assertTrue((user intersect perCam).isEmpty() && (perCam intersect noUi).isEmpty(), "một khoá ở hai danh sách")
+        // Android box B2 · W1 — danh sách trắng `prefs_set` KHÔNG còn khoá `camera_*` nào (lệnh + hàng Cài đặt camera BYD gỡ).
         val writable = TestBridgeCommands.WRITABLE_PREFS_KEYS.filter { it.startsWith("camera_") }.toSet()
-        assertEquals(emptySet<String>(), writable - user - perCam - noUi, "khoá camera chưa được xếp vào danh sách nào")
-        assertEquals(emptySet<String>(), (user + perCam + noUi) - writable, "danh sách nhắc một khoá không còn ghi được qua prefs_set (bài canh rữa)")
+        assertEquals(emptySet<String>(), writable, "khoá camera không được ghi qua prefs_set trên Android box")
         assertEquals(CameraSettingsIa.USER_KEYS.size, user.size, "không trùng trong USER_KEYS")
         assertEquals(CameraSettingsIa.PER_CAMERA_KEYS.size, perCam.size, "không trùng trong PER_CAMERA_KEYS")
         assertEquals(CameraSettingsIa.NO_UI_KEYS.size, noUi.size, "không trùng trong NO_UI_KEYS")
         assertEquals(CameraSettingsIa.ALL_KEYS.toSet(), user + perCam + noUi)
         // 31 → 29 (2.83): −2 vạch chuẩn khoảng cách (2.82), gỡ hẳn theo owner. 29 → 34 (2.92): +kiểu hình, +thu phóng,
         // +3 núm Thẳng rộng. 34 → 56 (2.93): +22 khoá MỚI của bộ chỉnh *Từng camera* (6 khoá cũ chỉ đổi danh sách).
-        assertEquals(56, writable.size, "9 hàng chung + 28 khoá bộ chỉnh từng camera + 19 khoá không-UI (2.93)")
+        assertEquals(56, (user + perCam + noUi).size, "9 hàng chung + 28 khoá bộ chỉnh từng camera + 19 khoá không-UI (2.93)")
     }
 }

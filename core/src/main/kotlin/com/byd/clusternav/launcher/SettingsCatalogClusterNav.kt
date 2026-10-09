@@ -121,36 +121,16 @@ internal object SettingsCatalogClusterNav {
      * nghĩa mà giao diện tự dựng ra (cùng lập luận đã dùng cho cặp cờ boot ở [SettingsCatalog.NOT_SETTINGS]).
      */
     val COMPANION_KEYS: Map<String, String> = mapOf(
-        "badge_center_y" to "badge_center",
-        "vm_bubble_y" to "vm_bubble_pos",
-        // 2.91 · F1 — `vm_bubble_hidden` KHÔNG còn đi kèm: nó có mục riêng (công tắc hiện bóng), `vm_bubble_enabled` có mục
-        // "Tự mở VietMap cho bong bóng" (SettingsCatalogEntries). Hai khái niệm, hai hàng — không còn một công tắc ghi cặp.
-        // S4-SEAT (owner 2026-09-23): 3 ghế còn lại đi kèm ghế lái. `Prefs.setSeatComfortLevel` ghi
-        // `"seat_level_$seatIndex"` cho 4 ghế trong MỘT hàm; chỉ `seat_level_0` được khai trong CLUSTERNAV_KEYS nên
-        // ProfileScope (sinh từ bảng đó) chỉ phủ ghế lái ⇒ đổi hồ sơ, 3 ghế kia giữ mức người trước. Khai đi-kèm để
-        // cả 4 vào ảnh chụp theo hồ sơ. (Cùng tệp `clusternav_prefs` như seat_level_0 — `Prefs.kt` FILE, :420-422.)
-        "seat_level_1" to "car_seat_levels",
-        "seat_level_2" to "car_seat_levels",
-        "seat_level_3" to "car_seat_levels",
+        // Android box B2 · W1 — khoá đi kèm của các mục đã gỡ (`badge_center_y` · `vm_bubble_y` · `seat_level_1..3` ·
+        // `rain_defrost_front/rear`) rời bảng này sang [SettingsCatalogRetired.KEYS]: mục chủ của chúng không còn, mà khoá
+        // vẫn ở [KEYS] (= còn theo hồ sơ). Hai dòng còn lại là của mục còn sống.
         // IA v2 · R3 — chip sáng/tối của Kachi ghi CẢ `theme_mode` (nguồn sự thật của launcher) lẫn `theme_choice`
         // (màn nâng cao đọc ở attachBaseContext). Một khái niệm, một công tắc, hai chỗ lưu vì hai màn đọc khác nhau.
         "theme_choice" to "display_theme",
-        // ── V7 (owner 2026-09-25) — hai ô CON của *"Tự sấy kính khi mưa"* ──
-        // Đây là dạng TỔNG QUÁT của ca `badge_center_x`/`badge_center_y` ngay trên: **một MỤC ghi nhiều khoá**,
-        // không phải nhiều mục. Mục `car_rain_defrost` sở hữu cả ba khoá của tính năng (bật/tắt + chọn kính nào),
-        // và một khoá vẫn có đúng MỘT chủ — bất biến của [SettingsCatalog] nguyên vẹn.
-        //
-        // Vì sao KHÔNG mở hai mục danh mục riêng: `car_rain_defrost_front`/`_rear` sẽ là hai dòng nữa ở rail đếm
-        // *"nhóm này có N mục"* cho **một** tính năng. kachi-automation V8 (owner 2026-09-30) bỏ công tắc chính
-        // khỏi giao diện — hai hàng nay độc lập, không hàng nào mờ — nhưng ba khoá vẫn là MỘT lựa chọn: mỗi cú
-        // chạm ghi cả ba trong một lượt (`enabled = trước || sau`, `RainDefrostChoice.toKeys`), nên chúng vẫn chung
-        // một chủ. Tách chủ là mời hai mục ghi lệch nhau đúng cái bộ ba mà V8 sinh ra để giữ khớp.
-        "rain_defrost_front" to "car_rain_defrost",
-        "rain_defrost_rear" to "car_rain_defrost",
         // ── V8 (owner 2026-09-25) — công tắc *"Tự động cập nhật"* ──
         // Chủ là `system_update`, mục vốn KHÔNG có khoá (nó là một VIỆC LÀM: nút *Kiểm tra cập nhật*). Nay hàng đó
         // có hai nửa của cùng một việc — *tự* dò và *tự tay* dò — nên mục ấy nhận khoá của nửa thứ nhất. Không mở
-        // mục mới cùng lý do hai dòng V7 ở trên.
+        // mục mới: một hàng, hai nửa của cùng một việc.
         "auto_update_enabled" to "system_update",
     )
 

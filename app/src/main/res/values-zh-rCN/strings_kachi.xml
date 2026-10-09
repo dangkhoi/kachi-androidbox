@@ -64,7 +64,6 @@
     <string name="kachi_slot_needs_access">需要授权</string>
     <string name="kachi_slot_no_channel">无控制通道</string>
     <string name="kachi_access_feature_blocked">需要窗口控制权限——请打开主屏幕进行授权</string>
-    <string name="kachi_sec_units">显示单位</string>
     <string name="kachi_sec_theme">浅色/深色主题</string>
     <string name="kachi_row_palette">配色方案</string>
     <string name="kachi_theme_note">“自动”表示18:00至06:00使用深色。更改配色方案会立即就地生效，格位中的应用继续运行。</string>
@@ -486,9 +485,6 @@
     <string name="kachi_keys_add">添加绑定…</string>
     <string name="kachi_keys_pick_button">第1步——选择按键</string>
     <string name="kachi_keys_pick_target">第3步——选择应用 / 助手</string>
-    <string name="kachi_keys_pick_kind">第2步——此按键的功能</string>
-    <string name="kachi_keys_kind_apps">打开应用 · 助手</string>
-    <string name="kachi_keys_pick_action">第3步——%1$s：选择操作</string>
     <string name="kachi_keys_no_buttons">还没有可绑定的按键。</string>
     <string name="kachi_keys_no_targets">此设备上还没有可通过按键打开的应用。</string>
     <string name="kachi_sub_keys_custom">已学习按键</string>
@@ -538,13 +534,12 @@
     <string name="kachi_pm25_middle">中度</string>
     <string name="kachi_pm25_heavy">重度</string>
     <string name="kachi_pm25_serious">严重</string>
-    <string name="kachi_headless_title">上电时在后台运行导航/仪表服务</string>
+    <string name="kachi_headless_title">上电时在后台运行服务（实体按键 · 定时导航）</string>
     <string name="kachi_headless_sub">与上一行“不同”：上一行会打开Kachi界面，这一行只启动服务，不打开任何界面。</string>
     <string name="kachi_sub_maint">维护</string>
     <string name="kachi_auto_update_title">自动更新</string>
     <string name="kachi_auto_update_sub">每次打开Kachi时检查是否有新版本；如有，会先询问再下载并覆盖安装。已是最新版本时不会打扰你。</string>
     <string name="kachi_check_update">检查更新</string>
-    <string name="kachi_nav_stop">停止所有导航</string>
     <string name="kachi_restart_launcher">重启启动器</string>
     <string name="kachi_sub_advanced">高级</string>
     <string name="kachi_test_bridge_title">ADB测试模式</string>
@@ -635,8 +630,6 @@
     <string name="kachi_voice_wav_failed">无法运行：%1$s</string>
     <string name="kachi_voice_wav_where">请将kachi-voice-test.wav（16 kHz · 单声道 · 16位PCM）放在以下位置之一：%1$s</string>
     <string name="kachi_pill_voice">与车对话</string>
-    <string name="kachi_top_strip_labels_title">显示标签文字</string>
-    <string name="kachi_top_strip_labels_sub">关闭后只保留图标和数字——栏上空间更宽裕</string>
     <string name="kachi_voice_confirm_sec">执行前确认</string>
     <string name="kachi_voice_confirm_note">默认情况下Kachi会直接执行，只有打开天窗时会先询问。勾选的项目都会在执行前先询问你。</string>
     <string name="kachi_voice_ask_aloud_title">朗读确认问题</string>
@@ -908,8 +901,6 @@
     <string name="kachi_camera_projection_own_row">画面样式</string>
     <string name="kachi_camera_rot_own_row">旋转</string>
     <string name="kachi_camera_mirror_own_title">镜像画面</string>
-    <string name="kachi_keys_kind_camera">按需摄像头</string>
-    <string name="kachi_keys_pick_camera">第3步——哪个摄像头</string>
     <string name="kachi_key_cam_toggle">%1$s——开/关</string>
     <string name="kachi_key_cam_off">关闭摄像头</string>
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->

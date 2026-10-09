@@ -99,7 +99,6 @@
     <string name="kachi_access_feature_blocked">Needs window control permission — open the home screen to grant it</string>
 
     <!-- ── SettingsSections — Hiển thị & đơn vị ── -->
-    <string name="kachi_sec_units">Display units</string>
     <string name="kachi_sec_theme">Light / dark theme</string>
     <string name="kachi_row_palette">Colour palette</string>
     <string name="kachi_theme_note">"Auto" means dark from 18:00 to 06:00. Changing the palette applies in place; apps in slots keep running.</string>
@@ -575,9 +574,6 @@
     <string name="kachi_keys_add">Add binding…</string>
     <string name="kachi_keys_pick_button">Step 1 — choose a button</string>
     <string name="kachi_keys_pick_target">Step 3 — choose the app / assistant</string>
-    <string name="kachi_keys_pick_kind">Step 2 — what this button does</string>
-    <string name="kachi_keys_kind_apps">Open an app · assistant</string>
-    <string name="kachi_keys_pick_action">Step 3 — %1$s: choose the action</string>
     <string name="kachi_keys_no_buttons">There is no button to bind yet.</string>
     <string name="kachi_keys_no_targets">No app on this device can be opened from a button yet.</string>
     <string name="kachi_sub_keys_custom">Self-learned buttons</string>
@@ -631,14 +627,13 @@
     <string name="kachi_pm25_serious">Serious</string>
 
     <!-- ── IA v2 nhóm 9 — Hệ thống & quyền: Khởi động · Bảo trì · Nâng cao ── -->
-    <string name="kachi_headless_title">Run the navigation/cluster service in the background on engine start</string>
+    <string name="kachi_headless_title">Run the background service on engine start (physical keys · scheduled navigation)</string>
     <string name="kachi_headless_sub">DIFFERENT from the row above: that one opens the Kachi screen, this one only starts the service without any screen.</string>
     <string name="kachi_sub_maint">Maintenance</string>
     <!-- V8 (owner 2026-09-25) — auto-update switch, independent of Nav+HUD. Off by default. -->
     <string name="kachi_auto_update_title">Auto-update</string>
     <string name="kachi_auto_update_sub">Checks for a newer build whenever Kachi opens; if there is one it asks before downloading and installing over the top. Stays quiet when you are already up to date.</string>
     <string name="kachi_check_update">Check for updates</string>
-    <string name="kachi_nav_stop">Stop all navigation</string>
     <string name="kachi_restart_launcher">Restart launcher</string>
     <string name="kachi_sub_advanced">Advanced</string>
 
@@ -756,8 +751,6 @@
     <string name="kachi_voice_wav_where">Put kachi-voice-test.wav (16 kHz · mono · 16-bit PCM) in one of: %1$s</string>
     <string name="kachi_pill_voice">Talk to car</string>
     <!-- V3 · R14 — chip label toggle -->
-    <string name="kachi_top_strip_labels_title">Show chip labels</string>
-    <string name="kachi_top_strip_labels_sub">Off keeps just the icon and the number — more room on the bar</string>
     <!-- V3 · R7 — "Ask before running" + microphone source -->
     <string name="kachi_voice_confirm_sec">Ask before running</string>
     <string name="kachi_voice_confirm_note">Kachi runs straight away by default, except opening the sunroof, which it asks about. Tick anything you want it to ask about first.</string>
@@ -1035,8 +1028,6 @@
     <string name="kachi_camera_projection_own_row">View style</string>
     <string name="kachi_camera_rot_own_row">Rotate</string>
     <string name="kachi_camera_mirror_own_title">Mirror video</string>
-    <string name="kachi_keys_kind_camera">Camera on demand</string>
-    <string name="kachi_keys_pick_camera">Step 3 — which camera</string>
     <string name="kachi_key_cam_toggle">%1$s — on/off</string>
     <string name="kachi_key_cam_off">Camera off</string>
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->

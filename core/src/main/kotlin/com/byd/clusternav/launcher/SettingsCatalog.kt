@@ -64,6 +64,12 @@ object SettingsCatalog {
     /** Khoá của ClusterNav **cố ý không lên UI** → lý do. Cùng vai trò [NOT_SETTINGS], cho phía ClusterNav. */
     val CLUSTERNAV_HIDDEN_KEYS: Map<String, String> = SettingsCatalogClusterNav.HIDDEN_KEYS
 
+    /**
+     * Android box B2 · W1 — khoá ĐÃ RỜI giao diện (mục Cài đặt gỡ) mà dữ liệu còn đi theo hồ sơ → lý do. Xem
+     * [SettingsCatalogRetired]: [orphans] và phép "khoá ClusterNav có chủ" tha ĐÚNG danh sách này, không tha theo mẫu.
+     */
+    val RETIRED_UI_KEYS: Map<String, String> = SettingsCatalogRetired.KEYS
+
     /** Tiền tố khoá dựng động phía ClusterNav → lý do (nay chỉ có `seat_level_`). */
     val CLUSTERNAV_DYNAMIC_KEY_PREFIXES: Map<String, String> = SettingsCatalogClusterNav.DYNAMIC_KEY_PREFIXES
 
@@ -295,7 +301,7 @@ object SettingsCatalog {
      */
     fun orphans(keys: Set<String>): Set<String> =
         keys.filterTo(mutableSetOf()) { key ->
-            groupOf(key) == null && key !in NOT_SETTINGS && !key.startsWith(SLOT_KEY_PREFIX)
+            groupOf(key) == null && key !in NOT_SETTINGS && key !in RETIRED_UI_KEYS && !key.startsWith(SLOT_KEY_PREFIX)
         }
 
     /** Khoá bị **hai mục trở lên** cùng nhận ⇒ hai nơi sửa một giá trị (bẫy hai-bản-sao). Rỗng là đúng. */
@@ -377,7 +383,7 @@ object SettingsCatalog {
         // có phép này thì thêm một khoá vào bảng mà quên dựng mục là chuyện xảy ra im lặng — đúng bệnh mà cả danh
         // mục này sinh ra để chữa, chỉ là ở phía ClusterNav.
         val ownerless = CLUSTERNAV_KEYS.keys.filter { key ->
-            if (groupOf(key) != null) return@filter false
+            if (groupOf(key) != null || key in RETIRED_UI_KEYS) return@filter false
             val ownerId = CLUSTERNAV_COMPANION_KEYS[key]
             ownerId == null || ENTRIES.none { it.id == ownerId }
         }
@@ -399,5 +405,17 @@ object SettingsCatalog {
         require(CLUSTERNAV_PREFS_FILES.values.all { it.isNotBlank() }) {
             "mỗi tệp prefs của ClusterNav phải kèm lý do nó tồn tại riêng"
         }
+        // ── Android box B2 · W1 — khoá đã rời UI ([SettingsCatalogRetired]) ──────────────────────────
+        // Rời UI = KHÔNG mục nào sở hữu, không phải "không phải cấu hình", không phải khoá đi kèm của mục còn sống; và khoá
+        // phía ClusterNav phải còn trong CLUSTERNAV_KEYS (= còn trong phạm vi hồ sơ — đợt W1 không được làm mất dữ liệu).
+        val retiredOwned = RETIRED_UI_KEYS.keys.filter {
+            groupOf(it) != null || it in NOT_SETTINGS || it in CLUSTERNAV_COMPANION_KEYS || it in CLUSTERNAV_HIDDEN_KEYS
+        }
+        require(retiredOwned.isEmpty()) { "khoá 'đã rời UI' lại có chủ / bị khai ở bảng khác: $retiredOwned" }
+        val retiredLost = RETIRED_UI_KEYS.keys.filter {
+            it !in SettingsCatalogRetired.LAUNCHER_KEYS && it !in CLUSTERNAV_KEYS
+        }
+        require(retiredLost.isEmpty()) { "khoá 'đã rời UI' phía ClusterNav không còn trong CLUSTERNAV_KEYS (mất khỏi hồ sơ): $retiredLost" }
+        require(RETIRED_UI_KEYS.values.all { it.isNotBlank() }) { "mỗi khoá đã rời UI phải kèm LÝ DO" }
     }
 }

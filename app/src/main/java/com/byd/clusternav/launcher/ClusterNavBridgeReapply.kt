@@ -1,14 +1,7 @@
 package com.byd.clusternav.launcher
 
 import android.util.Log
-import com.byd.clusternav.AppPrereqs
-import com.byd.clusternav.NavRepository
-import com.byd.clusternav.Prefs
-import com.byd.clusternav.VmOverlayPosition
 import com.byd.clusternav.automation.AutomationService
-import com.byd.clusternav.comfort.Pm25FilterApplier
-import com.byd.clusternav.comfort.SeatComfortApplier
-import com.byd.clusternav.launcher.camera.CameraReapply
 import com.byd.clusternav.launcher.voice.VoiceWakeService
 
 /**
@@ -48,57 +41,17 @@ import com.byd.clusternav.launcher.voice.VoiceWakeService
  * không đổi thứ tự bên trong applier nào: nó chỉ gọi đúng những hàm mà các `bridge.set*` tương ứng vẫn gọi.
  */
 internal fun ClusterNavBridge.reapplyAll() {
-    // ── Dẫn đường + HUD ─────────────────────────────────────────────────────────────────────────
-    // `enabled`: khúc ÁP của `setNavEnabled` (`ClusterNavBridge.kt:99` → `NavigationSpeedSignOwner.kt:44`).
-    // ⚠ CỐ Ý bỏ khúc XIN QUYỀN của hàm đó (`NavConnect.selfGrant` / `grantAccessibility`): chúng đi dadb, chờ tới
-    // ~31 s và có thể bật hộp thoại "Allow USB debugging" — chấp nhận được khi người dùng vừa gạt công tắc dẫn
-    // đường, KHÔNG chấp nhận được khi họ chỉ đổi hồ sơ trên xe đang chạy. Cổng thông báo thì vốn đã tự áp
-    // (`NavNotificationListener.kt:167` đọc lại mỗi thông báo).
-    step("nav.master") { speedSign.onMasterEnabled(Prefs.enabled(app)) }
-    // `nav_cluster_screen_mode`: đúng applier của `setClusterMode` (`ClusterNavBridge.kt:133`) — ép CLEAR rồi đẩy
-    // lại NGAY thay vì chờ khung kế bị dedup nuốt (`NavigationHudOwner.kt:267`).
-    step("nav.clusterMode") { NavRepository.reapplyClusterMode(app) }
+    // ⚠ Android box B2 · W1 (2026-10-09) — gỡ khỏi lượt áp lại mọi applier chỉ-BYD: dẫn đường lên cụm/HUD (`nav.master` ·
+    // `nav.clusterMode`), biển báo tốc độ (`badge.*`), bong bóng VietMap (`bubble.*`), điều kiện nền cho VietMap/app chiếu
+    // (`app.prereqs`), ghế (`seat`), lọc bụi (`pm25`) và camera theo yêu cầu (`camera.demand`). Khoá còn đi theo hồ sơ
+    // (`SettingsCatalogRetired`), chỉ không còn gì đang chạy để áp — đổi hồ sơ không chạm HAL / cụm / app khác nữa.
 
-    // ── Biển báo tốc độ (lớp phủ dùng chung trên cụm) ───────────────────────────────────────────
-    // Bốn applier của bốn `bridge.set*` tương ứng (`ClusterNavBridge.kt:247,256,265,278`).
-    // ⚠ CỐ Ý bỏ `VietMapAutostartService.startForAppOpen` mà `setBadgeEnabled` gọi khi BẬT: nó **mở một app**.
-    // Đổi hồ sơ mà tự bung VietMap lên màn xe đang chạy là hành vi không ai yêu cầu.
-    step("badge.enabled") { speedSign.onBadgeEnabledChanged() }
-    step("badge.upcoming") { speedSign.onUpcomingBadgeEnabledChanged() }
-    step("badge.alertChip") { speedSign.onAlertChipEnabledChanged() }
-    // Một lời gọi cho CẢ `badge_size_dp` + `badge_center_x/y` — đúng như `setBadgeSizeDp`/`setBadgeCenter` làm.
-    step("badge.layout") { speedSign.debugRefreshBadgeLayout() }
-
-    // ── Bong bóng VietMap trên cụm ──────────────────────────────────────────────────────────────
-    // `vm_bubble_x/y`: `VmOverlayPosition` vừa lưu vừa **bắn broadcast** cho mod VietMap trong cùng một hàm, nên
-    // `applyOnOpen` (`VmOverlayPosition.kt:86`) là đúng đường phát lại — nó tự no-op khi Cast chưa live.
-    step("bubble.pos") { VmOverlayPosition.applyOnOpen(app) }
-    // 2.90 · R8 — `vm_bubble_hidden` của HỒ SƠ MỚI ⇒ ẩn/hiện bóng thật (`VM_BUBBLE_VIS`), không gate Cast ON (bóng nằm trên cụm cả khi tắt chiếu).
-    step("bubble.vis") { com.byd.clusternav.VmBubbleVisibility.apply(app, "profile-reapply", force = true) }
-    // Review 2.89 Pass 3 · vietmap-dock-r2-2 — điều kiện nền (miễn pin · appop vẽ nổi) theo HỒ SƠ MỚI: `vm_bubble_enabled` /
-    // biển tốc độ / app tự chiếu theo hồ sơ, và lượt SẴN của hồ sơ trước có thể đã TRẢ appop vẽ nổi của VietMap (r1-2). Không
-    // gọi lại thì hồ sơ bật bóng mất bóng tới lần màn sáng / nổ máy / mở chiếu kế. `onReady` = lượt nền (luồng riêng, KHÔNG mở
-    // app nào — khác `VietMapAutostartService` bị cố ý bỏ ở trên): đọc → áp phần thiếu cho phạm vi mới → trả dấu đã rời phạm vi.
-    step("app.prereqs") { AppPrereqs.onReady(app) }
-
-    // ── Tiện nghi xe ────────────────────────────────────────────────────────────────────────────
-    // `seat_comfort_mode` + `seat_level_*`: applier của `setSeatMode` (`ClusterNavBridge.kt:380`). Nó **tự gate**
-    // theo `seat_comfort_enabled` bên trong (`SeatComfortApplier.kt:56`) nên công tắc chính cũng được tôn trọng.
-    step("seat") { SeatComfortApplier.applyNow(app) }
-    // `pm25_filter_enabled`: đúng cặp applier của `setPm25Enabled` (`ClusterNavBridge.kt:415`). Phải gọi cả nhánh
-    // TẮT: vòng lọc là một thread đang chạy, không tắt thì nó lọc tiếp theo cấu hình của hồ sơ vừa rời.
-    step("pm25") { if (Prefs.pm25FilterEnabled(app)) Pm25FilterApplier.enable(app) else Pm25FilterApplier.disable(app) }
-
-    // ── Tự động hoá (camera theo xi-nhan · luật dẫn đường theo lịch) ─────────────────────────────
+    // ── Tự động hoá (luật dẫn đường theo lịch) ──────────────────────────────────────────────────
     // V-CLUSTER A3: `camera_signal_enabled` (theo hồ sơ từ 2026-09-30) và `nav_automation_rules` (theo hồ sơ từ
     // 2026-09-28) quyết việc FGS tự động hoá có sống không. Đổi hồ sơ mà không đồng bộ thì hồ sơ B tắt camera vẫn để
     // engine của A chạy (và ngược lại: B bật mà FGS đang dừng thì camera câm tới lần khởi động kế). Đúng hàm mà
     // `setCameraSignal`/`setRainDefrost*` gọi sau khi ghi — idempotent, tự gác theo `anyEnabled`, không ném.
     step("automation.sync") { AutomationService.sync(app) }
-    // 2.93 wave 2B · D6 — camera THEO YÊU CẦU không hẹn giờ tắt (có thể treo cả chuyến) ⇒ khung đang hiện nhận cấu hình của
-    // hồ sơ mới NGAY (góc · chỗ · cỡ · hình · kiểu theo hồ sơ). Camera xi-nhan đang giữ ⇒ để yên — không dỡ camera điểm mù
-    // giữa lúc rẽ; lượt mở sau tự đọc (loại 1 ở KDoc đầu tệp). Overlay là cửa sổ của chính Kachi, không phải phiên chiếu cụm.
-    step("camera.demand") { CameraReapply.ifDemandShowing(app) }
 
     // ── Giọng nói: chế độ `:wake` (FIX286 · VK2/VK4) ─────────────────────────────────────────────────
     // `voicekey_bindings` · `voicekey_enabled` · `voice_music_default_app` theo HỒ SƠ ⇒ đổi hồ sơ đổi `keyHold` (hồ sơ B

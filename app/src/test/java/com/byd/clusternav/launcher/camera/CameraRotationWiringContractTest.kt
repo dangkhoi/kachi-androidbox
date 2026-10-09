@@ -158,7 +158,7 @@ class CameraRotationWiringContractTest {
         assertTrue(".remove(K_CAMERA_ROTATION_LEGACY)" in mig, "khoá cũ phải xoá sau migrate — còn đó là còn migrate lại đè lên lựa chọn mới")
         assertTrue("\"camera_rot_left\"" in prefs && "\"camera_rot_right\"" in prefs && "\"camera_rotation\"" in prefs)
         listOf("camera_rot_left", "camera_rot_right").forEach {
-            assertTrue(it in TestBridgeCommands.WRITABLE_PREFS_KEYS, "chốt chiều xoay trên xe cần prefs_set $it")
+            assertTrue(it !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "Android box B2 · W1: $it rời danh sách trắng")
             assertTrue("\"$it\" ->" in prefsSet, "prefs_set phải có nhánh $it (ghi + read_back)")
         }
         assertEquals(2, Regex("""\"camera_rot_(?:left|right)\" -> Prefs\.cameraRotation\(app, left = (?:true|false)\)""").findAll(prefsSet).count(), "read_back cho cả hai bên")

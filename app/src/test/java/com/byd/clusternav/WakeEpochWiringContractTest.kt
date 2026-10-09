@@ -45,6 +45,6 @@ class WakeEpochWiringContractTest {
         val chain = SourceRoots.body(early, "private fun readyChain(")
         order(chain, "val prev = chainFor.get()",
             "if (!WakeEpochPolicy.shouldRun(prev, epoch, ShellReadiness.isUp(), interactive(app))) return",
-            "if (!chainFor.compareAndSet(prev, epoch)) return", "AppPrereqs.onReady(app)")
+            "if (!chainFor.compareAndSet(prev, epoch)) return", "KeyReady.prepare(app)")   // Android box B2 · W1: AppPrereqs gỡ khỏi chuỗi
     }
 }

@@ -64,29 +64,12 @@ class RainDefrostV8WiringTest {
      * RainDefrostCadenceTest › yeu cau chua qua san…` chạy THẬT.
      */
     @Test
-    fun `vong nhip doc co due truoc moc 5 phut`() {
-        val loop = SourceRoots.body(service, "private fun startLoop(")
-        val call = loop.lines().map(String::trim).filter { "RainDefrostApplier.tickIfDue(" in it }
-        assertEquals(1, call.size, "đúng một lượt gọi nhịp mưa trong vòng: $call")
-        assertTrue(
-            call.single().startsWith("runCatching { RainDefrostApplier.tickIfDue(app, nowMs) }"),
-            "gọi mỗi lượt thức, không nằm sau một `if` nào: ${call.single()}",
-        )
-        assertTrue(
-            "cadence.shouldRun(nowMs, consumeDue())" in SourceRoots.body(rain, "fun tickIfDue("),
-            "consumeDue() là đối số ⇒ luôn được đọc-và-xoá",
-        )
-        assertFalse("interrupt()" in service, "D6: không ngắt luồng — cờ thôi")
+    fun `dong co khong con nhip mua - Android box W1`() {
+        // Android box B2 · W1 — ĐỔI GHIM có lý do: động cơ nền chỉ còn lịch tự dẫn; nhịp mưa (`tickIfDue`), cổng hiệu lực
+        // (`choice(app).any`) và lượt quên (`forgetAll`) gỡ khỏi `AutomationService`. Phần cờ đọc-và-xoá của applier giữ tới W2e.
+        assertFalse("RainDefrostApplier" in service, "động cơ không còn chạm sấy kính")
         assertTrue("due.getAndSet(false)" in SourceRoots.body(rain, "fun consumeDue("), "đọc-và-xoá nguyên tử")
         assertTrue("due.set(true)" in SourceRoots.body(rain, "fun requestSoon("))
-    }
-
-    /** Động cơ hỏi đúng lựa chọn HIỆU LỰC; tắt hẳn ⇒ quên cả hai kính. */
-    @Test
-    fun `dong co hoi lua chon hieu luc va quen ca hai khi tat`() {
-        assertTrue("RainDefrostApplier.choice(app).any" in SourceRoots.body(service, "fun anyEnabled("))
-        assertFalse("rainDefrostEnabled" in service, "công tắc chính một mình không còn là cổng")
-        assertTrue("RainDefrostApplier.forgetAll()" in SourceRoots.body(service, "fun sync("))
     }
 
     /**

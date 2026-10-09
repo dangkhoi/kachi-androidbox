@@ -188,27 +188,17 @@ class Automation185WiringTest {
 
     /** R4: nhịp 60 s cho nav, và rule mưa đếm nhịp ra ~5 phút (KHÔNG dựng vòng thứ hai). */
     @Test
-    fun `mot dong co, mot vong, hai nhip`() {
+    fun `mot dong co, mot vong, chi nhip lich dan duong`() {
         assertEquals(60_000L, AutomationService.TICK_MS)
-        assertEquals(5, AutomationService.RAIN_EVERY_TICKS)
-        // 2026-09-24: rule mưa nay theo THỜI GIAN TRÔI (nhịp base đổi tốc độ theo camera 1s/60s ⇒ không đếm nhịp được).
-        // kachi-automation V8.1 (spec bảng V8.1-b): mốc `lastRainMs = 0L` bắt nhịp đầu chờ uptime 5′ (OQ-V8.6) ⇒ nhịp mưa
-        // nay gác ở `RainDefrostCadence`. Bất biến GIỮ và chặt hơn: đồng hồ là `elapsedRealtime` của lượt thức, chu kỳ lấy
-        // ĐÚNG `TICK_MS * RAIN_EVERY_TICKS` (không dán số thứ hai), và `:core RainDefrostCadenceTest` chạy THẬT mốc 5′
-        // (cả khi hỏi dày 250 ms) thay vì chỉ soi một chuỗi so sánh.
+        // Android box B2 · W1 (2026-10-09) — ĐỔI GHIM có lý do: vòng chỉ còn LỊCH TỰ DẪN ĐƯỜNG. Nhịp mưa
+        // (`RainDefrostApplier.tickIfDue`/`loopStarted`/`forgetAll`) và đồng bộ camera xi-nhan (`syncCamera`) gỡ: HAL BYD.
         val loop = SourceRoots.body(service, "private fun startLoop(")
         assertTrue("val nowMs = android.os.SystemClock.elapsedRealtime()" in loop, "nhịp theo đồng hồ đơn điệu của lượt thức")
-        assertTrue("RainDefrostApplier.tickIfDue(app, nowMs)" in loop, "mưa đi qua nhịp gác theo thời gian trôi")
-        assertFalse("lastRainMs" in service, "mốc cục bộ cũ (so với 0L ⇒ chờ uptime 5′) phải gỡ hẳn")
-        assertTrue(
-            "periodMs = AutomationService.TICK_MS * AutomationService.RAIN_EVERY_TICKS" in rain,
-            "chu kỳ mưa ≈5′ lấy từ đúng hằng của động cơ",
-        )
-        // 2026-09-25 (closeout B2/BG-13/BG-15): camera KHÔNG còn nhịp 250 ms; sự kiện xi-nhan tới qua socket + hẹn giờ
-        // HOLD (`CameraHold`), controller dùng chung ở `AppContainer`. FGS vẫn là nơi giữ nó sống khi HOME stopped
-        // (owner 2026-09-24: lái xe HOME stopped) — qua `syncCamera(app)` mỗi nhịp và ở `finally`.
-        assertTrue("syncCamera(app)" in service, "FGS nền phải sync camera (owner 2026-09-24: lái xe HOME stopped)")
-        assertTrue("container.cameraSignal.tick()" in service, "camera đi qua controller dùng chung của AppContainer (BG-15)")
+        assertTrue("ScheduledNavApplier.tick(app)" in loop, "lịch tự dẫn chạy trong vòng")
+        listOf("RainDefrostApplier", "syncCamera", "cameraSignal").forEach {
+            assertFalse(it in service, "'$it' đã gỡ khỏi động cơ (Android box)")
+        }
+        assertFalse("RainDefrostApplier" in SourceRoots.body(service, "fun anyEnabled("), "mưa không còn giữ FGS sống")
         assertTrue("CAMERA_TICK_MS" !in service, "BG-13: không còn vòng 250 ms riêng cho camera")
         assertEquals(
             1,

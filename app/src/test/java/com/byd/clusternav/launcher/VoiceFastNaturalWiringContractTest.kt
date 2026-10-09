@@ -197,7 +197,8 @@ class VoiceFastNaturalWiringContractTest {
     fun `gateway that noi day hai phep tra moi, va cau co lenh featmap`() {
         assertTrue(gateway.contains("BydFeatureIds.idByName("), "tra tên hằng phải đi qua gateway thật")
         assertTrue(gateway.contains("BydFeatureIds.deviceFqnForFeature("), "và tra device theo bảng của framework")
-        assertTrue(bridge.contains("TestBridgeFeatMap.run(app, reply)"), "lệnh `featmap` phải có chỗ gọi thật")
+        // Android box B2 · W1 — lệnh `featmap` (bảng feature-id BYDAuto) rời cầu kiểm thử.
+        assertTrue(!bridge.contains("TestBridgeFeatMap.run(app, reply)"), "lệnh `featmap` đã gỡ khỏi cầu")
         val hal = code("src/main/java/com/byd/clusternav/launcher/testbridge/TestBridgeHal.kt")
         assertTrue(hal.contains("OP_SETEV"), "đầu dò `setev` (khoá/cốp) phải tồn tại cho lượt xe sau")
         assertTrue(hal.contains("cmd.autoConfirm"), "và nó vẫn đi qua cổng CONFIRM như mọi lượt GHI")

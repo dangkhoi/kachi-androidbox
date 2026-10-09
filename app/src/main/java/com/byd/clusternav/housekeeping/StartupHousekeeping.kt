@@ -11,13 +11,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  * ═══ 2.98 · R6-E/G/H — dọn MỘT LẦN mỗi tiến trình, trên luồng nền ưu tiên thấp ══════════════════════════════════
  *
  * Owner 2026-10-08: không thêm chi phí chạy, không thứ gì phình vô hạn theo ngày/tháng. [ĐO xe 29/09] BYD giết Kachi mỗi
- * lần tắt máy ⇒ "mỗi lần tiến trình bật" = mỗi lần nổ máy — đủ dày cho ba việc dưới, nên KHÔNG có nhịp định kỳ mới:
+ * lần tắt máy ⇒ "mỗi lần tiến trình bật" = mỗi lần nổ máy — đủ dày cho hai việc dưới, nên KHÔNG có nhịp định kỳ mới:
  *  • G — [DiagStorageCap.enforce]: trước đây chỉ chạy lúc mở màn chính / NLS nối; tiến trình dựng lại lúc màn tắt
  *    (A11yLifecycleHeal) mà không mở màn chính thì không bao giờ được dọn. Trong MỘT tiến trình, các nguồn phình đều có
  *    trần riêng (`usage` dừng ở 8 MiB, `nav_notif_*` xoay 8 MiB — R6-F, và ClusterBroadcaster gọi lại bộ dọn mỗi 60 s khi
  *    verbose) ⇒ một lượt lúc bật là đủ.
  *  • H — [UpdateApkHousekeeping]: xoá APK OTA đã cài.
- *  • E — [CastPrefsHousekeeping]: gỡ khoá hình học chiếu của app đã gỡ ≥ 30 ngày.
+ *  • (E — `CastPrefsHousekeeping`, khoá hình học chiếu cụm: Android box B2 · W1 gỡ khỏi lượt dọn — không còn chiếu cụm.)
  *
  * Trễ [DELAY_MS] để không tranh CPU/đĩa với đường "lên màn chính sẵn sàng" (READY-AT-HOME, ~3 s sau khi bật). Mỗi bước
  * bọc riêng: một bước hỏng không chặn bước sau và không bao giờ ném vào tiến trình launcher (HOME).
@@ -43,7 +43,6 @@ object StartupHousekeeping {
             }
             step("diag-cap") { DiagStorageCap.enforce(app) }
             step("ota-apk") { UpdateApkHousekeeping.sweep(app) }
-            step("cast-prefs") { CastPrefsHousekeeping.prune(app) }
         }, "kachi-housekeeping").apply { isDaemon = true }.start()
     }
 

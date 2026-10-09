@@ -35,14 +35,11 @@ class StartupContentionR11ContractTest {
     // ─── 1 · TAT-MAY-CAST-HOLD ─────────────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `lop 1 giu tu chieu TRUOC khi xep luot va nha trong finally`() {
+    fun `lop 1 xep luot thang - khong con giu tu chieu (Android box W1)`() {
+        // Android box B2 · W1 — móc `TatMayCastHold` (tự chiếu cụm chờ lớp 1 kết luận) gỡ: không còn chiếu cụm.
         val install = SourceRoots.body(heal, "fun install(ctx: Context) {")
-        order(
-            install,
-            "val interactive = interactive(app)",
-            "TatMayCastHold.arm(interactive, startedAt)",
-            "try { onProcessStart(app, interactive, startedAt) } finally { TatMayCastHold.release() }",
-        )
+        order(install, "val interactive = interactive(app)", "submit(\"khởi động (tương tác=\$interactive)\") { onProcessStart(app, interactive, startedAt) }")
+        assertFalse("TatMayCastHold" in install, "không còn móc giữ tự chiếu")
     }
 
     @Test

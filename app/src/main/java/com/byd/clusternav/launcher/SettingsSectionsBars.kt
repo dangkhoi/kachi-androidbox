@@ -31,8 +31,8 @@ class SettingsBarsSection(
     private val deps: SettingsDeps,
 ) {
 
-    /** Bộ chọn chip — MỘT thực thể cho một lượt dựng trang (nó giữ bảng tra `mã → view` để tô lại ô). */
-    private val stripPicker = TopStripPicker(context, rows, deps.state().topStrip, { id, on -> deps.onTopStrip(id, on) }, { cfg -> deps.onTopStripConfig(cfg) })
+    // Android box B2 · W1 — bộ chọn chip thanh trạng thái (`TopStripPicker`) + công tắc nhãn chip gỡ: mọi chip là chip dữ
+    // liệu xe BYD (năng lượng · nhiệt ngoài trời · PM2.5 · ghế · lốp). Khoá `top_strip`/`top_strip_labels` còn theo hồ sơ.
 
     /**
      * UX-OVERHAUL · WP4 — sắp chỗ các vật trên **thanh trên**.
@@ -72,31 +72,12 @@ class SettingsBarsSection(
         // câu đó thành "mọi thiết lập ở Cài đặt trừ ba nhóm theo-xe": dùng CHUNG một chuỗi cho cả hai nhóm nên
         // không có hai câu nói hai kiểu về cùng một luật.
         body.addView(rows.note(context.getString(R.string.kachi_home_profile_note, ProfileNames.display(deps.state().activeProfile))))
-        stripPicker.section(body)
-        chipLabels(body)
-        // WP4 — sắp chỗ ĐỨNG SAU chọn chip: sắp chỗ cho một vật chưa có mặt là câu hỏi vô nghĩa (thứ tự khai của
-        // danh mục cũng vậy — xem [SettingsCatalogEntries]).
         headerOrder.section(body, R.string.kachi_header_order_title, R.string.kachi_header_order_hint)
         voicePill(body)
         dock(body)
         // F1 · U2 — lối tắt ứng dụng NGAY SAU thanh nút: khối lối tắt là một mã của thanh nút (chọn ở nút ngay trên),
         // nên người vừa đặt khối lên thanh tìm thấy chỗ chọn app ở liền dưới. Widget `w_apps` dùng cùng danh sách.
         SettingsShortcutsSection(context, rows, deps).section(body)
-    }
-
-    /**
-     * V3 · R14 — **hiện nhãn trên chip hay không** (owner 2026-09-16: *"chỉ hiện icon và chỉ số thôi, text nhiều
-     * chật chỗ, cho cái toggle hiện text label"*).
-     *
-     * Đứng ngay SAU bộ chọn chip vì nó nói về chính những chip vừa chọn. Đi qua [SettingsDeps.onTopStripConfig]
-     * (đặt cả cấu hình) chứ không qua một cổng boolean riêng — xem KDoc ở đó.
-     */
-    private fun chipLabels(body: LinearLayout) {
-        body.addView(rows.checkRow(
-            on = deps.state().topStrip.showLabels,
-            title = context.getString(R.string.kachi_top_strip_labels_title),
-            sub = context.getString(R.string.kachi_top_strip_labels_sub),
-        ) { on -> deps.onTopStripConfig(deps.state().topStrip.copy(showLabels = on)) })
     }
 
     /**

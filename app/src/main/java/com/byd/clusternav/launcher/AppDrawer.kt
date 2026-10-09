@@ -151,7 +151,6 @@ class AppDrawer(
             body.addView(sectionLabel(CapabilityPicker.LAUNCHER_TITLE))
             body.addView(note(CapabilityPicker.LAUNCHER_NOTE))
             addPickGrid(body, CapabilityPicker.launcherPicks(), cols = COLS_TILE)
-            cameraSection(body)   // 2.93 · CAMERA-ON-DEMAND — năm nút camera theo yêu cầu: khối RIÊNG ngay sau khối Launcher
             groupSection(body); singlesSection(body)
         } else if (assign) {
             // #7 (owner 2026-09-21): thứ tự App → Widget của app → Thông tin khác. App là thứ người dùng đưa vào
@@ -171,9 +170,8 @@ class AppDrawer(
                 apps.grid(body, appWidgetPicks.map { p -> AppDrawerApps.Item(APPWIDGET_PKG, p.title, { p.icon }, p.onTap) }, cols = COLS_TILE)
             }
 
-            // ── Thông tin khác: nhóm xe · camera theo yêu cầu (2.93 wave 2B · CAMERA-WIDGET-TILE) · thẻ dựng tay · mục lẻ ──
+            // ── Thông tin khác: nhóm · thẻ dựng tay · mục lẻ (Android box B2 · W1: khối camera theo yêu cầu đã gỡ) ──
             groupSection(body)
-            cameraSection(body)
             body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_widgets)).also { it.setPadding(0, dpi(context, Sp.L), 0, dpi(context, Sp.XS)) })
             addWidgetGrid(body, cols = COLS_TILE)
             singlesSection(body)
@@ -243,12 +241,6 @@ class AppDrawer(
         val groups = CapabilityPicker.groupPicks()
         PickerBadge.unverifiedNote(context, groups)?.let { body.addView(note(it)) }
         addPickGrid(body, groups, cols = COLS_TILE)
-    }
-
-    /** 2.93 — khối RIÊNG năm nút camera theo yêu cầu (KDoc `CapabilityPicker.cameraPicks`): bộ chọn thanh nút + ngăn kéo gán-ô (wave 2B). */
-    private fun cameraSection(body: LinearLayout) {
-        body.addView(sectionLabel(CapabilityPicker.CAMERA_TITLE)); body.addView(note(CapabilityPicker.CAMERA_NOTE))
-        addPickGrid(body, CapabilityPicker.cameraPicks(), cols = COLS_TILE)
     }
 
     /**

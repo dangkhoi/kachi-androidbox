@@ -59,15 +59,12 @@ class KeySourceSplitWiringContractTest {
     }
 
     @Test
-    fun `W3 - giao dien hoc kem nguon va them xoa theo ma va nguon`() {
+    fun `W3 - hoc khong kem nguon, them xoa van theo ma va nguon`() {
+        // Android box B2 · W1 — học phím lưu nút KHÔNG kèm nguồn (không đo nguồn HAL BYD); dòng gán / nút đã lưu kèm nguồn
+        // vẫn đọc, gán và xoá theo (mã, nguồn) như 2.88 (các assert dưới).
         val learn = SourceRoots.body(section, "private fun learn()")
-        assertTrue(learn.contains("val source = learnedSource(code)"))
-        assertTrue(learn.contains("R.string.kachi_key_custom_name_src, name, code, KeySourceDetailText.kindLabel(context, source)"),
-            "R1: tên nút có hậu tố nguồn từ tài nguyên (đủ 5 tiếng)")
-        assertTrue(learn.contains("bridge.addCustomButton(label, code, source)"))
-        assertTrue(SourceRoots.body(section, "private fun learnedSource(code: Int): KeySourceKind?")
-            .contains("KeySourceProbes.verdict(bridge.learnedKeySource(code)?.reading) as? KeySourceVerdict.Source"),
-            "chỉ nguồn RÕ mới được lưu — chưa xong/hụt/lạ ⇒ lưu như 2.87")
+        assertTrue(learn.contains("bridge.addCustomButton(context.getString(R.string.kachi_key_custom_name, name, code), code, null)"))
+        assertTrue("learnedSource" !in section, "không còn đọc nguồn lúc học")
         assertTrue(section.contains("bridge.addBinding(option.code, spec, option.source)"), "R2: gán từ nút có nguồn ⇒ dòng theo nguồn")
         assertTrue(section.contains("bridge.removeBinding(binding.keyCode, binding.source)"), "R4: xoá đúng (mã, nguồn)")
         assertTrue(section.contains("bridge.removeCustomButton(button.keyCode, button.source)"), "R4: xoá nút đúng (mã, nguồn)")

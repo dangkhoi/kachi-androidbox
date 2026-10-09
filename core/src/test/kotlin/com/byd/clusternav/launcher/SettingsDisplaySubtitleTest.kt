@@ -17,8 +17,8 @@ class SettingsDisplaySubtitleTest {
     private val g = SettingsGroup.DISPLAY
 
     /** Mục của trang Hiển thị → từ khoá câu phụ phải nhắc (VI, EN). "Kính thật" là một dòng của mục sáng/tối. */
+    // Android box B2 · W1 — mục `display_units` gỡ (đơn vị chỉ cho dữ liệu xe) ⇒ câu phụ thôi nhắc "Đơn vị" (bài dưới).
     private val mustMention = mapOf(
-        "display_units" to ("Đơn vị" to "Units"),
         "display_theme" to ("sáng/tối" to "light/dark"),
         "display_color" to ("màu" to "colours"),
         "display_bar_scale" to ("cỡ thanh nút" to "bar size"),
@@ -40,7 +40,13 @@ class SettingsDisplaySubtitleTest {
 
     @Test
     fun `cau cu da thay - khong con ban thieu muc`() {
-        assertEquals("Đơn vị, sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ", g.sub)
-        assertEquals("Units, light/dark, colours, transparency, bar size, language", g.subEn)
+        assertEquals("Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ", g.sub)
+        assertEquals("Theme light/dark, colours, transparency, bar size, language", g.subEn)
+    }
+
+    @Test
+    fun `khong con hua don vi khi muc don vi da go`() {
+        assertTrue(SettingsCatalog.entriesOf(g).none { it.id == "display_units" }, "Android box B2 · W1: mục đơn vị đã gỡ")
+        assertTrue("đơn vị" !in (g.label + g.sub).lowercase() && "unit" !in (g.labelEn + g.subEn).lowercase())
     }
 }

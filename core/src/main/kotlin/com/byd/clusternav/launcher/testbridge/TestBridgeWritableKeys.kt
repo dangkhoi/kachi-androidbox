@@ -17,9 +17,8 @@ object TestBridgeWritableKeys {
     /**
      * Toàn bộ khoá ghi được. [TestBridgeCommands.WRITABLE_PREFS_KEYS] trỏ thẳng vào đây (một tên, một chỗ khai).
      *
-     * Bốn khoá đầu là khoá THEO XE của đường giọng nói (`PrefsVoiceV3.kt` + `Prefs.voiceAskAloud`); khoá
-     * `top_strip_labels` là công tắc nhãn chip **theo hồ sơ** (`WorkspacePrefs.setTopStrip`) — đường duy nhất đo
-     * được R14 bằng máy thay vì bằng một ảnh chụp màn hình.
+     * Bốn khoá đầu là khoá THEO XE của đường giọng nói (`PrefsVoiceV3.kt` + `Prefs.voiceAskAloud`). Android box B2 · W1:
+     * `top_strip_labels` (nhãn chip xe) và mọi khoá `camera_*` đã rời danh sách.
      *
      * ## H5 (2026-09-16) — **bốn núm chỉnh bộ nghe**, tất cả đều mặc định = hằng đang chạy
      * `voice_endpoint_silence_ms` · `voice_endpoint_min_speech_ms` ([VoiceEndpointer]) và `voice_beam` ·
@@ -34,7 +33,7 @@ object TestBridgeWritableKeys {
         "voice_ask_aloud",
         "voice_follow_up_ms",
         "voice_mic_source",
-        "top_strip_labels",
+        // Android box B2 · W1 — `top_strip_labels` (nhãn chip dữ liệu xe) ra khỏi danh sách cùng hàng Cài đặt của nó.
         "voice_endpoint_silence_ms",
         "voice_endpoint_min_speech_ms",
         "voice_endpoint_floor_cap",
@@ -54,89 +53,8 @@ object TestBridgeWritableKeys {
         // bằng một cú chạm trong Cài đặt (xem ràng buộc (3) ở KDoc trên) — nó vẫn nằm trong đường GIỌNG NÓI và vẫn
         // chỉ ghi được khi chế độ kiểm thử đang mở, nên hai ràng buộc còn lại không đổi.
         "voice_keep_log",
-        // Camera theo xi-nhan (findings 2026-09-23) — bật/tắt + chọn cam + chọn GÓC hiện từng bên, test nhanh
-        // trên xe. `camera_lvds_option` đã GỠ cùng mười option LVDS (spec camera-turn-signal-hal-socket R6).
-        // ⚠ 2.83 — hai khoá trái/phải của vạch chuẩn khoảng cách (2.82) đã **RA KHỎI** danh sách này cùng cả tính
-        // năng, owner: *"dẹp vạch đi"*. Không còn dòng mã nào đọc ⇒ `prefs_set` phải trả `bad_prefs_key` (tên khoá cũ
-        // chỉ còn ở bài canh `CameraSettingsIaTest` / `CameraSettingsIaWiringContractTest`, cố ý).
-        "camera_signal_enabled",
-        "camera_on_cluster",
-        "camera_pano_left",
-        "camera_pano_right",
-        "camera_view_left",
-        "camera_view_right",
-        "camera_cam_left",
-        "camera_cam_right",
-        "camera_pos_left",
-        "camera_pos_right",
-        // R7 (owner 2026-09-26): góc xoay video TỪNG BÊN (2.71 — owner trên xe: "2 line setting độc lập cho camera
-        // trái và phải") — cần đổi trên xe giữa hai lượt xi-nhan để chốt chiều đúng (mắt owner), không build lại.
-        // Mỗi khoá có một hàng chip đảo lại được ở Cài đặt › Tiện nghi xe ⇒ ràng buộc (3) giữ. Khoá đơn cũ
-        // `camera_rotation` (2.67–2.70) GỠ khỏi đây: `Prefs.cameraRotation` migrate nó một lần rồi xoá.
-        "camera_rot_left",
-        "camera_rot_right",
-        // 2.76 L7 — LẬT GƯƠNG video TỪNG BÊN (research `research-side-camera-orientation-2026-09-27.md` §6.2): tay
-        // gương của ảnh HAL **[CHƯA BIẾT]** (CAM-M1 chưa đo) ⇒ đúng loại khoá phải đổi được **giữa hai lượt xi-nhan
-        // trên xe** rồi nhìn ảnh so với gương kính, không build lại. Mỗi khoá có một ô tích đảo lại được ở Cài đặt ›
-        // Tiện nghi xe ⇒ ràng buộc (3) giữ. Mặc định TẮT (không đoán tay gương).
-        "camera_mirror_left",
-        "camera_mirror_right",
-        // CLOSE-14 (CAM-LAG): đường KẾT XUẤT khung hình (`TV`/`SV`). Vào đây vì đúng câu hỏi nó sinh ra để trả lời —
-        // *"TextureView có phải nguồn giật không"* — chỉ đo được bằng cách đổi đường **giữa hai lượt xi-nhan trên xe
-        // đang chạy** rồi so `gfxinfo`, không phải bằng một lượt build lại APK cho mỗi bên. Có hàng chip đảo lại được
-        // ở Cài đặt › Tiện nghi xe ⇒ ràng buộc (3) của KDoc trên vẫn giữ.
-        "camera_render",
-        // R8-A (2.74 · RE `electro-camera-RE-2026-09-26.md` §5 K10 · §6.1): VÙNG GƯƠNG + HÌNH KHUNG + KÊNH HAL.
-        // Đây là bộ khoá **sinh ra để đo trên xe**: dải nào là hướng nào vẫn [CHƯA BIẾT] (§7 Q1/Q2), đường kính vòng
-        // ảnh fisheye là [ĐOÁN], và `VIEW_CHANNEL_1..4` chưa ai gọi thử — cả ba chỉ chốt được bằng cách đổi giá trị
-        // **giữa hai lượt xi-nhan** rồi chụp `camera_frame`, không phải bằng một lượt build lại APK cho mỗi con số.
-        // Bốn khoá đầu có hàng chip đảo lại được ở Cài đặt › Tiện nghi xe ⇒ ràng buộc (3) của KDoc trên giữ.
-        // ⚠ 2.77 — `camera_source` (PANO/CHANNEL) và `camera_hal_mode` đã **RA KHỎI** danh sách này cùng cả nguồn
-        // *Một camera*: [ĐO xe 27/09, hai khung thô cùng cảnh] dải ghép có năng lượng cạnh 686 vs 351 và tỉ lệ chi
-        // tiết ngang/dọc 0,30 vs 0,19 ⇒ một kênh chỉ bị kéo ngang, không nét hơn; owner chốt bỏ. Một khoá không còn
-        // ai đọc mà vẫn ghi được là một lệnh `prefs_set` báo `ok` rồi không làm gì.
-        "camera_span",
-        "camera_strip_left",
-        "camera_strip_right",
-        "camera_shape",
-        // Núm tinh chỉnh cạnh ô vuông của hình TRÒN (%). Không có chip riêng — nhưng **tác dụng** của nó đảo được
-        // bằng một cú chạm: về chip "Chữ nhật" là hết ảnh hưởng, và `prefs_set camera_circle_scale 100` trả mặc định.
-        "camera_circle_scale",
-        // ── R8-B (2.74) · SÁU NÚM NẮN MÉO + công tắc `uTexMatrix` của đường kết xuất `GL` ──────────────────
-        // `docs/diagnostics/offcar-2026-09-26/camera-dewarp-gl.md`. Cùng một lý do với cả bộ `camera_*` ở trên, chỉ
-        // sắc hơn: bốn con số `F`/`K`/`SCALE`/`AMOUNT` của Electro nằm trong bytecode VMP ⇒ **[CHƯA BIẾT]** (RE §7
-        // Q6), nên Kachi không copy số mà suy một bộ mặc định từ hình học rồi để owner **chỉnh bằng mắt trên xe**.
-        // Không có đường nào khác: một khung fisheye thật chỉ có trên xe, và mỗi con số thử một lượt bằng build lại
-        // APK là một buổi xe cho bốn giá trị. Cả chín đều có hàng −/+ (hoặc ô tích) đảo lại được trong Cài đặt ›
-        // Tiện nghi xe ⇒ ràng buộc (3) của KDoc trên giữ nguyên; miền hợp lệ ở `:core` [CameraDewarpPrefs].
-        "camera_dewarp_amount",
-        "camera_dewarp_focal",
-        "camera_dewarp_k",
-        "camera_dewarp_scale",
-        "camera_dewarp_cx",
-        "camera_dewarp_cy",
-        // 2.75 — DỊCH CỬA SỔ, KHÔNG phải dời tâm quang: đường duy nhất *"dịch khung ra sau"* mà ảnh vẫn thẳng
-        // ([ĐO] xe 27/09 bác cả `scale` 140–145 % lẫn `cx −10 %`). Xem KDoc `CameraDewarp.panLocal`.
-        "camera_dewarp_pan_x",
-        "camera_dewarp_pan_y",
-        "camera_gl_texmatrix",
-        // ── 2.92 · CAMERA-FULL-VIEW (spec `kachi-292-camera-full-view.html`) ─────────────────────────────────────
-        // Kiểu hình + thu phóng có chip/thanh kéo đảo lại được ở Cài đặt › Tiện nghi xe ⇒ ràng buộc (3) giữ. Ba núm
-        // *Thẳng rộng* là bộ số [ĐOÁN] chỉ chốt được bằng mắt trên xe giữa hai lượt xi-nhan (cùng lý do sáu núm nắn);
-        // tác dụng của chúng đảo được bằng một cú chạm chip *Nắn thẳng*, và `prefs_set … 150/100/-20` trả mặc định.
-        "camera_projection",
-        "camera_zoom",
-        "camera_wide_kappa",
-        "camera_wide_focal",
-        "camera_wide_pan_x",
-    ) + PER_CAMERA
-
-    /**
-     * 2.93 · CAMERA-PER-CAM-CONFIG (spec `kachi-293-cam.html` R2) — khoá MỚI của bộ chỉnh *Từng camera* (sáu khoá góc/xoay/lật
-     * của hai camera gương đã có ở trên). Vào đây vì đúng hai câu hỏi chỉ trả lời được TRÊN XE: dải sau/trước có cần
-     * xoay/lật không ([CHƯA BIẾT] 🚗) và cửa sổ đặt chỗ nào thì vừa mắt. Mọi khoá có hàng đảo lại được ở Cài đặt › Tiện
-     * nghi xe › Từng camera ⇒ ràng buộc (3) giữ; danh sách SINH từ `CameraCamConfig` (một chỗ khai tên khoá).
-     */
-    private val PER_CAMERA: Set<String>
-        get() = com.byd.clusternav.launcher.camera.CameraCamConfig.NEW_KEYS.toSet()
+        // Android box B2 · W1 — toàn bộ khoá camera BYD (`camera_*`, cả bộ *Từng camera* `CameraCamConfig.NEW_KEYS`) RA KHỎI
+        // danh sách trắng: lệnh camera đã rời cầu và hàng Cài đặt đảo lại được (ràng buộc 3) không còn ⇒ `prefs_set` phải trả
+        // `bad_prefs_key` thay vì ghi một khoá không có cách nào đảo lại bằng tay.
+    )
 }

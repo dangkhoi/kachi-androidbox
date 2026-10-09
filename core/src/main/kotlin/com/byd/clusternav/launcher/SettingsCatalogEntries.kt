@@ -46,13 +46,8 @@ internal object SettingsCatalogEntries {
         // `home_dock_edge` / `home_dock_items` trên cả `:app` và `:core` — **0 chỗ tra theo mã mục** (chỉ
         // `home_scene_save` bị `SceneWiringContractTest` tra), nên đổi mã ở đây không phá dây nối nào. KHOÁ lưu bền
         // thì giữ nguyên (`top_strip`/`dock_edge`/`dock_enabled`) — đổi khoá là mất cấu hình của người đang dùng.
-        SettingsEntry("bars_top_strip", SettingsGroup.BARS, "Chip thanh trạng thái", "top_strip", "Status-bar chips"),
-        // V3 · R14 (owner 2026-09-16) — *"chỉ hiện icon và chỉ số thôi, text nhiều chật chỗ"*. Đứng NGAY dưới
-        // mục chọn chip: nó nói về chính những chip vừa chọn, và chỗ duy nhất đọc được kết quả là thanh trên.
-        SettingsEntry(
-            "bars_top_strip_labels", SettingsGroup.BARS, "Hiện nhãn trên thanh trên",
-            "top_strip_labels", "Show chip labels",
-        ),
+        // Android box B2 · W1 — `bars_top_strip` (khoá `top_strip`) + `bars_top_strip_labels` (khoá `top_strip_labels`) gỡ:
+        // mọi chip thanh trạng thái là chip dữ liệu xe BYD. Khoá còn đi theo hồ sơ — xem [SettingsCatalogRetired].
         // UX-OVERHAUL · WP4 (owner 2026-09-20) — *"cho user CHỌN VỊ TRÍ item BÊN TRONG header + taskbar"*. Đứng SAU
         // hai mục *chọn chip* vì nó sắp lại thứ vừa chọn: sắp chỗ cho một vật chưa có mặt là một câu hỏi vô nghĩa.
         SettingsEntry(
@@ -82,7 +77,7 @@ internal object SettingsCatalogEntries {
         SettingsEntry("bars_app_shortcuts", SettingsGroup.BARS, "Lối tắt ứng dụng", "app_shortcuts", "App shortcuts"),
 
         // ── Hiển thị & đơn vị ──
-        SettingsEntry("display_units", SettingsGroup.DISPLAY, "Đơn vị hiển thị", "unit_prefs", "Display units"),
+        // Android box B2 · W1 — `display_units` (khoá `unit_prefs`) gỡ: đơn vị chỉ dùng cho dữ liệu xe. Xem [SettingsCatalogRetired].
         // [ĐO] kiểm kê S1 §2: khoá này lưu bền, có enum + có đường ghi, nhưng TRƯỚC S1 không có nút nào chạm tới.
         // IA v2 · R3 — cùng một chip nay ghi THÊM `theme_choice` (tệp `clusternav_theme`) để màn nâng cao theo cùng
         // lựa chọn; khoá thứ hai đó khai ở [SettingsCatalog.CLUSTERNAV_COMPANION_KEYS], không mở mục riêng.
@@ -140,16 +135,8 @@ internal object SettingsCatalogEntries {
      * việc đó, để T4 dựng lại mà không phải đọc lại cả `MainActivity.kt` 1386 dòng.
      */
     private fun CLUSTER_NAV(): List<SettingsEntry> = listOf(
-        // ── Dẫn đường & cụm đồng hồ ──
-        // switch_enabled · Prefs.setEnabled + setLane(true) + NavConnect.selfGrant/ensureConnected (MainActivity.kt:99–126)
-        SettingsEntry("nav_enabled", SettingsGroup.NAV, "Dẫn đường lên cụm", "enabled", "Navigation on the cluster"),
-        // seg_cluster_mode · Prefs.setNavClusterScreenMode — chỉ OFF(0)/FULL(3), xem [ClusterNavSettingsModel]
-        SettingsEntry(
-            "nav_cluster_mode", SettingsGroup.NAV, "Chế độ hiện trên cụm",
-            "nav_cluster_screen_mode", "Cluster display mode",
-        ),
-        // cb_marquee · Prefs.setMarquee
-        SettingsEntry("nav_marquee", SettingsGroup.NAV, "Chạy chữ tên đường", "marquee", "Scroll long street names"),
+        // ── Dẫn đường ──
+        // Android box B2 · W1 — gỡ `nav_enabled` · `nav_cluster_mode` · `nav_marquee` (dẫn đường lên cụm/HUD BYD).
         // App dẫn đường MẶC ĐỊNH (owner 2026-09-18): nói "dẫn đường" không nêu app ⇒ dùng cái này.
         SettingsEntry(
             "nav_default_app", SettingsGroup.NAV, "App dẫn đường mặc định",
@@ -161,70 +148,8 @@ internal object SettingsCatalogEntries {
             "nav_automation", SettingsGroup.NAV, "Tự dẫn đường theo lịch",
             "nav_automation_rules", "Scheduled navigation",
         ),
-        // btn_reconnect_nav · NavConnect.ensureConnected — VIỆC LÀM, không lưu gì
-        SettingsEntry(
-            "nav_reconnect", SettingsGroup.NAV, "Kết nối lại nguồn dẫn đường",
-            labelEn = "Reconnect the navigation source",
-        ),
-        // switch_badge_enabled · Prefs.setBadgeEnabled (BadgePlacementController.kt:44–112)
-        SettingsEntry("badge_enabled", SettingsGroup.NAV, "Biển báo tốc độ", "badge_enabled", "Speed limit badge"),
-        // switch_upcoming_badge · Prefs.setShowUpcomingBadge
-        SettingsEntry("badge_upcoming", SettingsGroup.NAV, "Giới hạn sắp tới", "show_upcoming_badge", "Upcoming limit"),
-        // switch_alert_chip · Prefs.setShowAlertChip
-        SettingsEntry("badge_alert_chip", SettingsGroup.NAV, "Chip cảnh báo camera", "show_alert_chip", "Camera alert chip"),
-        // seek_badge_size · Prefs.setBadgeSizeDp, kẹp bằng BadgeLayout.clampSizeDp (60..240)
-        SettingsEntry("badge_size", SettingsGroup.NAV, "Cỡ biển báo", "badge_size_dp", "Badge size"),
-        // badge_placement_container (kéo-thả) · Prefs.setBadgeCenter ghi CẶP x/y — `badge_center_y` đi kèm, xem
-        // [SettingsCatalog.CLUSTERNAV_COMPANION_KEYS]
-        SettingsEntry("badge_center", SettingsGroup.NAV, "Vị trí biển báo", "badge_center_x", "Badge position"),
-        // 2.91 · F1 (spec kachi-291-small-fixes §4.1) — công tắc HIỆN bóng = `!vm_bubble_hidden` (sự thật bản mod theo) · bridge.setVmBubbleShown.
-        // Mã mục giữ nguyên (`vm_bubble_enabled`) — hàng người dùng đã quen; khoá nó GHI nay là `vm_bubble_hidden`.
-        SettingsEntry("vm_bubble_enabled", SettingsGroup.NAV, "Bong bóng VietMap", "vm_bubble_hidden", "VietMap bubble"),
-        // Hàng riêng "Tự mở VietMap cho bong bóng" — nghĩa CŨ của `vm_bubble_enabled` · bridge.setVmBubbleAutostart
-        SettingsEntry("vm_bubble_autostart", SettingsGroup.NAV, "Tự mở VietMap cho bong bóng", "vm_bubble_enabled", "Auto-open VietMap for the bubble"),
-        // vm_bubble_placement_container · VmOverlayPosition.set ghi CẶP x/y rồi broadcast sang bản mod
-        SettingsEntry("vm_bubble_pos", SettingsGroup.NAV, "Vị trí bong bóng", "vm_bubble_x", "Bubble position"),
-
-        // ── Chiếu màn lên cụm ──
-        // switch_cast_enabled · SimpleCastRuntime.coordinator(app).prefs.setCastEnabled
-        SettingsEntry("cast_enabled", SettingsGroup.CAST, "Bật chiếu màn", "cast_enabled", "Enable casting"),
-        // UX-OVERHAUL WP6 · R6.1 (owner 2026-09-20) — HIỆN/ẨN nút nổi. Đứng ngay sau công tắc chính vì nó chỉ có
-        // nghĩa khi chiếu đang bật; ẩn nút nổi KHÔNG tắt chiếu (xem [BubblePresence]).
-        SettingsEntry(
-            "cast_bubble", SettingsGroup.CAST, "Hiện nút nổi chiếu cụm",
-            "cast_bubble_visible", "Show the floating cast button",
-        ),
-        // split_ratio_buttons (9 nút 1:9…9:1) · prefs.setSplitRatioLeftPercent + applySplitRatioLive
-        SettingsEntry("cast_split", SettingsGroup.CAST, "Tỉ lệ chia đôi", "split_ratio_left_pct", "Split ratio"),
-        // B1b · CLUSTER-RECT-OPTION (owner 05/10, spec `kachi-289-field-fixes.html` B1b) — Bo tròn / Chữ nhật · prefs.setCastStyle.
-        // Khoá `cast_style` theo HỒ SƠ; hàng chỉ HIỆN khi đời xe cho Chữ nhật (Seal car.type 138 — `ClusterProfile.supportsStyle`).
-        SettingsEntry("cast_style", SettingsGroup.CAST, "Kiểu chiếu cụm", "cast_style", "Cluster cast style"),
-        // cb_autostart · prefs.setAutoStartEnabled — loại trừ nhau với tự-chiếu chia đôi (CastAutostart.kt:32–61)
-        SettingsEntry(
-            "cast_autostart", SettingsGroup.CAST, "Tự chiếu khi nổ máy",
-            "autostart_enabled", "Autostart on engine start",
-        ),
-        // spinner_autostart_app · prefs.setAutoStartPackage
-        SettingsEntry(
-            "cast_autostart_pkg", SettingsGroup.CAST, "App tự chiếu toàn màn",
-            "autostart_package", "Full-screen autostart app",
-        ),
-        // cb_autostart_split · prefs.setAutoStartSplitEnabled (CastAutostart.kt:47–56)
-        SettingsEntry(
-            "cast_autostart_split", SettingsGroup.CAST, "Tự chiếu chia đôi",
-            "autostart_split_enabled", "Autostart split view",
-        ),
-        // spinner_autostart_left · prefs.setAutoStartLeftPackage
-        SettingsEntry("cast_autostart_left", SettingsGroup.CAST, "App bên trái", "autostart_left_package", "Left-hand app"),
-        // spinner_autostart_right · prefs.setAutoStartRightPackage
-        SettingsEntry("cast_autostart_right", SettingsGroup.CAST, "App bên phải", "autostart_right_package", "Right-hand app"),
-        // cast_zone_full / cast_zone_left / cast_zone_right / cast_stop · openProjection/dispatch(Stop) — VIỆC LÀM
-        SettingsEntry(
-            "cast_actions", SettingsGroup.CAST, "Chiếu ngay: toàn màn, trái, phải, dừng",
-            labelEn = "Cast now: full, left, right, stop",
-        ),
-        // cast_recovery_actions (cast_clear_cluster · cast_deep_rescue) · trả cụm về đồng hồ — VIỆC LÀM
-        SettingsEntry("cast_rescue", SettingsGroup.CAST, "Cứu hộ cụm", labelEn = "Cluster rescue"),
+        // Android box B2 · W1 — gỡ `nav_reconnect`, biển báo tốc độ (`badge_*`), bong bóng VietMap (`vm_bubble_*`) và CẢ
+        // nhóm Chiếu màn lên cụm (`cast_*`): phần chỉ-BYD. Khoá còn đi theo hồ sơ — xem [SettingsCatalogRetired].
 
         // ── Phím vô-lăng ──
         // switch_voicekey_enabled · Prefs.setVoiceKeyEnabled + NavConnect.grantAccessibility(reset=true)
@@ -241,37 +166,7 @@ internal object SettingsCatalogEntries {
         // btn_voicekey_recheck + txt_voicekey_status · refreshVoiceKeyStatus (MainActivity.kt:998–1016) — VIỆC LÀM
         SettingsEntry("keys_check", SettingsGroup.KEYS, "Kiểm tra và sửa ngay", labelEn = "Check and fix now"),
 
-        // ── Tiện nghi xe ──
-        // ⚠ Tên khoá THẬT là "recirc_on_start_enabled" (Prefs.K_RECIRC_ON_START), KHÁC tên "recirc_on_start" mà spec
-        // S1 §2 ghi. Lấy theo mã nguồn, vì bài test phủ khoá đối chiếu với mã chứ không với spec.
-        SettingsEntry(
-            "car_recirc_on_start", SettingsGroup.CAR, "Tự lấy gió trong khi nổ máy", "recirc_on_start_enabled",
-            "Recirculation on engine start",
-        ),
-        // switch_seat_comfort_enabled · Prefs.setSeatComfortEnabled + SeatComfortApplier.applyNow
-        SettingsEntry(
-            "car_seat_enabled", SettingsGroup.CAR, "Ghế mát/sưởi tự động",
-            "seat_comfort_enabled", "Automatic seat cooling / heating",
-        ),
-        // seg_seat_mode · Prefs.setSeatComfortMode (0=COOL, 1=HEAT — khớp SeatComfort.SeatMode.ordinal)
-        SettingsEntry(
-            "car_seat_mode", SettingsGroup.CAR, "Chế độ ghế: mát hay sưởi",
-            "seat_comfort_mode", "Seat mode: cool or heat",
-        ),
-        // seat_diagram · Prefs.setSeatComfortLevel(i) — ghi `seat_level_0`..`seat_level_3` trong MỘT vòng lặp, xem
-        // [SettingsCatalog.SEAT_LEVEL_KEY_PREFIX]
-        SettingsEntry("car_seat_levels", SettingsGroup.CAR, "Mức từng ghế", "seat_level_0", "Level per seat"),
-        // switch_pm25_filter · Prefs.setPm25FilterEnabled + Pm25FilterApplier.enable/disable
-        SettingsEntry("car_pm25", SettingsGroup.CAR, "Tự lọc bụi mịn", "pm25_filter_enabled", "Automatic air purifier"),
-        // btn_pm25_clean_now + pm25_gauge · Pm25FilterApplier.cleanNow/readLevel — VIỆC LÀM
-        SettingsEntry("car_pm25_clean", SettingsGroup.CAR, "Lọc ngay một lượt", labelEn = "Purify now"),
-        // AUTOMATION #1 (1.85, spec kachi-automation R1.1 · §V8) · bridge.setRainDefrostGlass + AutomationService.sync.
-        // Ở nhóm CAR (không phải SYSTEM) vì người dùng đi tìm nó ở "thứ cabin tự làm hộ", không ở "dịch vụ nền" —
-        // cùng ranh giới mà sổ địa chỉ đã chọn khi nằm ở nhóm NAV dù dữ liệu theo hồ sơ.
-        SettingsEntry(
-            "car_rain_defrost", SettingsGroup.CAR, "Tự sấy kính khi mưa",
-            "rain_defrost_enabled", "Auto-defrost when it rains",
-        ),
+        // Android box B2 · W1 — gỡ CẢ nhóm Tiện nghi xe (`car_*`: lấy gió trong, ghế, lọc bụi, tự sấy kính): HAL BYD.
 
         // ── Giọng nói: ĐỌC phản hồi (spec `kachi-voice-feedback.html` R4 · T9) ──
         // Ba mục đứng cạnh hàng *Nhận dạng giọng nói* trong nhóm Hệ thống (§Nâng cao) vì chúng là hai nửa của
@@ -380,8 +275,7 @@ internal object SettingsCatalogEntries {
         ),
         // btn_check_update · VIỆC LÀM
         SettingsEntry("system_update", SettingsGroup.SYSTEM, "Kiểm tra cập nhật", labelEn = "Check for updates"),
-        // btn_nav_stop · dừng mọi output dẫn đường — VIỆC LÀM
-        SettingsEntry("system_nav_stop", SettingsGroup.SYSTEM, "Dừng toàn bộ dẫn đường", labelEn = "Stop all navigation"),
+        // Android box B2 · W1 — `system_nav_stop` (dừng mọi đầu ra dẫn đường lên cụm/HUD) gỡ.
         // ⚠ `system_advanced_screen` (mở màn ClusterNav cũ) đã XOÁ 2026-09-13 — màn đó bị gỡ hẳn
         // (docs/specs/kachi-remove-legacy-screen.html R1, đóng OQ1 của IA v2). Không có mục thay thế: mọi cấu
         // hình của nó đã nằm ở các nhóm nav/cast/keys/car từ IA v2 và ghi đúng cùng khoá.

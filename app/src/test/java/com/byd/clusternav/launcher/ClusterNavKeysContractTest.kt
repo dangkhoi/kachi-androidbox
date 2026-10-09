@@ -184,7 +184,9 @@ class ClusterNavKeysContractTest {
     @Test
     fun `khoa co UI deu co chu hoac la khoa di kem`() {
         val ownerless = SettingsCatalog.CLUSTERNAV_KEYS.keys.filter { key ->
-            SettingsCatalog.groupOf(key) == null && key !in SettingsCatalog.CLUSTERNAV_COMPANION_KEYS
+            SettingsCatalog.groupOf(key) == null && key !in SettingsCatalog.CLUSTERNAV_COMPANION_KEYS &&
+                // Android box B2 · W1 — khoá đã rời UI (mục chỉ-BYD gỡ) mà còn theo hồ sơ: bảng tha ĐÚNG danh sách có lý do.
+                key !in SettingsCatalog.RETIRED_UI_KEYS
         }
         assertEquals(
             emptyList<String>(), ownerless,

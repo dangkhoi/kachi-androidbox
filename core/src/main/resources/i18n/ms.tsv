@@ -457,11 +457,7 @@ Mở hết kính	Open all	Buka semua
 Đóng hết kính	Close all	Tutup semua
 Màn hình chính	Home screen	Skrin utama
 Thanh trạng thái & thanh nút	Status bar & button bar	Bar status & bar butang
-Hiển thị & đơn vị	Display & units	Paparan & unit
-Dẫn đường & cụm đồng hồ	Navigation & cluster	Navigasi & panel instrumen
-Chiếu màn lên cụm	Cluster cast	Pancar ke panel instrumen
 Phím vô-lăng	Steering-wheel keys	Butang stereng
-Tiện nghi xe	Car comfort	Keselesaan kereta
 Giọng nói	Voice	Suara
 Hệ thống & quyền	System & permissions	Sistem & kebenaran
 Giới thiệu	About	Perihal
@@ -470,15 +466,12 @@ Bố cục tự vẽ	Custom layout	Susun atur tersuai
 Vẽ bố cục riêng…	Draw your own layout…	Lukis susun atur sendiri…
 Tự ẩn nút ⇄	Auto-hide the ⇄ button	Sembunyi butang ⇄ secara automatik
 Hình nền & trình chiếu	Wallpaper & slideshow	Kertas dinding & tayangan slaid
-Chip thanh trạng thái	Status-bar chips	Cip bar status
-Hiện nhãn trên thanh trên	Show chip labels	Tunjukkan label cip
 Vị trí trên thanh trên	Status-bar item order	Susunan item bar status
 Hiện thanh nút xe	Show the car bar	Tunjukkan bar kereta
 Viền đặt thanh nút	Button bar edge	Tepi bar butang
 Nút trên thanh nút xe	Buttons on the car bar	Butang pada bar kereta
 Vị trí trên thanh nút xe	Car-bar item order	Susunan item bar kereta
 Lối tắt ứng dụng	App shortcuts	Pintasan apl
-Đơn vị hiển thị	Display units	Unit paparan
 Giao diện sáng/tối	Light / dark theme	Tema cerah / gelap
 Màu sắc	Colours	Warna
 Ngôn ngữ	Language	Bahasa
@@ -489,42 +482,13 @@ Hồ sơ lúc nổ máy	Profile on engine start	Profil semasa kereta dihidupkan
 Thêm hồ sơ (bản sao)	Add profile (a copy)	Tambah profil (salinan)
 Sổ địa chỉ	Address book	Buku alamat
 Thêm địa chỉ…	Add an address…	Tambah alamat…
-Dẫn đường lên cụm	Navigation on the cluster	Navigasi pada panel instrumen
-Chế độ hiện trên cụm	Cluster display mode	Mod paparan panel instrumen
-Chạy chữ tên đường	Scroll long street names	Tatal nama jalan yang panjang
 App dẫn đường mặc định	Default navigation app	Apl navigasi lalai
 Tự dẫn đường theo lịch	Scheduled navigation	Navigasi berjadual
-Kết nối lại nguồn dẫn đường	Reconnect the navigation source	Sambung semula sumber navigasi
-Biển báo tốc độ	Speed limit badge	Tanda had laju
-Giới hạn sắp tới	Upcoming limit	Had seterusnya
-Chip cảnh báo camera	Camera alert chip	Cip amaran kamera
-Cỡ biển báo	Badge size	Saiz tanda
-Vị trí biển báo	Badge position	Kedudukan tanda
-Bong bóng VietMap	VietMap bubble	Gelembung VietMap
-Vị trí bong bóng	Bubble position	Kedudukan gelembung
-Bật chiếu màn	Enable casting	Dayakan pancaran
-Hiện nút nổi chiếu cụm	Show the floating cast button	Tunjukkan butang pancar terapung
-Tỉ lệ chia đôi	Split ratio	Nisbah pisah
-Kiểu chiếu cụm	Cluster cast style	Gaya pancaran kluster
-Tự chiếu khi nổ máy	Autostart on engine start	Mula automatik semasa kereta dihidupkan
-App tự chiếu toàn màn	Full-screen autostart app	Apl mula automatik skrin penuh
-Tự chiếu chia đôi	Autostart split view	Paparan pisah mula automatik
-App bên trái	Left-hand app	Apl kiri
-App bên phải	Right-hand app	Apl kanan
-Chiếu ngay: toàn màn, trái, phải, dừng	Cast now: full, left, right, stop	Pancar sekarang: penuh, kiri, kanan, henti
-Cứu hộ cụm	Cluster rescue	Pemulihan panel instrumen
 Nhận nút vật lý	Listen to physical buttons	Dengar butang fizikal
 Danh sách gán nút	Button bindings	Pemetaan butang
 Nút tự học thêm	Self-learned buttons	Butang dipelajari
 Học phím mới	Learn a new key	Pelajari butang baharu
 Kiểm tra và sửa ngay	Check and fix now	Semak dan baiki sekarang
-Tự lấy gió trong khi nổ máy	Recirculation on engine start	Peredaran dalaman semasa kereta dihidupkan
-Ghế mát/sưởi tự động	Automatic seat cooling / heating	Pengudaraan / pemanasan tempat duduk automatik
-Chế độ ghế: mát hay sưởi	Seat mode: cool or heat	Mod tempat duduk: pengudaraan atau pemanasan
-Mức từng ghế	Level per seat	Tahap setiap tempat duduk
-Tự lọc bụi mịn	Automatic air purifier	Pemurnian udara automatik
-Lọc ngay một lượt	Purify now	Murnikan sekarang
-Tự sấy kính khi mưa	Auto-defrost when it rains	Penyahbeku automatik semasa hujan
 "Hey Kachi" gọi bằng giọng	"Hey Kachi" wake word	Frasa panggilan "Hey Kachi"
 Đọc phản hồi bằng giọng	Speak replies out loud	Bacakan jawapan dengan kuat
 Ưu tiên giọng offline	Prefer the offline voice	Utamakan suara luar talian
@@ -541,7 +505,6 @@ Chạy dịch vụ nền khi nổ máy	Run background service on engine start	Ja
 Mở app khi nổ máy	Open apps at ignition	Buka apl semasa kereta dihidupkan
 Giữ Kachi làm màn hình chính khi nổ máy	Keep Kachi as home screen on engine start	Kekalkan Kachi sebagai skrin utama semasa kereta dihidupkan
 Kiểm tra cập nhật	Check for updates	Semak kemas kini
-Dừng toàn bộ dẫn đường	Stop all navigation	Hentikan semua navigasi
 Chế độ kiểm thử qua adb	ADB test mode	Mod ujian ADB
 Phiên bản và giấy phép	Version and licence	Versi dan lesen
 Miễn trừ trách nhiệm	Disclaimer	Penafian
@@ -645,12 +608,7 @@ sức khoẻ pin, điện áp ắc-quy	battery health, auxiliary battery voltage
 quãng đường, thời gian, điện tiêu thụ, odo	distance, time, energy used, odometer	jarak, masa, tenaga digunakan, odometer
 Bố cục và hình nền	Layout and wallpaper	Susun atur dan kertas dinding
 Chip trên đỉnh và thanh nút xe	Top chips and the car button bar	Cip atas dan bar butang kereta
-Đơn vị, sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Units, light/dark, colours, transparency, bar size, language	Unit, cerah/gelap, warna, ketelusan, saiz bar kereta, bahasa
 Mỗi hồ sơ giữ bố cục riêng	Each profile keeps its own layout	Setiap profil menyimpan susun aturnya sendiri
-Chỉ đường, biển báo và bong bóng	Turn-by-turn, speed badge and bubble	Panduan arah, tanda had laju dan gelembung
-Đưa app lên cụm, chia đôi, tự chiếu	Apps on the cluster, split view, autostart	Apl pada panel instrumen, paparan pisah, mula automatik
-Gán nút vật lý cho app, trợ lý hoặc nút xe	Bind physical buttons to apps or car controls	Petakan butang fizikal kepada apl atau kawalan kereta
-Lấy gió trong, ghế, lọc bụi mịn	Recirculation, seats, air purifier	Peredaran dalaman, tempat duduk, pemurnian udara
 Nói với xe, giọng đọc, Hey Kachi	Talk to the car, reply voice, Hey Kachi	Cakap dengan kereta, suara jawapan, Hey Kachi
 Quyền, khởi động, bảo trì, nâng cao	Permissions, startup, maintenance	Kebenaran, permulaan, penyelenggaraan
 Phiên bản, giấy phép và miễn trừ	Version, licence and disclaimer	Versi, lesen dan penafian
@@ -820,7 +778,6 @@ ANR: đã đọc (không gửi lệnh ghi nào)	ANR: read (no write command sent
 # B3 DOCK-SCALE (2.89) — mục Cài đặt › Hiển thị "Cỡ thanh nút xe" (khoá dock_scale).
 Cỡ thanh nút xe	Car bar size	Saiz bar kereta
 # 2.91 · F1 — mục Cài đặt › Dẫn đường "Tự mở VietMap cho bong bóng" (khoá vm_bubble_enabled, nghĩa cũ: tự mở VietMap).
-Tự mở VietMap cho bong bóng	Auto-open VietMap for the bubble	Buka VietMap secara automatik untuk gelembung
 # 2.91 VOICE-APP-NAMES — dạy tên app bằng giọng (spec docs/specs/kachi-290-voice-app-names.html).
 Tên app đã dạy	Taught app names	Nama aplikasi yang diajar
 Nếu đó là tên app, hãy dạy Kachi trong Cài đặt, Giọng nói	If that is an app name, teach Kachi in Settings, Voice	Jika itu nama aplikasi, ajar Kachi dalam Tetapan, Suara
@@ -847,3 +804,8 @@ Chạm để bật/tắt camera đó; mở camera khác thì thay camera đang m
 Không có camera nào đang mở	No camera is open	Tiada kamera yang dibuka
 {0} đang không mở	{0} is not open	{0} tidak dibuka
 chưa liên lạc được màn hình chính	couldn't reach the home screen	tidak dapat menghubungi skrin utama
+# Android box B2 · W1 (2026-10-09) — rail Cài đặt sau khi gỡ nhóm BYD.
+Hiển thị	Display	Paparan
+Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Theme light/dark, colours, transparency, bar size, language	Tema cerah/gelap, warna, ketelusan, saiz bar, bahasa
+Sổ địa chỉ, app mặc định, lịch tự dẫn	Address book, default app, scheduled navigation	Buku alamat, apl lalai, navigasi berjadual
+Gán nút vật lý cho app hoặc trợ lý	Bind physical buttons to apps or the assistant	Petakan butang fizikal kepada apl atau pembantu

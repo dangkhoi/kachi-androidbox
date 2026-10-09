@@ -108,7 +108,6 @@
     <string name="kachi_access_feature_blocked">Cần quyền điều khiển cửa sổ — mở màn chính để cấp</string>
 
     <!-- ── SettingsSections — Hiển thị & đơn vị ── -->
-    <string name="kachi_sec_units">Đơn vị hiển thị</string>
     <string name="kachi_sec_theme">Giao diện sáng/tối</string>
     <string name="kachi_row_palette">Bảng màu</string>
     <string name="kachi_theme_note">"Tự động" = tối từ 18h đến 6h. Đổi bảng màu thì áp ngay tại chỗ, app trong ô vẫn chạy tiếp.</string>
@@ -593,9 +592,6 @@
     <string name="kachi_keys_add">Thêm gán…</string>
     <string name="kachi_keys_pick_button">Bước 1 — chọn nút</string>
     <string name="kachi_keys_pick_target">Bước 3 — chọn ứng dụng / trợ lý</string>
-    <string name="kachi_keys_pick_kind">Bước 2 — nút này làm gì</string>
-    <string name="kachi_keys_kind_apps">Mở ứng dụng · trợ lý</string>
-    <string name="kachi_keys_pick_action">Bước 3 — %1$s: chọn việc</string>
     <string name="kachi_keys_no_buttons">Chưa có nút nào để gán.</string>
     <string name="kachi_keys_no_targets">Máy chưa có ứng dụng nào mở được từ phím.</string>
     <string name="kachi_sub_keys_custom">Nút tự học</string>
@@ -650,14 +646,13 @@
     <string name="kachi_pm25_serious">Nghiêm trọng</string>
 
     <!-- ── IA v2 nhóm 9 — Hệ thống & quyền: Khởi động · Bảo trì · Nâng cao ── -->
-    <string name="kachi_headless_title">Chạy dịch vụ dẫn đường/cụm ở nền khi nổ máy</string>
+    <string name="kachi_headless_title">Chạy dịch vụ nền khi nổ máy (phím vật lý · lịch tự dẫn)</string>
     <string name="kachi_headless_sub">KHÁC dòng trên: dòng trên mở màn hình Kachi, dòng này chỉ chạy dịch vụ mà không mở màn nào.</string>
     <string name="kachi_sub_maint">Bảo trì</string>
     <!-- V8 (owner 2026-09-25) — công tắc tự cập nhật, độc lập với Nav+HUD. Mặc định TẮT. -->
     <string name="kachi_auto_update_title">Tự động cập nhật</string>
     <string name="kachi_auto_update_sub">Mở Kachi thì tự dò bản mới; có bản mới sẽ hỏi trước khi tải và cài đè. Không có bản mới thì im lặng.</string>
     <string name="kachi_check_update">Kiểm tra cập nhật</string>
-    <string name="kachi_nav_stop">Dừng toàn bộ dẫn đường</string>
     <string name="kachi_restart_launcher">Khởi động lại launcher</string>
     <string name="kachi_sub_advanced">Nâng cao</string>
 
@@ -782,8 +777,6 @@
     <string name="kachi_voice_wav_where">Đặt tệp kachi-voice-test.wav (16 kHz · 1 kênh · PCM 16-bit) ở một trong: %1$s</string>
     <string name="kachi_pill_voice">Nói với xe</string>
     <!-- V3 · R14 — công tắc nhãn chip thanh trên (owner 2026-09-16) -->
-    <string name="kachi_top_strip_labels_title">Hiện nhãn trên thanh trên</string>
-    <string name="kachi_top_strip_labels_sub">Tắt thì chip chỉ còn icon và con số — đỡ chật chỗ</string>
     <!-- V3 · R7 — mục "Hỏi xác nhận trước khi chạy" + nguồn micro -->
     <string name="kachi_voice_confirm_sec">Hỏi xác nhận trước khi chạy</string>
     <string name="kachi_voice_confirm_note">Mặc định Kachi chạy luôn, riêng mở cửa sổ trời thì hỏi lại. Tích việc nào thì việc đó hỏi lại trước khi bắn.</string>
@@ -1063,8 +1056,6 @@
     <string name="kachi_camera_projection_own_row">Kiểu hình</string>
     <string name="kachi_camera_rot_own_row">Xoay</string>
     <string name="kachi_camera_mirror_own_title">Lật gương</string>
-    <string name="kachi_keys_kind_camera">Camera theo yêu cầu</string>
-    <string name="kachi_keys_pick_camera">Bước 3 — camera nào</string>
     <string name="kachi_key_cam_toggle">%1$s — bật/tắt</string>
     <string name="kachi_key_cam_off">Tắt camera</string>
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->

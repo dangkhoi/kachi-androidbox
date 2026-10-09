@@ -298,7 +298,7 @@ class CameraSpanShapeWiringContractTest {
             "camera_circle_scale" to "Prefs.cameraCirclePct(app).toString()",
         )
         keys.forEach { (key, readBack) ->
-            assertTrue(key in TestBridgeCommands.WRITABLE_PREFS_KEYS, "dò trên xe cần prefs_set $key")
+            assertTrue(key !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "Android box B2 · W1: $key rời danh sách trắng")
             assertTrue("\"$key\" ->" in prefsSet, "prefs_set thiếu nhánh ghi cho $key")
             assertTrue("\"$key\" -> $readBack" in prefsSet, "read_back của $key phải đọc lại từ nơi lưu bền")
             assertTrue("\"$key\"" in prefs, "tên khoá phải khai ở PrefsAutomation")

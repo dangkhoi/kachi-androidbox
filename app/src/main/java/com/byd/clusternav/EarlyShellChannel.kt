@@ -154,7 +154,7 @@ internal object EarlyShellChannel {
         readyChain(app, KachiReadyLog.lastScreenOnAt())
     }
 
-    /** Một lượt mỗi lần màn bật: kiểm phím (2.83) rồi keep-alive + watchdog, nguồn HUD (FIX286), rồi chuyến lên xe. */
+    /** Một lượt mỗi lần màn bật: kiểm phím (2.83) rồi keep-alive + watchdog, rồi chuyến lên xe. */
     private fun readyChain(app: Context, epoch: Long) {
         // 2.91 · F3: cổng (kênh lên + màn tương tác) kiểm TRƯỚC, mốc chỉ bị TIÊU khi cổng đã qua — lượt xếp hàng chạy muộn lúc màn
         // đã tắt không còn ăn mất lượt của lần thức đó (`WakeEpochPolicy.shouldRun`). Một luồng `worker` ⇒ không hai lượt chồng nhau.
@@ -171,12 +171,8 @@ internal object EarlyShellChannel {
         } catch (e: RuntimeException) {
             Log.w(TAG, "khởi keep-alive/watchdog sớm hỏng (đường HOME sẽ gọi lại): ${e.message}")
         }
-        // FIX286 R-HUD: nguồn thông báo (nguồn duy nhất của HUD) đã GẮN thật chưa — hẹn sang luồng `kachi-nls-heal`, trả
-        // ngay; công tắc Dẫn đường TẮT ⇒ lượt đó không đọc, không ghi gì (cổng `NlsHealPolicy.step`).
-        NlsHeal.onReady(app)
-        // 2.89 · B2 VM-PREREQ-TRUTH: miễn pin/vẽ nổi của app Kachi tự mở ở nền, theo SỰ THẬT (không cờ một-lần) — luồng
-        // `kachi-app-prereqs`, trả ngay. Chạy TRƯỚC chuyến lên xe để app được mở sau đó đã đủ điều kiện.
-        AppPrereqs.onReady(app)
+        // Android box B2 · W1 — gỡ `NlsHeal.onReady` (gắn lại nguồn HUD kính lái BYD) và `AppPrereqs.onReady` (miễn pin /
+        // vẽ nổi cho VietMap + app chiếu cụm): cả hai là phần chỉ-BYD.
         TripStart.onReady(app)   // F2/F3 chuyến lên xe — đẩy sang luồng `kachi-trip`, trả ngay (spec shortcuts-autostart §4.5)
     }
 

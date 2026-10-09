@@ -39,7 +39,7 @@ internal object BubbleForegroundNotice {
             Intent(context, com.byd.clusternav.launcher.KachiHomeActivity::class.java)
                 .putExtra(
                     com.byd.clusternav.launcher.EXTRA_OPEN_SETTINGS_GROUP,
-                    com.byd.clusternav.launcher.SettingsGroup.CAST.id,
+                    "cast", // Android box B2 · W1: nhóm Chiếu cụm đã gỡ — id lạ ⇒ `openSettingsGroup` không làm gì (mã mồ côi, W2c xoá)
                 ),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

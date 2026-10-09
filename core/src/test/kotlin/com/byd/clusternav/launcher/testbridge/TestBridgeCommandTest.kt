@@ -188,104 +188,32 @@ class TestBridgeCommandTest {
         assertEquals("com.google.android.youtube", cmd.pkg)
     }
 
-    // ── ctl (bắn một control) ───────────────────────────────────────────────────────────────────
+    // ── Android box B2 · W1 — lệnh chỉ-BYD đã rời bảng ───────────────────────────────────────────
 
+    /**
+     * `ctl` · `hal` · `sweep` · `featmap` (nút / HAL BYDAuto) · `camera` · `camera_frame` · `camera_synth` (camera BYD) ·
+     * `captest` · `ctllog` (công cụ soát nút xe) · `diag_screen` (hai màn chẩn đoán BYD đã rời manifest): gõ đủ đối số cũ
+     * vẫn phải ra `unknown_cmd` — không một lệnh nào trong số đó dựng được thành lệnh "chạy được" trên Android box.
+     */
     @Test
-    fun `ctl can id, thieu id bao dung ten doi so`() {
-        assertEquals(
-            TestBridgeCommands.ERR_MISSING + TestBridgeCommands.EXTRA_ID,
-            err(TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.CTL),
+    fun `lenh chi BYD tra unknown_cmd ke ca khi du doi so cu`() {
+        val gone = listOf(
+            "ctl", "hal", "sweep", "featmap", "camera", "camera_frame", "camera_synth", "captest", "ctllog", "diag_screen",
         )
-    }
-
-    @Test
-    fun `ctl KHONG kiem id ton tai o tang phan tich, de tang thi hanh liet ke ma hop le`() {
-        // Cùng luật `pkg`/`profile`: phép kiểm ngữ nghĩa dồn về tầng thi hành (runCtl) để lời đáp liệt kê được.
-        val cmd = ok(TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.CTL, TestBridgeCommands.EXTRA_ID to "readl")
-        assertEquals("readl", cmd.id)
-        assertNull(cmd.v, "không truyền v ⇒ null, để tầng thi hành chọn mặc định theo kind")
-        assertTrue(!cmd.autoConfirm)
-    }
-
-    @Test
-    fun `ctl v la null khi vang, giu nguyen so khi truyen ke ca 0`() {
-        assertEquals(
-            0,
-            ok(
-                TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.CTL,
-                TestBridgeCommands.EXTRA_ID to "win_lf",
-                TestBridgeCommands.EXTRA_V to 0,
-            ).v,
-            "v=0 (đóng) phải giữ 0, KHÔNG bị coi là 'không truyền'",
-        )
-        assertEquals(
-            3,
-            ok(
-                TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.CTL,
-                TestBridgeCommands.EXTRA_ID to "seatc",   // ⚠ 1.90: mốc cũ `headlight_mode` đã xoá
-                TestBridgeCommands.EXTRA_V to 3,
-            ).v,
-        )
-    }
-
-    @Test
-    fun `ctl auto_confirm doc duoc`() {
-        assertTrue(
-            ok(
-                TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.CTL,
-                TestBridgeCommands.EXTRA_ID to "win_lf",
-                TestBridgeCommands.EXTRA_AUTO_CONFIRM to true,
-            ).autoConfirm,
-        )
-    }
-
-    // ── hal (gọi method HAL thô — chẩn đoán) ────────────────────────────────────────────────────
-
-    @Test
-    fun `hal can method, thieu m bao dung ten doi so`() {
-        assertEquals(
-            TestBridgeCommands.ERR_MISSING + TestBridgeCommands.EXTRA_METHOD,
-            err(TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.HAL),
-        )
-    }
-
-    @Test
-    fun `hal doc du dev method args op, op ha ve chu thuong`() {
-        val cmd = ok(
-            TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.HAL,
-            TestBridgeCommands.EXTRA_DEV to " BYDAutoBodyworkDevice ",
-            TestBridgeCommands.EXTRA_METHOD to " setBodyWindowCtrlState ",
-            TestBridgeCommands.EXTRA_HAL_ARGS to "1,2",
-            TestBridgeCommands.EXTRA_OP to "SET",
-        )
-        assertEquals("BYDAutoBodyworkDevice", cmd.dev)
-        assertEquals("setBodyWindowCtrlState", cmd.method)
-        assertEquals("1,2", cmd.halArgs)
-        assertEquals("set", cmd.op, "op phải hạ về chữ thường để tầng thi hành so 'get'/'set' không phân biệt hoa/thường")
-    }
-
-    @Test
-    fun `hal khong bat buoc dev args op — de tang thi hanh mac dinh`() {
-        val cmd = ok(
-            TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.HAL,
-            TestBridgeCommands.EXTRA_METHOD to "getWindowPermitState",
-        )
-        assertEquals("", cmd.dev, "vắng dev ⇒ rỗng, tầng thi hành chọn BYDAutoBodyworkDevice")
-        assertEquals("", cmd.halArgs, "getter 0-đối để rỗng")
-        assertEquals("", cmd.op, "vắng op ⇒ rỗng, tầng thi hành suy theo tiền tố get")
-    }
-
-    // ── sweep (quét raw một lượt — chỉ đọc) ─────────────────────────────────────────────────────
-
-    @Test
-    fun `sweep khong can doi so, op tuy chon ha ve chu thuong`() {
-        val all = ok(TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.SWEEP)
-        assertEquals("", all.op, "vắng op ⇒ rỗng, tầng thi hành quét CẢ telemetry + control")
-        val info = ok(TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.SWEEP, TestBridgeCommands.EXTRA_OP to "INFO")
-        assertEquals("info", info.op, "op hạ chữ thường để script gõ 'INFO'/'info' như nhau")
-        // Chỉ-đọc: KHÔNG có cờ auto_confirm trong spec — không được vô tình mở cổng ghi qua lệnh này.
-        val spec = TestBridgeCommands.SPECS.first { it.name == TestBridgeCommands.SWEEP }
-        assertTrue(TestBridgeCommands.EXTRA_AUTO_CONFIRM !in spec.optional && spec.required.isEmpty())
+        gone.forEach { name ->
+            assertTrue(name !in TestBridgeCommands.NAMES, "'$name' còn trong bảng lệnh")
+            assertEquals(
+                TestBridgeCommands.ERR_UNKNOWN_CMD,
+                err(
+                    TestBridgeCommands.EXTRA_CMD to name,
+                    TestBridgeCommands.EXTRA_ID to "win_lf",
+                    TestBridgeCommands.EXTRA_METHOD to "getWindowState",
+                    TestBridgeCommands.EXTRA_ARG to "diag",
+                    TestBridgeCommands.EXTRA_AUTO_CONFIRM to true,
+                ),
+                "'$name' phải ra unknown_cmd",
+            )
+        }
     }
 
     @Test
@@ -352,49 +280,21 @@ class TestBridgeCommandTest {
      */
     @Test
     fun `danh sach trang chi co muoi lam khoa, khong cham cast hay cum`() {
-        // 14 → 15 (owner 2026-09-21): +`voice_keep_log`. Ô tích của nó gỡ khỏi Cài đặt cùng mọi bề mặt dev/log ở bản
-        // release production, nên `prefs_set` là đường chỉnh DUY NHẤT còn lại — bỏ nó khỏi đây là biến một công
-        // tắc đang sống thành bất khả chỉnh.
-        // 20 → 21 (owner 2026-09-25, spec `camera-turn-signal-hal-socket.html` R3 · R6): −`camera_lvds_option`
-        // (mười option LVDS gỡ hẳn — đường có HÌNH là AVMCamera, không phải LVDS thụ động) và
-        // +`camera_pos_left`/`camera_pos_right` (góc hiện overlay từng bên). Cả hai khoá mới đảo lại được bằng một
-        // cú chạm trong Cài đặt › Tiện nghi xe ⇒ ràng buộc (3) của KDoc danh sách trắng vẫn giữ.
-        // 21 → 22 (owner 2026-09-26, spec R7): +`camera_rotation` (chế độ xoay video) — chiều xoay đúng chỉ mắt owner
-        // trên xe chốt được, nên phải đổi được giữa hai lượt xi-nhan không build lại. Có chipRow đảo lại ⇒ (3) giữ.
-        // 22 → 23 (owner TRÊN XE 2026-09-26, 2.71): −`camera_rotation` +`camera_rot_left`/`camera_rot_right` — "2 line
-        // setting độc lập cho camera trái và phải". Khoá cũ được `Prefs.cameraRotation` migrate rồi xoá, nên giữ nó
-        // trong danh sách trắng là cho `prefs_set` ghi vào một khoá không ai đọc nữa.
-        // 23 → 24 (CLOSE-14 · CAM-LAG 2026-09-26): +`camera_render` (TextureView/SurfaceView) — câu hỏi "đường vẽ nào
-        // giật" chỉ trả lời được bằng cách đổi đường GIỮA hai lượt xi-nhan trên xe đang chạy rồi so `gfxinfo`, không
-        // phải bằng hai lượt build. Có hàng chip đảo lại được trong Cài đặt ⇒ ràng buộc (3) giữ.
-        // Lịch sử nới danh sách (lý do đầy đủ: `docs/PROJECT-BACKLOG.md`, mục CAM-*):
-        //   24 → 30 (R8-A): 6 khoá dò vùng/dải/hình/kênh · 30 → 37 (R8-B): 6 núm nắn + `camera_gl_texmatrix`
-        //   37 → 40 (2.75): `camera_dewarp_pan_x/pan_y` (dịch CỬA SỔ) + `camera_source` (PANO/CHANNEL).
-        //   40 → 42 (2.76 L7): `camera_mirror_left/right` — LẬT GƯƠNG từng bên. Khác ba đợt trên: đây KHÔNG phải
-        //   móc đo mà là một lựa chọn của người lái (`CameraSettingsIa.USER_KEYS`), có ô tích trong Cài đặt ⇒
-        //   ràng buộc (3) "đảo lại được bằng một cú chạm" vẫn giữ, và cầu kiểm thử ghi được để đo CAM-M1 bằng adb.
-        // Cả ba đợt là **móc ĐO** và đều đảo lại được bằng một cú chạm trong Cài đặt ⇒ ràng buộc (3) giữ.
-        // ⚠ Danh sách nay ở [TestBridgeWritableKeys] (tách khỏi `TestBridgeCommands` ở 2.74 — CLAUDE.md §4.1);
-        // `WRITABLE_PREFS_KEYS` là bí danh, bài này hỏi qua tên cũ **có chủ ý** vì đó là hợp đồng của `parse`.
-        assertEquals(71, TestBridgeCommands.WRITABLE_PREFS_KEYS.size)   // 42 → 40 (2.77): lần đầu CO LẠI · 46 → 44 (2.83): −2 vạch chuẩn, owner "dẹp vạch đi" · 44 → 49 (2.92 CAMERA-FULL-VIEW): kiểu hình + thu phóng (chip/thanh kéo, đảo lại bằng một cú chạm ⇒ (3) giữ) + 3 núm Thẳng rộng [ĐOÁN] chốt bằng mắt trên xe · 49 → 71 (2.93 Từng camera: +22 `CameraCamConfig.NEW_KEYS`, mỗi khoá có hàng đảo lại được ⇒ (3) giữ)
+        // Lịch sử nới danh sách (14 → 71) ở bản BYD: `docs/PROJECT-BACKLOG.md` mục CAM-* + git log tệp này.
+        // Android box B2 · W1 (2026-10-09): **71 → 14** — gỡ toàn bộ `camera_*` (57 khoá, gồm 22 `CameraCamConfig.NEW_KEYS`)
+        // và `top_strip_labels` (nhãn chip xe): hàng Cài đặt đảo lại được của chúng không còn ⇒ ràng buộc (3) không giữ được.
+        // Còn đúng 14 khoá đường GIỌNG NÓI.
+        assertEquals(14, TestBridgeCommands.WRITABLE_PREFS_KEYS.size)
         assertEquals(
             TestBridgeWritableKeys.ALL, TestBridgeCommands.WRITABLE_PREFS_KEYS,
             "bí danh phải trỏ ĐÚNG tập đã tách — một bản sao thứ hai ở đây là hai danh sách sẽ lệch",
         )
-        listOf(
-            "camera_dewarp_amount", "camera_dewarp_focal", "camera_dewarp_k", "camera_dewarp_scale",
-            "camera_dewarp_cx", "camera_dewarp_cy", "camera_dewarp_pan_x", "camera_dewarp_pan_y",
-            "camera_gl_texmatrix",
-        ).forEach { assertTrue(it in TestBridgeCommands.WRITABLE_PREFS_KEYS, "núm nắn $it chưa vào danh sách trắng") }
-        assertTrue("camera_render" in TestBridgeCommands.WRITABLE_PREFS_KEYS)
-        listOf("camera_span", "camera_strip_left", "camera_strip_right", "camera_shape", "camera_circle_scale")
-            .forEach { assertTrue(it in TestBridgeCommands.WRITABLE_PREFS_KEYS, "khoá đo $it chưa vào danh sách trắng") }
-        // `camera_rotation` migrate (2.71) · `camera_source`/`camera_hal_mode` gỡ cùng nguồn một-kênh (2.77: [ĐO] 27/09 hai khung thô cùng cảnh, cạnh 686 vs 351 ⇒ một kênh chỉ bị kéo ngang, không nét hơn — `CameraSettingsIaTest`) · `camera_guide_*` gỡ cùng vạch chuẩn khoảng cách (2.83, owner *"dẹp vạch đi"*).
-        listOf("camera_rotation", "camera_source", "camera_hal_mode", "camera_guide_left", "camera_guide_right").forEach { assertTrue(it !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "$it không được nhận ghi nữa") }
+        assertTrue(TestBridgeCommands.WRITABLE_PREFS_KEYS.none { it.startsWith("camera_") }, "khoá camera BYD không được ghi nữa")
+        assertTrue("top_strip_labels" !in TestBridgeCommands.WRITABLE_PREFS_KEYS)
         assertTrue(TestBridgeCommands.WRITABLE_PREFS_KEYS.none { it.startsWith("cast") || it.startsWith("vk_") })
-        // Mọi khoá mới đều phải thuộc đường GIỌNG NÓI (hoặc khoá nhãn chip đã có từ V3) — ràng buộc (2).
+        // Mọi khoá phải thuộc đường GIỌNG NÓI — ràng buộc (2).
         assertTrue(
-            TestBridgeCommands.WRITABLE_PREFS_KEYS.all { it.startsWith("voice_") || it == "top_strip_labels" || it.startsWith("camera_") },
+            TestBridgeCommands.WRITABLE_PREFS_KEYS.all { it.startsWith("voice_") },
             "khoá lạ lọt vào danh sách trắng: ${TestBridgeCommands.WRITABLE_PREFS_KEYS}",
         )
     }
@@ -421,53 +321,6 @@ class TestBridgeCommandTest {
             "voice_dump xuất tiếng cabin ra Download — PHẢI mang cờ auto_confirm",
         )
         assertTrue(TestBridgeCommands.VOICE_DUMP in TestBridgeCommands.NAMES)
-    }
-
-    // ══ `hal --es op getid` — đường ĐỌC theo feature-id ═══════════════════════════════════════════════════
-
-    /**
-     * [ĐO xe 2026-09-16] Vệt mưa/sấy tắc vì `hal` không có đường đọc theo feature-id: `--es op get` chỉ nhận một
-     * **tên method**, nên `--es id` ra `missing_extra:m`. Bài này khoá lại hình dạng đã chốt: id/tên hằng đi
-     * trong `--es m` (đúng ô mà `setev` đã dùng), nên bộ phân tích không phải học thêm đối số nào.
-     */
-    @Test
-    fun `hal getid nhan id hoac ten hang trong --es m`() {
-        listOf("321912848", "WIPER_FRONT_WIPER_LEVEL").forEach { m ->
-            val cmd = ok(
-                TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.HAL,
-                TestBridgeCommands.EXTRA_OP to "getid",
-                TestBridgeCommands.EXTRA_DEV to "BYDAutoWiperDevice",
-                TestBridgeCommands.EXTRA_METHOD to m,
-            )
-            assertEquals("getid", cmd.op, "op phải giữ nguyên để tầng thi hành rẽ nhánh")
-            assertEquals(m, cmd.method)
-            assertEquals("BYDAutoWiperDevice", cmd.dev)
-            // Chỉ-ĐỌC ⇒ không mang cờ xác nhận. (Tầng thi hành cũng không hỏi tới nó — xem `TestBridgeHal`.)
-            assertTrue(!cmd.autoConfirm)
-        }
-    }
-
-    @Test
-    fun `hal getid van doi --es m nhu moi lenh hal khac`() {
-        assertEquals(
-            TestBridgeCommands.ERR_MISSING + TestBridgeCommands.EXTRA_METHOD,
-            err(
-                TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.HAL,
-                TestBridgeCommands.EXTRA_OP to "getid",
-            ),
-            "thiếu id/tên hằng phải báo THIẾU đúng tên ô, không phải một lệnh chạy được với id rỗng",
-        )
-    }
-
-    /** `--es op` được hạ chữ ở tầng phân tích ⇒ `GETID`/`GetId` vẫn rẽ đúng nhánh trên xe. */
-    @Test
-    fun `op duoc ha chu nen go HOA van chay`() {
-        val cmd = ok(
-            TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.HAL,
-            TestBridgeCommands.EXTRA_OP to "GetId",
-            TestBridgeCommands.EXTRA_METHOD to "540287",
-        )
-        assertEquals("getid", cmd.op)
     }
 
     // ══ H5 · năm núm chỉnh bộ nghe đi qua ĐÚNG cổng `prefs_set` ═══════════════════════════════════════════

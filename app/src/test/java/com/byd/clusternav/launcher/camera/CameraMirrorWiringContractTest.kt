@@ -90,7 +90,7 @@ class CameraMirrorWiringContractTest {
     /** `prefs_set` ghi được hai khoá (bool) và `read_back` đọc lại từ đĩa — đo trên xe giữa hai lượt xi-nhan. */
     @Test fun `prefs_set ghi va read_back hai khoa lat guong`() {
         listOf("camera_mirror_left", "camera_mirror_right").forEach { k ->
-            assertTrue(k in TestBridgeWritableKeys.ALL, "$k phải nằm trong danh sách trắng")
+            assertTrue(k !in TestBridgeWritableKeys.ALL, "Android box B2 · W1: $k rời danh sách trắng")
             // 2.93: ô tích dời vào bộ chỉnh *Từng camera* (một khoá, một hàng) — vẫn là khoá NGƯỜI LÁI có UI.
             assertTrue(k in CameraSettingsIa.PER_CAMERA_KEYS, "$k là khoá NGƯỜI LÁI (có ô tích đảo lại được)")
         }
@@ -102,7 +102,7 @@ class CameraMirrorWiringContractTest {
         // 2.93: hai camera GIỮA ghi/đọc qua nhánh THEO LOẠI (`TestBridgePerCam`), tên khoá ở `:core`.
         listOf(CameraWhich.REAR, CameraWhich.FRONT).forEach { w ->
             val k = CameraCamConfig.mirrorKey(w)
-            assertTrue(k in TestBridgeWritableKeys.ALL, "$k phải nằm trong danh sách trắng")
+            assertTrue(k !in TestBridgeWritableKeys.ALL, "Android box B2 · W1: $k rời danh sách trắng")
             assertTrue(k in CameraSettingsIa.PER_CAMERA_KEYS, "$k là khoá của bộ chỉnh *Từng camera*")
         }
         val perCamSet = app("launcher/testbridge/TestBridgePerCam.kt")

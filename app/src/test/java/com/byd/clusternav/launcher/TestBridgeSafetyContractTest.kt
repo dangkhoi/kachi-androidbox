@@ -414,15 +414,10 @@ class TestBridgeSafetyContractTest {
      * (BG-15/BG-16) nên lấy ở đâu cũng là cùng cái đang vẽ.
      */
     @Test
-    fun `camera_frame noi du bon mat day tu bang lenh xuong controller`() {
-        assertTrue(
-            TestBridgeCommands.CAMERA_FRAME in TestBridgeCommands.NAMES,
-            "`camera_frame` phải có trong bảng lệnh ở :core",
-        )
-        assertTrue(
-            code("KachiTestBridge.kt").contains("TestBridgeCommands.CAMERA_FRAME -> TestBridgeCameraFrame.run("),
-            "cửa điều phối phải có nhánh `camera_frame` — không có thì lệnh trả `unknown_cmd`",
-        )
+    fun `camera_frame da roi cau, moc mo coi van khong tu dung controller`() {
+        // Android box B2 · W1 — `camera_frame` rời bảng lệnh + cửa điều phối (camera BYD); phần móc dưới đây mồ côi tới W2b.
+        assertTrue(TestBridgeCommands.CAMERA_FRAME !in TestBridgeCommands.NAMES, "`camera_frame` đã rời bảng lệnh")
+        assertTrue(!code("KachiTestBridge.kt").contains("TestBridgeCommands.CAMERA_FRAME ->"), "nhánh điều phối `camera_frame` đã gỡ")
         assertTrue(
             code("TestBridgeCameraFrame.kt").contains("hooks.cameraFrame("),
             "thân lệnh phải đi qua móc `cameraFrame` — không dựng overlay/TextureView thứ hai",

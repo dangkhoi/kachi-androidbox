@@ -37,7 +37,9 @@ class CameraDemandWiringContractTest {
     /** Nút thanh nút: nhánh còn lại của `controlDock` → `tap`, và `tap` bỏ qua mã không phải camera. */
     @Test fun `nut thanh nut - mot duong, ma la khong lam gi`() {
         val dock = SourceRoots.body(app("launcher/KachiHomeWiring.kt"), "internal fun Activity.controlDock(")
-        assertTrue("CameraDemandDispatch.tap(this@controlDock, id)" in dock, "ô camera trên thanh nút phải nối vào đường chung")
+        // Android box B2 · W1 — nút camera trên thanh nút KHÔNG còn nối vào đường camera: mã lạ (kể cả `launcher_cam_*`) ⇒ không làm gì.
+        assertTrue("CameraDemandDispatch" !in dock, "thanh nút không còn bắn camera BYD")
+        assertTrue("else -> Unit" in dock, "mã launcher lạ ⇒ không làm gì")
         val tap = SourceRoots.body(dispatch, "fun tap(ctx: Context, launcherId: String): Boolean")
         assertTrue(tap.indexOf("if (!LauncherActions.isCamera(launcherId)) return false") in 0 until tap.indexOf("fire("),
             "mã launcher lạ ⇒ không làm gì (mở nhầm còn tệ hơn)")
@@ -124,11 +126,11 @@ class CameraDemandWiringContractTest {
         assertTrue(recv.indexOf("CameraWakeAsk.expired(deadline, SystemClock.elapsedRealtime())") in 0 until recv.indexOf("applyHere("),
             "kiểm hạn TRƯỚC khi áp (bỏ ⇒ giữ mã khởi đầu, không áp gì)")
         assertFalse("carControl" in dispatch || "actByKind" in dispatch, "lệnh nút xe (Camera 360) KHÔNG bao giờ bắn từ đường camera")
+        // Android box B2 · W1 — tiến trình chính KHÔNG còn đăng ký receiver camera (cùng `ControlSentRelay`): lệnh từ `:wake` ra
+        // UNREACHABLE (mã khởi đầu) — phiên giọng nói nói thật, không bật camera BYD.
         val appOnCreate = SourceRoots.body(app("KachiApplication.kt"), "override fun onCreate()")
-        val relay = appOnCreate.indexOf("ControlSentRelay.receiveInMain(this)")
-        val cam = appOnCreate.indexOf("CameraDemandDispatch.receiveInMain(this)")
-        val last = appOnCreate.indexOf("EarlyShellChannel.start(this)")
-        assertTrue(relay in 0 until cam && cam < last, "đăng ký sau cổng tiến trình nền (cùng chỗ ControlSentRelay), trước dòng chốt cuối")
+        assertTrue("CameraDemandDispatch.receiveInMain(" !in appOnCreate && "ControlSentRelay.receiveInMain(" !in appOnCreate,
+            "Android box không đăng ký receiver camera / lệnh cuối")
     }
 
     /** Cầu kiểm thử (QA máy ảo): `demand:/open:/close:` đi ĐÚNG đường chung; đối số cũ (`left/right/none`) giữ nghĩa cũ. */
@@ -139,7 +141,7 @@ class CameraDemandWiringContractTest {
         assertTrue("CameraDemandDispatch.fireForResult(app, op)" in cmd, "không đường thứ hai cho QA")
         assertTrue("\"outcome\" to o.name.lowercase()" in cmd, "wave 2B: lời đáp mang CÙNG kết quả mà câu trả lời giọng nói đọc")
         val bridge = app("launcher/testbridge/KachiTestBridge.kt")
-        assertTrue("TestBridgeCommands.CAMERA -> TestBridgeCamera.run(app, cmd, hooks, reply)" in bridge)
+        assertTrue("TestBridgeCommands.CAMERA ->" !in bridge, "Android box B2 · W1: lệnh `camera` rời dispatch của cầu")
         val state = app("launcher/testbridge/TestBridgeState.kt")
         assertTrue("\"camera\" to TestBridgeJson.Raw(cameraDemand(ctx))" in state, "`state` phải đọc lại demand/showing")
         val read = SourceRoots.body(state, "private fun cameraDemand(ctx: Context): String")

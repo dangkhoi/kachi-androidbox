@@ -25,33 +25,31 @@ class SettingsCatalogTest {
     // Đúng bộ khoá mà spec §4.1 nói phải có chủ. Viết tay ở đây để bài test còn nói được điều gì đó độc lập với
     // bộ quét — bài quét mã nguồn phía dưới mới là bài chống rữa.
     private val mustBeOwned = listOf(
-        "preset", "grid_layout", "wallpaper_prefs", "top_strip", "dock_enabled", "dock_edge", "dock_visible",
-        "unit_prefs", "profiles", "active_profile", "theme_mode", "launcher_autostart",
-        "recirc_on_start_enabled",
+        "preset", "grid_layout", "wallpaper_prefs", "dock_enabled", "dock_edge", "dock_visible",
+        "profiles", "active_profile", "theme_mode", "launcher_autostart",
+        // Android box B2 · W1 — `top_strip` · `unit_prefs` · `recirc_on_start_enabled` rời UI ⇒ không còn chủ, sang
+        // `SettingsCatalog.RETIRED_UI_KEYS` (bài `SettingsCatalogRetiredTest` canh chiều đó).
     )
 
     // IA v2 §4.3 — khoá của ClusterNav mà Settings mới phải nhận. Cũng viết tay, cùng lý do như trên; bài đối chiếu
     // với MÃ NGUỒN THẬT (`"<khoá>"` có mặt trong Prefs.kt/SimpleCastRuntime.kt/…) nằm ở `:app`
     // `ClusterNavKeysContractTest` — nó phải ở đó vì `:core:test` báo UP-TO-DATE khi chỉ nguồn `:app` đổi.
     private val clusterNavMustBeOwned = listOf(
-        "enabled", "nav_cluster_screen_mode", "marquee",
-        "badge_enabled", "show_upcoming_badge", "show_alert_chip", "badge_size_dp", "badge_center_x",
-        "vm_bubble_enabled", "vm_bubble_x",
-        "cast_enabled", "split_ratio_left_pct", "autostart_enabled", "autostart_package",
-        "autostart_split_enabled", "autostart_left_package", "autostart_right_package",
+        // Android box B2 · W1 — khoá dẫn đường cụm/HUD · biển báo · bong bóng · chiếu cụm · tiện nghi xe rời UI (danh sách ở
+        // `SettingsCatalogRetired`); còn phải có chủ: phím vô-lăng + khởi động nền + app dẫn đường mặc định + lịch tự dẫn.
         "voicekey_enabled", "voicekey_bindings", "voicekey_custom_buttons", "voicekey_learn",
-        "seat_comfort_enabled", "seat_comfort_mode", "seat_level_0", "pm25_filter_enabled",
-        "headless_autostart",
+        "headless_autostart", "voice_nav_default_app", "nav_automation_rules",
     )
 
     @Test
-    fun `dung muoi mot nhom theo dung thu tu spec`() {
-        assertEquals(11, SettingsCatalog.GROUPS.size, "IA v2 §4.1 + VOICE (owner 2026-09-21)")
+    fun `dung chin nhom theo dung thu tu spec`() {
+        assertEquals(9, SettingsCatalog.GROUPS.size, "IA v2 §4.1 + VOICE (owner 2026-09-21) − CAST − CAR (Android box B2 · W1)")
         assertEquals(
-            listOf("home", "bars", "display", "profiles", "nav", "cast", "keys", "car", "voice", "system", "about"),
+            listOf("home", "bars", "display", "profiles", "nav", "keys", "voice", "system", "about"),
             SettingsCatalog.GROUPS.map { it.id },
-            "thứ tự rail là thứ tự TẦN SUẤT DÙNG (§4.1) — VOICE chèn sau CAR, trước SYSTEM",
+            "thứ tự rail là thứ tự TẦN SUẤT DÙNG (§4.1) — Android box B2 · W1 gỡ hẳn 'cast' và 'car'",
         )
+        assertTrue(SettingsCatalog.GROUPS.none { it.id == "cast" || it.id == "car" }, "nhóm chỉ-BYD không được mọc lại")
         assertEquals("Màn hình chính", SettingsGroup.HOME.label)
         // Nhóm `clusternav` của IA v1 BỊ BỎ: ba nhóm thật (nav/cast/keys) thay cho một nút "mở màn kia", và dòng mở
         // màn cũ hạ xuống thành một mục của nhóm Hệ thống.
@@ -148,18 +146,17 @@ class SettingsCatalogTest {
     @Test
     fun `groupOf tra dung nhom cho tung khoa`() {
         assertEquals(SettingsGroup.HOME, SettingsCatalog.groupOf("preset"))
-        assertEquals(SettingsGroup.BARS, SettingsCatalog.groupOf("top_strip"), "chip + thanh nút tách sang nhóm Thanh")
         assertEquals(SettingsGroup.BARS, SettingsCatalog.groupOf("dock_edge"))
-        assertEquals(SettingsGroup.NAV, SettingsCatalog.groupOf("badge_size_dp"))
-        assertEquals(SettingsGroup.CAST, SettingsCatalog.groupOf("split_ratio_left_pct"))
+        assertEquals(SettingsGroup.NAV, SettingsCatalog.groupOf("saved_places"))
+        assertEquals(SettingsGroup.NAV, SettingsCatalog.groupOf("voice_nav_default_app"))
         assertEquals(SettingsGroup.KEYS, SettingsCatalog.groupOf("voicekey_bindings"))
-        assertEquals(SettingsGroup.CAR, SettingsCatalog.groupOf("seat_comfort_mode"))
         assertEquals(SettingsGroup.SYSTEM, SettingsCatalog.groupOf("headless_autostart"))
         assertEquals(SettingsGroup.HOME, SettingsCatalog.groupOf("wallpaper_prefs"))
-        assertEquals(SettingsGroup.DISPLAY, SettingsCatalog.groupOf("unit_prefs"))
         assertEquals(SettingsGroup.DISPLAY, SettingsCatalog.groupOf("theme_mode"))
         assertEquals(SettingsGroup.PROFILES, SettingsCatalog.groupOf("active_profile"))
-        assertEquals(SettingsGroup.CAR, SettingsCatalog.groupOf("recirc_on_start_enabled"))
+        // Android box B2 · W1 — khoá của mục chỉ-BYD đã gỡ: không còn nhóm nào nhận.
+        listOf("top_strip", "badge_size_dp", "split_ratio_left_pct", "seat_comfort_mode", "unit_prefs", "recirc_on_start_enabled")
+            .forEach { assertNull(SettingsCatalog.groupOf(it), "'$it' đã rời UI ở Android box — không được còn chủ") }
         assertEquals(SettingsGroup.SYSTEM, SettingsCatalog.groupOf("launcher_autostart"))
         assertNull(SettingsCatalog.groupOf("khong_ton_tai"), "khoá lạ phải trả null, không được đoán bừa một nhóm")
     }
@@ -254,7 +251,8 @@ class SettingsCatalogTest {
                 // và `profiles_add` ngay trên.
                 "places_add",
                 // IA v2: mọi HÀNH ĐỘNG của màn ClusterNav (§4.3, cột "API ghi") — chúng bấm là chạy, không lưu gì.
-                "nav_reconnect", "cast_actions", "cast_rescue", "keys_check", "car_pm25_clean",
+                // Android box B2 · W1: `nav_reconnect` · `cast_actions` · `cast_rescue` · `car_pm25_clean` · `system_nav_stop` gỡ.
+                "keys_check",
                 // owner 2026-09-21 — nhóm VOICE riêng; "Hey Kachi" là công tắc bridge (khoá `voice_wake_enabled`
                 // ở `clusternav_prefs`, ghi qua ClusterNavBridge), KHÔNG khai prefKey ở catalog ⇒ nằm ở đây.
                 "voice_wake",
@@ -276,13 +274,13 @@ class SettingsCatalogTest {
                 // lưu khoá nào; trạng thái đọc live từ PackageManager. Công tắc `system_keep_home_on_boot` thì CÓ
                 // khoá (`keep_home_on_boot`) nên KHÔNG nằm ở đây.
                 "system_default_home",
-                "system_update", "system_nav_stop",
+                "system_update",
                 // ⚠ `system_vietmap_data` + `system_diagnostics` cũng rời danh mục 2026-09-21 (cùng lượt dọn dev UI);
                 // hai màn ấy vẫn mở được bằng `am start -n <gói>/<lớp>`.
                 "about_version", "about_disclaimer",
             ),
             noKey,
-            "mười tám mục là việc-làm hoặc thông tin, không phải giá trị lưu bền",
+            "các mục này là việc-làm hoặc thông tin, không phải giá trị lưu bền",
         )
         // Rỗng KHÁC null: chuỗi rỗng sẽ lọt vào groupOf("") và biến một khoá không tồn tại thành có chủ.
         assertTrue(SettingsCatalog.ENTRIES.none { it.prefKey == "" }, "dùng null, không dùng chuỗi rỗng")

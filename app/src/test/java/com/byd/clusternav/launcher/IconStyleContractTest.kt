@@ -61,7 +61,11 @@ class IconStyleContractTest {
     /** Icon CHƯA có chỗ dùng, giữ lại có lý do — nợ nhìn thấy được, không phải chỗ cất rác. */
     // RES-CLEAN 2026-09-26: hai icon mồ côi (`ic_check_selected`, `ic_corner_cut`) đã XOÁ cùng 39 resource không dùng
     // (lint UnusedResources) — danh sách nay rỗng, nhưng giữ để nợ mới (nếu có) vẫn phải ghi lý do tại chỗ.
-    private val orphanPending: Map<String, String> = emptyMap()
+    private val orphanPending: Map<String, String> = mapOf(
+        "ic_turn_left.xml" to "Android box B2 · W1: chỉ thẻ dẫn đường dự phòng trên cụm (ClusterNavActivity, đã gỡ khỏi manifest) dùng — W2d xoá cùng mã dẫn đường cụm",
+        "ic_turn_right.xml" to "Android box B2 · W1: chỉ thẻ dẫn đường dự phòng trên cụm (ClusterNavActivity, đã gỡ khỏi manifest) dùng — W2d xoá cùng mã dẫn đường cụm",
+        "ic_turn_straight.xml" to "Android box B2 · W1: chỉ thẻ dẫn đường dự phòng trên cụm (ClusterNavActivity, đã gỡ khỏi manifest) dùng — W2d xoá cùng mã dẫn đường cụm",
+    )
 
     // ── hạ tầng đọc tệp ─────────────────────────────────────────────────────────────────────────────
 

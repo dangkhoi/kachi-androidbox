@@ -132,6 +132,10 @@ object TestBridgeCommands {
     const val SAY = "say"
     const val WAV = "wav"
     const val KWS = "kws"
+
+    // ⚠ Android box B2 · W1 — chín mã dưới ([CAMERA] · [CAMERA_FRAME] · [CAMERA_SYNTH] · [CTL] · [HAL] · [SWEEP] · [FEATMAP] ·
+    // [CAPTEST] · [CTLLOG]) KHÔNG còn trong [SPECS] ⇒ [parse] trả `unknown_cmd`, `KachiTestBridge` không dựng nhánh nào. Hằng
+    // còn ở đây chỉ vì mã thi hành mồ côi (`TestBridgeCamera` · `TestBridgeCtl` · `TestBridgeHal`…) còn nhắc tên — W2 xoá cùng.
     const val CAMERA = "camera"
 
     /**
@@ -376,13 +380,7 @@ object TestBridgeCommands {
         Spec(SAY, listOf(EXTRA_TEXT), listOf(EXTRA_AUTO_CONFIRM)),
         Spec(WAV, emptyList(), listOf(EXTRA_PATH)),
         Spec(KWS, emptyList(), listOf(EXTRA_PATH)),
-        Spec(CAMERA, emptyList(), listOf(EXTRA_ARG)),
-        // `name` tuỳ chọn: vắng ⇒ cỡ mặc định 5120×960. Cú pháp `<W>x<H>` phân tích ở [TestBridgeFrameSize] (thuần,
-        // có bài canh) — KHÔNG ở tầng thi hành: một chuỗi lạ phải cho ra cỡ MẶC ĐỊNH, không cho ra 0×0.
-        Spec(CAMERA_FRAME, emptyList(), listOf(EXTRA_ARG)),
-        // `name` tuỳ chọn: vắng ⇒ `on` (một lệnh đo không nên cần đối số để bật thứ nó sinh ra để bật). Giá trị lạ
-        // ⇒ cũng `on`, cùng luật `camera --es name`: tầng thi hành chỉ hỏi *"có phải off không"*.
-        Spec(CAMERA_SYNTH, emptyList(), listOf(EXTRA_ARG)),
+        // Android box B2 · W1 — `camera` · `camera_frame` · `camera_synth` (camera BYD) gỡ khỏi bảng lệnh.
         Spec(TTS, listOf(EXTRA_TEXT)),
         Spec(LISTEN, emptyList()),
         Spec(STATE, emptyList()),
@@ -395,23 +393,19 @@ object TestBridgeCommands {
         Spec(PREFS, listOf(EXTRA_FILE)),
         Spec(REAPPLY, emptyList()),
         Spec(DIAG, emptyList()),
-        Spec(CTL, listOf(EXTRA_ID), listOf(EXTRA_V, EXTRA_AUTO_CONFIRM)),
-        Spec(HAL, listOf(EXTRA_METHOD), listOf(EXTRA_DEV, EXTRA_HAL_ARGS, EXTRA_OP, EXTRA_AUTO_CONFIRM)),
-        Spec(SWEEP, emptyList(), listOf(EXTRA_OP)),
-        Spec(FEATMAP, emptyList()),
+        // Android box B2 · W1 — `ctl` · `hal` · `sweep` · `featmap` (nút/HAL BYDAuto) gỡ khỏi bảng lệnh.
         Spec(VOICE_DUMP, emptyList(), listOf(EXTRA_AUTO_CONFIRM)),
         // `text` là **tuỳ chọn** có chủ ý: vắng ⇒ giá trị rỗng ⇒ *"trả khoá về mặc định"* (tập rỗng / tắt), đúng
         // thứ `trap` của harness cần để dọn sau mỗi ca mà không phải biết mặc định của từng khoá.
         Spec(PREFS_SET, listOf(EXTRA_KEY), listOf(EXTRA_TEXT)),
-        // WP7 — `op` tuỳ chọn (vắng ⇒ `list`), `id` chỉ bắt buộc với ba op đóng dấu; phép kiểm đó nằm trong
-        // [parse] vì nó phụ thuộc GIÁ TRỊ của một extra khác, thứ mà [Spec.required] không diễn tả được.
-        Spec(CAPTEST, emptyList(), listOf(EXTRA_OP, EXTRA_ID, EXTRA_TEXT)),
+        // Android box B2 · W1 — `captest` (kiểm từng nút xe) gỡ khỏi bảng lệnh.
         // 2.83 — chỉ đọc, `n` (số dòng) tuỳ chọn và được kẹp trong [parse] qua [a11yLogTail].
         Spec(A11YLOG, emptyList(), listOf(EXTRA_SLOT)),
-        // FIX286 · SR6 — cùng hình dạng `a11ylog`: chỉ đọc, `n` tuỳ chọn, kẹp qua [ctlLogTail].
-        Spec(CTLLOG, emptyList(), listOf(EXTRA_SLOT)),
-        Spec(WAKELOG, emptyList(), listOf(EXTRA_SLOT)),   // FIX286 · VK6 — cùng hình dạng `ctllog`
-    ) + TestBridgeTeachCommands.SPECS + TestBridgeScreenCommands.SPECS   // 2.91 A7 · 2.93 DIAG-SCREENS — tệp riêng (trần 500)
+        // Android box B2 · W1 — `ctllog` (nhật ký lệnh ghi xe) gỡ khỏi bảng lệnh.
+        Spec(WAKELOG, emptyList(), listOf(EXTRA_SLOT)),   // FIX286 · VK6 — chỉ đọc, `n` tuỳ chọn, kẹp qua [wakeLogTail]
+        // 2.91 A7 — tệp riêng (trần 500). Android box B2 · W1: `diag_screen` (`TestBridgeScreenCommands`: hai màn chẩn đoán
+        // BYD đã rời manifest) KHÔNG còn nối vào bảng.
+    ) + TestBridgeTeachCommands.SPECS
 
     /** Tên mọi lệnh — cho tài liệu và cho bài canh "mã lệnh không trùng nhau". */
     val NAMES: List<String> = SPECS.map { it.name }
@@ -454,16 +448,9 @@ object TestBridgeCommands {
         if (name == PREFS_SET && key !in WRITABLE_PREFS_KEYS) return TestBridgeParse.Err(ERR_BAD_PREFS_KEY + key)
 
         val op = (extras[EXTRA_OP] as? String).orEmpty().trim().lowercase()
-        // WP7 · [CAPTEST]: op lạ bị chặn ở TẦNG PHÂN TÍCH (cùng luật danh sách trắng của `prefs_set`) — gõ sai
-        // `--es op mark` mà lệnh vẫn trả `ok:true` thì script đọc thành "đã đóng dấu" trong khi không có gì được ghi.
-        val cap = if (name == CAPTEST) op.ifEmpty { CapTestOps.LIST } else op
+        // Op lạ bị chặn ở TẦNG PHÂN TÍCH (cùng luật danh sách trắng của `prefs_set`). Android box B2 · W1: nhánh `captest`
+        // (op mặc định `list`, `id` bắt buộc với op đóng dấu) và cổng tên màn của `diag_screen` gỡ cùng hai lệnh ấy.
         if (!TestBridgeTeachCommands.validOp(name, op)) return TestBridgeParse.Err(ERR_BAD_OP + op)
-        TestBridgeScreenCommands.check(name, extras)?.let { return TestBridgeParse.Err(it) }   // 2.93 · tên màn lạ ⇒ chặn tại đây
-        if (name == CAPTEST) {
-            if (cap !in CapTestOps.ALL) return TestBridgeParse.Err(ERR_BAD_OP + cap)
-            val id = (extras[EXTRA_ID] as? String)?.trim().orEmpty()
-            if (cap in CapTestOps.MARKS && id.isEmpty()) return TestBridgeParse.Err(ERR_MISSING + EXTRA_ID)
-        }
 
         return TestBridgeParse.Ok(
             TestBridgeCommand(
@@ -481,13 +468,10 @@ object TestBridgeCommands {
                 dev = (extras[EXTRA_DEV] as? String).orEmpty().trim(),
                 method = (extras[EXTRA_METHOD] as? String).orEmpty().trim(),
                 halArgs = (extras[EXTRA_HAL_ARGS] as? String).orEmpty().trim(),
-                // `cap` thay `op` thô: nó đã điền mặc định `list` cho [CAPTEST] (tầng thi hành không phải nhớ lại
-                // mặc định lần thứ hai — đúng luật một-chỗ-quyết-định của dự án). Lệnh khác: `cap == op`.
-                op = cap,
+                op = op,
                 key = key,
                 tail = when (name) {
                     A11YLOG -> a11yLogTail(slot)
-                    CTLLOG -> ctlLogTail(slot)
                     WAKELOG -> wakeLogTail(slot)
                     else -> 0
                 },

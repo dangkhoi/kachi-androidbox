@@ -10,6 +10,7 @@ import com.byd.clusternav.testsupport.KotlinSource
 import com.byd.clusternav.testsupport.SourceRoots
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -116,7 +117,9 @@ class ClusterRectOptionWiringContractTest {
         assertEquals(PrefType.STRING, ProfileScopeCluster.DECLARED_TYPES["cast_style"])
         assertTrue(ProfileSharePolicy.shareable("cast_style"))
         assertEquals("simple_cast_prefs", SettingsCatalog.CLUSTERNAV_KEYS["cast_style"])
-        assertEquals(SettingsGroup.CAST, SettingsCatalog.groupOf("cast_style"))
+        // Android box B2 · W1 — nhóm Chiếu cụm gỡ khỏi Cài đặt: khoá không còn chủ, còn theo hồ sơ (RETIRED_UI_KEYS).
+        assertNull(SettingsCatalog.groupOf("cast_style"))
+        assertTrue("cast_style" in SettingsCatalog.RETIRED_UI_KEYS)
     }
 
     /** CLAUDE.md §8 — mọi hàm mới của B1b có ÍT NHẤT một call site ngoài định nghĩa (quét mã đã bỏ chú thích cả hai module). */

@@ -84,25 +84,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- Màn điều khiển: bật/tắt, trạng thái, chọn nguồn, cấp quyền -->
-        <!-- Màn CHẨN ĐOÁN: gom mọi thứ kỹ thuật về 1 chỗ để anh em chụp màn gửi dev.
-             exported=false. ⚠ 2.93 CODE-FIX-AFTER-283: trên bản PHÁT HÀNH màn này KHÔNG mở được — nút trong Cài đặt đã
-             gỡ (21/09) và adb 'am start' một activity non-exported bị từ chối ("Permission Denial … not exported from
-             uid" — AOSP 10 r47 ActivityStackSupervisor.checkStartAnyActivityPermission; shell không có
-             START_ANY_ACTIVITY; [ĐO xe 29/09] am start ném ngoại lệ). Đồ đo trên xe đi qua cầu kiểm thử (KachiTestBridge:
-             a11ylog · diag · …) sau công tắc Chế độ kiểm thử. 2.93 wave 2B · DIAG-SCREENS-UNREACHABLE: hai màn chẩn đoán
-             (màn này + VietMapWidgetDiagActivity) mở được CHỈ bằng lệnh cầu `diag_screen` (name = diag | vietmap; cùng
-             cổng Chế độ kiểm thử; app tự startActivity trong tiến trình của mình) — vẫn KHÔNG có lối vào UI nào. -->
-        <activity
-            android:name=".modules.clustercast.DiagActivity"
-            android:exported="false"
-            android:label="Chẩn đoán ClusterNav" />
-
-        <activity
-            android:name=".vietmapwidget.VietMapWidgetDiagActivity"
-            android:exported="false"
-            android:label="Dữ liệu VietMap" />
-
+        <!-- Android box B2 · W1: hai màn chẩn đoán BYD (DiagActivity cụm · VietMapWidgetDiagActivity) gỡ khỏi manifest. -->
         <!-- BEHIND-HOME (spec kachi-launcher-shortcuts-autostart §4.2.5): activity GIỮ CHỖ — không bao giờ chạy khi
              mọi thứ đúng (khoá avoidMoveToFront ⇒ mDoResume=false); chỉ để có một stack S nằm đáy display 0. Chạy thật
              ⇒ ROM bỏ qua khoá ⇒ tự báo + tự gỡ. Không exported: chỉ chính Kachi mở. -->
@@ -123,15 +105,6 @@
             android:resizeableActivity="true"
             android:taskAffinity="com.byd.clusternav.stage"
             android:theme="@android:style/Theme.Black.NoTitleBar" />
-
-        <activity
-            android:name=".modules.clustercast.ClusterBlackActivity"
-            android:configChanges="uiMode"
-            android:exported="true"
-            android:launchMode="singleInstance"
-            android:taskAffinity="com.byd.clusternav.cluster"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
-            android:label="ClusterNav Projection" />
 
         <!-- ⚠ `.MainActivity` (màn ClusterNav cũ) đã GỠ 2026-09-13 — docs/specs/kachi-remove-legacy-screen.html
              R1. Mọi intent tường minh từng trỏ tới nó (RebindReceiver, UpdateRelaunch, thông báo của
@@ -178,19 +151,6 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- Card fallback (CHIẾM màn, MẤT đồng hồ) — chỉ dùng khi làn nav zin không lên.
-             Launch qua `am start` (cờ display + component .ClusterNavActivity) từ uid shell/dadb 2000, KHÔNG in-process.
-             exported=true BẮT BUỘC: BYD DiLink3 enforce export-check cho shell-uid → exported=false bị Permission
-             Denial (VERIFY TRÊN XE 2026-07-20). -->
-        <activity
-            android:name=".ClusterNavActivity"
-            android:exported="true"
-            android:launchMode="singleTop"
-            android:screenOrientation="landscape"
-            android:resizeableActivity="true"
-            android:configChanges="orientation|screenSize|screenLayout|density|smallestScreenSize|keyboardHidden"
-            android:theme="@style/ClusterTheme" />
-
 
         <!-- ⚠ [ĐO xe 2026-09-15] KHÔNG thêm `<property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE">`
              vào các service `specialUse` dưới đây. `<property>` là tag API 34; PackageParser CLIENT-SIDE của
@@ -199,38 +159,19 @@
              `adb pm install` (parser server-side) bỏ qua nên vẫn cài được — đúng triệu chứng "adb được, GUI không".
              Xe chạy ≤ Android 12 (API 31) nên property này (chỉ bắt buộc từ API 34) là thừa. Nếu lint đòi → suppress,
              KHÔNG thêm lại property. -->
-        <!-- Nút nổi (bubble): chạm đưa GMaps lên cluster. Foreground specialUse (không có type nào khớp hơn). -->
-        <service
-            android:name=".modules.clustercast.FloatingBubbleService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-        </service>
-
-        <!-- Bounded visible host for one claimed boot auto-cast request (0.71). Never exported. -->
-        <service
-            android:name=".modules.clustercast.CastAutomationService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-        </service>
-
-        <!-- 1.21 Item 1: HEADLESS boot setup — relocates the accessibility grant + force-bind and the
-             cluster-lane re-assert off any screen so boot doesn't foreground the app (né size-compat dudu).
-             Short-lived; started by RebindReceiver when "Tự khởi động nền" is ON. Never exported. -->
+        <!-- Android box B2 · W1: nút nổi chiếu cụm (FloatingBubbleService), lượt tự chiếu (CastAutomationService), màn đen
+             chiếu cụm (ClusterBlackActivity), thẻ dẫn đường dự phòng trên cụm (ClusterNavActivity) và tự mở VietMap
+             (VietMapAutostartService) gỡ khỏi manifest — phần chỉ-BYD (docs/specs/androidbox-plan.html §4.1). -->
+        <!-- 1.21 Item 1: HEADLESS boot setup — accessibility grant + force-bind (physical keys) + voice-key keep-alive +
+             scheduled-nav engine, off any screen so boot doesn't foreground the app. Android box B2 · W1: the cluster /
+             VietMap / comfort work that used to run here is gone. Short-lived; started by RebindReceiver when "Tự khởi
+             động nền" is ON. Never exported. -->
         <service
             android:name=".BootSetupService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
         </service>
 
-        <!-- B3 (2026-09-07): auto-start VietMap chạy ĐỘC LẬP (foreground service riêng) — KHÔNG block chuỗi
-             boot-setup (ghế / lọc bụi / nav / voice-key) vì nhánh bóng nay POLL tới khi VietMap vào map (tuỳ
-             network). Short-lived; started by BootSetupService (boot) / ClusterNavBridge (bật badge · bóng).
-             Never exported. -->
-        <service
-            android:name=".VietMapAutostartService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-        </service>
         <!-- FGS mảnh giữ tiến trình sống khi phím-thoại bật → ssc_skip không DROP watchdog broadcast
              (deep-pass 2026-09-23 [P1] #3). IMPORTANCE_MIN, không mic. Never exported. -->
         <service
@@ -239,8 +180,8 @@
             android:foregroundServiceType="specialUse">
         </service>
 
-        <!-- AUTOMATION (1.85, spec kachi-automation R4): MỘT động cơ nền cho cả hai automation — "tự sấy kính khi
-             mưa" (nhịp ~5 phút) + "tự dẫn đường theo lịch" (nhịp ~1 phút). KHÁC ba service trên: chúng là việc
+        <!-- AUTOMATION (1.85, spec kachi-automation R4): động cơ nền của "tự dẫn đường theo lịch" (nhịp ~1 phút).
+             Android box B2 · W1: nhịp "tự sấy kính khi mưa" (HAL BYD) đã gỡ khỏi vòng. KHÁC ba service trên: chúng là việc
              MỘT LẦN rồi tự chết, còn cái này là một nhịp DÀI HẠN (cả chuyến) ⇒ `START_STICKY`.
              Chỉ sống khi có ít nhất một automation BẬT (`AutomationService.anyEnabled`); hết việc thì tự
              `stopSelf`. Started/stopped bởi `AutomationService.sync()` (công tắc UI + boot). Never exported.

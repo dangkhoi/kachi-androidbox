@@ -46,9 +46,14 @@ class ClusterProfileSwitchWiringContractTest {
      * app), không phải `VietMapAutostartService` (mở app — cố ý bỏ). Thử ĐỎ: xoá dòng `step("app.prereqs")`.
      */
     @Test
-    fun `Pass 3 - doi ho so chay lai luot dieu kien nen, khong mo app`() {
+    fun `Pass 3 - doi ho so khong cham applier BYD, khong mo app`() {
+        // Android box B2 · W1 — ĐỔI GHIM: lượt áp lại sau đổi hồ sơ không còn chạy applier chỉ-BYD (điều kiện nền VietMap ·
+        // cụm/HUD · biển báo · bong bóng · ghế · lọc bụi · camera); chỉ còn đồng bộ automation + `:wake`.
         val body = SourceRoots.body(launcher("ClusterNavBridgeReapply.kt"), "internal fun ClusterNavBridge.reapplyAll()")
-        assertTrue(body.contains("step(\"app.prereqs\") { AppPrereqs.onReady(app) }"), body)
+        listOf("AppPrereqs", "speedSign", "NavRepository", "VmOverlayPosition", "VmBubbleVisibility",
+            "SeatComfortApplier", "Pm25FilterApplier", "CameraReapply").forEach { assertFalse(body.contains(it), "applier BYD '$it' còn trong reapplyAll") }
+        assertTrue(body.contains("step(\"automation.sync\") { AutomationService.sync(app) }"), body)
+        assertTrue(body.contains("step(\"voice.wake\") { VoiceWakeService.sync(app) }"), body)
         listOf("VietMapAutostartService", "AppPrereqs.ensure(", "startForAppOpen").forEach {
             assertFalse(body.contains(it), "đổi hồ sơ không được mở app (`$it`)")
         }

@@ -81,9 +81,7 @@ class SettingsCatalogControlContractTest {
             "home_swap_autohide" to ("SettingsSectionsHome" to "deps.onSlotHeadAutoHide("),
             "home_wallpaper" to ("SettingsSectionsHome" to "deps.onWallpaper("),
             // ── 2 · Thanh trạng thái & thanh nút ──
-            "bars_top_strip" to ("SettingsSectionsBars" to "stripPicker.section("),
             // V3 · R14 (owner 2026-09-16) — công tắc nhãn chip; đi qua `onTopStripConfig` (đặt CẢ cấu hình).
-            "bars_top_strip_labels" to ("SettingsSectionsBars" to "deps.onTopStripConfig("),
             "bars_dock_visible" to ("SettingsSectionsBars" to "dock.withVisible("),
             "bars_dock_edge" to ("SettingsSectionsBars" to "deps.onDockEdge("),
             "bars_dock_items" to ("SettingsSectionsBars" to "deps.openDockPicker("),
@@ -94,7 +92,6 @@ class SettingsCatalogControlContractTest {
             // F1 · U2 — trang lối tắt dựng NGAY trong nhóm Thanh (thân ở `SettingsSectionsShortcuts.kt`).
             "bars_app_shortcuts" to ("SettingsSectionsBars" to "SettingsShortcutsSection(context, rows, deps).section(body)"),
             // ── 3 · Hiển thị & đơn vị ──
-            "display_units" to ("SettingsSections" to "rows.unitRow("),
             "display_theme" to ("SettingsSections" to "deps.onThemeMode("),
             // VISUAL-REFRESH P1b · R8 — hàng ô màu nhấn + chip tông thẻ, cùng intent.
             "display_color" to ("SettingsSections" to "deps.onColorChoice("),
@@ -110,21 +107,10 @@ class SettingsCatalogControlContractTest {
             "profiles_boot" to ("SettingsSectionsProfiles" to "deps.onBootProfile("),
             "profiles_add" to ("SettingsSectionsProfiles" to "deps.onDuplicateProfile("),
             // ── 5 · Dẫn đường & cụm đồng hồ ──
-            "nav_enabled" to ("SettingsSectionsNav" to "bridge.setNavEnabled("),
-            "nav_cluster_mode" to ("SettingsSectionsNav" to "bridge.setClusterMode("),
-            "nav_marquee" to ("SettingsSectionsNav" to "bridge.setMarquee("),
-            "nav_default_app" to ("SettingsSectionsNav" to "bridge.setNavDefaultApp("),
+            // Android box B2 · W1 — hàng app dẫn đường mặc định dựng ở tệp riêng (khối cụm/HUD `SettingsNavSection` gỡ khỏi trang).
+            "nav_default_app" to ("SettingsSectionsNavApp" to "bridge.setNavDefaultApp("),
             // ⚠ Bốn dòng dưới KHÔNG có "(" ở cuối: chúng là lời gọi dạng **trailing lambda** (`bridge.reconnect { … }`).
-            "nav_reconnect" to ("SettingsSectionsNav" to "bridge.reconnect"),
-            "badge_enabled" to ("SettingsSectionsNav" to "bridge.setBadgeEnabled("),
-            "badge_upcoming" to ("SettingsSectionsNav" to "bridge.setUpcomingBadge("),
-            "badge_alert_chip" to ("SettingsSectionsNav" to "bridge.setAlertChip("),
-            "badge_size" to ("SettingsSectionsNav" to "bridge.setBadgeSizeDp("),
-            "badge_center" to ("SettingsSectionsNav" to "bridge.setBadgeCenter("),
             // 2.91 · F1 — mã mục giữ, công tắc nay ghi cờ HIỆN bóng; tự mở VietMap là mục riêng.
-            "vm_bubble_enabled" to ("SettingsSectionsNav" to "bridge.setVmBubbleShown("),
-            "vm_bubble_autostart" to ("SettingsSectionsNav" to "bridge.setVmBubbleAutostart("),
-            "vm_bubble_pos" to ("SettingsSectionsNav" to "bridge.setVmBubblePos("),
             // Sổ địa chỉ (docs/specs/kachi-voice-addresses.html) — cùng nhóm NAV nhưng ở **tệp section riêng**:
             // `SettingsSectionsNav` đã 409 dòng, và hai khối không liên quan nhau (một bên là cấu hình cụm đọc
             // `bridge`, một bên là dữ liệu của hồ sơ đi qua `deps`).
@@ -134,19 +120,8 @@ class SettingsCatalogControlContractTest {
             // `SettingsSectionsNav` đã 425 dòng, và hai khối không liên quan nhau.
             "nav_automation" to ("SettingsSectionsAutomation" to "bridge.setNavRules("),
             // ── 6 · Chiếu màn lên cụm ──
-            "cast_enabled" to ("SettingsSectionsCast" to "bridge.setCastEnabled("),
             // UX-OVERHAUL WP6 · R6.1 — công tắc HIỆN nút nổi; dấu vết là lời gọi ghi cờ (hành vi), không phải nhãn.
-            "cast_bubble" to ("SettingsSectionsCast" to "bridge.setCastBubbleVisible("),
-            "cast_split" to ("SettingsSectionsCast" to "bridge.setSplitPct("),
             // 2.89 · B1b — Bo tròn / Chữ nhật; tệp RIÊNG (trần 500 dòng của `SettingsSectionsCast`), dựng trong nhóm Chiếu cụm.
-            "cast_style" to ("SettingsSectionsCastStyle" to "bridge.setCastStyle("),
-            "cast_autostart" to ("SettingsSectionsCast" to "bridge.setAutostartFull("),
-            "cast_autostart_pkg" to ("SettingsSectionsCast" to "bridge.setAutostartPkg("),
-            "cast_autostart_split" to ("SettingsSectionsCast" to "bridge.setAutostartSplit("),
-            "cast_autostart_left" to ("SettingsSectionsCast" to "bridge.setAutostartLeftPkg("),
-            "cast_autostart_right" to ("SettingsSectionsCast" to "bridge.setAutostartRightPkg("),
-            "cast_actions" to ("SettingsSectionsCast" to "bridge.castFull("),
-            "cast_rescue" to ("SettingsSectionsCast" to "bridge.deepRescue("),
             // ── 7 · Phím vô-lăng ──
             "keys_enabled" to ("SettingsSectionsKeys" to "bridge.setVoiceKeyEnabled("),
             "keys_bindings" to ("SettingsSectionsKeys" to "bridge.bindings()"),
@@ -154,15 +129,8 @@ class SettingsCatalogControlContractTest {
             "keys_learn" to ("SettingsSectionsKeys" to "bridge.startLearn"),
             "keys_check" to ("SettingsSectionsKeys" to "bridge.checkFix"),
             // ── 8 · Tiện nghi xe ──
-            "car_recirc_on_start" to ("SettingsSectionsCar" to "bridge.setRecircOnStart("),
-            "car_seat_enabled" to ("SettingsSectionsCar" to "bridge.setSeatEnabled("),
-            "car_seat_mode" to ("SettingsSectionsCar" to "bridge.setSeatMode("),
-            "car_seat_levels" to ("SettingsSectionsCar" to "bridge.setSeatLevel("),
-            "car_pm25" to ("SettingsSectionsCar" to "bridge.setPm25Enabled("),
-            "car_pm25_clean" to ("SettingsSectionsCar" to "bridge.pm25CleanNow()"),
             // AUTOMATION #1 (1.85) — "Tự sấy kính khi mưa", cùng tệp nhóm Tiện nghi xe. kachi-automation V8: dấu
             // vết là lời GHI của hai hàng độc lập (`setRainDefrostGlass(`) — công tắc chính một-tham-số đã gỡ.
-            "car_rain_defrost" to ("SettingsSectionsCar" to "bridge.setRainDefrostGlass("),
             // ── 9 · Hệ thống & quyền ──
             "system_permissions" to ("SettingsSections" to "rows.permissionRow("),
             "system_autostart" to ("SettingsSections" to "deps.onAutostart("),
@@ -203,7 +171,6 @@ class SettingsCatalogControlContractTest {
             "system_default_home" to ("SettingsSections" to "deps.bridge.setDefaultHome"),
             "system_keep_home_on_boot" to ("SettingsSections" to "deps.bridge.setKeepHomeOnBoot("),
             "system_update" to ("SettingsSections" to "deps.bridge.checkUpdate"),
-            "system_nav_stop" to ("SettingsSections" to "deps.bridge.navStop()"),
             // ⚠ `system_vietmap_data` + `system_diagnostics` đã rời cả DANH MỤC lẫn bảng này (owner 2026-09-21, bản
             // release production): hai nút ấy gỡ khỏi Cài đặt cùng mọi bề mặt dev. Giữ dòng canh cho một mã đã bỏ
             // là để bài này canh một thứ không còn — chính ca "bài canh rữa" mà hai phép `assertEquals` dưới đây
@@ -220,12 +187,9 @@ class SettingsCatalogControlContractTest {
             "SettingsSections" to sections,
             "SettingsSectionsHome" to home,
             "SettingsSectionsBars" to bars,
-            "SettingsSectionsNav" to nav,
-            "SettingsSectionsCast" to cast,
-            "SettingsSectionsCastStyle" to code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsCastStyle.kt"),
+            "SettingsSectionsNavApp" to code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsNavApp.kt"),
             "SettingsBarScaleSection" to code("src/main/java/com/byd/clusternav/launcher/SettingsBarScaleSection.kt"),
             "SettingsSectionsKeys" to keys,
-            "SettingsSectionsCar" to car,
             "SettingsSectionsPlaces" to places,
             "SettingsSectionsAutomation" to automation,
             "VoiceModelSettings" to voice,
@@ -250,9 +214,10 @@ class SettingsCatalogControlContractTest {
             emptyList<String>(), missing.sorted(),
             "mục của danh mục không tìm thấy control tương ứng trong tệp section của nhóm nó: $missing",
         )
-        // Chốt chống bảng rỗng: 11 nhóm phải có mặt đủ, không nhóm nào lọt qua vì bảng chỉ khai vài mục.
+        // Chốt chống bảng rỗng: 9 nhóm phải có mặt đủ, không nhóm nào lọt qua vì bảng chỉ khai vài mục.
+        // Android box B2 · W1: 11 → 9 (CAST + CAR gỡ). Mục chỉ-BYD rời bảng cùng danh mục (chiều 2 của bài này đòi vậy).
         assertEquals(
-            11, SettingsGroup.values().size,
+            9, SettingsGroup.values().size,
             "IA v2 §4.1 + VOICE (owner 2026-09-21) — đổi số nhóm là đổi cả bản đồ cài đặt, phải sửa cả bảng trên",
         )
     }

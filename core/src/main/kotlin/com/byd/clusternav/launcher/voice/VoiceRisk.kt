@@ -139,6 +139,13 @@ object VoiceRiskTable {
             listOf(ID_PROFILE, ID_MEDIA_QUERY)   // owner 2026-09-24: bỏ ID_NAV_QUERY (nav không hỏi nữa)
 
     /**
+     * Android box B2 · W1 — mã HIỆN ở mục Cài đặt *"Hỏi xác nhận trước khi chạy"*: [askableIds] trừ nút xe ([PREFIX_CONTROL])
+     * và gói lệnh xe ([PREFIX_MACRO]) — Android box không có nút xe BYD. Mã đã lưu thì không đụng (tập vẫn ghi nguyên vẹn).
+     */
+    fun launcherAskableIds(): List<String> =
+        askableIds().filterNot { it.startsWith(PREFIX_CONTROL) || it.startsWith(PREFIX_MACRO) }
+
+    /**
      * ═══ V3 · R7 — MẶC ĐỊNH **KHÔNG HỎI GÌ CẢ** ═════════════════════════════════════════════════════════════
      *
      * ## ⚠⚠ Đổi hành vi 2026-09-16 — owner chốt, và đây là lý do

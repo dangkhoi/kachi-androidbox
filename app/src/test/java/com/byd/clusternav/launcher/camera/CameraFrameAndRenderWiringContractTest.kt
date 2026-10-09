@@ -158,7 +158,7 @@ class CameraFrameAndRenderWiringContractTest {
             assertTrue("\"$it\"" !in vi && "\"$it\"" !in en, "chữ $it mồ côi — hàng của nó đã gỡ")
         }
         // Đường chẩn đoán KHÔNG được mất cùng UI (CLAUDE.md §15 bước 2/3).
-        assertTrue("camera_render" in TestBridgeCommands.WRITABLE_PREFS_KEYS, "`camera_render` phải còn ghi được qua prefs_set")
+        assertTrue("camera_render" !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "Android box B2 · W1: `camera_render` rời danh sách trắng")
     }
 
     /** Pref `camera_render`: đọc lạ ⇒ mặc định `:core`; đảo được qua `prefs_set` (đo hai đường trên xe đang chạy). */
@@ -168,7 +168,7 @@ class CameraFrameAndRenderWiringContractTest {
         assertTrue("CameraDefaults.of(ctx).render" in body, "mặc định lấy từ hồ sơ xe, không chép chuỗi")
         assertTrue("CameraSignalPolicy.isRender(raw)" in body, "giá trị lạ trên đĩa ⇒ rơi về mặc định")
         assertTrue("\"camera_render\"" in prefs)
-        assertTrue("camera_render" in TestBridgeCommands.WRITABLE_PREFS_KEYS, "đo hai đường trên xe cần prefs_set camera_render")
+        assertTrue("camera_render" !in TestBridgeCommands.WRITABLE_PREFS_KEYS, "Android box B2 · W1: camera_render rời danh sách trắng")
         assertTrue("\"camera_render\" ->" in prefsSet, "prefs_set phải có nhánh ghi")
         assertTrue("CameraSignalPolicy.isRender(it)" in prefsSet, "prefs_set chỉ nhận mã hợp lệ")
         assertTrue("\"camera_render\" -> Prefs.cameraRender(app)" in prefsSet, "read_back phải đọc lại từ nơi lưu bền")

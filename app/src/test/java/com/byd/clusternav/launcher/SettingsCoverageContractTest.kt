@@ -211,10 +211,9 @@ class SettingsCoverageContractTest {
         val src = SourceRoots.codeOf("src/main/java/com/byd/clusternav/Prefs.kt")
         val real = Regex("""K_RECIRC_ON_START\s*=\s*"([^"]+)"""").find(src)?.groupValues?.get(1)
         assertNotNull(real, "không đọc được hằng K_RECIRC_ON_START — bài test đang quét vùng không tồn tại")
-        assertEquals(
-            SettingsGroup.CAR, SettingsCatalog.groupOf(real!!),
-            "khoá lấy gió trong ('$real') phải thuộc nhóm Tiện nghi xe",
-        )
+        // Android box B2 · W1 — nhóm Tiện nghi xe gỡ: khoá THẬT phải nằm ở bảng "đã rời UI" (còn theo hồ sơ), không còn chủ.
+        assertNull(SettingsCatalog.groupOf(real!!), "khoá lấy gió trong ('$real') đã rời UI ở Android box")
+        assertTrue(real in SettingsCatalog.RETIRED_UI_KEYS, "khoá lấy gió trong ('$real') phải khai đúng tên ở RETIRED_UI_KEYS")
         assertNull(
             SettingsCatalog.groupOf("recirc_on_start"),
             "tên trong spec §2 bị thiếu hậu tố _enabled — danh mục không được dùng tên đó",

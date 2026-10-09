@@ -41,14 +41,18 @@ class NlsHealWiringContractTest {
     // ── S1: hai lối vào tự động ─────────────────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `chuoi SAN goi NlsHeal sau cong man sang va truoc chuyen len xe`() {
-        order(body(early, "private fun readyChain("), "WakeEpochPolicy.shouldRun(prev, epoch, ShellReadiness.isUp(), interactive(app))", "NlsHeal.onReady(app)", "TripStart.onReady(app)")
+    fun `chuoi SAN KHONG con goi NlsHeal - Android box W1`() {
+        // Android box B2 · W1 — chữa nguồn HUD kính lái BYD gỡ khỏi lượt SẴN; chuyến lên xe vẫn là bước cuối.
+        assertTrue("NlsHeal.onReady(" !in body(early, "private fun readyChain("))
+        order(body(early, "private fun readyChain("), "WakeEpochPolicy.shouldRun(prev, epoch, ShellReadiness.isUp(), interactive(app))", "TripStart.onReady(app)")
     }
 
     @Test
-    fun `nhip watchdog 60 s goi NlsHeal chi voi ACTION_WATCHDOG`() {
+    fun `nhip watchdog 60 s KHONG con goi NlsHeal - Android box W1`() {
+        // Android box B2 · W1 — nhịp watchdog chỉ còn chữa trợ năng (phím vật lý); `NlsHeal.onWatchdog` gỡ.
         val b = body(rebind, "override fun onReceive(")
-        assertTrue(Regex("""if\s*\(action == ACTION_WATCHDOG\)\s*NlsHeal\.onWatchdog\(context\)""").containsMatchIn(b), b)
+        assertTrue("NlsHeal.onWatchdog(" !in b, b)
+        assertTrue("AccessibilityHealGates.alarmShouldHeal(" in b, "watchdog trợ năng phải còn")
     }
 
     @Test
@@ -131,7 +135,7 @@ class NlsHealWiringContractTest {
             root.toFile().walkTopDown().filter { it.isFile && it.extension == "kt" }.map { it.name to it.readText() }.toList()
         }
         mapOf(
-            "NlsHeal.onReady(" to "NlsHeal.kt", "NlsHeal.onWatchdog(" to "NlsHeal.kt",
+            // Android box B2 · W1: `NlsHeal.onReady(` · `NlsHeal.onWatchdog(` không còn chỗ gọi (lối vào đã cắt — hai bài trên).
             "NlsHeal.userEnsure(" to "NlsHeal.kt", "NlsHeal.userReconnect(" to "NlsHeal.kt",
             "NlsHeal.readForSettings(" to "NlsHeal.kt", "NlsHealShell.run(" to "NlsHealShell.kt",
             "NlsHealShell.read(" to "NlsHealShell.kt", "NlsLiveDump.verdict(" to "NlsLiveDump.kt",

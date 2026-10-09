@@ -52,30 +52,26 @@ enum class SettingsGroup(
     DISPLAY(
         // 2.93 · SETTINGS-DISPLAY-SUBTITLE — câu phụ kể ĐỦ năm mục của trang (màu · độ trong suốt nền · cỡ thanh nút
         // vào nhóm này từ 2.87–2.89 mà câu cũ chỉ nói đơn vị, sáng/tối, ngôn ngữ). Bài: `SettingsDisplaySubtitleTest`.
-        "display", "Hiển thị & đơn vị", "Đơn vị, sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ",
-        "Display & units", "Units, light/dark, colours, transparency, bar size, language",
+        // Android box B2 · W1 — mục Đơn vị (chỉ cho dữ liệu xe) gỡ ⇒ nhãn + câu phụ không còn hứa "đơn vị".
+        "display", "Hiển thị", "Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ",
+        "Display", "Theme light/dark, colours, transparency, bar size, language",
     ),
     PROFILES(
         "profiles", "Hồ sơ tài xế", "Mỗi hồ sơ giữ bố cục riêng",
         "Driver profiles", "Each profile keeps its own layout",
     ),
+    // Android box B2 · W1 — dẫn đường lên cụm/HUD, biển báo, bong bóng VietMap gỡ; còn Sổ địa chỉ, app mặc định, lịch tự dẫn.
+    // Nhóm CAST (chiếu màn lên cụm) gỡ hẳn — phần chỉ-BYD (docs/specs/androidbox-plan.html §4.1).
     NAV(
-        "nav", "Dẫn đường & cụm đồng hồ", "Chỉ đường, biển báo và bong bóng",
-        "Navigation & cluster", "Turn-by-turn, speed badge and bubble",
-    ),
-    CAST(
-        "cast", "Chiếu màn lên cụm", "Đưa app lên cụm, chia đôi, tự chiếu",
-        "Cluster cast", "Apps on the cluster, split view, autostart",
+        "nav", "Dẫn đường", "Sổ địa chỉ, app mặc định, lịch tự dẫn",
+        "Navigation", "Address book, default app, scheduled navigation",
     ),
     KEYS(
-        // FIX286 · R-KC — phím nay gán được cả MỌI nút xe (KeyCtlTargets), không chỉ app/trợ lý.
-        "keys", "Phím vô-lăng", "Gán nút vật lý cho app, trợ lý hoặc nút xe",
-        "Steering-wheel keys", "Bind physical buttons to apps or car controls",
+        // Android box B2 · W1 — đích nút xe (`ctl:`) / camera (`cam:`) gỡ khỏi bộ chọn ⇒ còn app + trợ lý.
+        "keys", "Phím vô-lăng", "Gán nút vật lý cho app hoặc trợ lý",
+        "Steering-wheel keys", "Bind physical buttons to apps or the assistant",
     ),
-    CAR(
-        "car", "Tiện nghi xe", "Lấy gió trong, ghế, lọc bụi mịn",
-        "Car comfort", "Recirculation, seats, air purifier",
-    ),
+    // Android box B2 · W1 — nhóm CAR (tiện nghi xe: HAL BYD) gỡ hẳn.
     VOICE(
         "voice", "Giọng nói", "Nói với xe, giọng đọc, Hey Kachi",
         "Voice", "Talk to the car, reply voice, Hey Kachi",

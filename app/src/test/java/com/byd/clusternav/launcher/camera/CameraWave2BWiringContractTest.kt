@@ -74,7 +74,7 @@ class CameraWave2BWiringContractTest {
     /** D6 — đổi hồ sơ: áp cho camera THEO YÊU CẦU đang hiện; camera xi-nhan đang giữ ⇒ để yên (điểm mù khi rẽ). */
     @Test fun `doi ho so ap cho camera theo yeu cau, khong do camera xi nhan`() {
         val all = SourceRoots.body(app("launcher/ClusterNavBridgeReapply.kt"), "internal fun ClusterNavBridge.reapplyAll()")
-        assertTrue("step(\"camera.demand\") { CameraReapply.ifDemandShowing(app) }" in all, "bước áp lại camera của lượt đổi hồ sơ")
+        assertTrue("CameraReapply" !in all, "Android box B2 · W1: lượt đổi hồ sơ không còn áp lại camera BYD")
         val door = SourceRoots.body(reapply, "fun ifDemandShowing(ctx: Context)")
         assertTrue("if (c.cameraSignalCreated) c.cameraSignal.reapplyIfDemandShowing()" in door, "không dựng controller chỉ để áp")
         val fn = SourceRoots.body(controller, "fun reapplyIfDemandShowing()")

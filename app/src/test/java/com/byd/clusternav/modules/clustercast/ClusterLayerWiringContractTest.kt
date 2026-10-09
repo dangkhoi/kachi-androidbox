@@ -53,7 +53,8 @@ class ClusterLayerWiringContractTest {
     fun `giu an - gui lai sau tu mo VietMap, nhip lam tuoi, ap lai ho so, do cum`() {
         assertTrue(code("src/main/java/com/byd/clusternav/VietMapAutostart.kt").contains("VmBubbleVisibility.apply(app, \"sau lượt tự mở VietMap\", force = true)"))
         assertTrue(code("src/main/java/com/byd/clusternav/modules/clustercast/FloatingBubbleService.kt").contains("VmBubbleVisibility.keepHidden(applicationContext)"))
-        assertTrue(code("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeReapply.kt").contains("step(\"bubble.vis\")"))
+        // Android box B2 · W1 — lượt đổi hồ sơ không còn áp lại bóng VietMap (applier chỉ-BYD gỡ khỏi reapplyAll).
+        assertTrue(!code("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeReapply.kt").contains("step(\"bubble.vis\")"))
         val rt = code("src/main/java/com/byd/clusternav/modules/clustercast/simplified/SimpleCastRuntime.kt")
         assertTrue(rt.contains("ClusterOverlayDisplays.publishCastDisplay(id)"), "id cụm sống tới lớp phủ trong tiến trình")
         assertTrue(rt.contains("VmBubbleVisibility.apply(app, \"dò cụm id=\$id\")"))

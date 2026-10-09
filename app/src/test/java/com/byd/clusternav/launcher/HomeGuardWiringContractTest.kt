@@ -20,12 +20,11 @@ class HomeGuardWiringContractTest {
     private val autostart by lazy { SourceRoots.codeOf("src/main/java/com/byd/clusternav/KachiAutostart.kt") }
 
     @Test
-    fun `cai o tien trinh chinh, truoc dong chot cuoi EarlyShellChannel`() {
+    fun `KHONG con cai o tien trinh chinh - Android box W1`() {
+        // Android box B2 · W1 — giành lại HOME từ launcher BYD 5.7.5 là hành vi chỉ của ROM BYD ⇒ không cài nữa (W2f xoá lớp).
         val onCreate = SourceRoots.body(application, "override fun onCreate()")
-        val i = onCreate.indexOf("HomeGuard.install(this)")
-        assertTrue(i >= 0, "HomeGuard phải được cài ở KachiApplication.onCreate")
-        assertTrue(i < onCreate.indexOf("EarlyShellChannel.start(this)"), "đường mới đứng TRƯỚC dòng chốt cuối")
-        assertTrue(i > onCreate.indexOf("isBackgroundVoiceProcess()"), "chỉ tiến trình launcher (sau cổng tiến trình nền)")
+        assertTrue("HomeGuard.install(" !in onCreate, "HomeGuard không được cài trên Android box")
+        assertTrue(onCreate.contains("EarlyShellChannel.start(this)"), "dòng chốt cuối giữ nguyên")
     }
 
     @Test

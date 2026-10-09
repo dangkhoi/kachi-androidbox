@@ -457,11 +457,7 @@ Mở hết kính	Open all	全部打开
 Đóng hết kính	Close all	全部关闭
 Màn hình chính	Home screen	主屏幕
 Thanh trạng thái & thanh nút	Status bar & button bar	顶栏与车控栏
-Hiển thị & đơn vị	Display & units	显示与单位
-Dẫn đường & cụm đồng hồ	Navigation & cluster	导航与仪表
-Chiếu màn lên cụm	Cluster cast	仪表投屏
 Phím vô-lăng	Steering-wheel keys	方向盘按键
-Tiện nghi xe	Car comfort	舒适
 Giọng nói	Voice	语音
 Hệ thống & quyền	System & permissions	系统与权限
 Giới thiệu	About	关于
@@ -470,15 +466,12 @@ Bố cục tự vẽ	Custom layout	自定义布局
 Vẽ bố cục riêng…	Draw your own layout…	绘制自定义布局…
 Tự ẩn nút ⇄	Auto-hide the ⇄ button	自动隐藏 ⇄ 按钮
 Hình nền & trình chiếu	Wallpaper & slideshow	壁纸与轮播
-Chip thanh trạng thái	Status-bar chips	顶栏标签
-Hiện nhãn trên thanh trên	Show chip labels	显示标签文字
 Vị trí trên thanh trên	Status-bar item order	顶栏项目顺序
 Hiện thanh nút xe	Show the car bar	显示车控栏
 Viền đặt thanh nút	Button bar edge	车控栏位置
 Nút trên thanh nút xe	Buttons on the car bar	车控栏按钮
 Vị trí trên thanh nút xe	Car-bar item order	车控栏项目顺序
 Lối tắt ứng dụng	App shortcuts	应用快捷方式
-Đơn vị hiển thị	Display units	显示单位
 Giao diện sáng/tối	Light / dark theme	浅色/深色主题
 Màu sắc	Colours	颜色
 Ngôn ngữ	Language	语言
@@ -489,42 +482,13 @@ Hồ sơ lúc nổ máy	Profile on engine start	上电时使用的档案
 Thêm hồ sơ (bản sao)	Add profile (a copy)	添加档案（复制当前）
 Sổ địa chỉ	Address book	地址簿
 Thêm địa chỉ…	Add an address…	添加地址…
-Dẫn đường lên cụm	Navigation on the cluster	在仪表上显示导航
-Chế độ hiện trên cụm	Cluster display mode	仪表显示模式
-Chạy chữ tên đường	Scroll long street names	滚动显示长路名
 App dẫn đường mặc định	Default navigation app	默认导航应用
 Tự dẫn đường theo lịch	Scheduled navigation	定时导航
-Kết nối lại nguồn dẫn đường	Reconnect the navigation source	重新连接导航来源
-Biển báo tốc độ	Speed limit badge	限速标志
-Giới hạn sắp tới	Upcoming limit	前方限速
-Chip cảnh báo camera	Camera alert chip	电子眼提醒标签
-Cỡ biển báo	Badge size	标志大小
-Vị trí biển báo	Badge position	标志位置
-Bong bóng VietMap	VietMap bubble	VietMap气泡
-Vị trí bong bóng	Bubble position	气泡位置
-Bật chiếu màn	Enable casting	启用投屏
-Hiện nút nổi chiếu cụm	Show the floating cast button	显示悬浮投屏按钮
-Tỉ lệ chia đôi	Split ratio	分屏比例
-Kiểu chiếu cụm	Cluster cast style	仪表投屏样式
-Tự chiếu khi nổ máy	Autostart on engine start	上电自动投屏
-App tự chiếu toàn màn	Full-screen autostart app	自动整屏投屏的应用
-Tự chiếu chia đôi	Autostart split view	自动分屏投屏
-App bên trái	Left-hand app	左侧应用
-App bên phải	Right-hand app	右侧应用
-Chiếu ngay: toàn màn, trái, phải, dừng	Cast now: full, left, right, stop	立即投屏：整屏、左侧、右侧、停止
-Cứu hộ cụm	Cluster rescue	仪表应急恢复
 Nhận nút vật lý	Listen to physical buttons	监听实体按键
 Danh sách gán nút	Button bindings	按键绑定
 Nút tự học thêm	Self-learned buttons	已学习按键
 Học phím mới	Learn a new key	学习新按键
 Kiểm tra và sửa ngay	Check and fix now	立即检查并修复
-Tự lấy gió trong khi nổ máy	Recirculation on engine start	上电自动内循环
-Ghế mát/sưởi tự động	Automatic seat cooling / heating	座椅自动通风/加热
-Chế độ ghế: mát hay sưởi	Seat mode: cool or heat	座椅模式：通风或加热
-Mức từng ghế	Level per seat	各座椅挡位
-Tự lọc bụi mịn	Automatic air purifier	自动空气净化
-Lọc ngay một lượt	Purify now	立即净化
-Tự sấy kính khi mưa	Auto-defrost when it rains	雨天自动除霜
 "Hey Kachi" gọi bằng giọng	"Hey Kachi" wake word	“Hey Kachi”唤醒词
 Đọc phản hồi bằng giọng	Speak replies out loud	语音播报回复
 Ưu tiên giọng offline	Prefer the offline voice	优先使用离线语音
@@ -541,7 +505,6 @@ Chạy dịch vụ nền khi nổ máy	Run background service on engine start	�
 Mở app khi nổ máy	Open apps at ignition	上电时打开应用
 Giữ Kachi làm màn hình chính khi nổ máy	Keep Kachi as home screen on engine start	上电时保持Kachi为主屏幕
 Kiểm tra cập nhật	Check for updates	检查更新
-Dừng toàn bộ dẫn đường	Stop all navigation	停止所有导航
 Chế độ kiểm thử qua adb	ADB test mode	ADB测试模式
 Phiên bản và giấy phép	Version and licence	版本与许可证
 Miễn trừ trách nhiệm	Disclaimer	免责声明
@@ -645,12 +608,7 @@ sức khoẻ pin, điện áp ắc-quy	battery health, auxiliary battery voltage
 quãng đường, thời gian, điện tiêu thụ, odo	distance, time, energy used, odometer	里程、时间、电耗、总里程
 Bố cục và hình nền	Layout and wallpaper	布局和壁纸
 Chip trên đỉnh và thanh nút xe	Top chips and the car button bar	顶栏标签和车控栏
-Đơn vị, sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Units, light/dark, colours, transparency, bar size, language	单位、浅色/深色、颜色、透明度、车控栏大小、语言
 Mỗi hồ sơ giữ bố cục riêng	Each profile keeps its own layout	每个档案保存各自的布局
-Chỉ đường, biển báo và bong bóng	Turn-by-turn, speed badge and bubble	逐向导航、限速标志和气泡
-Đưa app lên cụm, chia đôi, tự chiếu	Apps on the cluster, split view, autostart	应用投屏到仪表、分屏、自动投屏
-Gán nút vật lý cho app, trợ lý hoặc nút xe	Bind physical buttons to apps or car controls	将实体按键绑定到应用或车控功能
-Lấy gió trong, ghế, lọc bụi mịn	Recirculation, seats, air purifier	内循环、座椅、空气净化
 Nói với xe, giọng đọc, Hey Kachi	Talk to the car, reply voice, Hey Kachi	与车对话、回复语音、Hey Kachi
 Quyền, khởi động, bảo trì, nâng cao	Permissions, startup, maintenance	权限、启动、维护
 Phiên bản, giấy phép và miễn trừ	Version, licence and disclaimer	版本、许可证和免责声明
@@ -820,7 +778,6 @@ ANR: đã đọc (không gửi lệnh ghi nào)	ANR: read (no write command sent
 # B3 DOCK-SCALE (2.89) — mục Cài đặt › Hiển thị "Cỡ thanh nút xe" (khoá dock_scale).
 Cỡ thanh nút xe	Car bar size	车控栏大小
 # 2.91 · F1 — mục Cài đặt › Dẫn đường "Tự mở VietMap cho bong bóng" (khoá vm_bubble_enabled, nghĩa cũ: tự mở VietMap).
-Tự mở VietMap cho bong bóng	Auto-open VietMap for the bubble	为气泡自动打开VietMap
 # 2.91 VOICE-APP-NAMES — dạy tên app bằng giọng (spec docs/specs/kachi-290-voice-app-names.html).
 Tên app đã dạy	Taught app names	已教的应用名称
 Nếu đó là tên app, hãy dạy Kachi trong Cài đặt, Giọng nói	If that is an app name, teach Kachi in Settings, Voice	如果那是应用名称，请在设置、语音中教 Kachi
@@ -847,3 +804,8 @@ Chạm để bật/tắt camera đó; mở camera khác thì thay camera đang m
 Không có camera nào đang mở	No camera is open	没有正在打开的摄像头
 {0} đang không mở	{0} is not open	{0}未打开
 chưa liên lạc được màn hình chính	couldn't reach the home screen	无法连接主屏幕
+# Android box B2 · W1 (2026-10-09) — rail Cài đặt sau khi gỡ nhóm BYD.
+Hiển thị	Display	显示
+Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Theme light/dark, colours, transparency, bar size, language	浅色/深色主题、颜色、透明度、车控栏大小、语言
+Sổ địa chỉ, app mặc định, lịch tự dẫn	Address book, default app, scheduled navigation	地址簿、默认应用、定时导航
+Gán nút vật lý cho app hoặc trợ lý	Bind physical buttons to apps or the assistant	将实体按键绑定到应用或语音助手

@@ -48,8 +48,9 @@ class MainProbeSurfaceAbsenceTest {
             "Intent.ACTION_MY_PACKAGE_REPLACED",
             "rebind(context)",
             "scheduleWatchdog(context)",
-            "castBootWork(context",
         ).forEach { token -> assertTrue(receiver.contains(token), "missing receiver behavior $token") }
+        // Android box B2 · W1 — lượt dựng lại chiếu cụm lúc boot (`castBootWork`) gỡ khỏi receiver.
+        assertTrue(!receiver.contains("castBootWork("), "castBootWork must be gone on Android box")
     }
 
     @Test

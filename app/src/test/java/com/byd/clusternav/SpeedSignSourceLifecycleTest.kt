@@ -106,12 +106,9 @@ class SpeedSignSourceLifecycleTest {
         // R1 (#6, docs/specs/cast-nav-ux-release-v104.html): the nav→HUD output toggle is hidden and
         // force-disabled — there is no user-driven HUD-enable path anymore, so the control feeds a constant
         // `false`. Chỗ ép tắt đó chuyển sang boot-setup cùng lúc màn cũ bị gỡ (chạy mỗi lần nổ máy).
-        assertTrue(boot.contains("onOutputEnabled(SpeedSignOutput.HUD, false)"))
-        // `forcedPrefs` gom ba khoá không-có-nút vào một chỗ để CẢ HAI nhánh boot cùng gọi (xem
-        // `HeadlessAutostartContractTest.ca hai nhanh boot deu ep ba khoa khong co nut`); ở đây chỉ chốt rằng
-        // chuỗi boot-setup có gọi nó, và nó thật sự ép `hud` về false.
-        assertTrue(boot.contains("forcedPrefs(applicationContext)"))
-        assertTrue(boot.contains("Prefs.setHud(ctx, false)"))
+        // Android box B2 · W1 — lượt nổ máy KHÔNG còn chạm đầu ra biển tốc độ / HUD (cùng `forcedPrefs`): phần chỉ-BYD.
+        assertFalse(boot.contains("SpeedSignOutput"), "BootSetupService không còn chạm đầu ra biển tốc độ")
+        assertFalse(boot.contains("forcedPrefs"))
         assertTrue(prefs.contains("fun speedLimitSource(ctx: Context): SpeedLimitSource"))
         // 08-22: nguồn tốc độ KHÔNG còn là lựa chọn — chỉ widget VietMap. Selector + prefs key đã gỡ.
         assertFalse(prefs.contains("fun setSpeedSource"), "setter nguồn tốc độ phải đã gỡ")

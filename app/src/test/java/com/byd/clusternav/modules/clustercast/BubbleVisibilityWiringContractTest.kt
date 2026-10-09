@@ -5,6 +5,7 @@ import com.byd.clusternav.launcher.SettingsGroup
 import com.byd.clusternav.testsupport.SourceRoots
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -59,7 +60,9 @@ class BubbleVisibilityWiringContractTest {
      */
     @Test
     fun `khoa co chu trong danh muc, dung nhom, theo HO SO cung pham vi voi cast_enabled`() {
-        assertEquals(SettingsGroup.CAST, SettingsCatalog.groupOf("cast_bubble_visible"))
+        // Android box B2 · W1 — nhóm Chiếu cụm gỡ khỏi Cài đặt: khoá không còn chủ, còn theo hồ sơ (RETIRED_UI_KEYS).
+        assertNull(SettingsCatalog.groupOf("cast_bubble_visible"))
+        assertTrue("cast_bubble_visible" in SettingsCatalog.RETIRED_UI_KEYS)
         assertEquals("simple_cast_prefs", SettingsCatalog.CLUSTERNAV_KEYS["cast_bubble_visible"])
         val scope = com.byd.clusternav.launcher.ProfileScope
         assertEquals(

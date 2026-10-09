@@ -138,8 +138,8 @@ object A11yLifecycleHeal {
             // tắt máy). Mất lớp 2 thì lớp 1 + nút vẫn còn; ghi lỗi to, không nuốt câm.
             Log.e(TAG, "không đăng ký được bộ thu màn bật — lớp 2 tắt trong tiến trình này", e)
         }
-        TatMayCastHold.arm(interactive, startedAt)   // 2.96 R11 — tự chiếu chờ lớp 1 kết luận (KDoc TatMayCastHoldPlan)
-        submit("khởi động (tương tác=$interactive)") { try { onProcessStart(app, interactive, startedAt) } finally { TatMayCastHold.release() } }
+        // Android box B2 · W1 — gỡ móc `TatMayCastHold` (tự chiếu cụm chờ lớp 1 kết luận): chiếu cụm là phần chỉ-BYD.
+        submit("khởi động (tương tác=$interactive)") { onProcessStart(app, interactive, startedAt) }
         // Đường MỚI xuống CUỐI (CLAUDE.md §6): xếp SAU lớp 1 trên cùng luồng nối tiếp — [onProcessStart] giữ nguyên.
         submit("ân hạn khởi động") { try { onBootGrace(app, interactive, startedAt) } finally { bootGraceBusy.set(false) } }
         if (interactive != true) submit("test-mode") { com.byd.clusternav.launcher.testbridge.TestBridgeStore.closeAfterScreenOffStart(app) }
@@ -367,7 +367,7 @@ object A11yLifecycleHeal {
     // ─── Chung ───────────────────────────────────────────────────────────────────────────────────────────
 
     /**
-     * Đo → chờ → đo lại → KẸT BỀN → (2.93) chờ chiếu cụm yên ([HealCastWait]) → vào ĐÚNG đường leo thang sẵn có
+     * Đo → chờ → đo lại → KẸT BỀN → vào ĐÚNG đường leo thang sẵn có
      * ([NavConnect.escalateOnLifecycle] → `escalateIfStuck` → `AccessibilityRebind.forceStopRebindCommand`). Không tự dựng lệnh nào ở đây.
      *
      * @return `true` = đã thấy KẸT nhưng lượt bị CẮT vì pha qua (chưa kết luận) — chỉ [onBootGrace] dùng (trao lớp 1).
@@ -394,13 +394,11 @@ object A11yLifecycleHeal {
             Log.i(TAG, "$note: kẹt KHÔNG bền (lần 2 bound=${second.bound}, binding=${second.inBinding}) → không leo")
             return false
         }
-        // 2.93 · READY-RESTART-MID-CAST — chiếu cụm đang dở ⇒ chờ trong pha, có trần; wave 2A HEAL-DEFER-GATE-RECHECK — cổng cuối
-        // tắt-máy hỏi LẠI mối nguy, thao tác mới bắt đầu lúc đọc ⇒ chờ + leo lại (KDoc HealCastWait); pha qua ⇒ CẮT như nhánh trên.
-        val r = HealCastWait.escalate(phase, screenOnAt, note, { stillInPhase(app, phase, screenOnAt) }) { gate ->
-            // READY-AT-HOME — dòng `keys=` TRƯỚC khi leo là dòng duy nhất chắc ra kịp (lệnh bắn mở đầu bằng `am force-stop`).
-            KachiReadyLog.keys("STUCK($note)->ESCALATE")
-            NavConnect.escalateOnLifecycle(app, phase) { gate() }
-        } ?: return true
+        // Android box B2 · W1 — gỡ lượt chờ chiếu cụm yên (`HealCastWait`, 2.93 READY-RESTART-MID-CAST): không còn chiếu cụm ⇒
+        // cổng cuối của nấc leo = đúng cổng pha (như `HealCastDeferral.escalate` khi không có mối nguy).
+        // READY-AT-HOME — dòng `keys=` TRƯỚC khi leo là dòng duy nhất chắc ra kịp (lệnh bắn mở đầu bằng `am force-stop`).
+        KachiReadyLog.keys("STUCK($note)->ESCALATE")
+        val r = NavConnect.escalateOnLifecycle(app, phase) { stillInPhase(app, phase, screenOnAt) }
         KachiReadyLog.keys("STUCK($note)->$r")
         Log.w(TAG, "$note: kẹt BỀN ${second.atElapsed - first.atElapsed} ms → leo thang: $r")
         // Cổng cuối của đường leo nói "pha qua" ⇒ không bắn ⇒ cũng là CẮT (cùng nghĩa với nhánh chờ ở trên).

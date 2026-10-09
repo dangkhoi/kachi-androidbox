@@ -57,7 +57,7 @@ class SettingsSections(
             orientation = LinearLayout.VERTICAL
             setPadding(0, 0, dpi(context, Sp.XS), dpi(context, Sp.L))
         }
-        // ⚠ `when` **tường minh 10 nhánh, KHÔNG `else`**: thêm một nhóm vào `:core` mà quên dựng nội dung thì
+        // ⚠ `when` **tường minh, mỗi nhóm một nhánh, KHÔNG `else`**: thêm một nhóm vào `:core` mà quên dựng nội dung thì
         // **không biên dịch được**. Bản trước có `else -> clusterNav(body)` và [ĐO] nó nuốt gọn ba nhóm mới
         // (nav · cast · keys) — cả ba hiện ra một trang "mở màn ClusterNav" giống hệt nhau mà không gì báo lỗi.
         // Đó chính là "trang trắng im lặng" mà KDoc lớp này nói là phải chặn, chỉ khác màu.
@@ -70,14 +70,14 @@ class SettingsSections(
             // hình cụm sau. Sổ địa chỉ đứng đầu — lý do đầy đủ ở KDoc [SettingsPlacesSection] (nó không phụ thuộc
             // công tắc dẫn đường, và chôn nó dưới ~2,7 màn cuộn là chôn một tính năng dùng hằng ngày). Lịch tự dẫn
             // (1.85) đứng NGAY SAU sổ vì một luật **không dựng được** khi sổ còn trống: nó chọn điểm đến TỪ sổ.
+            // Android box B2 · W1: khối cấu hình cụm/HUD/biển báo/bong bóng (`SettingsNavSection`) gỡ khỏi trang; còn lại hàng
+            // app dẫn đường mặc định ([SettingsNavAppSection]). Nhóm Chiếu màn lên cụm + Tiện nghi xe gỡ hẳn khỏi `:core`.
             SettingsGroup.NAV -> {
                 SettingsPlacesSection(context, rows, deps).build(body)
                 SettingsNavAutomationSection(context, rows, deps).build(body)
-                SettingsNavSection(context, rows, deps).build(body)
+                SettingsNavAppSection(context, rows, deps).build(body)
             }
-            SettingsGroup.CAST -> SettingsCastSection(context, rows, deps).build(body)
             SettingsGroup.KEYS -> SettingsKeysSection(context, rows, deps).also { keysSection = it }.build(body)
-            SettingsGroup.CAR -> SettingsCarSection(context, rows, deps).build(body)
             SettingsGroup.VOICE -> SettingsVoiceSection(context, rows, deps).build(body)
             SettingsGroup.SYSTEM -> system(body)
             SettingsGroup.ABOUT -> about(body)
@@ -107,14 +107,7 @@ class SettingsSections(
      * kiểm được off-car và không phụ thuộc firmware. Câu chữ trên màn nói đúng điều đó, không hứa nhiều hơn.
      */
     private fun display(body: LinearLayout) {
-        body.addView(rows.sectionLabel(context.getString(R.string.kachi_sec_units)))
-        var units = deps.state().unitPrefs
-        UnitFormat.quantitiesInUse().forEach { q ->
-            body.addView(rows.unitRow(q, units.unitFor(q)) { code ->
-                units = units.with(q, code)
-                deps.onUnitPrefs(units)
-            })
-        }
+        // Android box B2 · W1 — khối Đơn vị (7 loại đại lượng của dữ liệu xe BYD) gỡ khỏi trang.
         body.addView(rows.sectionLabel(context.getString(R.string.kachi_sec_theme)))
         body.addView(rows.chipRow(
             label = context.getString(R.string.kachi_row_palette),
@@ -293,7 +286,7 @@ class SettingsSections(
         val update = rows.button(context.getString(R.string.kachi_check_update)) {} as TextView
         update.setOnClickListener { deps.bridge.checkUpdate { text -> update.text = text } }
         body.addView(update)
-        body.addView(rows.button(context.getString(R.string.kachi_nav_stop)) { deps.bridge.navStop() })
+        // Android box B2 · W1 — nút "Dừng toàn bộ dẫn đường" (đầu ra cụm/HUD BYD) gỡ.
         // Nút khởi động lại launcher (owner 2026-09-25): khi có lỗi (bind rớt / cụm kẹt / overlay treo) → restart
         // process Kachi cho về trạng thái sạch, khỏi phải tắt máy. Giết process → hệ thống tự mở lại (Kachi là HOME).
         body.addView(rows.button(context.getString(R.string.kachi_restart_launcher)) { deps.bridge.restartLauncher() })

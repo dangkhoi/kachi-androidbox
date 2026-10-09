@@ -53,9 +53,11 @@ class AppPrereqsWiringContractTest {
     // ── Ba lối vào, MỘT hàm quyết ──────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `chuoi SAN goi AppPrereqs sau cong man sang va truoc chuyen len xe`() {
-        order(SourceRoots.body(early, "private fun readyChain("), "WakeEpochPolicy.shouldRun(prev, epoch, ShellReadiness.isUp(), interactive(app))", "AppPrereqs.onReady(app)", "TripStart.onReady(app)")
-        assertEquals(1, Regex(Regex.escape("AppPrereqs.onReady(")).findAll(early).count())
+    fun `chuoi SAN KHONG con goi AppPrereqs - Android box W1`() {
+        // Android box B2 · W1 — điều kiện nền (miễn pin · vẽ nổi) chỉ phục vụ VietMap + app chiếu cụm ⇒ lượt SẴN không gọi nữa;
+        // chuyến lên xe vẫn là bước cuối của chuỗi. W2c xoá `AppPrereqs` cùng bài này.
+        assertEquals(0, Regex(Regex.escape("AppPrereqs.onReady(")).findAll(early).count())
+        order(SourceRoots.body(early, "private fun readyChain("), "WakeEpochPolicy.shouldRun(prev, epoch, ShellReadiness.isUp(), interactive(app))", "TripStart.onReady(app)")
     }
 
     @Test
@@ -228,7 +230,7 @@ class AppPrereqsWiringContractTest {
     @Test
     fun `ham moi deu co cho goi`() {
         mapOf(
-            "AppPrereqs.onReady(" to "EarlyShellChannel.kt",
+            // Android box B2 · W1: `AppPrereqs.onReady(` không còn chỗ gọi (lối vào đã cắt — xem bài chuỗi SẴN ở trên).
             "AppPrereqs.ensure(" to "VietMapAutostart.kt",
             "AppPrereqs.ensureForCastOpen(" to "SimpleCastRuntime.kt",
             "AppPrereqs.diagnose(" to "DiagActivity.kt",

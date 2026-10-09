@@ -61,9 +61,8 @@ class SunroofFix286WiringContractTest {
     @Test
     fun `cau ctllog di cua khong-can-man-chinh va CHI DOC`() {
         val noHome = code("src/main/java/com/byd/clusternav/launcher/testbridge/TestBridgeNoHome.kt")
-        assertTrue(
-            SourceRoots.body(noHome, "fun handle(").contains("TestBridgeCommands.CTLLOG -> TestBridgeCtlLog.run(app, cmd, reply)"),
-        )
+        // Android box B2 · W1 — `ctllog` (nhật ký lệnh ghi xe BYD) rời cầu; thân đọc dưới đây mồ côi, vẫn phải CHỈ ĐỌC tới W3.
+        assertFalse(SourceRoots.body(noHome, "fun handle(").contains("TestBridgeCommands.CTLLOG ->"), "ctllog đã gỡ khỏi cầu")
         val run = SourceRoots.body(code("src/main/java/com/byd/clusternav/launcher/testbridge/TestBridgeCtlLog.kt"), "fun run(")
         assertTrue(run.contains("CtlJournalStore.read(app)"), "đọc qua đúng hàm có khoá")
         listOf("append(", "record(", "edit()", "Prefs.set").forEach {

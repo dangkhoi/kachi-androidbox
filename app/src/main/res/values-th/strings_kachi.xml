@@ -64,7 +64,6 @@
     <string name="kachi_slot_needs_access">ต้องการสิทธิ์</string>
     <string name="kachi_slot_no_channel">ไม่มีช่องทางควบคุม</string>
     <string name="kachi_access_feature_blocked">ต้องมีสิทธิ์ควบคุมหน้าต่าง — เปิดหน้าจอหลักเพื่ออนุญาต</string>
-    <string name="kachi_sec_units">หน่วยที่แสดง</string>
     <string name="kachi_sec_theme">ธีมสว่าง / มืด</string>
     <string name="kachi_row_palette">ชุดสี</string>
     <string name="kachi_theme_note">“อัตโนมัติ” คือโหมดมืดตั้งแต่ 18:00 ถึง 06:00 การเปลี่ยนชุดสีจะมีผลทันทีโดยไม่สร้างหน้าจอใหม่ แอปในช่องยังทำงานต่อ</string>
@@ -486,9 +485,6 @@
     <string name="kachi_keys_add">เพิ่มการกำหนดปุ่ม…</string>
     <string name="kachi_keys_pick_button">ขั้นที่ 1 — เลือกปุ่ม</string>
     <string name="kachi_keys_pick_target">ขั้นที่ 3 — เลือกแอป / ผู้ช่วย</string>
-    <string name="kachi_keys_pick_kind">ขั้นที่ 2 — ปุ่มนี้ทำอะไร</string>
-    <string name="kachi_keys_kind_apps">เปิดแอป · ผู้ช่วย</string>
-    <string name="kachi_keys_pick_action">ขั้นที่ 3 — %1$s: เลือกการทำงาน</string>
     <string name="kachi_keys_no_buttons">ยังไม่มีปุ่มให้กำหนด</string>
     <string name="kachi_keys_no_targets">ยังไม่มีแอปในเครื่องนี้ที่เปิดจากปุ่มได้</string>
     <string name="kachi_sub_keys_custom">ปุ่มที่เรียนรู้เอง</string>
@@ -538,13 +534,12 @@
     <string name="kachi_pm25_middle">ปานกลาง</string>
     <string name="kachi_pm25_heavy">หนัก</string>
     <string name="kachi_pm25_serious">รุนแรง</string>
-    <string name="kachi_headless_title">เรียกใช้บริการการนำทาง/หน้าปัดเบื้องหลังเมื่อสตาร์ทรถ</string>
+    <string name="kachi_headless_title">เรียกใช้บริการเบื้องหลังเมื่อสตาร์ทรถ (ปุ่มกายภาพ · การนำทางตามเวลา)</string>
     <string name="kachi_headless_sub">“ต่างจาก” แถวด้านบน: แถวนั้นเปิดหน้าจอ Kachi ส่วนแถวนี้เริ่มเฉพาะบริการโดยไม่เปิดหน้าจอใด</string>
     <string name="kachi_sub_maint">การบำรุงรักษา</string>
     <string name="kachi_auto_update_title">อัปเดตอัตโนมัติ</string>
     <string name="kachi_auto_update_sub">ตรวจหาเวอร์ชันใหม่ทุกครั้งที่เปิด Kachi หากมีจะถามก่อนดาวน์โหลดและติดตั้งทับ ไม่แจ้งอะไรหากเป็นเวอร์ชันล่าสุดแล้ว</string>
     <string name="kachi_check_update">ตรวจหาอัปเดต</string>
-    <string name="kachi_nav_stop">หยุดการนำทางทั้งหมด</string>
     <string name="kachi_restart_launcher">รีสตาร์ทลันเชอร์</string>
     <string name="kachi_sub_advanced">ขั้นสูง</string>
     <string name="kachi_test_bridge_title">โหมดทดสอบผ่าน ADB</string>
@@ -635,8 +630,6 @@
     <string name="kachi_voice_wav_failed">เรียกใช้ไม่ได้: %1$s</string>
     <string name="kachi_voice_wav_where">วางไฟล์ kachi-voice-test.wav (16 kHz · โมโน · PCM 16-bit) ไว้ในตำแหน่งใดตำแหน่งหนึ่งต่อไปนี้: %1$s</string>
     <string name="kachi_pill_voice">คุยกับรถ</string>
-    <string name="kachi_top_strip_labels_title">แสดงชื่อบนชิป</string>
-    <string name="kachi_top_strip_labels_sub">เมื่อปิด จะเหลือเพียงไอคอนและตัวเลข — แถบมีพื้นที่มากขึ้น</string>
     <string name="kachi_voice_confirm_sec">ถามก่อนดำเนินการ</string>
     <string name="kachi_voice_confirm_note">โดยค่าเริ่มต้น Kachi จะดำเนินการทันที ยกเว้นการเปิดซันรูฟซึ่งจะถามก่อน เลือกรายการที่ต้องการให้ถามก่อนดำเนินการ</string>
     <string name="kachi_voice_ask_aloud_title">อ่านคำถามยืนยันออกเสียง</string>
@@ -908,8 +901,6 @@
     <string name="kachi_camera_projection_own_row">รูปแบบภาพ</string>
     <string name="kachi_camera_rot_own_row">หมุน</string>
     <string name="kachi_camera_mirror_own_title">กลับด้านวิดีโอ</string>
-    <string name="kachi_keys_kind_camera">กล้องตามสั่ง</string>
-    <string name="kachi_keys_pick_camera">ขั้นที่ 3 — กล้องตัวไหน</string>
     <string name="kachi_key_cam_toggle">%1$s — เปิด/ปิด</string>
     <string name="kachi_key_cam_off">ปิดกล้อง</string>
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->

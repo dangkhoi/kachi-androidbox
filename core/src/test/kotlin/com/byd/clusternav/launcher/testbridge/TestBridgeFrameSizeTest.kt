@@ -15,35 +15,9 @@ class TestBridgeFrameSizeTest {
 
     // ── Lệnh có thật trong bảng ─────────────────────────────────────────────────────────────────
 
-    @Test
-    fun `camera_frame la lenh that, khong doi doi so nao, nhan name tuy chon`() {
-        assertTrue(TestBridgeCommands.CAMERA_FRAME in TestBridgeCommands.NAMES)
-        val spec = TestBridgeCommands.SPECS.first { it.name == TestBridgeCommands.CAMERA_FRAME }
-        assertEquals(emptyList<String>(), spec.required, "chụp một khung không cần đối số nào")
-        assertEquals(listOf(TestBridgeCommands.EXTRA_ARG), spec.optional, "`--es name <W>x<H>` là đối số tuỳ chọn")
-    }
+    // Android box B2 · W1 — `camera_frame` rời bảng lệnh của cầu (bài `TestBridgeCommandTest.lenh chi BYD tra unknown_cmd…`);
+    // hai bài "là lệnh thật / phân tích được" gỡ, các bài của phép thuần `TestBridgeFrameSize` dưới đây giữ tới W2b.
 
-    @Test
-    fun `camera_frame phan tich duoc khong co doi so, va doc duoc name`() {
-        val bare = TestBridgeCommands.parse(
-            mapOf(TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.CAMERA_FRAME),
-            emptySet(),
-        )
-        assertTrue(bare is TestBridgeParse.Ok, "thiếu `name` phải chạy được (⇒ cỡ mặc định), nhận: $bare")
-        assertEquals("", (bare as TestBridgeParse.Ok).cmd.arg)
-
-        val sized = TestBridgeCommands.parse(
-            mapOf(
-                TestBridgeCommands.EXTRA_CMD to TestBridgeCommands.CAMERA_FRAME,
-                TestBridgeCommands.EXTRA_ARG to "1280x720",
-            ),
-            emptySet(),
-        )
-        assertTrue(sized is TestBridgeParse.Ok)
-        assertEquals("1280x720", (sized as TestBridgeParse.Ok).cmd.arg)
-    }
-
-    /** `camera_frame` KHÔNG được trùng tiền tố xử lý với `camera`: hai lệnh, hai nhánh (bẫy `startsWith`). */
     @Test
     fun `camera va camera_frame la hai ma khac nhau`() {
         assertTrue(TestBridgeCommands.CAMERA != TestBridgeCommands.CAMERA_FRAME)

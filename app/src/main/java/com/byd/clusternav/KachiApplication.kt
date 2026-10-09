@@ -6,7 +6,6 @@ import android.util.Log
 import com.byd.clusternav.launcher.KachiLog
 import com.byd.clusternav.system.KachiCrashHandler
 import com.byd.clusternav.system.StrictModeGate
-import com.byd.clusternav.launcher.voice.ControlSentRelay
 import com.byd.clusternav.launcher.voice.PiperTtsService
 import com.byd.clusternav.launcher.voice.VoiceEngine
 import com.byd.clusternav.launcher.voice.VoiceVad
@@ -54,19 +53,12 @@ class KachiApplication : Application() {
         // B1.1 (1.70) — hâm sẵn Silero VAD (0,64 MB ONNX) để bỏ phần nạp ONNX khỏi đường "bấm → mic mở"
         // ([ĐO xe 2026-09-17] 1,5 s lần đầu). Giữ MỘT instance sống, mỗi lượt chỉ reset — xem KDoc VoiceVad.
         VoiceVad.preload(this)
-        // 2.87 · SOÁT vòng 1 · P2 — nhận lượt ghi bảng "lệnh cuối" từ phiên giọng nói `:wake` vào bảng ô + phím của tiến
-        // trình NÀY (chỉ tiến trình chính — sau cổng nền ở trên). Chỉ đăng ký receiver, không I/O, không phụ thuộc gì ở
-        // trên/dưới; đứng TRƯỚC `EarlyShellChannel.start` vì dòng đó được chốt là lời gọi cuối (ReadyAtHomeWiringContractTest).
-        ControlSentRelay.receiveInMain(this)
-        // 2.93 · CAMERA-ON-DEMAND — nhận lệnh camera của phiên giọng nói `:wake` (*"mở camera sau"* qua phím vô-lăng): cùng
-        // khuôn receiver trong gói ngay trên; chỉ đăng ký, không I/O. Đứng TRƯỚC dòng chốt cuối `EarlyShellChannel.start`.
-        com.byd.clusternav.launcher.camera.CameraDemandDispatch.receiveInMain(this)
+        // Android box B2 · W1 — gỡ hai receiver của phiên `:wake` (bảng "lệnh cuối" nút xe `ControlSentRelay` · lệnh camera
+        // `CameraDemandDispatch`): Android box không có nút xe / camera BYD (docs/specs/androidbox-plan.html §4.1).
         // 2.94 · R3 — bên lưu bài YouTube đang phát (để lên xe phát tiếp): chỉ hẹn một lượt nền mỗi 60 s, không I/O ở đây; tự
         // dừng ở cổng sớm nhất khi không gì đang phát / hồ sơ không dùng phát tiếp. Đứng TRƯỚC dòng chốt cuối.
         com.byd.clusternav.launcher.trip.YoutubeResumeSampler.install(this)
-        // 2.96 · R8 — giữ Kachi làm HOME khi người dùng đã chọn ([ĐO xe 07/10] launcher khác giành HOME ~17 s sau khi lên).
-        // Chỉ hẹn một nhịp nền (đọc `resolveActivity`, không shell); tự im khi người dùng không chọn Kachi. TRƯỚC dòng chốt cuối.
-        com.byd.clusternav.launcher.HomeGuard.install(this)
+        // Android box B2 · W1 — `HomeGuard` (giành lại HOME từ launcher BYD 5.7.5) gỡ: hành vi chỉ của ROM BYD.
         // 2.98 · R6-E/G/H — dọn MỘT lần mỗi tiến trình (= mỗi lần nổ máy), luồng nền ưu tiên thấp, trễ 30 s: bộ dọn chẩn
         // đoán · APK OTA đã cài · khoá chiếu của app đã gỡ. Chỉ hẹn một luồng, không I/O ở đây. TRƯỚC dòng chốt cuối.
         com.byd.clusternav.housekeeping.StartupHousekeeping.install(this)

@@ -68,7 +68,7 @@ internal fun KachiHomeActivity.render(state: HomeUiState) {
         // dựng lại thanh (C5: dựng lại mỗi nhịp 1/giây sẽ nháy + mất trạng thái ô vừa bấm).
         dock.setCarStatus(state.carStatus, unitPrefs)
         workspace.setUnitPrefs(unitPrefs)   // R11: ô giữa màn cũng theo lựa chọn đơn vị (tự bỏ qua nếu không đổi)
-        cameraSignal.tick()   // camera theo xi-nhan (tự đọc xi-nhan qua HAL — findings 2026-09-23; pref mặc định TẮT)
+        // Android box B2 · W1 — `cameraSignal.tick()` (camera theo xi-nhan qua HAL helper BYD) gỡ khỏi nhịp vẽ.
     }
     // ⚠ S4 · R7 — KHÔNG còn dải nút bố cục trên thanh trên nên ở đây không còn gì để tô sáng. Ô đang sáng của
     // bố cục sẵn nay chỉ nằm trong Cài đặt › Màn hình chính, và trang đó tự dựng lại khi state đổi.

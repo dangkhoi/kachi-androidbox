@@ -44,7 +44,9 @@ class VoiceConfirmSettings(
         // Đọc MỘT lần lúc dựng trang rồi sửa trên bản sao: mỗi ô tích ghi lại **cả tập**, nên hai ô bấm liền
         // nhau phải cùng nhìn vào một bản. Đọc lại prefs trong từng lambda là để lượt ghi sau xoá lượt trước.
         val picked = deps.bridge.voiceConfirmIds().toMutableSet()
-        VoiceRiskTable.askableIds().forEach { id ->
+        // Android box B2 · W1 — chỉ việc của launcher (đổi hồ sơ · mở bài vừa đọc); id nút xe / gói lệnh xe không còn hàng.
+        // `picked` giữ nguyên mọi id đã lưu (kể cả id xe cũ) nên ghi lại tập không làm mất lựa chọn nào.
+        VoiceRiskTable.launcherAskableIds().forEach { id ->
             val (label, why) = VoiceRiskTable.askableLabel(id) ?: return@forEach
             body.addView(rows.checkRow(on = id in picked, title = label, sub = why) { on ->
                 if (on) picked.add(id) else picked.remove(id)

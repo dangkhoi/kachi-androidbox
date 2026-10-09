@@ -120,7 +120,7 @@ class CameraPerCamPrefsWiringContractTest {
     /** (4) `prefs_set`: đủ 22 khoá mới vào danh sách trắng, một nhánh THEO LOẠI, mỗi loại một phép kiểm `:core`. */
     @Test fun `prefs_set ghi va doc lai du 22 khoa moi, sai mien thi tu choi`() {
         assertEquals(22, CameraCamConfig.NEW_KEYS.size)
-        CameraCamConfig.NEW_KEYS.forEach { assertTrue(it in TestBridgeWritableKeys.ALL, "$it thiếu trong danh sách trắng") }
+        CameraCamConfig.NEW_KEYS.forEach { assertTrue(it !in TestBridgeWritableKeys.ALL, "Android box B2 · W1: $it rời danh sách trắng") }
         assertTrue("fun owns(key: String): Boolean = key in CameraCamConfig.NEW_KEYS" in perCamSet)
         val set = app("launcher/testbridge/TestBridgePrefsSet.kt")
         assertTrue("else -> if (TestBridgePerCam.owns(cmd.key)) TestBridgePerCam.write(app, cmd.key, raw)" in set, "nhánh ghi")

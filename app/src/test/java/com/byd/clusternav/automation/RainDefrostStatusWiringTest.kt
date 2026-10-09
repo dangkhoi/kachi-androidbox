@@ -128,13 +128,9 @@ class RainDefrostStatusWiringTest {
 
     /** R-V8.8 — vòng báo "bắt đầu" TRƯỚC `while` ⇒ nhịp mưa đầu ở lượt thức đầu, không chờ uptime 5′. */
     @Test
-    fun `vong goi loopStarted truoc khi vao vong`() {
-        val loop = SourceRoots.body(service, "private fun startLoop(")
-        val started = loop.indexOf("RainDefrostApplier.loopStarted()")
-        val whileAt = loop.indexOf("while (myGen == generation && anyEnabled(app))")
-        assertTrue(started >= 0 && whileAt >= 0, loop)
-        assertTrue(started < whileAt, "loopStarted() phải chạy TRƯỚC lượt thức đầu")
-        assertEquals(1, Regex("""RainDefrostApplier\.loopStarted\(\)""").findAll(service).count())
+    fun `vong khong con goi loopStarted - Android box W1`() {
+        // Android box B2 · W1 — nhịp mưa gỡ khỏi động cơ (HAL BYD); mã sấy kính mồ côi tới W2e.
+        assertEquals(0, Regex("""RainDefrostApplier\.loopStarted\(\)""").findAll(service).count())
     }
 
     // ══ (2) Chữ THẬT từ tài nguyên — ảnh chữ mẫu mọi ca ══════════════════════════════════════════════════════
