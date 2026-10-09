@@ -1,0 +1,341 @@
+package com.kachi.box.launcher
+
+import androidx.lifecycle.ViewModel
+import com.kachi.box.launcher.trip.TripAppCodec
+import com.kachi.box.launcher.trip.TripConfig
+import com.kachi.box.launcher.trip.TripMusicCodec
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
+
+/**
+ * NGUỒN SỰ THẬT DUY NHẤT cho HOME (Kachi): giữ [HomeUiState] trong một [StateFlow] read-only.
+ * Trạng thái launcher KHÔNG còn nằm trong [WorkspaceView] nữa — view chỉ `render(state)` + phát event lên.
+ *
+ * Luồng MỘT CHIỀU: view/user event → intent (hàm dưới) → cập nhật `_uiState` (immutable copy) + ghi bền qua
+ * [WorkspaceRepository] → `uiState` phát → Activity thu (`repeatOnLifecycle`) → render.
+ *
+ * Kế thừa [androidx.lifecycle.ViewModel] (chuẩn hiện hành: có sẵn `viewModelScope`, sống qua config-change).
+ * Các intent ở đây cập nhật state ĐỒNG BỘ + ghi bền ĐỒNG BỘ (SharedPreferences `apply()` vốn ghi nền) — giữ đúng
+ * hành vi cũ (Activity trước cũng `prefs.save(...)` ngay trên main). Không dùng coroutine cho ghi để test tất định.
+ */
+class HomeViewModel(
+    private val repository: WorkspaceRepository,
+    initialEmbedded: Boolean = false,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(repository.load().copy(embedded = initialEmbedded))
+
+    /** Trạng thái HOME hiện tại — nguồn sự thật duy nhất cho toàn bộ view của launcher. */
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    // ── Intent: workspace (ô + bố cục) ───────────────────────────────────────────
+    // Đổi bố cục ⇒ chỉ số ô đổi nghĩa ⇒ bỏ lớp tạm (R1.6). Mọi đường LƯU dưới đây gỡ lớp tạm của ô bị chạm (§2.2).
+    fun setPreset(preset: LayoutPreset) =
+        mutate { it.copy(workspace = it.workspace.withPreset(preset), overlay = SlotOverlay.EMPTY) }
+
+    fun assignApp(slot: Int, pkg: String) = mutate {
+        it.copy(workspace = it.workspace.withSlot(slot, SlotContent.App(pkg)), overlay = it.overlay.afterSave(listOf(slot), listOf(pkg)))
+    }
+
+    fun assignWidgets(slot: Int, ids: List<String>) = mutate {
+        val content = if (ids.isEmpty()) SlotContent.Empty else SlotContent.Widget(ids)
+        it.copy(workspace = it.workspace.withSlot(slot, content), overlay = it.overlay.afterSave(listOf(slot)))
+    }
+
+    /**
+     * ĐẶT TẠM [pkg] vào ô [slot] (0-based) — đính chính owner 01/10: lối tắt + giọng nói *"mở X vào ô n"* KHÔNG ghi
+     * `slot_n`. Chỉ đổi state (lớp tạm + mốc đổi-tại-chỗ), **không** gọi [persist] — `HomeViewModelTest.placeTemporary doi o dang hien nhung KHONG ghi ben` khoá.
+     * Ô ngoài số ô đang hiện ⇒ `false`, không đổi gì. Ô đang hiện đúng [pkg] ⇒ `true`, không đổi gì.
+     */
+    fun placeTemporary(slot: Int, pkg: String): Boolean {
+        val cur = _uiState.value
+        if (pkg.isBlank() || slot !in 0 until EffectiveLayout.slotCount(cur.workspace.preset, cur.customLayout)) return false
+        if ((cur.effectiveWorkspace.slots.getOrNull(slot) as? SlotContent.App)?.pkg == pkg) return true
+        _uiState.update {
+            it.copy(overlay = it.overlay.place(slot, pkg), swapNonce = it.swapNonce + (slot to nextSwapNonce()))
+        }
+        return true
+    }
+
+    /**
+     * Lượt đặt tạm không thành (app mới không vào được màn ảo — app cũ [shownPkg] vẫn ở đỉnh ô): trả ô về [shownPkg]
+     * mà KHÔNG mở lại gì (host đã nhận lại app đang hiện — `VdAppHost.adoptShown`). Ô LƯU đang là [shownPkg] ⇒ bỏ mục
+     * tạm; khác ⇒ mục tạm = [shownPkg]. Không ghi bền.
+     */
+    fun revertTemporary(slot: Int, shownPkg: String) = _uiState.update {
+        val saved = (it.workspace.slots.getOrNull(slot) as? SlotContent.App)?.pkg
+        val overlay = if (saved == shownPkg) it.overlay.drop(slot) else it.overlay.place(slot, shownPkg)
+        it.copy(overlay = overlay, swapNonce = it.swapNonce + (slot to nextSwapNonce()))
+    }
+
+    /**
+     * L6 · luật hoàn ô — [event] vừa xảy ra ở ô [slot] (app [pkg] chết / bị tắt / ra nền, hoặc widget bị tắt): ô đi đâu,
+     * quyết ở `:core` ([SlotRevertPlan]) từ ĐÚNG hai lớp của state (LƯU vs đang HIỆN). Chỉ ĐỌC — bên gọi làm phần Android
+     * (host thôi giữ app) rồi mới [applySlotRevert]: lượt render nhả host của ô, mà host còn giữ app thì `release()` sẽ
+     * `am force-stop` nó — nên phần Android phải đi TRƯỚC khi state đổi.
+     */
+    fun slotRevert(slot: Int, event: SlotRevertPlan.Event, pkg: String?): SlotRevertPlan.Next {
+        val cur = _uiState.value
+        val saved = cur.workspace.slots.getOrElse(slot) { SlotContent.Empty }
+        return SlotRevertPlan.next(saved, cur.effectiveWorkspace.slots.getOrElse(slot) { SlotContent.Empty }, event, pkg)
+    }
+
+    /**
+     * Áp [next] của [slotRevert] lên lớp TẠM — KHÔNG ghi bền (owner 01/10). Không đặt mốc đổi-tại-chỗ (L8: mọi sự kiện của
+     * bảng đến SAU KHI app đã rời màn ảo ô ⇒ ô dựng lại; host đã thôi giữ app ⇒ nhả ô không `force-stop`). Đọc cả lớp LƯU:
+     * app rời ô không được "về" ô LƯU khác của nó (soát 2.87 · P1 — KDoc [SlotRevertPlan.overlayAfter]).
+     */
+    fun applySlotRevert(slot: Int, next: SlotRevertPlan.Next) = _uiState.update {
+        val overlay = SlotRevertPlan.overlayAfter(it.workspace, it.overlay, slot, next)
+        if (overlay === it.overlay) it else it.copy(overlay = overlay)
+    }
+
+    /** Mốc đổi-tại-chỗ tăng dần — chỉ cần KHÁC lần trước của cùng ô (xem [HomeUiState.swapNonce]). */
+    private var swapCounter = 0L
+    private fun nextSwapNonce(): Long = ++swapCounter
+
+    /**
+     * T4 — đặt một widget Android của app khác vào ô. [content] đã **ràng buộc xong** (có id nền tảng cấp).
+     *
+     * Chỉ ghi state như mọi intent khác; việc **thu hồi id cũ** của ô đó do `AppWidgetSlotHost.reclaim` làm khi thấy
+     * state đổi. Cố ý KHÔNG thu hồi ở đây: ViewModel không được giữ đối tượng Android, và trộn hai việc vào một chỗ
+     * là cách chắc chắn để một trong hai bị quên khi ô đổi nội dung bằng đường khác (kéo-thả, đổi hồ sơ, xoá ô).
+     */
+    fun assignAppWidget(slot: Int, content: SlotContent.AppWidget) =
+        mutate { it.copy(workspace = it.workspace.withSlot(slot, content), overlay = it.overlay.afterSave(listOf(slot))) }
+
+    fun clearSlot(slot: Int) =
+        mutate { it.copy(workspace = it.workspace.clearSlot(slot), overlay = it.overlay.afterSave(listOf(slot))) }
+
+    fun swapSlots(a: Int, b: Int) =
+        mutate { it.copy(workspace = it.workspace.swap(a, b), overlay = it.overlay.afterSave(listOf(a, b))) }
+
+    // ── Intent: dock (thanh điều khiển) ──────────────────────────────────────────
+    /**
+     * Đặt THẲNG một viền — đường DUY NHẤT. Màn Cài đặt → Màn hình chính → "Viền đặt thanh" bày cả 4 viền.
+     *
+     * ⚠ `cycleDockEdge()` (xoay vòng BOTTOM → LEFT → RIGHT → TOP) đã **XOÁ** cùng lúc với pill "Thanh" ở thanh trên:
+     * sau khi gỡ pill nó không còn chỗ gọi nào ⇒ mã chết. Xoay vòng cũng là hình dạng SAI cho bề mặt hiện tại — khi
+     * cả 4 viền đang hiện ra thì bấm "Phải" phải ra "Phải", chứ không phải viền kế tiếp.
+     */
+    fun setDockEdge(edge: DockEdge) = mutate { it.copy(dock = it.dock.withEdge(edge)) }
+
+    /**
+     * Đặt **cả** cấu hình thanh nút một lượt (T6 · R-UI m).
+     *
+     * ⚠ Thay `toggleDock(id, on)` cũ, và đó là một quyết định chứ không phải đổi tên: bộ chọn nút
+     * ([DrawerController.openDockPicker]) trả về một **TẬP** người dùng vừa chốt, nên phép đổi luôn có **cả hai
+     * chiều** — mã bị bỏ tích phải rời thanh. Một cổng "bật/tắt từng mã" không diễn tả được chiều tắt hàng loạt
+     * ⇒ chỗ gọi sẽ viết `selected.forEach { setEnabled(it, true) }` và cấu hình chỉ **lớn lên** (xem KDoc
+     * [DockSelection] — đúng bẫy đó đã có thật ở bản nháp T6).
+     *
+     * Phép gấp TẬP → [DockConfig] nằm ở `:core` ([DockSelection.apply], có test); ViewModel chỉ nhận kết quả.
+     */
+    fun setDockConfig(config: DockConfig) = mutate { it.copy(dock = config) }
+
+    // ── Intent: theme ────────────────────────────────────────────────────────────
+    fun setThemeMode(mode: ThemeMode) = mutate { it.copy(themeMode = mode) }
+
+    /** P1b · R8 — màu nhấn + tông thẻ (theo hồ sơ, đi qua `persist` như chủ đề). Đọc-để-vẽ ở `ThemeHost`. */
+    fun setColorChoice(choice: ColorChoice) = mutate { it.copy(colorChoice = choice) }
+
+    /**
+     * U5·T3 — NGÔN NGỮ. State + lưu bền trong MỘT lượt, cùng khuôn [setAutostart]: khoá này nằm ngoài
+     * bộ khoá theo hồ sơ (chung cả máy) nên không đi qua [mutate]/`persist`.
+     *
+     * Chỉ ghi *lựa chọn*. Việc giải nghĩa ra ngôn ngữ thật (`Strings.current` + locale của `Context`) là của `LangHost`
+     * ở `:app`, gọi từ `attachBaseContext` — tức nó chạy lại **mỗi lần Activity được dựng**, kể cả lượt `recreate()`
+     * sau khi đổi ngôn ngữ. Đặt việc đó ở đây thì `ViewModel` phải biết Android và ngôn ngữ sẽ chỉ đúng ở lượt đổi,
+     * không đúng ở lượt mở app kế tiếp.
+     */
+    fun setLangMode(mode: LangMode) {
+        _uiState.update { it.copy(langMode = mode) }
+        repository.setLangMode(mode)
+    }
+
+    // ── Intent: hồ sơ tài xế (uỷ quyền repository re-scope prefs + nạp lại hồ sơ đó) ──
+    fun switchProfile(name: String) = reload { repository.switchProfile(name) }
+
+    fun addProfile(name: String) = reload { repository.addProfile(name) }
+
+    /** #4 · PROFILE-IO-0930 — chuỗi export kiểu [kind] của hồ sơ đang dùng (wiring ghi ra file). null nếu không xuất được. */
+    fun exportActiveProfile(kind: ProfileTransfer.Kind): String? = repository.exportActiveProfile(kind)
+
+    /**
+     * PROFILE-IO-0930 · IO-R1 — nhập MỘT tệp người dùng vừa chọn (wiring đọc đúng tệp đó). Trả **báo cáo lượt nhập**
+     * (tên hồ sơ vừa tạo + phần chiếu cụm của tệp — FIX286 · PI3, cho hộp thoại), `null` nếu tệp không hợp lệ. Thay
+     * `importProfiles(list)` của #4: nhập mọi tệp mỗi lần bấm ⇒ nhân bản, và toast đếm `list.size` chứ không phải số hồ
+     * sơ vào được. Tên lấy từ nơi lưu (tên THẬT sau khi khử trùng "X 2"), không đoán bằng hiệu hai danh sách.
+     */
+    fun importProfile(data: String): ProfileImportReport? {
+        val next = repository.importProfileData(data) ?: return null
+        reload { next.state }
+        return next.report
+    }
+
+    /**
+     * S4 · R8 — **thêm hồ sơ = BẢN SAO của hồ sơ đang dùng** (owner 2026-09-14: hồ sơ nay giữ *tất cả*, nên một hồ sơ
+     * mới hoàn toàn trống là thứ không ai muốn dựng — họ muốn "giống cái đang dùng rồi sửa vài chỗ").
+     *
+     * Cùng khuôn [addProfile]: chỉ **uỷ quyền** rồi nạp lại toàn bộ. Phép chép (mọi hậu tố theo hồ sơ + ảnh chụp cấu
+     * hình ClusterNav) nằm ở tầng lưu bền — để nó ở đây thì ViewModel phải biết tên từng khoá, đúng đường mà luật
+     * *"tầng trên 0 lần chạm nơi lưu"* đã đóng.
+     */
+    fun duplicateProfile(name: String) = reload { repository.duplicateProfile(name) }
+
+    fun deleteProfile(name: String) = reload { repository.deleteProfile(name) }
+
+    /** V3 · R13 — đổi tên hồ sơ (owner E5). Cùng khuôn [addProfile]: uỷ quyền rồi nạp lại toàn bộ. */
+    fun renameProfile(old: String, new: String) = reload { repository.renameProfile(old, new) }
+
+    /**
+     * Câu tóm tắt bố cục của MỘT hồ sơ (owner 2026-09-14) — **đọc**, không đổi state, không ghi bền.
+     *
+     * Ở đây chứ không ở tầng UI vì nó phải đọc **hồ sơ KHÔNG đang dùng**: [HomeUiState] chỉ mang hồ sơ đang dùng, nên
+     * chỗ vẽ sẽ bị cám dỗ tự mở một `WorkspacePrefs` thứ hai — đúng đường đọc bền đi vòng mà [SOÁT P1-1] đã dọn. Câu
+     * chữ do `:core` ([ProfileNames.summary]) gấp, nên nó kiểm được off-car ở cả hai thứ tiếng.
+     */
+    fun profileSummary(name: String): String {
+        val (preset, filled) = repository.profileLayout(name)
+        return ProfileNames.summary(preset, filled)
+    }
+
+    // ── Runtime host capability (không bền) ─────────────────────────────────────
+    /** Cập nhật cờ nhúng (dadb loopback nối được / ROM platform-signed). Chỉ runtime, KHÔNG ghi bền. */
+    fun setEmbedded(embedded: Boolean) = _uiState.update { it.copy(embedded = embedded) }
+
+    // Android box B2 · W3: `setCarStatus` (trạng thái xe LIVE) · `setUnitPrefs` (đơn vị datum xe) · `setTopStrip`/`toggleTopStrip`
+    // (chip xe thanh trên) gỡ cùng lõi HAL BYDAuto.
+
+    // ── Bền, nhưng lưu ở KHOÁ RIÊNG (không nằm trong `persist`) ─────────────────
+    // Ba intent dưới đây tồn tại để tầng UI KHÔNG tự gọi repository: trước đây màn chính ghi thẳng
+    // `workspaceRepository.setGridLayout/setWallpaperPrefs`, tức có đường ghi bền đi VÒNG qua
+    // ViewModel ⇒ state trên màn và state đã lưu có thể lệch nhau mà không ai phát hiện.
+
+    /** Bố cục tự vẽ (P9). `null` = quay về bố cục sẵn. Cập nhật state + lưu bền trong MỘT lượt. */
+    fun setCustomLayout(layout: GridLayout?) {
+        _uiState.update { it.copy(customLayout = layout, overlay = SlotOverlay.EMPTY) }
+        persistLayout(layout)
+    }
+
+    /**
+     * ĐÚNG MỘT chỗ trong ViewModel nói với cổng lưu bố cục.
+     *
+     * Bố cục nằm ở **khoá riêng**, không đi qua `persist()`, nên nó là thứ dễ bị bỏ sót nhất khi thêm một đường ghi
+     * mới: quên gọi thì màn hình đổi bố cục mà lần mở sau lại về bố cục cũ. Gom về một hàm để `GridSeamGuardTest`
+     * (*"setGridLayout phải được gọi ở ĐÚNG MỘT chỗ"*) vẫn đúng **theo nghĩa nó muốn** khi có đường ghi thứ hai —
+     * S4 · R1 đã gỡ đường thứ hai (`applyScene`), nhưng luật thì giữ.
+     */
+    private fun persistLayout(layout: GridLayout?) = repository.setGridLayout(layout)
+
+    /**
+     * UX-OVERHAUL · WP4 — **thứ tự các vật trên thanh trên**. State + lưu bền trong MỘT lượt, cùng khuôn [setAutostart]
+     * (khoá `header_order` nằm ngoài bộ khoá mà `persist` ghi).
+     *
+     * Phép DỜI là hàm thuần ở `:core` ([HeaderLayout.move] → [BarOrder.move]); ở đây chỉ nhận thứ tự đã chốt. Không
+     * có cổng `moveHeaderItem(item, delta)` vì cổng ấy sẽ là bản sao thứ hai của luật kẹp biên — đúng bẫy mà
+     * [setDockConfig] đã ghi lại một lần (`toggleDock` cũ không diễn tả được chiều tắt hàng loạt).
+     */
+    fun setHeaderLayout(layout: HeaderLayout) {
+        _uiState.update { it.copy(header = layout) }
+        repository.setHeaderLayout(layout)
+    }
+
+    /**
+     * **Sổ địa chỉ** của hồ sơ đang dùng — state + lưu bền trong MỘT lượt, cùng khuôn mẫu [setHeaderLayout].
+     *
+     * Không đi qua [mutate]/`persist` vì khoá này nằm ngoài bộ khoá mà `persist` ghi (đúng như đơn vị, hình nền,
+     * chip thanh trên). Phép thêm/sửa/xoá là hàm thuần ở `:core` ([SavedPlaces]); ở đây chỉ nhận danh sách đã chốt.
+     */
+    fun setSavedPlaces(places: List<SavedPlace>) {
+        _uiState.update { it.copy(savedPlaces = places) }
+        repository.setSavedPlaces(places)
+    }
+
+    /**
+     * F1 — **lối tắt ứng dụng** của hồ sơ đang dùng (spec shortcuts-autostart R1.1/R1.4). State + lưu bền trong MỘT lượt,
+     * cùng khuôn [setSavedPlaces] (khoá `app_shortcuts` nằm ngoài bộ khoá mà `persist` ghi). Phép sửa (chọn · đổi kiểu ·
+     * dời) là hàm thuần ở `:core` ([ShortcutSelection]); ở đây chỉ nhận danh sách đã chốt, qua [AppShortcutCodec.sanitize]
+     * để state không bao giờ mang thứ mà đĩa sẽ không giữ (trần 8 · gói hợp lệ · không trùng).
+     */
+    fun setAppShortcuts(items: List<AppShortcut>) {
+        val clean = AppShortcutCodec.sanitize(items)
+        _uiState.update { it.copy(shortcuts = clean) }
+        repository.setAppShortcuts(clean)
+    }
+
+    /**
+     * 2.91 VOICE-APP-NAMES (spec §4.3) — **tên app tự dạy** của hồ sơ đang dùng: cổng ghi DUY NHẤT của trang *Dạy tên app*
+     * (tầng UI 0 lần ghi bền), cùng khuôn [setAppShortcuts]. Không có trường state: phiên nghe đọc prefs (tiến trình
+     * chính) / ảnh chụp (`:wake`) mỗi lượt. `false` = không ghi (dữ liệu phiên bản lạ ⇒ chỉ đọc).
+     */
+    fun setVoiceAppNames(names: List<com.kachi.box.launcher.voice.TaughtName>): Boolean = repository.setVoiceAppNames(names)
+
+    fun voiceAppNames(): List<com.kachi.box.launcher.voice.TaughtName> = repository.voiceAppNames()
+
+    fun voiceAppNamesReadOnly(): Boolean = repository.voiceAppNamesReadOnly()
+
+    /**
+     * F2/F3 — **chuyến lên xe** của hồ sơ đang dùng (spec shortcuts-autostart R2.1/R3.1). Cùng khuôn [setAppShortcuts]:
+     * state + lưu bền một lượt, qua phép làm sạch của `:core` ([TripAppCodec.sanitize] — trần 6, ≤ 1 app *Mở bình
+     * thường*; [TripMusicCodec.clean]) để state không mang thứ đĩa sẽ không giữ.
+     */
+    fun setTripConfig(cfg: TripConfig) {
+        val clean = TripConfig(TripAppCodec.sanitize(cfg.apps), cfg.music.copy(query = TripMusicCodec.clean(cfg.music.query)))
+        _uiState.update { it.copy(trip = clean) }
+        repository.setTripConfig(clean)
+    }
+
+    /** Lựa chọn hình nền (U4). */
+    fun setWallpaperPrefs(prefs: WallpaperPrefs) {
+        _uiState.update { it.copy(wallpaper = prefs) }
+        repository.setWallpaperPrefs(prefs)
+    }
+
+    /**
+     * S1·T4 — **tự mở khi nổ máy**. State + lưu bền trong MỘT lượt, cùng khuôn mẫu [setHeaderLayout].
+     *
+     * Không đi qua [mutate]/`persist` vì khoá này nằm ngoài bộ khoá theo hồ sơ (chung cả máy), đúng như đơn vị và
+     * hình nền.
+     */
+    fun setAutostart(on: Boolean) {
+        _uiState.update { it.copy(autostart = on) }
+        repository.setAutostart(on)
+    }
+
+    /** 2.87 · R-AH3 — "Tự ẩn nút ⇄" (theo hồ sơ). State + lưu bền trong MỘT lượt, cùng khuôn [setAutostart]. */
+    fun setSlotHeadAutoHide(on: Boolean) {
+        _uiState.update { it.copy(slotHeadAutoHide = on) }
+        repository.setSlotHeadAutoHide(on)
+    }
+
+    /**
+     * S4 · R6 — **hồ sơ lúc nổ máy**; `null` = *"hồ sơ dùng gần nhất"*. State + lưu bền trong MỘT lượt, cùng khuôn
+     * [setAutostart].
+     *
+     * ⚠ Khoá này theo **XE** chứ không theo hồ sơ (R4: nó CHỌN hồ sơ nên phải đọc được trước khi biết hồ sơ nào), nên
+     * nó **không** đi qua [mutate]/`persist` — `persist` ghi vào khoá mang tiền tố hồ sơ đang dùng.
+     *
+     * Vẫn nằm trong [HomeUiState] vì màn Cài đặt **render** nó: để nó ngoài state thì chỗ vẽ phải tự đọc nơi lưu, tức
+     * đường đọc bền thứ hai ở tầng UI ([SOÁT P1-1]).
+     */
+    fun setBootProfile(name: String?) {
+        _uiState.update { it.copy(bootProfile = name) }
+        repository.setBootProfile(name)
+    }
+
+    /** Cập nhật state (atomic) rồi ghi bền phần lưu-được. */
+    private fun mutate(block: (HomeUiState) -> HomeUiState) {
+        val next = _uiState.updateAndGet(block)
+        repository.persist(next)
+    }
+
+    /** Nạp lại state từ repository (đổi/thêm/xoá hồ sơ) — giữ nguyên cờ runtime [HomeUiState.embedded]. */
+    private fun reload(loader: () -> HomeUiState) {
+        val embedded = _uiState.value.embedded
+        _uiState.value = loader().copy(embedded = embedded)
+    }
+}

@@ -40,7 +40,7 @@ import unicodedata
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 DATA = os.path.join(HERE, "data")
-KT = os.path.join(REPO, "core/src/main/kotlin/com/byd/clusternav/launcher/voice/VoicePhoneticConfusions.kt")
+KT = os.path.join(REPO, "core/src/main/kotlin/com/kachi/box/launcher/voice/VoicePhoneticConfusions.kt")
 REGISTRY = os.path.join(REPO, "core/build/catalog/registry.json")
 RECDIR = os.path.join(REPO, "docs/diagnostics/voice-rec-2026-09-16")
 OUT = os.path.join(DATA, "misspell.tsv")

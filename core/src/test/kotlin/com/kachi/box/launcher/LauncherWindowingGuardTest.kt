@@ -1,0 +1,134 @@
+package com.kachi.box.launcher
+
+import com.kachi.box.testsupport.KotlinSource
+import com.kachi.box.testsupport.SourceRoots
+import java.nio.file.Files
+import java.nio.file.Path
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+/**
+ * STAGE 0 SAFETY NET — GUARD A: the LAUNCHER must never target a display >= 1.
+ *
+ * Display 1 is the driver's CLUSTER. Only Cluster Cast (`com.kachi.box.modules.clustercast`) is allowed
+ * to place windows there. A launcher (home / app-slot) command that leaked `--display 1` (or higher) would
+ * fling a home-slot app onto the cluster — exactly the class of bug the two-track split forbids.
+ *
+ * Two layers:
+ *  (1) PURE — every command the pure builders ([FreeformLaunch], [ShellAppLauncher]) emit for the launcher
+ *      path targets display 0 only.
+ *  (2) SOURCE-SCAN — no launcher source file under `com/kachi/box/launcher/` (cast excluded) contains a
+ *      literal `--display <1-9>`. Comment-stripped, so a doc mention can never trip it.
+ *
+ * It also PINS the inline `am start --display ...` templates of the two Android launcher hosts ([VdAppHost],
+ * [SlotAppHost]) which build them inline (unreachable from a pure JVM test). Those two target a SELF-CREATED
+ * [android.hardware.display.VirtualDisplay] (a private secondary display used only to render the app inside a
+ * slot — NOT the cluster), so they are safe today, but the strings are documented here and flagged for
+ * Stage 1 to route through [FreeformLaunch].
+ */
+class LauncherWindowingGuardTest {
+
+    /** A launcher command targeting the cluster or any secondary display by LITERAL id (0 is the only allowed). */
+    private val displayGe1 = Regex("""--display\s+[1-9]""")
+
+    // ─────────────────────────────────── (1) PURE builder outputs ───────────────────────────────────
+
+    @Test
+    fun `FreeformLaunch defaults to and only ever names the main display 0`() {
+        // 2.93 · SLOT-DEAD-OPENSLOT: `launchCmd` (freeform open on display 0) removed — 0 product call sites. The remaining
+        // display-0 builder is the fullscreen return.
+        assertEquals(0, FreeformLaunch.MAIN_DISPLAY)
+        assertTrue(FreeformLaunch.fullscreenCmd("com.foo/.Main").contains("--display 0"))
+        assertFalse(displayGe1.containsMatchIn(FreeformLaunch.fullscreenCmd("com.foo/.Main")))
+    }
+
+    @Test
+    fun `ShellAppLauncher never emits a command targeting display greater than or equal to 1`() {
+        val calls = mutableListOf<String>()
+        val sh: (String) -> String = { c ->
+            calls += c
+            if (c.startsWith("cmd package resolve-activity")) "priority=0\ncom.foo/.Main" else ""
+        }
+        // 2.93 · SLOT-DEAD-OPENSLOT: openInSlot/moveToSlot removed; 2.93 wave 2C · SLOT-DEAD-FREEFORM-REST: isFreeformAvailable
+        // removed — `closeSlot` is the ONLY thing the adapter can still emit, so it is fully covered here.
+        val launcher = ShellAppLauncher(sh)
+        launcher.closeSlot("com.foo")
+        assertTrue(calls.isNotEmpty(), "closeSlot must have emitted its sequence — an empty scan proves nothing")
+        val leaks = calls.filter { displayGe1.containsMatchIn(it) }
+        assertTrue(leaks.isEmpty(), "launcher adapter leaked a cluster/secondary-display command: $leaks")
+    }
+
+    // ────────────────────────────────────── (2) SOURCE-SCAN ─────────────────────────────────────────
+
+    @Test
+    fun `no launcher source file targets a display greater than or equal to 1`() {
+        val launcherFiles = launcherSourceFiles()
+        assertTrue(launcherFiles.isNotEmpty(), "could not locate launcher source files to scan (root resolution)")
+        val offenders = launcherFiles
+            .filter { displayGe1.containsMatchIn(KotlinSource.stripComments(it.toFile().readText())) }
+            .map { it.fileName.toString() }
+            .sorted()
+        assertEquals(
+            emptyList<String>(),
+            offenders,
+            "launcher (non-cast) source must never target display >= 1 — the cluster is cast-only. Offenders: $offenders",
+        )
+    }
+
+    // ── Stage 1 DONE: VdAppHost / SlotAppHost now build their am-start via FreeformLaunch.launchOnDisplayCmd ──
+    //  The exact strings are byte-locked by the PURE builder in LauncherCommandGoldenTest (launchOnDisplayCmd*),
+    //  not by a source pin. These tests confirm the routing + that the inline template is gone. Both target a
+    //  SELF-CREATED VirtualDisplay (private secondary display for in-slot rendering), NOT the cluster.
+
+    @Test
+    fun `VdAppHost routes am-start through FreeformLaunch (Stage 1)`() {
+        val src = SourceRoots.text("src/main/java/com/kachi/box/launcher/VdAppHost.kt")
+        assertTrue(
+            src.contains("FreeformLaunch.launchOnDisplayCmd(comp, displayId, windowingMode = 1)"),
+            "VdAppHost must build its launch command via FreeformLaunch.launchOnDisplayCmd (byte-locked in LauncherCommandGoldenTest)",
+        )
+        assertFalse(
+            src.contains("\"am start --display \$displayId"),
+            "VdAppHost inline am-start template must be gone (routed through FreeformLaunch)",
+        )
+        assertTrue(src.contains("am force-stop \$p"), "VdAppHost force-stop stays inline (touch/lifecycle moves in B4)")
+        // 2.89-thử1 (ô 7, spec 287 §4.6d) — ĐỔI GHIM có lý do: `VdAppHost.kt` chạm trần 500 dòng ⇒ thân phân giải component
+        // chuyển NGUYÊN sang `FreeformLaunch.resolveComponent`, dùng `FreeformLaunch.resolveCmd` — chuỗi lệnh byte-khớp bản inline
+        // cũ (khoá ngay dưới). Ý của ghim giữ nguyên: lệnh resolve-activity của đường mở app vào ô KHÔNG đổi một byte.
+        assertTrue(src.contains("FreeformLaunch.resolveComponent(p, sh)"), "VdAppHost resolves through FreeformLaunch")
+        assertFalse(src.contains("cmd package resolve-activity"), "no second inline copy of the resolve template")
+        assertEquals(
+            "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER \$pkg",
+            FreeformLaunch.resolveCmd("\$pkg"),
+            "VdAppHost resolve-activity template unchanged (byte-for-byte)",
+        )
+    }
+
+    @Test
+    fun `SlotAppHost routes am-start through FreeformLaunch (Stage 1)`() {
+        val src = SourceRoots.text("src/main/java/com/kachi/box/launcher/SlotAppHost.kt")
+        assertTrue(
+            src.contains("FreeformLaunch.launchOnDisplayCmd(comp, vd, windowingMode = 1, withLauncherCategory = false)"),
+            "SlotAppHost must build its launch command via FreeformLaunch.launchOnDisplayCmd (byte-locked in LauncherCommandGoldenTest)",
+        )
+        assertFalse(
+            src.contains("\"am start --display \$vd"),
+            "SlotAppHost inline am-start template must be gone (routed through FreeformLaunch)",
+        )
+    }
+
+    /** All launcher (non-cast) Kotlin sources across :core and :app. */
+    private fun launcherSourceFiles(): List<Path> =
+        SourceRoots.moduleSourceRoots().flatMap { root ->
+            Files.walk(root).use { paths ->
+                paths.filter { p ->
+                    val s = p.toString().replace('\\', '/')
+                    Files.isRegularFile(p) && s.endsWith(".kt") &&
+                        s.contains("/com/kachi/box/launcher/") &&
+                        !s.contains("/modules/clustercast/")
+                }.toList()
+            }
+        }
+}

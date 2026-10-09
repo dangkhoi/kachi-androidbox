@@ -30,8 +30,8 @@ flatten = _gen.flatten
 
 ROOT = Path(__file__).resolve().parents[2]
 GRAMMAR = ROOT / "design" / "icon-grammar.json"
-CORE = ROOT / "core" / "src" / "main" / "kotlin" / "com" / "byd" / "clusternav" / "launcher"
-THEME = ROOT / "app" / "src" / "main" / "java" / "com" / "byd" / "clusternav" / "launcher" / "KachiTheme.kt"
+CORE = ROOT / "core" / "src" / "main" / "kotlin" / "com" / "kachi" / "box" / "launcher"
+THEME = ROOT / "app" / "src" / "main" / "java" / "com" / "kachi" / "box" / "launcher" / "KachiTheme.kt"
 RES = ROOT / "app" / "src" / "main" / "res" / "drawable"
 
 # Tệp ic_* KHÔNG thuộc bộ glyph (mỗi dòng phải có lý do — cùng lệ orphanPending của IconStyleContractTest)

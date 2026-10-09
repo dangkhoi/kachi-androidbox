@@ -1,0 +1,172 @@
+package com.kachi.box.launcher
+
+import android.app.Activity
+import android.graphics.PixelFormat
+import android.view.KeyEvent
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.FrameLayout
+
+/**
+ * Điều khiển App Drawer (lớp phủ chọn app/widget cho một ô) — tách khỏi [KachiHomeActivity] (B5b).
+ *
+ * Mở dạng overlay (`TYPE_APPLICATION_OVERLAY`, nổi TRÊN cửa sổ app freeform) nếu có quyền vẽ-đè; nếu không → gắn vào
+ * [rootFrame]. Byte-giữ so với `openDrawer()`/`closeDrawer()` cũ (kể cả xử lý phím BACK khi ở overlay).
+ */
+class DrawerController(
+    private val activity: Activity,
+    private val rootFrame: FrameLayout,
+    private val currentWidgets: (Int) -> List<String>,
+    private val onClearOverlays: () -> Unit,
+    private val onOverlayHeads: () -> Unit,
+    private val onPickApp: (Int, String) -> Unit,
+    private val onPickWidgets: (Int, List<String>) -> Unit,
+    private val onOpenApp: (String) -> Unit = {},        // U3: chạm app ở chế độ mở-thường → mở TOÀN MÀN
+    private val recentApps: () -> List<String> = { emptyList() },
+    /**
+     * T4 — mục "Widget của app khác" cho ô [index]. Là HÀM nhận index vì mỗi lần mở ngăn kéo phải **đọc lại** danh
+     * sách nhà cung cấp (app có thể vừa được cài/gỡ) và vì việc chạm phải biết đặt vào ô nào.
+     */
+    private val appWidgetPicks: (Int) -> List<AppWidgetPick> = { emptyList() },
+    /** 2.93 `WIDGET-CAPACITY-HINT` — cỡ px THẬT của ô [Int] (đã đo); `null` ⇒ bộ chọn không nói sức chứa. */
+    private val slotFrame: (Int) -> Pair<Int, Int>? = { null },
+) {
+    private var drawer: AppDrawer? = null
+    private var asOverlay = false
+
+    fun isOpen(): Boolean = drawer != null
+
+    /**
+     * Nói một câu vào bảng đang mở (T4). Bảng đã đóng ⇒ **không làm gì** — câu trả lời tới sau khi người dùng đã đóng
+     * bảng thì không còn chỗ nào hợp lý để hiện, và đúng lúc đó một toast cũng sẽ bị lớp phủ che (xem `AppDrawer.say`).
+     */
+    fun say(msg: String) { drawer?.say(msg) }
+
+    /** Ngăn kéo GÁN VÀO Ô [index] (hành vi cũ). */
+    fun open(index: Int) {
+        if (drawer != null) return
+        val current = currentWidgets(index)
+        show(
+            AppDrawer(
+                activity, WidgetRegistry.ALL, current,
+                onPickApp = { pkg -> onPickApp(index, pkg) },
+                onPickWidgets = { ids -> onPickWidgets(index, ids) },
+                onClose = { close() },
+                appWidgetPicks = appWidgetPicks(index),
+                fitOf = slotFrame(index)?.let { (w, h) -> { ids: List<String> -> WidgetCapacity.of(activity, ids, w, h) } },
+            ),
+        )
+    }
+
+    /**
+     * Ngăn kéo **MỞ ỨNG DỤNG** (U3) — không gắn ô nào: chạm app là mở toàn màn. Có hàng "Gần đây".
+     * Không đụng bố cục/gán ô đã lưu.
+     */
+    fun openAppList() {
+        if (drawer != null) return
+        show(
+            AppDrawer(
+                activity, WidgetRegistry.ALL, emptyList(),
+                onPickApp = { pkg -> onOpenApp(pkg) },
+                onPickWidgets = {},
+                onClose = { close() },
+                mode = AppDrawer.Mode.OPEN_APP,
+                recentApps = recentApps(),
+            ),
+        )
+    }
+
+    /**
+     * ═══ T6 · R-UI (m) — BỘ CHỌN **NÚT CHO THANH NÚT XE**, MỘT BỘ CHỌN HAI LỐI VÀO ═══════════════════════════
+     *
+     * Mở chính [AppDrawer] ở [AppDrawer.Mode.PICK_DOCK]: đa chọn trên ĐÚNG tập ô mà màn Cài đặt đang bày cho thanh
+     * nút, tô sẵn theo [selected], bấm **Áp dụng (N)** ⇒ [onApply] nhận tập mã người dùng chốt và bảng tự đóng.
+     *
+     * ## Hợp đồng với chỗ gọi (màn Cài đặt, nhóm "Thanh trạng thái & thanh nút")
+     *  • [selected] = `state().dock.enabled.toSet()` — **đọc lại mỗi lần mở**, không chụp sẵn một lần lúc dựng
+     *    trang: người dùng có thể vừa đổi cấu hình ở lối vào kia.
+     *  • [onApply] KHÔNG được ghi bền trực tiếp (luật "chỉ ViewModel được ghi bền" —
+     *    `GridSeamGuardTest.chi ViewModel duoc ghi ben`): gấp tập này bằng [DockSelection.apply] rồi đẩy xuống qua
+     *    intent của ViewModel. **Đừng tự viết vòng lặp `setEnabled(id, true)`** — nó chỉ có chiều bật nên cấu hình
+     *    chỉ lớn lên, bỏ tích một ô rồi Áp dụng thì nút vẫn còn trên thanh (xem KDoc [DockSelection]).
+     *  • Bảng **không** tự đóng trước khi [onApply] chạy xong; chỗ gọi không phải gọi [close].
+     *
+     * Thanh nút xe KHÔNG có trần số mục (khác ô giữa màn, trần 8) — xem `AppDrawer.cap`.
+     */
+    fun openDockPicker(selected: Set<String>, onApply: (Set<String>) -> Unit) {
+        if (drawer != null) return
+        show(
+            AppDrawer(
+                activity, WidgetRegistry.ALL, selected.toList(),
+                onPickApp = {},
+                onPickWidgets = {},
+                onClose = { close() },
+                mode = AppDrawer.Mode.PICK_DOCK,
+                onApply = { ids -> onApply(ids); close() },
+            ),
+        )
+    }
+
+    /**
+     * F1 · U1 (spec shortcuts-autostart R1.4) — bộ chọn APP cho lối tắt: [AppDrawer.Mode.PICK_SHORTCUTS], cùng hình dạng
+     * [openDockPicker] (đa chọn, tô sẵn theo [selected], **Áp dụng (N)** ⇒ [onApply] rồi tự đóng). 2.92: hết trần 8 —
+     * trần của bảng (`AppDrawer.cap`) = trần KỸ THUẬT [AppShortcutCodec.MAX] của danh sách.
+     *
+     * Hợp đồng với chỗ gọi (trang Cài đặt lối tắt): [selected] đọc lại MỖI lần mở; [onApply] nhận danh sách gói THEO
+     * THỨ TỰ CHẠM (tập của bảng là `LinkedHashSet` — `selected.toSet()`), gấp bằng [ShortcutSelection.apply] rồi đẩy qua
+     * intent ViewModel — KHÔNG ghi bền trực tiếp (`GridSeamGuardTest.chi ViewModel duoc ghi ben`).
+     */
+    fun openShortcutPicker(
+        selected: List<String>,
+        onApply: (List<String>) -> Unit,
+        /** F2 · U6 — [AppDrawer.Mode.PICK_TRIP] (app mở khi nổ máy, trần 6): CÙNG bộ chọn, khác trần + chữ. */
+        mode: AppDrawer.Mode = AppDrawer.Mode.PICK_SHORTCUTS,
+    ) {
+        if (drawer != null) return
+        show(
+            AppDrawer(
+                activity, WidgetRegistry.ALL, selected,
+                onPickApp = {},
+                onPickWidgets = {},
+                onClose = { close() },
+                mode = mode,
+                onApply = { ids -> onApply(ids.toList()); close() },
+            ),
+        )
+    }
+
+    /** Gắn ngăn kéo lên màn — dùng CHUNG cho cả 4 chế độ (byte-giữ so với nhánh overlay cũ). */
+    private fun show(d: AppDrawer) {
+        drawer = d
+        onClearOverlays()
+        // Drawer NỔI như overlay → trên cả cửa sổ app freeform (tránh app đè popup). Chưa có quyền overlay → fallback
+        // vào cửa sổ launcher.
+        asOverlay = android.provider.Settings.canDrawOverlays(activity) && runCatching {
+            d.isFocusableInTouchMode = true
+            d.setOnKeyListener { _, code, ev ->
+                if (code == KeyEvent.KEYCODE_BACK && ev.action == KeyEvent.ACTION_UP) { close(); true } else false
+            }
+            activity.windowManager.addView(
+                d,
+                WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    PixelFormat.TRANSLUCENT,
+                ),
+            )
+            d.requestFocus()
+            true
+        }.getOrDefault(false)
+        if (!asOverlay) rootFrame.addView(d, FrameLayout.LayoutParams(MATCH, MATCH))
+    }
+
+    fun close() {
+        drawer?.let { if (asOverlay) runCatching { activity.windowManager.removeViewImmediate(it) } else rootFrame.removeView(it) }
+        drawer = null; asOverlay = false; onOverlayHeads()
+    }
+
+    private companion object {
+        const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
+    }
+}

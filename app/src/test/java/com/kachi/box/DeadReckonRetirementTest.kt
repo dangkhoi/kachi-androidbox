@@ -1,0 +1,141 @@
+package com.kachi.box
+
+import com.kachi.box.testsupport.KotlinSource
+import java.nio.file.Files
+import java.nio.file.Path
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+class DeadReckonRetirementTest {
+    @Test
+    fun `active product has no DR or mock provider wiring and no BYD cluster tracks`() {
+        val manifest = app("src/main/AndroidManifest.xml").toFile().readText()
+        // Màn chính của app nay là Kachi (màn ClusterNav cũ gỡ 2026-09-13 — S3 · R1).
+        val home = app("src/main/java/com/kachi/box/launcher/KachiHomeActivity.kt").toFile().readText()
+        val receiver = app("src/main/java/com/kachi/box/RebindReceiver.kt").toFile().readText()
+        val prefs = app("src/main/java/com/kachi/box/Prefs.kt").toFile().readText()
+        listOf(manifest, home, receiver, prefs).forEach { text ->
+            assertFalse(text.contains("DeadReckon"))
+            assertFalse(text.contains("modules.deadreckon"))
+            assertFalse(text.contains("modules.mockloc"))
+            assertFalse(text.contains("ACCESS_MOCK_LOCATION"))
+        }
+        assertFalse(prefs.contains("gpsAuto"))
+        // Android box B2 · W2c/W2d — hai nhánh BYD (Dẫn đường + HUD lên cụm · Chiếu màn lên cụm) gỡ: không còn nhãn nào của
+        // chúng trên bề mặt người dùng (trước đây bài này ĐÒI hai nhãn còn).
+        val labels = app("src/main/res/values-en/strings_kachi.xml").toFile().readText()
+        assertFalse(labels.contains("Navigation + HUD"))
+        assertFalse(labels.contains("Cluster cast"))
+    }
+
+    @Test
+    fun `nguon da nghi phai bien khoi cay lam viec`() {
+        // 2026-07-27, chủ xe quyết: bỏ hẳn Dead Reckon, "đang fail quá, sau này cần làm thì tìm giải pháp
+        // mới sau". Bản trước bài kiểm này ĐÒI file phải còn, với lý do "đọc lại được để rollback" — nhưng
+        // git đã giữ nguyên lịch sử, nên giữ thêm bản trong cây chỉ để lại 1.096 dòng không ai chạy, không
+        // ai kiểm, mà vẫn phải đọc mỗi lần soát kiến trúc. Giờ đảo lại: chúng PHẢI biến mất.
+        assertFalse(app("src/main/java/com/kachi/box/modules/deadreckon").toFile().exists())
+        assertFalse(app("src/main/java/com/kachi/box/modules/mockloc").toFile().exists())
+    }
+
+    @Test
+    fun `no active source outside the retired packages can reach DR or mock injection`() {
+        // The five-file check above cannot catch a future caller in some other file, and mock
+        // location changes what the head unit believes its position is. Lock the whole tree:
+        // comments may mention the retired code, executable references may not.
+        val retired = Regex("""(deadreckon|mockloc)""")
+        val callSite = Regex(
+            """(^|[^\w.])(import\s+com\.byd\.clusternav\.modules\.(deadreckon|mockloc)|""" +
+                """MockLoc\s*\.\s*\w+\s*\(|DeadReckon(Module|Service|State)\s*[.(])"""
+        )
+        val offenders = mutableListOf<String>()
+        val root = app("src/main/java/com/kachi/box")
+        Files.walk(root).use { paths ->
+            paths.filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }
+                .filter { !retired.containsMatchIn(it.parent.fileName.toString()) }
+                .forEach { file ->
+                    // 2.93 wave 2C · TEST-STRIP-COPIES — bộ quét có trạng thái dùng chung, GIỮ số dòng (bản cũ cắt `//` và
+                    // `* ` từng dòng: `a * MockLoc.x()` bị cắt mất, comment khối không dấu `*` lại bị coi là mã).
+                    KotlinSource.stripComments(file.toFile().readText(), keepLines = true).lineSequence().forEachIndexed { index, code ->
+                        if (callSite.containsMatchIn(code)) offenders += "$file:${index + 1}"
+                    }
+                }
+        }
+        assertTrue(offenders.isEmpty(), "Dead Reckon / mock injection reachable from: $offenders")
+    }
+
+    /**
+     * ⚠⚠ **BẤT BIẾN AN TOÀN — 1.85 thu HẸP, không nới lỏng.**
+     *
+     * Bản trước chặn **năm** tên quyền, gộp `ACCESS_FINE_LOCATION` cùng bốn tên kia. Nhưng hai việc bị gộp vào một
+     * bài kiểm là hai việc khác hẳn nhau:
+     *  • **GHI** vị trí giả — đúng sự cố 2026-07-27 (Kachi làm app mock-location ⇒ **ghim GPS của cả xe**; README
+     *    ghi *"Đừng chọn ClusterNav làm app mock-location"*). Đây là thứ phải chặn vĩnh viễn.
+     *  • **ĐỌC** tuổi của lần định vị gần nhất — không đổi vị trí của ai, không ghi gì, và là **điều kiện cần** của
+     *    cổng *"đã ra khỏi hầm chưa"* mà spec `kachi-automation.html` R2.4/R3 (owner đã duyệt) yêu cầu.
+     *
+     * [ĐO] `isProviderEnabled` một mình **không** trả lời được câu hỏi của R2.4: trong hầm GPS provider vẫn BẬT,
+     * chỉ là không có fix ⇒ nếu chỉ hỏi provider thì luật sẽ dẫn ngay trong hầm, đúng ca tính năng sinh ra để chặn.
+     * Nên quyền ĐỌC là bắt buộc, còn phần nguy hiểm thì **vẫn bị ghim, và nay ghim CHẶT HƠN**: bốn tên quyền kia ở
+     * lại đây, và [ca hành vi][the app never writes or subscribes to location] mới chặn cả `addTestProvider` /
+     * `requestLocationUpdates` — hai đường mà bài cũ **không** soi (bài cũ chỉ đọc manifest, nên một lượt
+     * `requestLocationUpdates` bằng `ACCESS_FINE_LOCATION` vẫn qua được nó).
+     *
+     * ⚠ Owner cần biết: đây là một thay đổi có ý thức lên một bất biến an toàn (spec §OQ1 đã nêu trước, bản này
+     * thực hiện). Nếu owner muốn giữ *"tuyệt đối không quyền định vị"* thì cổng GPS của automation #2 phải bỏ, và
+     * luật `requireGps` mất nghĩa — ghi rõ ở `docs/_handoff/1.85-stage3.md`.
+     */
+    @Test
+    fun `the shipped manifest requests no mock or broad location permission`() {
+        val manifest = app("src/main/AndroidManifest.xml").toFile().readText()
+        // Owner 2026-09-16 mở khoá ĐÚNG phần ĐỌC (spec `kachi-rain-defrost-and-rebind.html` R5/§4.7): FINE + COARSE
+        // cùng xin — Android 12+ bỏ qua lời xin FINE đơn lẻ (lint CoarseFineLocation). Phần GHI và phần NỀN vẫn đóng.
+        assertTrue(manifest.contains("android.permission.ACCESS_FINE_LOCATION"), "manifest phải xin FINE (đọc)")
+        assertTrue(manifest.contains("android.permission.ACCESS_COARSE_LOCATION"), "COARSE phải đi kèm FINE")
+        listOf(
+            "ACCESS_MOCK_LOCATION",
+            "ACCESS_BACKGROUND_LOCATION",
+            "FOREGROUND_SERVICE_LOCATION",
+        ).forEach { permission ->
+            assertFalse(manifest.contains(permission), "manifest still requests $permission")
+        }
+    }
+
+    /**
+     * Quyền định vị chỉ được dùng để **ĐỌC**. Quét toàn bộ `app/src/main` (không chỉ manifest — đó là lỗ của bài
+     * cũ): không một dòng mã nào được dựng test-provider, ghi vị trí, hay đăng ký nhận định vị liên tục.
+     *
+     * Chú thích được phép nhắc tên (KDoc của `GpsAvailability` giải thích chính những điều này); **mã** thì không.
+     */
+    @Test
+    fun `the app never writes or subscribes to location`() {
+        val banned = listOf(
+            "addTestProvider",
+            "setTestProviderLocation",
+            "setTestProviderEnabled",
+            "clearTestProviderLocation",
+            "requestLocationUpdates",
+            "requestSingleUpdate",
+            "LocationListener",
+        )
+        val offenders = mutableListOf<String>()
+        val root = app("src/main/java/com/kachi/box")
+        Files.walk(root).use { paths ->
+            paths.filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }.forEach { file ->
+                // Bỏ chú thích TRƯỚC khi soi — cùng cách bài `no active source…` ở trên làm (bộ quét dùng chung, giữ số dòng).
+                KotlinSource.stripComments(file.toFile().readText(), keepLines = true).lineSequence().forEachIndexed { index, code ->
+                    banned.forEach { needle ->
+                        if (code.contains(needle)) offenders += "$file:${index + 1} → $needle"
+                    }
+                }
+            }
+        }
+        assertTrue(offenders.isEmpty(), "định vị chỉ được ĐỌC (isProviderEnabled + getLastKnownLocation): $offenders")
+    }
+
+    private fun app(relative: String): Path {
+        val current = Path.of(System.getProperty("user.dir"))
+        return if (Files.exists(current.resolve("src"))) current.resolve(relative) else current.resolve("app").resolve(relative)
+    }
+}

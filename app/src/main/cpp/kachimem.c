@@ -43,10 +43,10 @@
 
 /*
  * `mallopt(M_PURGE, 0)` — trả về 1 khi bionic nhận lệnh, 0 khi không (allocator khác / tuỳ chọn lạ).
- * Tên hàm theo luật mangling JNI tĩnh: package `com.byd.clusternav.launcher.perf`, lớp `KachiMem`.
+ * Tên hàm theo luật mangling JNI tĩnh: package `com.kachi.box.launcher.perf`, lớp `KachiMem`.
  */
 JNIEXPORT jint JNICALL
-Java_com_byd_clusternav_launcher_perf_KachiMem_nativePurge(JNIEnv *env, jclass clazz) {
+Java_com_kachi_box_launcher_perf_KachiMem_nativePurge(JNIEnv *env, jclass clazz) {
     (void) env;
     (void) clazz;
     return (jint) mallopt(M_PURGE, 0);
@@ -57,7 +57,7 @@ Java_com_byd_clusternav_launcher_perf_KachiMem_nativePurge(JNIEnv *env, jclass c
  * tự madvise ngay, không chờ tick. Gọi MỘT lần lúc tiến trình `:wake` sinh ra.
  */
 JNIEXPORT jint JNICALL
-Java_com_byd_clusternav_launcher_perf_KachiMem_nativeDecayNow(JNIEnv *env, jclass clazz) {
+Java_com_kachi_box_launcher_perf_KachiMem_nativeDecayNow(JNIEnv *env, jclass clazz) {
     (void) env;
     (void) clazz;
     return (jint) mallopt(M_DECAY_TIME, 0);

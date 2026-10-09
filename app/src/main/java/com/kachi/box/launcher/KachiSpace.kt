@@ -1,0 +1,404 @@
+package com.kachi.box.launcher
+
+import android.content.Context
+
+/**
+ * ═══ G1 · T5 — THANG KHOẢNG CÁCH ════════════════════════════════════════════════════════════════════════════
+ *
+ * Spec `docs/specs/kachi-capability-groups.html` §4.4. **Một nguồn duy nhất** cho mọi con số dp của tầng vẽ
+ * launcher.
+ *
+ * ## Vì sao tệp này tồn tại — [ĐO] hiện trạng trước T5
+ * **369 con số viết tại chỗ** trong 19 tệp: 344 lời gọi `dp(...)`/`dpi(...)` + 25 bán kính truyền dạng `Float`
+ * cho [KachiTheme.card]/[KachiTheme.gradient]. **30 giá trị phân biệt** (1·2·3·4·5·6·7·8·9·10·11·12·14·16·18·
+ * 20·22·24·26·30·34·36·40·44·56·78·116·124·150·999). Riêng vai trò *"lề trong thẻ"* đã dùng **18 giá trị khác
+ * nhau** cho cùng một việc. Đó là lý do owner nói *"margin, padding đang chưa OK"*: không có nhịp, nên mắt
+ * đọc ra sự lệch dù từng chỗ nhìn riêng thì đều "hợp lý".
+ *
+ * ## ⚠ CHỌN BẬC THEO VAI TRÒ, KHÔNG THEO SỐ GẦN NHẤT
+ * Đây là điều dễ làm sai nhất khi chuyển sang thang. `dp(5)` ở vai trò *khe icon–chữ* thì đúng là [XS]; nhưng
+ * `dp(5)` ở vai trò *lề trong thẻ* thì **không** phải [XS] — 5dp là quá chật, và chính chỗ đó là thứ owner
+ * thấy. Nó phải lên [M]. Ánh xạ đúng là *vai trò → bậc*, không phải *số cũ → số gần nhất*.
+ *
+ * ## Vì sao KHÔNG để số dp ở `:core`
+ * Khoảng cách là việc của tầng vẽ. `:core` nói *"đang cảnh báo"* / *"nhóm này có 4 thành viên"*; chỉ `:app`
+ * mới biết một thành viên cách nhau bao nhiêu. Cùng bài học với `ChipTone` của RW0 (sắc thái ở `:core`, mã màu
+ * ở `:app`) — nếu `:core` giữ dp thì dự án có **hai** thang và chúng sẽ lệch ngay dòng đầu.
+ *
+ * ## Bài canh
+ * [com.kachi.box.launcher.SpacingScaleContractTest] quét mã nguồn của gói `launcher` và **đỏ** khi có
+ * `dp(7)` viết tại chỗ. Ngoại lệ phải khai tường minh **kèm lý do**, theo lệ `SettingsCatalog.NOT_SETTINGS`.
+ */
+object KachiSpace {
+
+    // ══ THANG KHOẢNG CÁCH — lề · khe · giãn cách. Nhịp 4dp (spec §4.4) ═══════════════════════════════════
+    //
+    // Sáu bậc: ít hơn thì không đủ diễn đạt (nhãn sát icon vs thẻ cách thẻ), nhiều hơn thì lại thành "tự chọn
+    // số" như trước T5. 4/8/12/16 là nhịp 4dp quen thuộc; 20/28 cho khoảng thở của thẻ lớn trên màn 1920.
+
+    /** Khe hẹp nhất: icon–chữ, ô con–ô con trong cùng một lưới. Dưới mức này thì hai thứ **dính** vào nhau. */
+    const val XS = 4
+
+    /** Khe/lề nhỏ: lề trong ô con, khe giữa nút trong cùng một hàng. */
+    const val S = 8
+
+    /** **Lề trong thẻ mặc định.** Bậc dùng nhiều nhất — chọn bậc nào khi không rõ thì chọn bậc này. */
+    const val M = 12
+
+    /** Lề trong thẻ lớn, khe giữa hai thẻ. */
+    const val L = 16
+
+    /** Lề trong bảng phủ, khe giữa hai nhóm nội dung khác nhau. */
+    const val XL = 20
+
+    /** Lề ngoài cùng của bảng phủ toàn màn; khoảng nghỉ giữa hai khối lớn. */
+    const val XXL = 28
+
+    // ══ HẰNG RIÊNG — vai trò KHÔNG biểu diễn được bằng sáu bậc trên ══════════════════════════════════════
+    //
+    // Luật: mỗi hằng dưới đây phải nói ĐƯỢC vì sao nó không thể là một bậc của thang. Thiếu lý do thì nó chỉ
+    // là "số trần có tên", tức là đúng cái bệnh T5 đi dọn.
+
+    /**
+     * Nét viền mảnh (1dp).
+     *
+     * **Không thể là [XS]**: 4dp không còn là *viền* mà là một cái *khung*. Nét là đường phân giới, không phải
+     * khoảng cách — nó thuộc họ khác và phải mỏng nhất mà màn còn vẽ được.
+     */
+    const val HAIRLINE = 1
+
+    /**
+     * Nét viền nhấn (2dp) — vành ô tick khi CHƯA tích.
+     *
+     * **Không thể là [XS]**: cùng lý do [HAIRLINE]. Cần dày hơn [HAIRLINE] để ô tick trống còn thấy rõ trên
+     * nền tối, nhưng 4dp thì thành khối đặc.
+     */
+    const val STROKE = 2
+
+    // ⚠ 2.93 · EDGE-H-DEAD — ba hằng chết đã XOÁ: `DASH_ON`/`DASH_OFF` (chỗ đọc cuối gỡ ở f56c508; 0 `DashPathEffect` trong
+    // mã) và `CAPTION_COVER` (chỗ đọc cuối gỡ ở a549547 — dải phủ caption bỏ). Hằng không ai đọc là lời hứa sai về màn hình:
+    // `ScaleConstantsUsedContractTest` đỏ khi thang có hằng 0 chỗ dùng. [EDGE_H] (cùng lượt xoá) nay KHAI LẠI kèm chỗ đọc thật.
+
+    /**
+     * **LỀ NGANG (trái + phải) của khung nội dung màn chính** — thanh trên · vùng ô · thanh nút (13dp = 19px @1.5×).
+     *
+     * ## Owner 2026-09-20: *"canh lại margin header, taskbar, trái phải, bé lại còn 80%, đang dư thừa khoảng trắng phí"*
+     * `13` = **80 % của [L]** (16 × 0,8 = 12,8, làm tròn LÊN để còn là số nguyên dp — làm tròn xuống 12 trùng đúng bậc [M],
+     * mà bậc đó mang nghĩa *lề-trong-thẻ*: đọc mã sẽ hiểu sai vai). [ĐO git f56c508] bản 1.87 KHAI hằng này mà không nối —
+     * khung giữ [L] cả bốn cạnh (S1b) ⇒ lời giao chưa từng lên màn; 2.93 wave 2A · HOME-EDGE-80 nối nó (spec
+     * `docs/specs/kachi-293-wave2a.html` §4.1). Bài canh: `HomeEdgeInsetContractTest`.
+     *
+     * ## MỘT con số cho cả ba thứ, không tách header/taskbar
+     * Thanh trên, vùng ô và thanh nút là con của **cùng một** `LinearLayout` gốc ở [KachiHomeActivity]; lề ngang của chúng LÀ
+     * `paddingLeft/Right` của khung đó. Lề riêng cho hai thanh phải dùng lề âm ⇒ hai thanh LỆCH CỘT với các ô ở giữa (mép lệch
+     * 3dp đọc ra như lỗi vẽ). Nên hạ đúng lề ngang dùng chung; vùng ô đi theo. Cửa sổ app on-car (`LauncherWindows`
+     * `absoluteSlotRect`) lấy vị trí bằng `getLocationOnScreen` ⇒ tự theo lề mới, không có bẫy P-bug2.
+     *
+     * ## Chỉ NGANG — lề DỌC giữ [L]
+     * Lời giao nói lề trái/phải; chiều cao không đổi. Khung nội dung từ nay KHÔNG còn cách đều 4 cạnh như S1b (2026-09-14) —
+     * sai lệch có chủ đích, bài canh khoá cả hai con số để không ai "dọn cho đều" mất một nửa lời giao.
+     *
+     * **Không thể là một bậc của thang**: nằm GIỮA [M] và [L] — thêm vào thang là phá nhịp 4dp. Hằng VAI TRÒ như [SLOT_GAP]
+     * (9 = 75 % của [M], cũng do owner chốt theo cảm nhận trên xe).
+     */
+    const val EDGE_H = 13
+
+    // ── Bán kính góc ─────────────────────────────────────────────────────────────────────────────────────
+    //
+    // Bán kính KHÔNG phải khoảng cách: 12dp bán kính đứng cạnh 12dp lề là **trùng hợp**, không phải nhịp. Gộp
+    // hai họ vào một thang sẽ khoá chúng vào nhau — đổi độ bo của thẻ là đổi luôn lề trong của nó.
+
+    /** Bo góc ô con nhỏ, nút mini. */
+    const val RADIUS_S = 8
+
+    /** Bo góc ô con của lưới, hàng cài đặt. */
+    const val RADIUS_M = 12
+
+    /** **Bo góc thẻ mặc định** — ô widget, thẻ nội dung, hàng chọn. */
+    const val RADIUS_L = 16
+
+    /** Bo góc thẻ lớn / khung ô làm việc. */
+    const val RADIUS_XL = 20
+
+    /** Bo góc bảng phủ toàn màn (ngăn kéo, Cài đặt) — mềm hơn để khối lớn không "nặng". */
+    const val RADIUS_XXL = 24
+
+    /**
+     * Bo tròn hết cỡ (viên thuốc).
+     *
+     * Không phải một khoảng cách mà là **quy ước "bo tối đa"**: [android.graphics.drawable.GradientDrawable]
+     * kẹp bán kính về nửa cạnh ngắn, nên mọi số lớn hơn nửa chiều cao đều cho cùng kết quả. 999 là cách nói
+     * *"bo hết"* mà không cần biết chiều cao lúc dựng.
+     */
+    const val RADIUS_PILL = 999
+
+    // ── Đích chạm ────────────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * **Đích chạm tối thiểu (48dp).**
+     *
+     * Cũng chính là con số đã dùng để quyết định *"chip thanh trên không nhận nút"* ở RW0: chip ~24dp, dưới
+     * xa mức này, mà chạm lệch rồi bắn lệnh xe (mở khoá cửa) là việc **không hoàn lại được**.
+     */
+    const val TOUCH = 48
+
+    // Android box B2 · W3: `TOUCH_TIGHT` (bề cao −/+ của ô STEP nút xe) gỡ cùng `StepTouchTarget`.
+
+    // ── Cỡ icon ──────────────────────────────────────────────────────────────────────────────────────────
+    //
+    // Cỡ là *kích thước một vật*, không phải *khoảng cách giữa hai vật*. Một icon 16dp cạnh lề 16dp không nói
+    // lên điều gì chung.
+
+    /** Icon phụ trong một dòng chữ, icon đầu thẻ. */
+    const val ICON_XS = 16
+
+    /** Icon ô con của lưới/dải. */
+    const val ICON_S = 20
+
+    /** Icon nút trong thanh đầu ô. */
+    const val ICON_M = 24
+
+    /** Icon ô nút thanh dưới / ô chọn trong ngăn kéo. */
+    const val ICON_L = 32
+
+    /** Icon ô lớn (ngăn kéo, lưới chọn khả năng). */
+    const val ICON_XL = 44
+
+    /** Icon ứng dụng trên thẻ app chiếm cả ô — to nhất, vì nó là nội dung chính của thẻ đó. */
+    const val ICON_XXL = 56
+
+    /** Chấm chỉ báo tròn (badge "chưa kiểm trên xe", chấm màu ô). Trước T5 rải 6·7·9dp cho cùng một việc. */
+    const val DOT = 8
+
+    // ── Vạch mảnh ─────────────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Chiều cao thanh tiến trình (4dp).
+     *
+     * Trùng số với [XS] nhưng **khác vai trò**: đây là chiều cao một *vật vẽ được*, không phải khoảng cách.
+     * Tách tên ra để sau này nới nhịp khoảng cách không âm thầm làm dày thanh tiến trình.
+     */
+    const val BAR_THIN = 4
+
+    // ── Cỡ thành phần một-lần ────────────────────────────────────────────────────────────────────────────
+    //
+    // Đây là cỡ của những khối CỤ THỂ, không tái sử dụng. Khai ở đây (chứ không để số trần tại chỗ) để mọi
+    // con số dp của launcher nằm đúng một tệp — đó mới là "một nguồn duy nhất".
+
+    // Android box B2 · W3: `READ_ROW` (chiều cao một dòng dữ liệu xe trong ô nhóm) gỡ cùng ô nhóm/ô đọc.
+
+    /**
+     * **SÀN cỡ chữ NHÃN của ô vẽ Canvas** (13dp = 19.5px @1.5× ⇒ **nét cao ~15px**, mực đủ ~19px).
+     *
+     * ## Vì sao một ô vẽ theo tỉ lệ lại cần SÀN theo dp
+     * Ô vẽ Canvas của dự án tính mọi cỡ theo tỉ lệ cạnh (`m * 0.058f`) — đúng để bất biến với dpi/cỡ ô, nhưng tỉ lệ
+     * **không biết ngưỡng đọc được của mắt**. [ĐO] ảnh máy ảo 2026-09-12: bảng sơ đồ ADAS ở khung 4/12 màn có
+     * `m = 231px` ⇒ nhãn 13.4px ⇒ **nét cao 10px / mực 13px**, dưới chuẩn G1 (15–16px). Tỉ lệ vẫn "đúng", chữ vẫn
+     * không đọc được.
+     *
+     * ## Con số suy từ CHÍNH chuẩn G1, không tự chọn
+     * G1 chốt nhãn ô con của nhóm ở **13.5sp** và ghi *"[ĐO] ở density 1.5: 13.5sp cho nét cao 16px"*. Ô vẽ này là
+     * cùng loại nội dung (nhãn của một ô con) nên phải cùng bậc ⇒ sàn 13dp ≈ 13.5sp. Đặt thấp hơn là để một bảng
+     * Canvas có chuẩn đọc riêng, thấp hơn phần còn lại của cùng một màn.
+     *
+     * ⚠ Bảng đã đo ở trên (*sơ đồ hai bên xe*, nhóm ADAS) **đã xoá 2026-09-16** cùng toàn bộ ADAS/an toàn (owner).
+     * Phép đo giữ nguyên làm bằng chứng cho con số — sàn này nay áp cho `DoorBoardView` và `TyreBoardView`.
+     *
+     * Nên: cỡ = `max(tỉ lệ, sàn)`, và **số HÀNG** mới là thứ co theo chỗ. Đảo lại — bóp chữ để nhồi đủ hàng — là
+     * chính cái bệnh đang chữa.
+     *
+     * **Không thể là một bậc của thang**: đây là cỡ CHỮ, không phải khoảng cách; và thang cố ý không quản typography
+     * (xem KDoc `SpacingScaleContractTest`) — nhưng một cái SÀN thì phải sống cùng chỗ với mọi con số dp khác, không
+     * thì nó thành hằng trần ở tầng vẽ (đúng lỗ `SettingsPanel.RAIL_DP` đã bị bắt).
+     */
+    const val BOARD_LABEL_MIN = 13
+
+    // Android box B2 · W3: `BOARD_VALUE_MIN` (sàn chữ giá trị của ô vẽ Canvas lốp/cửa) gỡ cùng các bảng xe.
+
+    // ⚠ 2026-09-16 — `BOARD_ROW_MIN` (sàn chiều cao một HÀNG của bảng sơ đồ hai bên) đã XOÁ cùng `SideBoardView`:
+    // nó là hằng của **riêng** bảng đó và sau lượt gỡ ADAS/an toàn (owner) không còn một chỗ gọi nào. Nếu mai có
+    // bảng nhiều-hàng mới, suy lại từ sàn chữ giá trị + [S] như cũ — đừng chép lại con số.
+
+    // Android box B2 · W3: `LEAD_ROW` (số chính của thẻ CARD dữ liệu xe) gỡ cùng ô đọc.
+
+    /**
+     * Độ hở phía trên cho nội dung widget, để không bị nút ⇄ **nổi** ở đầu ô đè lên.
+     *
+     * **Suy ra, không tự chọn**: `XS` (lề trên của nút) + `ICON_L` (cỡ nút) + `XS` (khoảng thở). Viết dạng phép
+     * cộng để đổi cỡ nút là độ hở tự đúng theo. ⚠ Trước T5 chỗ này là `dp(30)` trong khi nút chiếm 34dp ⇒ nội
+     * dung widget **đã bị đè 4dp** — một lỗi nhìn-thấy-được mà không bài test nào bắt, vì nó là số trần ở một
+     * tệp khác với số trần quyết định cỡ nút.
+     */
+    const val SLOT_HEAD_CLEAR = XS + ICON_L + XS
+
+    /**
+     * Đĩa kính dưới nút ⇄ của Ô TRỐNG (FIX286 · OQ8 phương án B, chốt 2026-10-03): `S` + `ICON_S` + `S` = 36dp —
+     * suy ra từ cỡ icon như [SLOT_HEAD_CLEAR], không tự chọn; nằm trong khung chạm `TOUCH × SLOT_HEAD_CLEAR`.
+     */
+    const val SWAP_DISC = S + ICON_S + S
+
+    /**
+     * **KHE GIỮA CÁC Ô LÀM VIỆC** — và giữa vùng ô với thanh nút.
+     *
+     * ⚠⚠ **BỐN chỗ đọc con số này và chúng PHẢI bằng nhau**: [WorkspaceView] (vẽ khung ô) · [LauncherWindows]
+     * `absoluteSlotRect` (đặt cửa sổ app on-car) · [DockAreaLayout] (khe vùng ô ↔ thanh nút) · và qua đó là vị
+     * trí dải đầu ô. Trước T5 mỗi chỗ giữ **một bản sao** `dp(10)` riêng — đúng cái bẫy hai-bản-sao dự án đã
+     * mắc nhiều lần. Lệch một chỗ thì **màn hình vẽ ô theo lưới mới trong khi cửa sổ app đặt theo lưới cũ** =
+     * hình dạng P-bug2 (app nằm lệch khỏi ô). Đặt tên riêng để không ai sửa lẻ một chỗ.
+     *
+     * Giá trị = **9** (ngoài thang): owner 2026-09-14 *"chỉnh margin giữa các khung bé lại chút, tầm 75% hiện tại"*.
+     * 75% của [M] (12) = 9 — khe giữa các ô hẹp lại một nhịp mà vẫn thấy rõ đường chia. Ngoài thang có chủ đích: đây
+     * là con số owner chốt theo cảm nhận trên xe, không phải một bậc của thang dp.
+     */
+    const val SLOT_GAP = 9
+
+    /**
+     * Thụt cửa sổ app vào trong ô (trái/phải/dưới).
+     *
+     * Bằng [SLOT_GAP] là **cố ý**: nhờ vậy rãnh quanh cửa sổ app trông liền một nhịp với rãnh giữa các ô. Nhưng
+     * đây là **vai trò khác** ([SLOT_GAP] là khoảng cách *giữa hai ô*, còn đây là lề *bên trong một ô*) nên có
+     * tên riêng — để sau này muốn app sát viền hơn thì sửa được mà không xê dịch cả lưới.
+     *
+     * Từ 2026-09-14 bám thẳng [SLOT_GAP] (nay = 9) thay vì chép giá trị [M]: giữ đúng lời hứa "rãnh quanh app
+     * trông liền một nhịp với rãnh giữa các ô" khi owner kéo khe ô về 75%.
+     */
+    const val SLOT_APP_INSET = SLOT_GAP
+
+    /**
+     * **Bề rộng TỐI THIỂU của cột nhãn** trong một hàng cài đặt (nhãn bên trái · điều khiển bên phải).
+     *
+     * ## [ĐO] bệnh nó chữa — nhãn và điều khiển cách nhau gần một mét màn hình
+     * Trước đây nhãn nhận `weight = 1f`, tức nó **ăn hết** chỗ trống của hàng và đẩy dãy chip sang mép phải. Khung
+     * nội dung của màn Cài đặt rộng ~950dp (1920×1080, rail 230dp), nên [ĐO] trên máy ảo: hàng *"Bố cục sẵn"* có
+     * nhãn kết ở x=547 và chip đầu bắt đầu ở x=1437 — **890px (593dp) trống ở giữa**; hàng *"Cách phủ"* (2 chip)
+     * còn tệ hơn: **1064px (709dp)**. Mắt không ghép được điều khiển nào thuộc nhãn nào, phải đưa ngón tay dò
+     * ngang. Đây chính là thứ owner gọi là *"margin padding chưa OK"*.
+     *
+     * ## Vì sao là `minWidth` chứ không phải bề rộng CỐ ĐỊNH
+     * Cố định thì nhãn dài hơn sẽ **bị cắt âm thầm** (`ellipsize`), và không bài test nào bắt được điều đó. Với
+     * `minWidth` thì mọi nhãn hiện nay xếp thẳng một cột (điều khiển của các hàng thẳng hàng nhau — thứ khiến một
+     * danh sách 7 hàng đơn vị đọc được), còn nhãn dài hơn trong tương lai thì **đẩy** điều khiển sang phải chứ
+     * không mất chữ. Suy giảm an toàn thay vì mất dữ liệu.
+     *
+     * ## Vì sao KHÔNG thể là một bậc của thang
+     * Đây là **bề rộng một cột bố cục**, cùng họ với [ART] / [PROGRESS_W] / [DOCK_TILE_W] — không phải khoảng cách
+     * giữa hai vật. Bậc lớn nhất của thang là [XXL] = 28dp, không cùng bậc độ lớn.
+     *
+     * Giá trị 150dp = 225px @1.5×: nhãn dài nhất đang dùng (*"Viền đặt thanh"*, 14 ký tự @13.5sp ≈ 140px) nằm gọn
+     * một dòng và còn ~85px dư, trong khi vẫn chừa ~800dp cho dãy chip dài nhất (5 lựa chọn bố cục sẵn).
+     */
+    const val LABEL_COL = 150
+
+    /**
+     * **Bề rộng cột rail nhóm** của màn Cài đặt.
+     *
+     * 230dp ở 1920×1080 (density 1.5 ⇒ 1280dp ngang) chừa ~950dp cho khung nội dung — đủ cho lưới 5 ô ngang của
+     * nhóm *"Màn hình chính"* mà nhãn nhóm dài nhất (*"Dẫn đường · Cụm · Phím"*) vẫn nằm trên một dòng.
+     *
+     * ⚠ [SOÁT G1] Trước lượt soát này nó là `SettingsPanel.RAIL_DP` — một **hằng cỡ nằm ngoài thang**. Bài canh
+     * không thấy nó (nó là định danh, không phải số trần), nên "một thang, một chỗ" chỉ đúng trên giấy: cùng một
+     * màn Cài đặt có cột nhãn khai trong [KachiSpace] mà cột rail khai ở tầng vẽ. Nay cả hai cùng chỗ, và có bài
+     * canh [khong duoc truyen hang co ngoai thang vao dp] chặn hằng mới mọc ra ngoài.
+     *
+     * **Không thể là một bậc của thang**: cùng họ [LABEL_COL] — bề rộng một cột bố cục, không phải khoảng cách.
+     */
+    const val RAIL_COL = 230
+
+    /**
+     * **Lề NGANG của nội dung một bảng phủ toàn màn** ([XXL] + [XXL] = 56dp = 84px @1.5×).
+     *
+     * ## Suy ra từ bảng Cài đặt, không tự chọn
+     * [SettingsPanel] là bảng phủ toàn màn duy nhất đã được owner duyệt bằng ảnh: nó là một thẻ có **lề ngoài**
+     * [XXL] rồi **lề trong** [XXL] ⇒ nội dung bắt đầu ở x = 28 + 28 = 56dp ([ĐO] ảnh: **x = 84px**). Bảng vẽ bố
+     * cục ([LayoutEditorPanel]) là bảng phủ toàn màn ĐỤC (không thẻ, không scrim) nên không có hai lớp lề để cộng
+     * — nó phải khai thẳng cột nội dung, và cột đó phải TRÙNG với bảng kia, nếu không thì hai bề mặt toàn màn của
+     * cùng một app bắt đầu ở hai cột khác nhau (R-UI (h): *"bảng vẽ bố cục dùng cùng lề panel (x84)"*; [ĐO] trước
+     * bản vá nó ở **x = 30px**).
+     *
+     * Viết dạng **phép cộng** chứ không gõ 56: đổi [XXL] thì cả hai bề mặt đi cùng nhau. Đây chính là chỗ mà bẫy
+     * hai-bản-sao sẽ xuất hiện nếu gõ số.
+     *
+     * **Không thể là một bậc của thang**: cùng họ [LABEL_COL] / [RAIL_COL] — bề rộng một khối bố cục.
+     */
+    const val PANEL_INSET = XXL + XXL
+
+    /**
+     * **Bề rộng TỐI THIỂU của một chip** trong dãy segmented (66dp).
+     *
+     * ## [ĐO] bệnh nó chữa — chip 1–2 ký tự trông như HÌNH TRÒN
+     * Chip bo [RADIUS_PILL] (bo hết cỡ) nên dáng của nó do **tỉ lệ rộng/cao** quyết định. [ĐO] ảnh máy ảo
+     * 2026-09-12: chip *"m"* / *"ft"* / *"°C"* đo **72×66px** ⇒ tỉ lệ **1.09** — mắt đọc ra một hình tròn, lạc
+     * khỏi họ viên thuốc của các chip dài cùng hàng. Trước đó `minWidth` lấy [TOUCH] (48dp) vì lý do *đích chạm*,
+     * nhưng đích chạm và **dáng** là hai ràng buộc khác nhau và 48dp chỉ thoả cái thứ nhất.
+     *
+     * Suy từ chiều cao chip chứ không tự chọn: chip cao [ICON_XL] = 44dp, tỉ lệ tối thiểu để còn đọc ra viên
+     * thuốc là 1.5 ⇒ 44 × 1.5 = **66dp**. Đổi chiều cao chip thì con số này phải tính lại theo cùng tỉ lệ.
+     *
+     * **Không thể là một bậc của thang**: đây là bề rộng của MỘT VẬT (cùng họ [LABEL_COL] / [DOCK_TILE_W]),
+     * không phải khoảng cách giữa hai vật; bậc lớn nhất của thang là [XXL] = 28dp.
+     */
+    const val CHIP_MIN_W = 66
+
+    /**
+     * **Bề rộng TỐI ĐA của một dòng chú thích** (`SettingsRows.note`, 600dp).
+     *
+     * ## [ĐO] bệnh nó chữa — dòng chú thích dài 1358px
+     * Khung nội dung của màn Cài đặt rộng ~950dp (1920×1080, rail [RAIL_COL]), và `note()` là `MATCH_PARENT` nên
+     * [ĐO] ảnh máy ảo 2026-09-12: một dòng chú thích trải **1358px ≈ 150 ký tự/dòng**. Chuẩn sắp chữ là 45–90 ký
+     * tự/dòng — quá ngưỡng thì mắt **trượt dòng** khi xuống hàng (mất mốc quay về đầu dòng).
+     *
+     * 600dp = 900px @1.5×, ở [KachiType.CAPTION] 12sp (bề rộng trung bình ~7px/ký tự) cho **~90 ký tự/dòng** —
+     * đúng cận trên của khoảng dễ đọc, và vẫn là `maxWidth` (không phải bề rộng cố định) nên màn hẹp hơn thì dòng
+     * tự co, không có chỗ nào bị cắt.
+     *
+     * **Không thể là một bậc của thang**: cùng họ [LABEL_COL] — bề rộng một khối bố cục, không phải khoảng cách.
+     */
+    const val NOTE_MAX_W = 600
+
+    // ── Chiều cao của view TỰ VẼ nhúng vào Cài đặt (`SettingsRows.embed`) ───────────────────────────────
+    //
+    // ⚠ Số ở mục này (nay không còn số nào) là **bề cao một khối bố cục**, cùng họ [LABEL_COL]/[RAIL_COL]/[NOTE_MAX_W] — KHÔNG phải một
+    // bậc khoảng cách. Chúng phải nằm ở đây chứ không viết tại chỗ gọi vì `embed(view, heightDp)` nhận dp thô:
+    // một số trần ở chỗ gọi **không** bị `SpacingScaleContractTest` bắt (nó chỉ soi đối số của `dp(`/`dpi(`),
+    // tức đúng cái lỗ mà `px()` đã lách qua một lần (xem KDoc `dpHelperNames` của bài canh đó).
+
+    // Android box B2 · W2e — `EMBED_M` (sơ đồ ghế; khung kéo-thả biển báo/bong bóng đã gỡ ở W2c) và `EMBED_S` (đồng hồ
+    // PM2.5) gỡ cùng tiện nghi xe. `SettingsRows.embed` còn nhận dp thô cho view tự vẽ sau này.
+    // Android box B2 · W2c — `EMBED_PREVIEW` (ô xem trước cụm `ClusterPreviewView` của nhóm Chiếu cụm) gỡ cùng view đó.
+
+    /** Ảnh bìa nhạc (vuông). */
+    const val ART = 80
+
+    /** Bề rộng thanh tiến trình của widget nhạc. */
+    const val PROGRESS_W = 152
+
+    // ⚠⚠ [UX-OVERHAUL · WP5 · 2026-09-20] **HÌNH HỌC CỦA HAI THANH đã DỜI sang `KachiSpaceBars.kt`** (`object
+    // KachiBars`): `DOCK_THICK` · `DOCK_WIDE` · `DOCK_TILE_W` · `DOCK_TILE_H` · `DOCK_TILE_W_VERTICAL` ·
+    // `DOCK_TILE_H_VERTICAL`, cộng bộ hằng MỚI của thanh trên (`HEADER_H` · `HEADER_BTN` · `HEADER_AVATAR`).
+    //
+    // Cắt theo VAI, không cắt cho vừa số dòng (cùng lệ `ControlTileFactory` → `TileSize.kt`/`ReadTile.kt`): tệp này
+    // là **thang dùng chung cho mọi bề mặt**, còn tệp kia là **cỡ của hai khối bố cục cụ thể** mà WP5 vừa hạ tỉ lệ
+    // theo lời owner (thanh nút 80/85 %, thanh trên 75/70 %) — chúng suy lẫn nhau (bề dày thanh = ô + lề ô + lề
+    // thanh) nên phải đứng cạnh nhau để không ai đổi một nửa. Lý do PHẢI tách: tệp này đã **496 dòng** trước khi
+    // WP5 thêm một dòng nào, tức chạm trần 500 của dự án (CLAUDE.md §4.1).
+    //
+    // `KachiBars` vẫn là **một phần của thang** (chỉ khai hằng, 0 lời gọi `dp(`, 0 import Android) — bài canh
+    // `SpacingScaleContractTest` nhận nó cùng hạng với tệp này và có phép kiểm riêng ép đúng tính chất đó.
+
+    /**
+     * Thụt TRÊN cho caption cửa sổ freeform (24dp ≈ 36px @1.5×).
+     *
+     * **Đây là số ĐO của nền tảng, không phải lựa chọn thiết kế**: `DecorCaptionView` của AOSP cao chừng đó và
+     * app thường KHÔNG gỡ được. Nó phải đứng riêng vì nếu ai nới nhịp khoảng cách của thang thì **không** được
+     * kéo theo con số này — đổi nó là đổi một cách lách nền tảng đã đo trên máy thật.
+     */
+    const val CAPTION_INSET = 24
+
+    // ══ Tiện ích ════════════════════════════════════════════════════════════════════════════════════════
+
+    /** dp → pixel (số nguyên). */
+    fun dp(ctx: Context, v: Int): Int = (v * ctx.resources.displayMetrics.density).toInt()
+
+    /** dp → pixel (số thực) — cho bán kính, vốn nhận `Float`. */
+    fun dpf(ctx: Context, v: Int): Float = v * ctx.resources.displayMetrics.density
+}

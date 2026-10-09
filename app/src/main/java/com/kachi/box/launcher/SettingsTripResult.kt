@@ -1,0 +1,98 @@
+package com.kachi.box.launcher
+
+import android.content.Context
+import android.widget.LinearLayout
+import com.kachi.box.R
+import com.kachi.box.launcher.trip.TripGate
+import com.kachi.box.launcher.trip.TripPlan
+import com.kachi.box.launcher.trip.TripStep
+import com.kachi.box.launcher.trip.TripStepCode
+import com.kachi.box.launcher.trip.TripStepKind
+import com.kachi.box.launcher.trip.TripWaitMark
+import java.text.SimpleDateFormat
+import java.util.Date
+
+/**
+ * ═══ L4 · D1(b) — Cài đặt › Mở app khi nổ máy: KẾT QUẢ chuyến gần nhất, từng bước MỘT câu dễ hiểu ═══════════════════════
+ *
+ * Owner 03/10 trên xe 2.86: chạy nền / nhạc không làm gì mà Cài đặt vẫn nói *"đã chạy lúc HH:mm"*, lý do chỉ nằm ở màn Chẩn
+ * đoán (không có nút ở bản phát hành). Nay Cài đặt dịch từng MÃ bước ([TripStepCode], sổ `kachi_trip_last` trường `s=`)
+ * thành một câu ở 5 tiếng ⇒ anh em chụp màn hình gửi về là đủ (CLAUDE.md §11). Một mã một câu — [reasonRes] là `when` đủ
+ * nhánh: thêm mã mới mà quên câu là KHÔNG biên dịch được.
+ */
+internal fun tripResultRows(list: LinearLayout, context: Context, rows: SettingsRows, r: TripGate.Result) {
+    // Giờ 24h theo ngôn ngữ NGƯỜI DÙNG chọn (cùng mẫu đồng hồ thanh trên) — `DateFormat.getTimeInstance` không truyền
+    // locale thì theo locale MÁY (xe đặt `ms`/`en_US` ra 12h + AM/PM), lệch với đồng hồ ngay trên màn (spec R7).
+    // L4: kết quả KHÔNG phải của hôm nay (kênh chưa lên lần nổ máy này ⇒ chuyến chưa chạy, dòng này là của lần trước) ⇒ kèm
+    // ngày, để ảnh chụp không đọc nhầm "đã chạy lúc 08:10" của hôm qua thành của hôm nay.
+    val day = SimpleDateFormat("yyyyMMdd", LangHost.locale())
+    val pattern = if (day.format(Date(r.atWall)) == day.format(Date())) "HH:mm" else "dd/MM HH:mm"
+    val at = SimpleDateFormat(pattern, LangHost.locale()).format(Date(r.atWall))
+    val text = when (r.code) {
+        TripGate.Code.RAN -> context.getString(R.string.kachi_trip_res_ran, at)
+        TripGate.Code.NOTHING -> context.getString(R.string.kachi_trip_res_nothing, at)
+        // A2 (4) · 2.89: sổ có mốc chờ (`w=`) ⇒ gọi tên thứ đã chờ; bản ghi cũ ⇒ câu chung như trước.
+        TripGate.Code.EXPIRED -> r.wait?.let { context.getString(R.string.kachi_trip_expired_wait, tripWaitText(context, it)) }
+            ?: context.getString(R.string.kachi_trip_expired)
+        TripGate.Code.GAVE_UP -> context.getString(R.string.kachi_trip_res_gave_up, at)
+        TripGate.Code.NOOP -> context.getString(R.string.kachi_trip_res_noop, at)
+        TripGate.Code.PARTIAL -> context.getString(R.string.kachi_trip_res_partial, at)
+    }
+    list.addView(rows.note(context.getString(R.string.kachi_trip_last_ran, text)))
+    r.steps.forEach { s -> list.addView(rows.note(context.getString(R.string.kachi_trip_step, stepLabel(context, s), context.getString(reasonRes(s.code))))) }
+}
+
+/** Tên hiện cho một bước: tên app thật (đã gỡ ⇒ tên gói); bước nhạc ⇒ *"Nhạc (YouTube)"*, app ở ô ⇒ *"Nhạc (YouTube ở ô 1)"* (A2). */
+private fun stepLabel(context: Context, s: TripStep): String {
+    val app = InstalledApps.labelOf(context, s.pkg) ?: s.pkg
+    val slot = s.slot
+    return when {
+        s.kind != TripStepKind.MUSIC -> app
+        slot != null -> context.getString(R.string.kachi_trip_step_music_slot, app, slot + 1)
+        else -> context.getString(R.string.kachi_trip_step_music, app)
+    }
+}
+
+/**
+ * A2 (4) · 2.89 — tên thứ chuyến chờ (dùng cho *"Hết hạn chờ …"* và *"đang chạy — chờ …"*). Một mã một câu (`when` đủ nhánh:
+ * thêm cổng chờ mới mà quên câu là KHÔNG biên dịch được); ô hiện 1-based như nút đầu ô (*"Đổi ứng dụng ô 1"*).
+ */
+internal fun tripWaitText(context: Context, m: TripWaitMark): String = when (m.wait) {
+    TripPlan.Wait.BOOT -> context.getString(R.string.kachi_trip_wait_boot)
+    TripPlan.Wait.HOME_SCREEN -> context.getString(R.string.kachi_trip_wait_home_screen)
+    TripPlan.Wait.SLOTS -> context.getString(R.string.kachi_trip_wait_slots)
+    TripPlan.Wait.HOME_STEADY -> context.getString(R.string.kachi_trip_wait_home_steady)
+    TripPlan.Wait.SLOT_APP ->
+        context.getString(R.string.kachi_trip_wait_slot_app, InstalledApps.labelOf(context, m.pkg) ?: m.pkg, m.slot + 1)
+}
+
+internal fun reasonRes(code: TripStepCode): Int = when (code) {
+    TripStepCode.MOVED -> R.string.kachi_trip_why_moved
+    TripStepCode.HOME_RESTORED -> R.string.kachi_trip_why_home_restored
+    TripStepCode.ALREADY_RUNNING -> R.string.kachi_trip_why_already_running
+    TripStepCode.KEPT_UNDER -> R.string.kachi_trip_why_kept_under
+    TripStepCode.IN_SLOT -> R.string.kachi_trip_why_in_slot
+    TripStepCode.OPENED -> R.string.kachi_trip_why_opened
+    TripStepCode.PLAYING -> R.string.kachi_trip_why_playing
+    TripStepCode.SELF_PLAYING -> R.string.kachi_trip_why_self_playing
+    TripStepCode.SENT -> R.string.kachi_trip_why_sent
+    TripStepCode.TIMEOUT -> R.string.kachi_trip_why_timeout
+    TripStepCode.NO_STAGE -> R.string.kachi_trip_why_no_stage
+    TripStepCode.NO_CHANNEL -> R.string.kachi_trip_why_no_channel
+    TripStepCode.DISABLED -> R.string.kachi_trip_why_disabled
+    TripStepCode.SYSTEM_APP -> R.string.kachi_trip_why_system_app
+    TripStepCode.NOT_INSTALLED -> R.string.kachi_trip_why_not_installed
+    TripStepCode.SELF -> R.string.kachi_trip_why_self
+    TripStepCode.CAMERA_UNKNOWN -> R.string.kachi_trip_why_camera_unknown
+    TripStepCode.CAMERA -> R.string.kachi_trip_why_camera
+    TripStepCode.OTHER_FRONT -> R.string.kachi_trip_why_other_front
+    TripStepCode.NOT_STAGED -> R.string.kachi_trip_why_not_staged
+    TripStepCode.NO_SESSION -> R.string.kachi_trip_why_no_session
+    TripStepCode.UNKNOWN_MEDIA -> R.string.kachi_trip_why_unknown_media
+    TripStepCode.DEADLINE -> R.string.kachi_trip_why_deadline
+    TripStepCode.ANCHOR_IN_FRONT -> R.string.kachi_trip_why_anchor_in_front
+    TripStepCode.UNREAD -> R.string.kachi_trip_why_unread
+    TripStepCode.SLOT_NOT_READY -> R.string.kachi_trip_why_slot_not_ready
+    TripStepCode.SLOT_WAIT -> R.string.kachi_trip_why_slot_wait
+    TripStepCode.PARKED -> R.string.kachi_trip_why_parked
+}

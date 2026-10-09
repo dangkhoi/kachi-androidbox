@@ -1,0 +1,202 @@
+package com.kachi.box
+
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.os.SystemClock
+import android.service.notification.NotificationListenerService
+import android.util.Log
+import com.kachi.box.launcher.KachiHomeActivity
+import com.kachi.box.launcher.trip.TripStart
+import com.kachi.box.modules.navaccess.AccessibilityHealGates
+
+/**
+ * SELF-HEAL nav listener — auto-rebind KHÔNG cần mở app / không cần disallow→allow tay.
+ *
+ * Head-unit BYD hay GIỮ quyền listener nhưng KHÔNG bind (hoặc THẢ binding lúc chạy)
+ * → [MediaSessionListener.onNotificationPosted] câm = "nav không lên / flaky".
+ * Quyền vẫn ON, Maps vẫn đẩy noti category=navigation, nhưng service không ở trạng thái bound.
+ *
+ * Ba lớp tự hồi phục:
+ *  1. Sự kiện hệ thống: MY_PACKAGE_REPLACED + BOOT_COMPLETED + LOCKED_BOOT_COMPLETED → rebind ngay.
+ *  2. [MediaSessionListener.onListenerDisconnected] → rebind ngay khi binding rớt.
+ *  3. WATCHDOG định kỳ ([ACTION_WATCHDOG] qua AlarmManager ~60s) → rebind lại kể cả khi
+ *     binding CHƯA TỪNG lên (case "sáng nay đi không lên") mà không cần thao tác tay.
+ *
+ * ⚠ ĐÍNH CHÍNH FIX286 (03/10, [ĐO nguồn AOSP]): lớp 1–3 ở trên đều là `requestRebind` — chỉ gỡ "snooze", KHÔNG gắn lại
+ * một bộ nghe đã CẤP mà chưa GẮN (r47 NMS `:3127-3139` → `ManagedServices.java:707-711`). Android box B2 · W1: đường
+ * chữa disallow → allow của HUD (`NlsHeal`) đã gỡ khỏi nhịp này; giữ watchdog trợ năng (phím vật lý).
+ *
+ * Đăng ký trong AndroidManifest (manifest-declared, để nhận được kể cả khi process đã chết).
+ */
+class RebindReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        val action = intent?.action ?: return
+        Log.i(TAG, "rebind trigger: $action")
+        rebind(context)
+        // Android box B2 · W1 — `NlsHeal.onWatchdog` (gắn lại bộ nghe thông báo cho HUD kính lái BYD) gỡ khỏi nhịp này.
+        // B2 · BIND-SELFHEAL (owner 2026-09-22): vòng NỀN định kỳ tự chữa binding PHÍM VÔ-LĂNG (accessibility)
+        // khi enabled-nhưng-chưa-BOUND — ca "phím chết giữa lúc lái do CPU cao" mà người dùng KHÔNG mở app.
+        // `rebind()` ở trên chỉ lo notification-listener; phím vô-lăng đi qua KachiKeyService, cần đường
+        // heal RIÊNG. `KeyServiceConnect.grantAccessibility` idempotent (verify `dumpsys` bound TRƯỚC, chỉ toggle khi
+        // enabled-nhưng-chưa-bound) ⇒ gọi định kỳ an toàn. Gate: chỉ khi voice-key BẬT và cờ in-process nói CHƯA
+        // bound (tránh dadb thừa mỗi 60s khi đang bound tốt).
+        // ⚠ Cửa fail đã soi (owner 2026-09-23 "còn cửa nào fail?"): KHÔNG gate heal bằng tín hiệu IN-PROCESS.
+        // Cả cờ `connected` LẪN `AccessibilityManager.getEnabledAccessibilityServiceList` đều có thể DƯƠNG-TÍNH-GIẢ
+        // khi service CHẾT mà settings vẫn liệt kê "enabled" (Android giữ enabled qua crash/unbind ngầm — xác nhận
+        // tài liệu). Nguồn SỰ THẬT duy nhất về BOUND = `dumpsys accessibility` "Bound services", mà chỉ đọc được
+        // qua dadb. `grantAccessibility` idempotent: nó verify `dumpsys` bound TRƯỚC, đã bound → no-op/no-toggle,
+        // chưa bound → toggle ép rebind. Nên watchdog GỌI THẲNG (không gate in-process) — 1 lệnh dumpsys/60s là
+        // giá chấp nhận để tự-heal ĐÚNG cả ca "enabled nhưng instance chết". Single-flight `grantingAcc` chống trùng.
+        // B1 (BG-14, 2026-09-25) — hai sửa, KHÔNG bỏ đường heal:
+        //  (a) Đoạn trên nói `getEnabledAccessibilityServiceList` có thể dương-tính-giả — [ĐO AOSP android-10.0.0_r47
+        //      `AccessibilityManagerService.java:653-679`] nó duyệt `mBoundServices`, CÙNG danh sách `dumpsys` in ở
+        //      "Bound services:{" (`:2563`) ⇒ hai nguồn là một. `grantAccessibility` nay hỏi binder trước, đã bound ⇒
+        //      0 lệnh shell (xem `AccessibilityHealGates`); chưa bound / binder ném ⇒ dadb đầy đủ như cũ.
+        //  (b) Alarm là LƯỚI PHỤ: FGS keep-alive sống ⇒ watchdog in-process 30 s đã lo ⇒ alarm no-op (cờ tĩnh chết
+        //      theo tiến trình ⇒ FGS chết thì alarm lại heal — đúng ca nó sinh ra). Alarm KHÔNG cancel: giữ cho ca chết.
+        if (AccessibilityHealGates.alarmShouldHeal(
+                voiceKeyEnabled = Prefs.voiceKeyEnabled(context),
+                inProcessWatchdogAlive = VoiceKeyKeepAliveService.inProcessWatchdogAlive,
+            )
+        ) {
+            // 2.83 lớp 3 — CÙNG cổng thuần với watchdog 30 s: dump gần nhất đã nói KẸT ⇒ toggle vô ích (AOSP
+            // `:1630-1631`) ⇒ không re-grant mỗi 60 s, chỉ kiểm lại chậm. Alarm này chỉ heal khi FGS keep-alive CHẾT —
+            // [ĐO xe c2 29/09] đúng khoảng TẮT MÁY (BYD giết keep-alive, chỉ dựng lại lúc mở xe), và là alarm WAKEUP ⇒
+            // không cổng này thì kẹt qua đêm = thức SoC ghi `enabled_accessibility_services` mỗi phút tới sáng.
+            // `bound` chỉ theo binder (không rơi về cờ RAM): binder không hỏi được ⇒ `false` ⇒ chưa biết kẹt thì đi
+            // grant như cũ (grant tự hỏi lại binder rồi đi shell) — không mất đường tự-heal 1.78.
+            val app = context.applicationContext
+            val bound = KeyServiceConnect.boundPerAccessibilityManager(app) == true
+            when (AccessibilityHealGates.watchdogStep(bound, A11yLifecycleHeal.runningStuckSeenAt(bound), SystemClock.elapsedRealtime())) {
+                AccessibilityHealGates.WatchdogStep.GRANT ->
+                    runCatching { KeyServiceConnect.grantAccessibility(context.applicationContext) }
+                        .onFailure { Log.e(TAG, "accessibility self-heal failed", it) }
+                AccessibilityHealGates.WatchdogStep.RECHECK -> A11yLifecycleHeal.recheckRunningStuck(app)
+                AccessibilityHealGates.WatchdogStep.NONE ->
+                    Log.d(TAG, "alarm: đã gắn, hoặc KẸT đã đo chưa tới nhịp kiểm lại → không toggle ($action)")
+            }
+        } else if (action == ACTION_WATCHDOG) {
+            Log.d(TAG, "watchdog alarm no-op: FGS keep-alive đang chạy watchdog in-process (hoặc phím-thoại tắt)")
+        }
+        when (action) {
+            Intent.ACTION_BOOT_COMPLETED -> {
+                scheduleWatchdog(context)
+                TripStart.onBootCompleted(context)   // F2/F3 R2.3a — khoá lần khởi động này (commit), không phụ thuộc công tắc
+                // 1.21 Item 1 (owner): HEADLESS auto-start — do the boot setup in a background
+                // foreground-service (BootSetupService) WITHOUT foregrounding any screen on the main
+                // display (also dodges the dudu size-compat letterbox). Toggle defaults ON; when OFF, fall
+                // back to the 1.14 I5 behaviour (auto-open Home on start).
+                if (Prefs.headlessAutostart(context)) startBootSetup(context) else launchHome(context)
+                // B6 (launcher): surface-independent boot orchestration (seed freeform + set-home + ensure the
+                // Kachi HOME activity is up so it restores + mounts the saved workspace). Independent of the
+                // ClusterNav headlessAutostart toggle above — the launcher should come up ready regardless; its
+                // own pref + anti-loop gate live in KachiAutostart.runBoot. Best-effort (never throws).
+                KachiAutostartService.startForBoot(context)
+            }
+            Intent.ACTION_LOCKED_BOOT_COMPLETED -> scheduleWatchdog(context)
+            Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                scheduleWatchdog(context)   // #4: alarm mất sau replace/force-stop; đặt lại (idempotent FLAG_UPDATE_CURRENT)
+                // OTA auto-reopen (owner 2026-08-12): the installer kills us on update and does NOT
+                // relaunch. Bring the app back to the foreground so the user lands on Home after an
+                // update instead of a blank screen. Manifest-declared receiver ⇒ delivered even though
+                // our process was replaced. Background-activity-start is allowed here because the app
+                // holds SYSTEM_ALERT_WINDOW (the overlay/bubble permission) — the standard A10
+                // exemption; best-effort (runCatching) if the grant is missing.
+                // 1.21 Item 1 (owner): same headless gate as boot — when "Tự khởi động nền" is ON, run the
+                // background setup instead of reopening Home after an OTA self-update.
+                if (Prefs.headlessAutostart(context)) startBootSetup(context) else launchHome(context)
+                // B6 (launcher): the installer kills us on update and does NOT relaunch → ensure the Kachi HOME
+                // activity comes back up (which restores + mounts the saved workspace) via the surface-independent
+                // orchestration. Same independence + best-effort as the boot path.
+                KachiAutostartService.startForBoot(context)
+            }
+        }
+    }
+
+    // Android box B2 · W1 — gỡ `castBootWork` (dựng lại phiên chiếu cụm `SimpleCastRuntime`, nút nổi chiếu
+    // `FloatingBubbleService`, ghi lượt tự chiếu `CastAutomationService`): chiếu cụm là phần chỉ-BYD.
+
+    /**
+     * 1.21 Item 1: start the short-lived headless [BootSetupService] instead of foregrounding a screen.
+     * A foreground service (not a plain [launchHome]) because the relocated accessibility
+     * grant + force-bind takes ~3–5 s over dadb — longer than a BroadcastReceiver's execution budget — so
+     * it needs the FGS to keep the process alive. Best-effort: startForegroundService can throw in some
+     * background-start-restricted states, so it is wrapped; the nav pipeline + auto-cast still self-heal via
+     * their own headless paths (listener bind), and the same setup re-runs when the app is
+     * opened (the old ClusterNav screen carried it until it was removed on 2026-09-13; it now lives in
+     * [BootSetupService] and [com.kachi.box.launcher.KachiHomeActivity]'s startup path).
+     */
+    private fun startBootSetup(context: Context) {
+        runCatching {
+            val app = context.applicationContext
+            app.startForegroundService(Intent(app, BootSetupService::class.java))
+            Log.i(TAG, "headless boot setup requested")
+        }.onFailure { Log.e(TAG, "headless boot setup start failed", it) }
+    }
+
+    /**
+     * Bring the app to the foreground. Used both on car BOOT_COMPLETED (I5 1.14:
+     * auto-open on start, per owner) and after a self-update (MY_PACKAGE_REPLACED). Uses the package's own
+     * launcher intent with NEW_TASK; CLEAR_TOP so a stale task isn't stacked. Best-effort: background
+     * activity-start needs the SYSTEM_ALERT_WINDOW exemption, so this may be a no-op if the overlay grant is
+     * absent — it never throws.
+     *
+     * NOTE (S3, 2026-09-13 — docs/specs/kachi-remove-legacy-screen.html R1): the launcher intent resolves to
+     * [KachiHomeActivity], and so does the fallback below — the old ClusterNav screen was removed on
+     * 2026-09-13, so Kachi is the only screen this can open. It only fires when the `headless_autostart`
+     * toggle is OFF; the default-ON path still starts [BootSetupService] with no UI.
+
+     */
+    private fun launchHome(context: Context) {
+        runCatching {
+            val app = context.applicationContext
+            val launch = app.packageManager.getLaunchIntentForPackage(app.packageName)
+                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                ?: Intent(app, KachiHomeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            app.startActivity(launch)
+            Log.i(TAG, "launch Home requested")
+        }.onFailure { Log.e(TAG, "launch Home failed", it) }
+    }
+    companion object {
+        private const val TAG = "NavRebind"
+        /** Dựng từ applicationId (manifest: `${applicationId}.REBIND_WATCHDOG`) — đổi gói không phải sửa chuỗi. */
+        const val ACTION_WATCHDOG = "${BuildConfig.APPLICATION_ID}.REBIND_WATCHDOG"
+
+        private const val INTERVAL_MS = 60_000L
+
+        /** Ép hệ thống bind lại nav listener (an toàn gọi nhiều lần; no-op nếu đã bound). */
+        fun rebind(context: Context) {
+            runCatching {
+                NotificationListenerService.requestRebind(
+                    ComponentName(context, MediaSessionListener::class.java)
+                )
+            }.onFailure { Log.e(TAG, "requestRebind failed", it) }
+        }
+
+        /** Đặt alarm lặp ~60s gọi lại [rebind] → tự hồi phục binding khi đang chạy/đỗ. */
+        fun scheduleWatchdog(context: Context) {
+            val am = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            val pi = PendingIntent.getBroadcast(
+                context, 0,
+                Intent(context, RebindReceiver::class.java).setAction(ACTION_WATCHDOG),
+                flags
+            )
+            runCatching {
+                am.setInexactRepeating(
+                    // 2.98 · R6-B′ (owner duyệt 09/10): KHÔNG thức máy. Máy thức (xe chạy, màn sáng) ⇒ nổ y như cũ ⇒ độ trễ chữa phím/NLS
+                    // không đổi; standby ⇒ dồn tới lần thức kế (lớp khởi động/màn sáng lo). [ĐO log xe 17/09→08/10] 6 929 lượt, 0 lần cứu
+                    // phím; standby gần như không được giao (soát 09/10, spec kachi-298-plan R6-B). Bản cũ R4 dùng WAKEUP.
+                    AlarmManager.ELAPSED_REALTIME,
+                    SystemClock.elapsedRealtime() + INTERVAL_MS,
+                    INTERVAL_MS,
+                    pi
+                )
+            }.onFailure { Log.e(TAG, "scheduleWatchdog failed", it) }
+        }
+    }
+}

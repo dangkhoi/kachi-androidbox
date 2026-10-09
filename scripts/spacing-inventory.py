@@ -10,7 +10,7 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-SRC = Path("app/src/main/java/com/byd/clusternav/launcher")
+SRC = Path("app/src/main/java/com/kachi/box/launcher")
 
 # dp(12) | dpi(context, 12) | dp(ctx, 12f) — chỉ bắt đối số CUỐI là số trần.
 CALL = re.compile(r"\bdp(i?)\(\s*(?:[A-Za-z_][A-Za-z0-9_.]*\s*,\s*)?(\d+)f?\s*\)")

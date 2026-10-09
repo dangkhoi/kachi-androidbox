@@ -45,7 +45,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 
 # Bản sao (chỉ-đọc) của `VoiceGrammar.VERBS` — bỏ dấu, chữ thường, dài trước ngắn. Nguồn:
-# core/src/main/kotlin/com/byd/clusternav/launcher/voice/VoiceGrammar.kt
+# core/src/main/kotlin/com/kachi/box/launcher/voice/VoiceGrammar.kt
 VERBS: list[tuple[tuple[str, ...], str]] = [
     (("dan", "duong", "den"), "NAV"), (("dan", "duong", "toi"), "NAV"),
     (("chi", "duong", "den"), "NAV"), (("chi", "duong", "toi"), "NAV"),

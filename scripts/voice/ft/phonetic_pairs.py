@@ -10,7 +10,7 @@ Sinh lại:  /tmp/sherpa-venv/bin/python scripts/voice/ft/gen-phonetic-pairs.py
 """
 from __future__ import annotations
 
-# 30 cặp, trích từ core/src/main/kotlin/com/byd/clusternav/launcher/voice/VoicePhoneticConfusions.kt.
+# 30 cặp, trích từ core/src/main/kotlin/com/kachi/box/launcher/voice/VoicePhoneticConfusions.kt.
 # (chuẩn, nghe_thành, mức_bằng_chứng: REC = bản thu giọng thật · HOST = đo trên host)
 OBSERVED: list[tuple[str, str, str]] = [
     ('cốp', 'cấp', 'REC'),

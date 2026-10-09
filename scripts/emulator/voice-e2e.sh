@@ -24,7 +24,7 @@ MODELDIR=""
 OUT="/tmp/kachi-voice-e2e"
 PKG="com.kachi.box"
 # shellcheck disable=SC2034  # đọc trong voice-common.sh (start_home)
-HOME_ACT="$PKG/com.byd.clusternav.launcher.KachiHomeActivity"
+HOME_ACT="$PKG/com.kachi.box.launcher.KachiHomeActivity"
 # 2.98: app dùng bản int8 (SherpaModelCatalog) — bản fp32 cũ không còn được nạp.
 MODEL_ID="zipformer-vi-int8-2025-04-20"
 ADB="${ADB:-$HOME/Library/Android/sdk/platform-tools/adb}"

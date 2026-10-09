@@ -1,0 +1,481 @@
+package com.kachi.box.launcher
+
+import android.content.Context
+import android.text.TextUtils
+import android.view.DragEvent
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import com.kachi.box.system.inputd.InputDaemonClient
+import com.kachi.box.launcher.KachiSpace as Sp
+
+/**
+ * Sân khấu workspace: đặt tối đa 4 "ô" theo [WorkspaceLayout] cho [WorkspaceState.preset].
+ * P1: mỗi ô là placeholder (chạm → callback [onSlotTap], nối drawer ở P2). Thuần code → gọn, không đụng layout seal.
+ */
+class WorkspaceView(context: Context) : ViewGroup(context) {
+
+    var onSlotTap: ((Int) -> Unit)? = null
+    var onSlotClear: ((Int) -> Unit)? = null
+    var onSlotSwap: ((Int, Int) -> Unit)? = null
+    var onAppOpen: ((Int) -> Unit)? = null
+    /** Đặt TẠM xong (spec shortcuts-autostart R0.1): (ô, màn ảo, app cũ, app mới) ⇒ màn chính giao `BehindHomeRunner`. */
+    var onAppSwapped: ((Int, Int, String, String) -> Unit)? = null
+
+    /**
+     * T4 — dựng view cho ô widget bên thứ ba. `null` (chưa gắn, hoặc trả `null`) ⇒ ô hiện thẻ *"widget không còn"*.
+     *
+     * Là hàm tiêm vào chứ không phải `AppWidgetHost` nằm ngay đây: view này chỉ **là bề mặt vẽ**, còn vòng đời
+     * nghe-cập-nhật + thu hồi id phải do một chủ duy nhất giữ ([AppWidgetSlotHost]). Đặt host vào view thì mỗi lần
+     * view bị dựng lại là một host mới ⇒ id rò và nhịp nghe nhân đôi.
+     */
+    var appWidgetView: ((SlotContent.AppWidget) -> View?)? = null
+
+    /**
+     * T4 — tên nhà cung cấp của một ô widget bên thứ ba, dùng cho thẻ *"widget không còn"* ([deadWidgetCard]).
+     *
+     * ⚠ **KHÔNG** phải nhãn hiện ở dải đầu ô: [slotHead] chỉ vẽ nút ⇄ ([SlotSwapButton]) và **không nhận** tên
+     * nữa; [OverlayHeads] (đường freeform) cũng chỉ vẽ đúng nút đó. Không còn nhãn ở dải đầu ô (owner 2026-09-12/13);
+     * ✕ *tắt* + *chạy nền* (owner 03/10, L6) là cụm RIÊNG cạnh ⇄ ([SlotActionsCluster]), không phải nhãn.
+     */
+    var appWidgetName: ((SlotContent.AppWidget) -> String)? = null
+    // Android box B2 · W3: `carStatus` · `control` (cổng nút xe) · `unitPrefs` (đơn vị datum xe) gỡ cùng lõi HAL BYDAuto.
+    var mediaProvider: () -> MediaSnapshot? = { null }   // đọc nhạc live (Bitmap ở :app → ngoài state :core)
+    var onMedia: (String) -> Unit = {}                    // transport: play/pause/next/prev
+    // ── KÊNH NHÚNG (gói 1, P-bug2): 4 thứ dưới đây PHẢI được gắn CÙNG LÚC qua [applyEmbedSeam] ─────────────────
+    // Vì sao private: `makeSlot` đọc chúng LÚC DỰNG VIEW. Nếu để công khai cho bên ngoài gán rời từng cái thì ai
+    // gán sai THỨ TỰ (vd dựng lại ô trước khi gắn kênh chạm) sẽ ra bộ chiếu thiếu kênh chạm — chạy đường bơm chạm
+    // chậm hơn mà KHÔNG có gì báo lỗi. Đóng private ⇒ sai thứ tự trở thành KHÔNG THỂ.
+    private var shell: ((String) -> String)? = null   // dadb uid-shell → nhúng app lên VirtualDisplay (display phụ, không caption) + bơm chạm
+    // B2b: đăng ký/gỡ display của VD ô với DisplayOwnershipRegistry (qua WindowCommandDispatcher). Mặc định no-op.
+    private var registerVd: (Int) -> Unit = {}
+    private var unregisterVd: (Int) -> Unit = {}
+    // B4: MỘT input-daemon THƯỜNG TRÚ dùng chung cho MỌI ô (mỗi khung tự mang displayId). B5b: KHÔNG tự dựng nữa —
+    // do AppContainer sở hữu và TIÊM vào (activity gắn khi dadb nối). null → VdAppHost fallback `input -d` (cũ).
+    private var inputClient: InputDaemonClient? = null
+    var slotDensityDpi = 200                   // mật độ cho VirtualDisplay của ô (Dudu ~200; chỉnh để app hiện vừa mắt)
+
+    private val gapPx = dp(Sp.SLOT_GAP)
+    // View-transient ONLY: bản sao khung hình ĐANG hiển thị, dùng để DIFF khi [render] để không dựng lại ô không đổi.
+    // KHÔNG phải nguồn sự thật — nguồn sự thật là HomeViewModel.uiState; không code ngoài nào đọc field này.
+    private var displayed = WorkspaceState()
+    internal val slotViews = ArrayList<View>()
+
+    /**
+     * H2·1 — DANH TÍNH CHỦ SỞ HỮU màn ảo của cây workspace này. Hai màn Kachi cùng sống (màn cũ "đang kết thúc"
+     * chưa tháo view) là ca [ĐO] đã làm rò 4 màn ảo cho 2 ô; [SlotVdOwner] phân biệt chúng bằng chuỗi này.
+     */
+    private val hostOwner = "ws@${System.identityHashCode(this)}"
+
+    /** 2.87 · R-AH — nút đầu ô tự ẩn ([SlotHeadAutoHide]; L6: + chạy nền/tắt qua `heads.actions`). Khai TRƯỚC `init`. */
+    internal val heads = SlotHeadAutoHide(this)
+
+    init { rebuild() }
+
+    /**
+     * Nhả màn ảo của ô [i] **trước** khi tháo view của ô đó.
+     *
+     * Vì sao không phó mặc `onDetachedFromWindow` của [VdAppHost] (đường cũ, vẫn giữ làm lưới an toàn):
+     * `ViewGroup.removeView` CHỈ gọi `dispatchDetachedFromWindow` khi cây view **đang gắn cửa sổ**
+     * (`view.mAttachInfo != null`) — tháo ô lúc workspace đã rời cửa sổ là một màn ảo không ai nhả. Gọi tường
+     * minh ở đây thì việc nhả không còn phụ thuộc trạng thái gắn/tháo của cây view. Idempotent.
+     */
+    private fun releaseSlotHost(i: Int) {
+        val slot = slotViews.getOrNull(i) as? ViewGroup ?: return
+        for (k in 0 until slot.childCount) (slot.getChildAt(k) as? VdAppHost)?.release()
+    }
+
+    /**
+     * Nhả MỌI màn ảo của cây này (dựng lại tất cả · workspace tháo · màn chính huỷ). Idempotent.
+     *
+     * Hai lớp: đi qua từng ô đang có view (đường thường), rồi **quét theo CHỦ** ở [SlotVdOwner] — bắt nốt màn ảo
+     * của một host đã rời cây view mà chưa kịp nhả. Không đụng ô mà một cây workspace khác đã nhận.
+     */
+    fun releaseAppHosts() {
+        for (i in slotViews.indices) releaseSlotHost(i)
+        SlotVdOwner.releaseOwner(hostOwner)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        releaseAppHosts()
+        heads.release()   // R-AH: gỡ hẹn giờ ⇄ + người nghe TalkBack (khuôn `LauncherWindows.cancelPending`)
+    }
+
+    /** R-A4 (PROFILE-SWITCH-SLOTS): gắn lại cửa sổ mà ô App đã bị nhả ⇒ DỰNG LẠI ô, không đen câm — xem [SlotHostHeal]. */
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        heads.attach()
+        post { if (isAttachedToWindow && SlotHostHeal.anyReleased(slotViews)) renderInternal(displayed, embedChanged = true) }
+    }
+
+    /**
+     * Áp trạng thái [s] lên view (was `setState`). PURE VIEW: chỉ RENDER — KHÔNG giữ nguồn sự thật.
+     * Cập nhật TĂNG DẦN: cùng preset → chỉ dựng lại ô có nội dung ĐỔI (so với khung đang hiển thị [displayed]);
+     * giữ nguyên View (và VdAppHost) của các ô khác → thêm app vào ô mới KHÔNG relaunch/nháy app đang chạy ở ô khác,
+     * launcher đứng yên. Đổi preset/số ô → dựng lại cả. Nguồn sự thật do HomeViewModel giữ; đây chỉ phản chiếu.
+     */
+    fun render(s: WorkspaceState, swap: Set<Int> = emptySet(), profileSwitch: Boolean = false) =
+        renderInternal(s, embedChanged = false, swap = swap, profileSwitch = profileSwitch)
+
+    /**
+     * Android box B2 · W3 — đổ lại SỐ LIỆU của ô widget (nhạc · …) TẠI CHỖ theo nhịp đồng hồ có sẵn (`KachiHomeActivity.tick`,
+     * 10 s — không thêm nhịp mới). ≤ 2.98 BYD việc này chạy theo nhịp trạng thái xe 1 Hz (`CarStatusRepository`) đã gỡ; không có
+     * lời gọi này thì ô nhạc chỉ đổi bài khi có một lượt render khác. Ô App không bị chạm (C5 — [WorkspaceRenderPlanner]).
+     */
+    fun refreshValues() = renderInternal(displayed, embedChanged = false, valuesChanged = true)
+
+    /**
+     * Gắn NGUYÊN KHỐI kênh nhúng (dadb shell + kênh chạm + đăng ký/gỡ màn ảo) rồi tự áp [state] lại MỘT LẦN.
+     *
+     * **Đây là bản vá P-bug2.** Trước đây activity gán rời 4 field rồi gọi [render]; nhưng [render] so sánh theo
+     * NỘI DUNG ô nên ô App "không đổi" ⇒ không dựng lại ⇒ `VdAppHost` không bao giờ được gắn ⇒ app trong ô chỉ
+     * hiện sau khi người dùng đổi bố cục (khi đó mới đi nhánh dựng-lại-tất-cả). Nay việc kênh-vừa-có được khai
+     * báo tường minh cho bộ quyết định, và vì hàm này gắn đủ 4 thứ TRƯỚC khi dựng lại nên không thể sai thứ tự.
+     */
+    fun applyEmbedSeam(
+        shell: (String) -> String,
+        inputClient: InputDaemonClient?,
+        registerVd: (Int) -> Unit,
+        unregisterVd: (Int) -> Unit,
+        state: WorkspaceState,
+    ) {
+        val had = this.shell != null
+        this.registerVd = registerVd
+        this.unregisterVd = unregisterVd
+        this.inputClient = inputClient
+        this.shell = shell
+        renderInternal(state, embedChanged = !had)
+    }
+
+    private fun renderInternal(s: WorkspaceState, embedChanged: Boolean, swap: Set<Int> = emptySet(), profileSwitch: Boolean = false, valuesChanged: Boolean = false) {
+        mediaCache = null      // lượt mới ⇒ đọc lại nhạc đúng MỘT lần cho cả lượt
+        val old = displayed
+        displayed = s
+        // Luật "ô nào cần dựng lại" nằm ở :core (WorkspaceRenderPlanner) → test được off-car, kể cả ca P-bug2.
+        var structural = false
+        // P9: số ô THỰC TẾ (bố cục tự vẽ có thể khác bố cục sẵn). Đọc từ bố cục sẵn ở đây sẽ làm bộ quyết định thấy 'số view lệch
+        // số ô' mọi lần render ⇒ dựng lại TẤT CẢ liên tục. 2.97 · R5: luật đỗ chỉ nhìn ô ĐANG HIỆN (`shown`) — ô ngoài bố cục không nhận lại ai.
+        val shown = s.slots.take(EffectiveLayout.slotCount(displayed.preset, customLayout))
+        when (val plan = WorkspaceRenderPlanner.decide(old, s, slotViews.size, valuesChanged, embedChanged, slotCount = shown.size, swap = swap)) {
+            WorkspaceRenderPlan.RebuildAll -> { rebuild(); EmptySlotLog.note(displayed.slots, slotViews.size); return }
+            is WorkspaceRenderPlan.PerSlot -> (plan.rebuild + plan.swap).sorted().forEach { i ->   // 2.89-thử1: đặt tạm cũng dựng lại ô (ô 7 đỗ app cũ)
+                val nc = s.slots.getOrElse(i) { SlotContent.Empty }
+                val oc = old.slots.getOrElse(i) { SlotContent.Empty }
+                // [SOÁT P1-1] Ô chỉ cần LÀM MỚI SỐ (nội dung không đổi, năng lực nhúng không đổi) ⇒ đổi tại chỗ
+                // đúng những ô con là mục ĐỌC. Giữ nguyên view của nút và của widget trình chiếu ⇒ không mất cú bấm,
+                // không đặt lại vòng quay ảnh. Không thay được con nào ⇒ lùi về dựng lại cả ô (an toàn).
+                val onlyValues = !embedChanged && WorkspaceRenderPlanner.sameContent(oc, nc)
+                if (onlyValues && nc is SlotContent.Widget &&
+                    WidgetViews.refreshRead(slotViews[i], widgetData()) > 0
+                ) return@forEach          // refresh SỐ tại chỗ — widget tự invalidate, KHÔNG relayout workspace
+                parkLeaving(i, oc, nc, shown, profileSwitch)   // ô 7 (§4.6d): app rời ô còn dùng ⇒ ĐỖ; đổi hồ sơ ⇒ đỗ nếu còn hiện (2.97 R5)
+                releaseSlotHost(i)          // ô đổi nội dung ⇒ nhả màn ảo của ô TRƯỚC khi tháo view
+                removeView(slotViews[i])
+                val v = makeSlot(i, nc)
+                addView(v); slotViews[i] = v
+                structural = true           // có add/remove view ⇒ mới cần relayout cả workspace
+            }
+        }
+        // (owner 2026-09-25 "refresh datum lại nháy dựt cả widget"): CHỈ relayout khi có thay đổi CẤU TRÚC (dựng/tháo
+        // ô). Lượt chỉ làm-mới-số (refreshRead in-place) KHÔNG gọi requestLayout — trước đây requestLayout mỗi nhịp
+        // (1s) ép CẢ workspace đo lại ⇒ widget nhấp/giật liên tục dù số là thứ duy nhất đổi. Widget tự invalidate.
+        if (structural) { requestLayout(); invalidate() }
+        EmptySlotLog.note(displayed.slots, slotViews.size)   // mọi lượt render (rẻ, tự khử trùng) — kể cả lượt ĐẦU không đổi ô nào
+    }
+
+    /** Gói dữ liệu render widget hiện tại (nhạc live + ảnh trình chiếu). */
+    private fun widgetData(): WidgetData {
+        // [SOÁT P2-8] Đọc nhạc là một lời gọi LIÊN TIẾN TRÌNH (`getActiveSessions`). Bản trước gọi nó trong hàm này,
+        // mà hàm này được gọi **mỗi Ô** (tới 6 ô) và mỗi nhịp trạng thái xe (1 giây) ⇒ tới 6 lời gọi/giây trên thread
+        // chính cho một dữ liệu y hệt nhau. Nay đọc MỘT LẦN cho mỗi lượt render và dùng lại trong lượt đó.
+        val media = mediaCache ?: mediaProvider().also { mediaCache = it }
+        return WidgetData(media, onMedia, photos.provider(), photos.intervalSec)
+    }
+
+    /** Ảnh chụp nhạc dùng cho LƯỢT render hiện tại (xoá ở đầu mỗi lượt) — xem KDoc widgetData. */
+    private var mediaCache: MediaSnapshot? = null
+
+    /** U4(b) — nguồn ảnh cho widget trình chiếu (tách sang [WorkspacePhotoSource], trần 500 dòng). */
+    private val photos = WorkspacePhotoSource()
+
+    /**
+     * Bố cục TỰ VẼ (P9 bước 2). Để ở kênh riêng, KHÔNG nhét vào `WorkspaceState`: bộ quyết-định-dựng-lại đang bị
+     * test tương-đương-hành-vi hơn 1000 tổ hợp khoá, thêm field vào state là xáo trộn đúng chỗ đó.
+     */
+    private var customLayout: GridLayout? = null
+
+    /**
+     * Đặt bố cục tự vẽ. Số ô đổi ⇒ phải dựng lại; **số ô giữ nguyên mà chỉ đổi hình dạng ⇒ CHỈ đặt lại chỗ**, không
+     * dựng lại — nhờ vậy app đang chiếu trong ô **không bị nhả/gắn lại** (C5), chỉ đổi cỡ khung.
+     */
+    fun setCustomLayout(layout: GridLayout?) {
+        val before = EffectiveLayout.slotCount(displayed.preset, customLayout)
+        customLayout = layout
+        val after = EffectiveLayout.slotCount(displayed.preset, customLayout)
+        if (before != after) rebuild() else { requestLayout(); invalidate() }   // [slot-empty]: lượt render kế tiếp ghi
+    }
+
+    /** Khung pixel đang hiệu lực — mọi chỗ trong view PHẢI đi qua đây (xem `EffectiveLayout`). */
+    private fun effectiveRects(w: Int, h: Int) =
+        EffectiveLayout.rects(displayed.preset, customLayout, w, h, gapPx)
+
+    /**
+     * U4(b) — đặt nguồn ảnh cho widget trình chiếu. Dựng lại **chỉ ô widget** khi nguồn thật sự đổi.
+     *
+     * Phải dựng lại vì ảnh nằm trong View đã dựng, nhưng **KHÔNG** dựng lại ô đang
+     * chiếu app (làm thế là ngắt kênh chạm — ràng buộc C5 của gói 2). Gọi lại với cùng nguồn thì không làm gì.
+     */
+    fun setPhotoSource(paths: List<String>, intervalSec: Int) {
+        val changed = photos.set(paths, intervalSec)   // so theo NỘI DUNG, không theo số lượng — xem [WorkspacePhotoSource.set]
+        if (changed) rebuildWidgetSlots(photos::consumes)   // QA2 P3: chỉ ô ĐỌC ảnh — ô khác không khớp lại lần hai
+    }
+
+    private fun rebuild() {
+        mediaCache = null      // lượt dựng lại cũng là một lượt mới ⇒ đọc nhạc lại đúng một lần
+        val n = EffectiveLayout.slotCount(displayed.preset, customLayout)
+        // 2.97 · R5: app bố cục MỚI vẫn hiện ⇒ ĐỖ, ô mới nhận lại. CHỈ ô sẽ ĐƯỢC DỰNG (`take(n)`): ô ngoài bố cục (≥ n, state còn giữ) không ai nhận lại ⇒ nhả.
+        parkStillShown(displayed.slots.take(n))
+        releaseAppHosts(); removeAllViews(); slotViews.clear()   // dựng lại TẤT CẢ ⇒ nhả màn ảo cũ trước, không để hai đời ô cùng giữ VD
+        for (i in 0 until n) {
+            val content = displayed.slots.getOrElse(i) { SlotContent.Empty }
+            val v = makeSlot(i, content)
+            addView(v); slotViews.add(v)
+        }
+        heads.retain(slotViews.size); requestLayout(); invalidate()   // P3: bỏ đầu ô của ô đã mất · ⚠ KHÔNG ghi [slot-empty] ở đây: `init` gọi với state RỖNG
+    }
+
+    /**
+     * #10 (owner 2026-09-23) — ĐỔI MÀU theme mà GIỮ STATE: dựng lại ô widget + ô trống với bảng màu mới, nhưng
+     * **KHÔNG đụng ô App** (giữ `VdAppHost` ⇒ app trong ô KHÔNG bị giết/restart). Gọi khi theme đổi (light↔dark)
+     * thay cho `recreate()` cả Activity. Nền/thẻ ô chrome lấy màu mới; app đang chiếu chạy tiếp.
+     */
+    fun restyle() {
+        for (i in slotViews.indices) {
+            val content = displayed.slots.getOrElse(i) { SlotContent.Empty }
+            if (content is SlotContent.App) continue   // GIỮ ô App — không nhả VD, app chạy tiếp
+            removeView(slotViews[i])
+            val v = makeSlot(i, content)
+            addView(v); slotViews[i] = v
+        }
+        heads.restyleAll()   // QA 2.87: ⇄ + cụm nút của ô App (khung giữ nguyên) tô lại theo bảng màu mới
+        requestLayout(); invalidate(); EmptySlotLog.note(displayed.slots, slotViews.size)
+    }
+
+    /** Dựng lại CHỈ ô widget (đổi thứ chỉ widget đọc: đơn vị, ảnh) — ô App giữ view ⇒ bộ chiếu không bị nhả (C5). */
+    private fun rebuildWidgetSlots(only: (List<String>) -> Boolean = { true }) {
+        for (i in slotViews.indices) {
+            val content = displayed.slots.getOrElse(i) { SlotContent.Empty }
+            if (content !is SlotContent.Widget || !only(content.ids)) continue
+            removeView(slotViews[i])
+            val v = makeSlot(i, content)
+            addView(v); slotViews[i] = v
+        }
+        requestLayout(); invalidate()
+    }
+
+    private fun makeSlot(index: Int, content: SlotContent): View {
+        val fl = FrameLayout(context)
+        // ⚠⚠ [SOÁT Pass 4 · VISUAL-REFRESH P1] Ô làm việc là **bề mặt lớn nhất màn hình**, và P1 đã bỏ sót nó:
+        // bảng rà của §9 đi từ chuỗi `KachiTheme.card(`, còn chỗ này dựng `GradientDrawable` thẳng tại chỗ nên nó
+        // không nằm trong 26 chỗ gọi được rà. [ĐO] so ảnh máy ảo trước/sau P1 tại (800,320): cùng là `(23,26,32)`
+        // — không đổi MỘT byte, trong khi ô con bên trong thì đổi. Đó là toàn bộ lý do "đổi mà nhìn không ra".
+        //
+        // Nay nó đi qua CÙNG bộ dựng bề mặt với mọi thẻ khác, ở tone KHAY: tối hơn thẻ nội dung một bậc để thẻ có
+        // chỗ nổi lên (WP1 đã gỡ viền [KachiTheme.LINE_STRONG] mà tone này từng có — khay tách nền CHỈ bằng bậc
+        // sáng), cộng sắc lĩnh vực của chính nội dung trong ô ⇒ nhìn màu là biết ô nào là Khí hậu, không phải đọc chữ.
+        // P1b · §4.10: có ảnh nền thì khay là CỬA SỔ kính nhìn xuống ảnh mờ (KachiGlass); không có ảnh thì đúng
+        // KachiTheme.surface(..., SurfaceTone.WELL, ...) như trước — cùng cửa, cùng tone, không đổi một byte.
+        // Ô TRỐNG không đi qua kính, và KHÔNG được mang tag kính: FIX286 · ES1 (owner 03/10) — khung trống TRONG SUỐT
+        // thấy hình nền; tag kính còn trên khung thì lượt `KachiGlass.refresh` khi ảnh đổi sẽ đắp kính lên (bẫy P1b).
+        if (content !is SlotContent.Empty) KachiGlass.apply(fl, Sp.RADIUS_L, SurfaceTone.WELL)
+        SlotFrameClip.apply(fl, Sp.dpf(context, Sp.RADIUS_L))   // cắt nội dung theo góc bo (overflow:hidden) — A5(b): viền RIÊNG, không mượn nền
+        val mm = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        when (content) {
+            is SlotContent.Widget -> {
+                val body = WidgetViews.buildGrid(context, content.ids, widgetData(), ShortcutScrollMemory.slotKey(index, content.ids))
+                // ⚠ [SOÁT UI 2026-09-12] Widget FULL khung như ô App: nút ⇄ chỉ NỔI đè ở đầu ô (overlay), KHÔNG
+                // đẩy nội dung. Trước đây `setPadding(top += SLOT_HEAD_CLEAR)` đẩy cả nội dung widget xuống ⇒ mất một
+                // khúc TO ở đỉnh (owner báo: "widget bị che mất top 1 khúc lớn"), trong khi ô App không hề bị vì app
+                // render MATCH_PARENT còn nút chỉ nổi trên. Nay hai loại ô đồng nhất: nút nổi, khung giữ nguyên cỡ.
+                fl.addView(body, mm)
+                fl.addView(slotHead(index), headLp())
+                fl.setOnClickListener { onSlotTap?.invoke(index) }
+                fl.setOnLongClickListener { startSlotDrag(index, fl); true }
+            }
+            // ── T4: widget Android của APP KHÁC ──
+            //
+            // Nhà cung cấp tự vẽ nội dung (đẩy RemoteViews sang), nên ở đây chỉ có hai việc: xin view, và **nói ra**
+            // khi không xin được. `null` = id đã chết (app bị gỡ/vô hiệu) ⇒ hiện thẻ nói rõ app nào, chạm để chọn
+            // lại. Cố ý KHÔNG để ô trống: một ô trống ở đây là "widget của tôi biến mất không lý do".
+            is SlotContent.AppWidget -> {
+                val host = appWidgetView?.invoke(content)
+                if (host != null) {
+                    // ⚠ [SOÁT UI 2026-09-12] FULL khung như ô App/Widget: nút ⇄ chỉ NỔI đè, KHÔNG đẩy host xuống
+                    // (trước đây topMargin = SLOT_HEAD_CLEAR đẩy widget bên thứ ba xuống, mất khúc top).
+                    val hostLp = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT,
+                    )
+                    // ⚠⚠ Nền TỐI CỐ ĐỊNH phía sau widget — không theo chủ đề, cùng lý do nút ⇄ (`scrimBtn`).
+                    //
+                    // Nội dung ô này là RemoteViews do app KHÁC vẽ, và quy ước widget Android là "nền tối" nên phần
+                    // lớn widget dùng chữ TRẮNG. [ĐO] bảng SÁNG + widget đồng hồ: ô chỉ còn **0.15%** điểm mực tối,
+                    // chữ giờ gần như biến mất. Launcher không sửa được màu RemoteViews của app khác ⇒ chỗ duy nhất
+                    // chữa được là nền. Widget nào tự vẽ nền đục thì lớp này bị che, nên nó không làm hại ca nào.
+                    fl.addView(appWidgetBacking(), hostLp)
+                    fl.addView(host, hostLp)
+                    // Không đặt `setOnClickListener` cho CẢ ô: widget bên thứ ba có nút bấm riêng bên trong nó
+                    // (next/prev của widget nhạc…). Bắt chạm ở ô cha sẽ ăn mất cú bấm của widget. Đổi/xoá widget đi
+                    // qua nút ⇄/✕ ở dải đầu ô — đường mà mọi loại ô khác cũng dùng.
+                } else {
+                    fl.addView(deadWidgetCard(content), mm)
+                    fl.setOnClickListener { onSlotTap?.invoke(index) }
+                }
+                fl.addView(slotHead(index), headLp())
+                fl.setOnLongClickListener { startSlotDrag(index, fl); true }
+            }
+            is SlotContent.App -> {
+                fl.addView(appCard(content.pkg, tapHint = shell == null && !SlotAppHost.embeddingUsable(context)), mm)   // fallback phía sau; R-B1: không bộ chiếu ⇒ "Chạm để mở"
+                val sh = shell
+                if (sh != null) {
+                    val host = VdAppHost(context, slotDensityDpi, registerVd, unregisterVd, inputClient, slot = index, owner = hostOwner) { p, away -> heads.actions?.onAppGone(index, p, away) }  // L6: app rời ô ⇒ luật hoàn ô (2.93: away = ra khỏi ô, còn mở) · sideload: app render lên VirtualDisplay (display phụ → KHÔNG caption) qua dadb — kiểu Dudu, SurfaceView cho đỡ lag; chạm qua input-daemon (fallback `input -d`)
+                    fl.addView(host, mm); host.bind(content.pkg, sh)
+                } else if (SlotAppHost.embeddingUsable(context)) {
+                    val host = SlotAppHost(context, dp(Sp.RADIUS_L).toFloat())
+                    if (host.available()) { fl.addView(host, mm); host.embed(content.pkg) }   // ROM xe (platform-signed): ActivityView, không lag/caption
+                }
+                fl.addView(slotHead(index), headLp())                                             // ⇄ nổi đè lên trên cùng
+                fl.setOnClickListener { onAppOpen?.invoke(index) }
+                fl.setOnLongClickListener { startSlotDrag(index, fl); true }
+            }
+            // FIX286 · ES1 — khung trống TRONG SUỐT: không nền/viền/kính, KHÔNG nhận chạm cả ô (vùng trong suốt bấm được =
+            // nút vô hình) — chỉ ⇄ trên đĩa kính nhỏ (OQ8 phương án B). Vẫn VISIBLE + giữ drag listener dưới ⇒ vẫn là điểm thả.
+            SlotContent.Empty -> fl.addView(slotHead(index, empty = true), headLp())
+        }
+        heads.register(index, fl, content)   // R-AH: MỘT chỗ đăng ký ⇄ cho cả bốn đường dựng lại (⇄ luôn là con cuối)
+        // Mọi ô là điểm THẢ: kéo 1 ô rồi thả lên ô khác → đổi chỗ nội dung.
+        fl.setOnDragListener { _, e ->
+            when (e.action) {
+                DragEvent.ACTION_DROP -> {
+                    (e.localState as? Int)?.let { from -> if (from != index) onSlotSwap?.invoke(from, index) }; true
+                }
+                else -> true
+            }
+        }
+        return fl
+    }
+
+    // `startSlotDrag` · `slotFrame` → `WorkspaceViewSlotDomain.kt` (tách THUẦN theo trần 500 dòng, L6-debt 2026-09-27).
+
+    /**
+     * Khung trong suốt bọc nút ⇄ **nổi** ở đầu ô.
+     *
+     * Cao [Sp.SLOT_HEAD_CLEAR]: nó phải chứa nổi `XS + ICON_L + XS`. Trước T5 khung cao 34dp (hằng `HEAD_BAR`
+     * của thanh đầu ô cũ, nay đã xoá cùng thanh đó — D2a) trong khi nút chiếm 34dp ⇒ **không còn chỗ thở**, và
+     * độ hở của nội dung widget lại là 30dp ⇒ nội dung bị đè. Hai con số ở hai tệp khác nhau, nên không bài test
+     * nào bắt được.
+     *
+     * ⚠ **Đích chạm 32dp — DƯỚI mức [Sp.TOUCH], có lý do**: nút này **nổi ĐÈ lên nội dung** ô (khác nút của
+     * [OverlayHeads] nằm trong thanh riêng). Nới lên 48dp buộc độ hở lên 56dp, tức mọi ô widget mất 56dp chiều
+     * cao (≈11% ô trong bố cục 2×2) cho một nút **hiếm dùng** và bấm nhầm thì chỉ mở bảng chọn (hoàn lại được).
+     * Đổi lấy 24dp nội dung thật cho một đích chạm rộng hơn là đánh đổi sai ở màn hình xe.
+     */
+    private fun headLp() = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.MATCH_PARENT, dp(Sp.SLOT_HEAD_CLEAR), Gravity.TOP,
+    )
+
+    /**
+     * Header ô — owner: CHỈ 1 nút đổi app, canh GIỮA trên cùng, KHÔNG thanh nền, KHÔNG nút ✕.
+     *
+     * Hình + hình học ở [SlotSwapButton] — dùng CHUNG với [OverlayHeads] (đường freeform) để hai đường không lệch nhau
+     * ("lúc 1 icon lúc 2 icon", 2026-09-13).
+     *
+     * ⚠ [SOÁT SENIOR 2026-09-13] Hai tham số `name`/`dotColor` đã **BỎ**, cùng ba hàm chỉ sống để nuôi chúng
+     * (`appName` · `widgetName` · `widgetAccent`). Bản trước giữ chữ ký "cho chỗ gọi khỏi đổi" và đánh dấu
+     * `@Suppress("UNUSED_PARAMETER")` — nhưng chỗ gọi vẫn phải TÍNH hai giá trị đó mỗi lượt `render()`, và
+     * `appName` là một lượt `getApplicationInfo` + `getApplicationLabel` của `PackageManager` **cho mỗi ô App**
+     * để rồi vứt đi. Đúng lối dọn mà chính tệp này vừa làm với `headBtnLp()`/`headBtn()` ở T5 (CLAUDE.md §8).
+     */
+    private fun slotHead(index: Int, empty: Boolean = false): View =
+        SlotSwapButton.centered(context, SlotSwapButton.describe(context, index, empty), disc = empty) { onSlotTap?.invoke(index) }
+
+    /** R-AH3 — công tắc "Tự ẩn nút ⇄" (theo hồ sơ): áp lại trạng thái nghỉ của mọi ⇄ tại chỗ, KHÔNG dựng lại ô. */
+    fun setSlotHeadAutoHide(on: Boolean) = heads.setEnabled(on)
+
+    /** R-AH2 — chỉ NHÌN cú chạm: `super` TRƯỚC (đích chạm chọn xong rồi ⇄ mới đổi), trả nguyên kết quả, không nuốt. */
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val handled = super.dispatchTouchEvent(ev)
+        heads.observe(ev, slotViews, handled)
+        return handled
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val w = MeasureSpec.getSize(widthMeasureSpec)
+        val h = MeasureSpec.getSize(heightMeasureSpec)
+        if (w > 0 && h > 0) {
+            val rects = effectiveRects(w, h)
+            for (i in slotViews.indices) {
+                val r = rects.getOrNull(i) ?: continue
+                slotViews[i].measure(
+                    MeasureSpec.makeMeasureSpec(r.width, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(r.height, MeasureSpec.EXACTLY),
+                )
+            }
+        }
+        setMeasuredDimension(w, h)
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        val w = r - l; val h = b - t
+        if (w <= 0 || h <= 0) return
+        val rects = effectiveRects(w, h)
+        for (i in slotViews.indices) {
+            val rect = rects.getOrNull(i) ?: continue
+            slotViews[i].layout(rect.left, rect.top, rect.right, rect.bottom)
+            pushSlotSize(i, rect.width, rect.height)
+        }
+    }
+
+    /** V3 · R15 — đẩy cỡ ô THẬT xuống màn ảo; [VdAppHost.resize] no-op khi trùng cỡ ⇒ không phải cơ chế thứ hai. */
+    private fun pushSlotSize(i: Int, w: Int, h: Int) {
+        val slot = slotViews.getOrNull(i) as? ViewGroup ?: return
+        for (k in 0 until slot.childCount) (slot.getChildAt(k) as? VdAppHost)?.resize(w, h)
+    }
+
+    private var lastInsetSignature = Int.MIN_VALUE
+
+    /**
+     * ═══ V3 · R15 — inset đổi ⇒ ĐO LẠI ═══════════════════════════════════════════════════════════════════
+     *
+     * [ĐO xe 2026-09-16] `carlog-0916/slot-insets-bug.png`: lúc khởi động, thanh trên/dưới của ROM **còn hiện**,
+     * ô dựng theo khung đã co, và ảnh trong ô giữ khung hụt tới khi bấm Home lần nữa. Cờ `LAYOUT_STABLE |
+     * LAYOUT_FULLSCREEN` nói cửa sổ **được phép** trải hết màn, KHÔNG hứa rằng lượt bố trí **ĐẦU TIÊN** xảy ra
+     * sau khi ROM đã gỡ thanh — mà lượt đầu tiên chính là lượt dựng màn ảo của ô.
+     *
+     * ⚠ **Không tiêu thụ** inset, không đổi một pixel nào của phép bố trí: hàm này chỉ *nghe*. Trừ inset ra khỏi
+     * khung ô ở đây là đổi hành vi đang chạy tốt cho ba bố cục (CLAUDE.md §6 — đường mới xuống cuối).
+     */
+    override fun onApplyWindowInsets(insets: android.view.WindowInsets): android.view.WindowInsets {
+        val sig = (insets.systemWindowInsetTop * PRIME + insets.systemWindowInsetBottom) * PRIME +
+            insets.systemWindowInsetLeft * PRIME + insets.systemWindowInsetRight
+        if (sig != lastInsetSignature) {
+            lastInsetSignature = sig
+            android.util.Log.i("KachiWorkspace", "[slot-insets] inset đổi ⇒ đo lại ô (chữ ký $sig)")
+            requestLayout()
+        }
+        return super.onApplyWindowInsets(insets)
+    }
+
+    /** Bộ chiếu màn ảo của ô [i] (`null` = ô không có) — cho đường đặt tạm ở `WorkspaceViewSwap.kt`. */
+    internal fun hostAt(i: Int): VdAppHost? = (slotViews.getOrNull(i) as? ViewGroup)?.let { g ->
+        (0 until g.childCount).firstNotNullOfOrNull { g.getChildAt(it) as? VdAppHost }
+    }
+
+    /** `internal` (không `private`) vì các hàm dựng thẻ nay ở `WorkspaceViewCards.kt` — xem KDoc tệp ấy. */
+    internal fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
+    /** Số nguyên tố trộn chữ ký inset — chỉ cần *khác nhau thì khác*, không cần phân phối đẹp. */
+    private companion object { const val PRIME = 31 }
+}

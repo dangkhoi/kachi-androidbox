@@ -1,0 +1,303 @@
+package com.kachi.box.launcher.voice
+
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+
+/**
+ * ═══ CẮT CỬA SỔ MIC (`head`) — số học thuần, kiểm off-car ════════════════════════════════════════════════════
+ *
+ * Bằng chứng: `docs/diagnostics/voice-stream-eval-2026-09-16.md` §6 · §8.
+ *
+ * Bài này khoá **một phép tính ba dòng mà sai thì không có gì báo**: cắt hụt là mất nửa sau câu nói, cắt thừa là
+ * rơi lại đúng cái bẫy §6 (đuôi im lặng kéo 22/25 → 6/25 trên chính mô hình đang ship). Cả hai kiểu sai đều cho
+ * ra một chuỗi *trông như* một câu, nên không lượt chạy nào sẽ tự tố cáo chúng.
+ */
+class VoiceVadTrimTest {
+
+    private val rate = 16_000
+
+    private fun seg(startMs: Int, lenMs: Int) =
+        VoiceVadTrim.Segment(VoiceVadTrim.msToSamples(startMs, rate), VoiceVadTrim.msToSamples(lenMs, rate))
+
+    private fun ms(samples: Int) = VoiceVadTrim.samplesToMs(samples, rate)
+
+    // ══ NGANG BẰNG với `scripts/voice/stream-matrix.py` (chế độ `head`) ═══════════════════════════════════
+
+    /**
+     * ⚠ Bài này khẳng định **số học**, không chạy script host.
+     *
+     * Script là Python + sherpa-onnx + 1 899 WAV; gọi nó từ một bài JUnit là biến `:core:test` thành thứ cần một
+     * venv và 2 GB mô hình — tức nó sẽ bị tắt, và một bài test bị tắt tệ hơn không có. Nên chỗ nối giữa hai bên
+     * là **công thức**, và bài này ghim đúng công thức ấy bằng các con số chép tay từ script:
+     * ```python
+     * end = vad.front.start + len(vad.front.samples) + int(margin * sr)
+     * seg = audio[:max(1, min(len(audio), end))]
+     * ```
+     * Đổi công thức ở một bên mà quên bên kia ⇒ bài này đỏ, và người sửa đọc được ngay bên nào lệch.
+     */
+    @Test
+    fun `cong thuc head trung khop voi script host`() {
+        // Ca thường của bộ đo: cửa sổ 3 s, tiếng từ 200 ms tới 1 400 ms.
+        val window = VoiceVadTrim.msToSamples(3_000, rate)
+        val segments = listOf(seg(200, 1_200))
+        val expected = VoiceVadTrim.msToSamples(1_400, rate)   // start + length, margin 0
+        assertEquals(expected, VoiceVadTrim.headTrimSamples(segments, window))
+        // …và `head` KHÁC hẳn hai cách kia — đó là toàn bộ lý do nó được chọn (§8: 21/25 vs 18/25 vs 8/25).
+        assertTrue(
+            VoiceVadTrim.headTrimSamples(segments, window) < window,
+            "`head` phải cắt bớt đuôi, nếu không nó chính là `window`",
+        )
+        assertTrue(
+            VoiceVadTrim.headTrimSamples(segments, window) > segments[0].startSample,
+            "`head` phải giữ TRỌN phần đầu cửa sổ, nếu không nó chính là `segment` (nuốt mất từ đầu câu)",
+        )
+    }
+
+    @Test
+    fun `margin duoc cong vao dung nhu script`() {
+        val window = VoiceVadTrim.msToSamples(3_000, rate)
+        val segments = listOf(seg(200, 1_200))
+        val margin = VoiceVadTrim.msToSamples(250, rate)
+        assertEquals(
+            VoiceVadTrim.msToSamples(1_650, rate),
+            VoiceVadTrim.headTrimSamples(segments, window, margin),
+        )
+        // Nhưng bộ đã chốt là margin 0 — chừa thêm đuôi là đi ngược đúng phát hiện §6.
+        assertEquals(0, VoiceVadTrim.MARGIN_MS)
+    }
+
+    // ══ Các ca biên ═══════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * ⚠ **Ca hai đoạn** — chỗ bài này khác script một cách có chủ ý, và là ca duy nhất sai được mà im lặng.
+     *
+     * Người ta ngắt giữa câu ("bật đèn đọc … và mở kính") ⇒ VAD chốt hai đoạn. Lấy đoạn **đầu** (như `front` của
+     * script, thứ ở đó luôn là đoạn duy nhất) sẽ cắt mất vế sau: không lỗi, không cảnh báo, chỉ là Kachi hiểu
+     * một nửa. Lấy đoạn **cuối** thì ca một-đoạn vẫn ra đúng con số của script.
+     */
+    @Test
+    fun `hai doan thi cat toi HET doan CUOI, khong phai doan dau`() {
+        val window = VoiceVadTrim.msToSamples(5_000, rate)
+        val segments = listOf(seg(200, 800), seg(1_600, 900))   // 200–1 000 ms và 1 600–2 500 ms
+        assertEquals(VoiceVadTrim.msToSamples(2_500, rate), VoiceVadTrim.headTrimSamples(segments, window))
+        // Thứ tự VAD trả ra không được ảnh hưởng kết quả (hàng đợi có thể rút ra theo thứ tự khác).
+        assertEquals(
+            VoiceVadTrim.headTrimSamples(segments, window),
+            VoiceVadTrim.headTrimSamples(segments.reversed(), window),
+        )
+    }
+
+    /** Không đoạn nào ⇒ nạp NGUYÊN cửa sổ — cùng nhánh `if seg is None: seg = audio` của script. */
+    @Test
+    fun `khong co doan nao thi nap nguyen cua so`() {
+        val window = VoiceVadTrim.msToSamples(4_200, rate)
+        assertEquals(window, VoiceVadTrim.headTrimSamples(emptyList(), window))
+    }
+
+    /** Đoạn dài hơn cửa sổ (VAD đếm mẫu của chính nó) ⇒ kẹp về cửa sổ, không bao giờ đọc ra ngoài mảng. */
+    @Test
+    fun `khong bao gio tra ve qua do dai cua so`() {
+        val window = VoiceVadTrim.msToSamples(1_000, rate)
+        val segments = listOf(seg(0, 5_000))
+        assertEquals(window, VoiceVadTrim.headTrimSamples(segments, window))
+    }
+
+    @Test
+    fun `luon tra ve it nhat mot mau khi cua so khac rong`() {
+        val window = VoiceVadTrim.msToSamples(2_000, rate)
+        assertEquals(1, VoiceVadTrim.headTrimSamples(listOf(VoiceVadTrim.Segment(0, 0)), window))
+        // Cửa sổ rỗng thì không có gì để giải mã — 0, không phải 1 (đừng bịa ra một mẫu không tồn tại).
+        assertEquals(0, VoiceVadTrim.headTrimSamples(listOf(VoiceVadTrim.Segment(0, 0)), 0))
+    }
+
+    // ══ Ba ca của bộ E2E: tệp đã cắt sát vs tệp có đuôi ═══════════════════════════════════════════════════
+
+    /**
+     * Tệp **đã cắt sát tiếng** (`w01`–`w25`) ⇒ phép cắt gần như **no-op**; tệp có đuôi (`w26`–`w28`) ⇒ cắt thật.
+     *
+     * Đây là tính chất khiến bộ đo cũ **không được phép xê dịch** khi thêm phép cắt: nếu nó cắt cả những tệp đã
+     * sát thì 22/25 sẽ đổi, và lúc ấy không ai biết con số mới nói về phép cắt hay về một hồi quy.
+     */
+    @Test
+    fun `tep da cat sat gan nhu khong bi dong, tep co duoi thi bi cat that`() {
+        // w-cũ: 1,4 s tiếng, tệp dài 1,45 s ⇒ mất ≤ 50 ms.
+        val tight = VoiceVadTrim.msToSamples(1_450, rate)
+        val tightTrim = VoiceVadTrim.headTrimSamples(listOf(seg(50, 1_350)), tight)
+        assertTrue(ms(tight - tightTrim) <= 50, "tệp đã cắt sát chỉ được mất ≤ 50 ms, mất ${ms(tight - tightTrim)} ms")
+        // w26: cùng câu, nối thêm 2 s im lặng ⇒ phải bỏ đúng khoảng 2 s.
+        val withTail = VoiceVadTrim.msToSamples(3_450, rate)
+        val tailTrim = VoiceVadTrim.headTrimSamples(listOf(seg(50, 1_350)), withTail)
+        assertEquals(tightTrim, tailTrim, "cùng câu + cùng đoạn tiếng ⇒ cắt ra CÙNG một khúc, bất kể đuôi dài bao nhiêu")
+        assertTrue(ms(withTail - tailTrim) >= 1_900, "phải bỏ ~2 s đuôi, mới bỏ ${ms(withTail - tailTrim)} ms")
+    }
+
+    // ══ Tham số đã chốt bằng lưới ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Mặc định phải bằng ĐÚNG bộ đang chạy — đổi một con số ở đây là đổi một kết luận đã có bằng chứng.
+     *
+     * Ba con số vẫn là điểm lưới host §8; **`MIN_SILENCE_MS` thì không nữa** — nó bị [ĐO xe 2026-09-18] chốt lại
+     * (150 → 600), xem KDoc `VoiceVadTrim.MIN_SILENCE_MS` và bài `nguong im chiu duoc quang ngung lay hoi`.
+     */
+    @Test
+    fun `tham so mac dinh bang dung bo dang chay`() {
+        assertEquals(0.45f, VoiceVadTrim.THRESHOLD)       // hạ từ 0.5 sau on-car 2026-09-23 (mic xe nghe hụt)
+        assertEquals(100, VoiceVadTrim.MIN_SPEECH_MS)     // 0,10 s — lưới host §8
+        assertEquals(600, VoiceVadTrim.MIN_SILENCE_MS)    // 0,60 s — [ĐO xe 2026-09-18], KHÔNG còn là 0,15 s host
+        assertEquals(0, VoiceVadTrim.MARGIN_MS)
+        assertEquals(512, VoiceVadTrim.WINDOW_SIZE)       // Silero v4 @16 kHz, cũng là mặc định của AAR 1.13.8
+    }
+
+    /**
+     * ═══ [ĐO xe 2026-09-18] Ngưỡng im phải CHỊU ĐƯỢC một quãng ngừng lấy hơi giữa câu ═════════════════════
+     *
+     * 53 phiên thật: `silence_ms` = **150–174 ms ở 90/90 lượt** (VAD chốt đúng trần dưới của chính nó ở mọi
+     * lượt), và câu cụt lộ ra ngay — *"gập gương chiếu hậu"* → `gặp gu`. Người lái ngừng **200–500 ms** giữa câu
+     * để nghĩ; ngưỡng nào ≤ quãng ngừng đó là ngưỡng **cắt giữa câu**, và nó cắt IM LẶNG (Kachi chỉ hiểu sai).
+     *
+     * Sàn 500 ms ở đây là *"trên mức ngừng-để-nghĩ dài nhất đã đo"*. Ai hạ lại về vùng 150 ms thì bài này đỏ kèm
+     * đúng lý do — thay vì phát hiện lại bằng một lượt lái thử nữa.
+     * Bằng chứng: `docs/diagnostics/oncar-voice-cases-findings-2026-09-18.md` §A.
+     */
+    @Test
+    fun `nguong im chiu duoc quang ngung lay hoi giua cau`() {
+        assertTrue(
+            VoiceVadTrim.MIN_SILENCE_MS >= 500,
+            "ngưỡng im ${VoiceVadTrim.MIN_SILENCE_MS} ms ≤ quãng ngừng-để-nghĩ đã đo trên xe (200–500 ms) " +
+                "⇒ câu bị cắt giữa chừng",
+        )
+    }
+
+    @Test
+    fun `moi mac dinh nam trong chinh dai cua no`() {
+        assertTrue(VoiceVadTrim.THRESHOLD in VoiceVadTrim.MIN_THRESHOLD..VoiceVadTrim.MAX_THRESHOLD)
+        assertTrue(VoiceVadTrim.MIN_SPEECH_MS in VoiceVadTrim.MIN_MIN_SPEECH_MS..VoiceVadTrim.MAX_MIN_SPEECH_MS)
+        assertTrue(VoiceVadTrim.MIN_SILENCE_MS in VoiceVadTrim.MIN_MIN_SILENCE_MS..VoiceVadTrim.MAX_MIN_SILENCE_MS)
+        // Ngưỡng im của VAD vẫn phải NHỎ HƠN của bộ RMS: Silero biết "có phải giọng người không" nên còn dám chờ
+        // ít hơn. ⚠ Biên độ thì hết là "nhỏ hơn nhiều" — [ĐO xe 2026-09-18] đẩy 150 → 600 ms (RMS 800 ms), vì
+        // 150 ms cắt đúng vào quãng ngừng lấy hơi của người lái.
+        assertTrue(
+            VoiceVadTrim.MIN_SILENCE_MS < VoiceEndpointer.HANGOVER_MS,
+            "VAD chốt sớm hơn RMS — đó là toàn bộ lý do nó thành đường chính",
+        )
+    }
+
+    @Test
+    fun `doi don vi ms sang giay va sang mau khong lam tron sai`() {
+        assertEquals(0.15f, VoiceVadTrim.msToSeconds(150))
+        assertEquals(0.60f, VoiceVadTrim.msToSeconds(600))   // mốc thật của bộ tham số từ 2026-09-18
+        assertEquals(0.10f, VoiceVadTrim.msToSeconds(100))
+        assertEquals(1_600, VoiceVadTrim.msToSamples(100, rate))
+        assertEquals(100, VoiceVadTrim.samplesToMs(1_600, rate))
+        // Vòng tròn ms → mẫu → ms phải đứng yên ở mọi mốc thật của bộ tham số.
+        listOf(40, 80, 100, 150, 500, 600, 800, 8_400).forEach {
+            assertEquals(it, VoiceVadTrim.samplesToMs(VoiceVadTrim.msToSamples(it, rate), rate), "mốc $it ms")
+        }
+        assertEquals(0, VoiceVadTrim.samplesToMs(1_600, 0), "chia cho 0 phải trả 0, không được ném")
+    }
+
+    // ── VOICE-HEAD-SILENCE (2.75) — cắt IM LẶNG DẪN ĐẦU, [ĐO xe 2026-09-27] ─────────────────────
+
+    /**
+     * Cổng [VoiceVadTrim.HEAD_SILENCE_CUT_MS] là thứ làm bản vá này **không thể** làm hụt một ca đang chạy.
+     *
+     * [ĐO] mốc bắt đầu tiếng của **cả 30 bản thu thật 26–27/09**: 220 · 412 · 636 · 1 020 ms — mọi bản đều dưới
+     * trần ⇒ điểm cắt của chúng **không đổi một mẫu nào** so với 2.74. Còn bốn lượt bệnh của buổi xe 27/09 (1 212 ·
+     * 1 436 · 1 820 · 6 012 ms) thì đều được cắt.
+     */
+    @Test
+    fun `im lang dan dau NGAN thi khong cat gi - dung mang mau cua 274`() {
+        val window = VoiceVadTrim.msToSamples(3_800, rate)
+        listOf(220, 412, 636, 1_020, 1_200).forEach { onsetMs ->
+            val segs = listOf(seg(onsetMs, 1_500))
+            assertEquals(
+                0, headStart(segs, window),
+                "im lặng dẫn đầu $onsetMs ms ≤ trần ${VoiceVadTrim.HEAD_SILENCE_CUT_MS} ms ⇒ phải giữ NGUYÊN đầu cửa sổ",
+            )
+        }
+    }
+
+    @Test
+    fun `im lang dan dau DAI thi cat, va chua lai dung mot preroll`() {
+        val window = VoiceVadTrim.msToSamples(8_000, rate)
+        // [ĐO xe 10:36:52] lượt chạm trần 8 s: 6 012 ms im lặng dẫn đầu ⇒ *"mở vietmap hai"* (mất cả *"vào ô số"*).
+        val start = headStart(listOf(seg(6_012, 1_988)), window)
+        assertEquals(6_012 - VoiceVadTrim.PRE_ROLL_MS, VoiceVadTrim.samplesToMs(start, rate))
+        // Ba lượt còn lại của buổi xe.
+        listOf(1_212, 1_436, 1_820).forEach { onsetMs ->
+            val s = headStart(listOf(seg(onsetMs, 1_500)), VoiceVadTrim.msToSamples(4_600, rate))
+            assertEquals(onsetMs - VoiceVadTrim.PRE_ROLL_MS, VoiceVadTrim.samplesToMs(s, rate), "lượt $onsetMs ms")
+        }
+    }
+
+    /**
+     * Pre-roll phải **≥ 3×** [VoiceVadTrim.MIN_SPEECH_MS].
+     *
+     * Đây là bất biến khoá lại đúng phát hiện §8: cách cắt `segment` (cắt **tại** mốc bắt đầu tiếng, tức pre-roll
+     * = 0) chỉ cho **8/25** vì *"VAD mở đoạn muộn ⇒ nuốt mất từ đầu câu"*. Mốc `segment.start` trễ **ít nhất**
+     * bằng lượng tiếng mà luật mở đoạn đòi ([VoiceVadTrim.MIN_SPEECH_MS]), nên pre-roll phải phủ nó có biên. Hạ
+     * pre-roll xuống 0 là dựng lại chế độ 8/25 mà không ai thấy.
+     */
+    @Test
+    fun `preroll phu duoc do tre cua luat mo doan`() {
+        assertTrue(
+            VoiceVadTrim.PRE_ROLL_MS >= 3 * VoiceVadTrim.MIN_SPEECH_MS,
+            "pre-roll ${VoiceVadTrim.PRE_ROLL_MS} ms quá ngắn so với toi_thieu_tieng ${VoiceVadTrim.MIN_SPEECH_MS} ms " +
+                "⇒ rơi lại chế độ `segment` (8/25 ở §8)",
+        )
+        // …và phải rất xa vùng độc của §6 (im lặng 750 ms đã kéo 22/25 xuống 15/25).
+        assertTrue(VoiceVadTrim.PRE_ROLL_MS <= 400, "pre-roll quá dài là tự nạp im lặng vào mô hình (§6)")
+        // Trần cắt phải nằm TRÊN mọi mốc đã nghe đúng (1 020 ms) và DƯỚI mọi mốc đã nghe sai (1 212 ms).
+        assertTrue(VoiceVadTrim.HEAD_SILENCE_CUT_MS in 1_021..1_211, "trần cắt ${VoiceVadTrim.HEAD_SILENCE_CUT_MS} ms lệch khỏi phép đo 27/09")
+    }
+
+    @Test
+    fun `khong co doan nao thi khong cat dau - cung nhanh VAD khong no`() {
+        // Không biết tiếng bắt đầu ở đâu thì không được cắt ở đâu cả (cùng lẽ `headTrimSamples` trả nguyên cửa sổ).
+        assertEquals(0, headStart(emptyList(), VoiceVadTrim.msToSamples(5_000, rate)))
+        assertEquals(0, headStart(listOf(seg(6_000, 500)), 0), "cửa sổ rỗng ⇒ 0, không được ném")
+    }
+
+    @Test
+    fun `khuc dau luon con it nhat mot mau de giai ma`() {
+        // Bất biến ghép hai hàm: `headStart` phải < `headTrimSamples`, nếu không `rangeResult` trả chuỗi RỖNG và
+        // lượt nói biến mất **im lặng** (không lỗi, không log) — đúng loại hỏng mà CLAUDE.md §8 nói tới.
+        listOf(1_300 to 200, 2_000 to 100, 6_012 to 1_988).forEach { (onsetMs, lenMs) ->
+            val window = VoiceVadTrim.msToSamples(onsetMs + lenMs + 800, rate)
+            val segs = listOf(seg(onsetMs, lenMs))
+            assertTrue(
+                headStart(segs, window) < VoiceVadTrim.headTrimSamples(segs, window),
+                "khúc đầu rỗng ở mốc $onsetMs ms / dài $lenMs ms",
+            )
+        }
+    }
+
+    /**
+     * VOICE-OPEN-TURN: vế SAU cũng được một pre-roll, và nó **không** được lùi quá điểm hết tiếng của vế trước.
+     *
+     * Không có chặn dưới ấy thì khúc vế sau kéo lại tiếng của vế trước ⇒ [VoiceOpenTurn.join] phải gỡ một phần
+     * trùng dài hơn, và ca *"vế sau đọc lại nguyên vế trước"* (đã đo 2026-09-26) nặng thêm.
+     */
+    @Test
+    fun `ve sau co preroll nhung khong lui qua ve truoc`() {
+        val window = VoiceVadTrim.msToSamples(4_000, rate)
+        val pre = VoiceVadTrim.msToSamples(VoiceVadTrim.PRE_ROLL_MS, rate)
+        // Quãng ngừng 1 000 ms > pre-roll ⇒ lùi đúng một pre-roll.
+        val far = VoiceVadTrim.tailRange(listOf(seg(200, 1_100), seg(2_300, 1_200)), 1, window, 0, pre)!!
+        assertEquals(2_300 - VoiceVadTrim.PRE_ROLL_MS, VoiceVadTrim.samplesToMs(far.first, rate))
+        // Quãng ngừng 100 ms < pre-roll ⇒ kẹp ở điểm hết tiếng của vế trước, không lấn vào nó.
+        val near = VoiceVadTrim.tailRange(listOf(seg(200, 1_100), seg(1_400, 1_200)), 1, window, 0, pre)!!
+        assertEquals(1_300, VoiceVadTrim.samplesToMs(near.first, rate))
+        // Mặc định `preRollSamples = 0` ⇒ đúng hành vi 2.74 từng-mẫu (bài canh của bản cũ vẫn đúng).
+        val old = VoiceVadTrim.tailRange(listOf(seg(200, 1_100), seg(2_300, 1_200)), 1, window)!!
+        assertEquals(2_300, VoiceVadTrim.samplesToMs(old.first, rate))
+    }
+
+    private fun headStart(segs: List<VoiceVadTrim.Segment>, window: Int): Int =
+        VoiceVadTrim.headStartSamples(
+            segs, window,
+            VoiceVadTrim.msToSamples(VoiceVadTrim.PRE_ROLL_MS, rate),
+            VoiceVadTrim.msToSamples(VoiceVadTrim.HEAD_SILENCE_CUT_MS, rate),
+        )
+}

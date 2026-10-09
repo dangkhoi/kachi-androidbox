@@ -59,6 +59,8 @@
     <string name="kachi_access_open_full_failed">Tidak dapat membuka apl ini</string>
     <string name="kachi_home_result_picker">Pemilih apl utama peranti dibuka — pilih Kachi.</string>
     <string name="kachi_home_result_picker_failed">Peranti tidak dapat membuka pemilih apl utama — pergi ke Tetapan › Apl › Apl lalai.</string>
+    <string name="kachi_home_result_not_yet">Belum — Kachi belum menjadi skrin utama. Tekan butang sekali lagi dan pilih Kachi dalam pemilih.</string>
+    <string name="kachi_keys_manual">Tiada saluran kawalan untuk Kachi menghidupkannya sendiri — hidupkan \"Kachi — butang fizikal\" dalam skrin Kebolehcapaian peranti.</string>
     <string name="kachi_voice_no_mic_hw">Peranti ini tiada mikrofon — suara dan \"Hey Kachi\" tidak tersedia.</string>
     <string name="kachi_shell_approval_msg">Sistem sedang bertanya “Benarkan penyahpepijatan USB?” — tandakan “Sentiasa benarkan”, kemudian OK, supaya Kachi boleh meletakkan apl dalam petak.</string>
     <string name="kachi_shell_approval_retry">Cuba lagi</string>

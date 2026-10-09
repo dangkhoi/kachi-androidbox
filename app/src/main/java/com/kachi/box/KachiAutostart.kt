@@ -1,0 +1,165 @@
+package com.kachi.box
+
+import android.content.Context
+import android.util.Log
+import com.kachi.box.launcher.AutostartGate
+import com.kachi.box.launcher.BootHomeUp
+import com.kachi.box.launcher.DefaultHome
+import com.kachi.box.launcher.FreeformLaunch
+import com.kachi.box.launcher.HomeActivityCmd
+import com.kachi.box.launcher.HomeResumed
+import com.kachi.box.launcher.WorkspacePrefs
+import com.kachi.box.system.FreeformSeedStore
+
+/**
+ * Auto-start orchestration for the Kachi launcher (B6) — makes the workspace come up ready on car boot by doing
+ * the SURFACE-INDEPENDENT setup, idempotently, off the main thread. Driven by [KachiAutostartService] (a
+ * short-lived foreground service started from [RebindReceiver] on BOOT_COMPLETED / MY_PACKAGE_REPLACED).
+ *
+ * ── Why this is NOT a headless mounter (the VD-surface constraint) ────────────────────────────────────────────
+ * Each slot app is hosted in a VirtualDisplay BACKED BY the Activity's slot SurfaceView
+ * ([com.kachi.box.launcher.VdAppHost]). A headless service has NO surfaces, so it CANNOT create those VDs
+ * or mount apps. Kachi IS the HOME app, and [KachiHomeActivity] + [com.kachi.box.launcher.HomeViewModel]
+ * already RESTORE the persisted workspace on init → per-slot mounting happens IN the Activity when it renders the
+ * restored state. So this object does ONLY the setup a service can do:
+ *   1. seed the freeform boot flags via the SINGLE sanctioned writer ([FreeformSeedStore.forLauncher] →
+ *      [com.kachi.box.system.FreeformSeedPolicy.ensureSeed]) — respects the terminal FF_USER_REMOVED marker;
+ *   2. S5 — reassert Kachi as the current HOME activity (`cmd package set-home-activity`, only if not already)
+ *      ONLY when the user opted into "keep home on boot" ([WorkspacePrefs.keepHomeOnBoot], default OFF); the
+ *      primary way to become HOME is the Settings button (`ClusterNavBridge.setDefaultHome`);
+ *   3. (Android box B2 · W2c: the cast-coordination boot-plan log was removed with cluster cast);
+ *   4. ensure the HOME Activity is up (`am start` the HOME component) so it restores + mounts the saved slots —
+ *      covers the MY_PACKAGE_REPLACED case where the installer kills us and does NOT relaunch.
+ *
+ * All shell writes route through the launcher ownership seam ([com.kachi.box.system.WindowCommandDispatcher.launcherSeam],
+ * owned by [AppContainer]); none carry `--display`, so they never target the cluster and are ALLOWed by the gate.
+ *
+ * ── Idempotent + degrade-safe ─────────────────────────────────────────────────────────────────────────────────
+ * Single in-flight run + cooldown via [AutostartGate] (the reusable generalization of the proven
+ * `VietMapAutostart` guard): a burst of boot triggers runs the setup at most once. Every step is wrapped so a
+ * failure (no dadb loopback on the emulator, a rejected write on a locked trim) NEVER crashes boot and is simply
+ * retried on the next trigger. Gated by [WorkspacePrefs.launcherAutostart] (default ON) so the user can opt out.
+ */
+object KachiAutostart {
+    private const val TAG = "KachiAutostart"
+
+    /** READY-AT-HOME — chờ F4 đo kênh ở lượt nâng cấp đầu (chưa có dấu duyệt). Hết hạn ⇒ cổng quyết như thường. */
+    private const val AUTOSTART_CHANNEL_WAIT_MS = 60_000L
+
+    /** Minimum spacing between two runs — mirrors `VietMapAutostart.COOLDOWN_MS`. */
+    const val COOLDOWN_MS = 30_000L
+
+    private val gate = AutostartGate(COOLDOWN_MS)
+
+    /** Claim a run (in-flight + cooldown). `internal` so the gate can be driven end-to-end off-car. */
+    internal fun tryBeginRun(nowMs: Long = System.currentTimeMillis()): Boolean = gate.tryBegin(nowMs)
+
+    /** Release the claimed run (call in `finally`). */
+    internal fun finishRun() = gate.finish()
+
+    /** Test-only: reset the process-global gate between tests. */
+    internal fun resetGateForTest() = gate.reset()
+
+
+    /**
+     * BLOCKING (runs on [KachiAutostartService]'s background thread — the FGS keeps the process alive while the
+     * dadb round-trips complete). No-op if the user disabled launcher auto-start. Anti-loop (in-flight + cooldown)
+     * is inside this call; the whole body is degrade-safe.
+     */
+    fun runBoot(ctx: Context) {
+        val app = ctx.applicationContext
+        if (!WorkspacePrefs(app).launcherAutostart()) {
+            Log.i(TAG, "launcher auto-start disabled by pref — skip")
+            return
+        }
+        if (!tryBeginRun()) {
+            Log.i(TAG, "skip (a run is in-flight or within cooldown ${COOLDOWN_MS}ms) — anti-loop for boot/OTA/relaunch bursts")
+            return
+        }
+        try {
+            runCatching {
+                // READY-AT-HOME §4.6 — mọi lệnh dưới đây đi qua cổng thi hành. Lượt NÂNG CẤP đầu tiên lên bản có cổng chưa
+                // có dấu duyệt ⇒ cổng chặn tới khi F4 ở màn chính đo được kênh (UpdateRelaunch đưa màn chính lên). Chờ
+                // phép đo đó (tối đa 60 s, luồng nền của FGS) thay vì để set-home/`am start` bị chặn mất cả lượt.
+                val ready = ShellReadiness.awaitMeasured(AUTOSTART_CHANNEL_WAIT_MS)
+                Log.i(TAG, "shell channel before boot run: ${ready.phase}")
+                val container = AppContainer.get(app)
+                val seam = container.windowDispatcher.launcherSeam()
+                val comp = DefaultHome.component(app)              // alias HOME — đích của `set-home-activity`
+                // ⚠ [SOÁT 2026-09-15 · P1] `am start` PHẢI nhắm activity (luôn bật), KHÔNG nhắm alias HOME: alias xuất
+                // xưởng `enabled=false` ⇒ `am start -n <alias>` trả "Activity class … does not exist" ⇒ người dùng chưa
+                // bấm "Đặt làm màn hình chính" thì sau boot/OTA launcher không được đưa lên, ô không mount lại.
+                val launchComp = DefaultHome.launchComponent(app)
+
+                // (1) Seed the freeform boot flags via the ONE sanctioned writer (respects FF_USER_REMOVED).
+                val seeded = FreeformSeedStore.forLauncher(app) { Log.i(TAG, it) }.ensureSeed()
+                Log.i(TAG, "freeform seed ensured (handled=$seeded — false = user removed / already handled by marker; ghi hay không: dòng ngay trên)")   // 2.96 QA [P3]: trả về là ĐÃ XỬ LÝ, không phải ĐÃ GHI
+
+                // (2) S5 — Reassert Kachi as the HOME activity ONLY if the user opted into "keep home on boot"
+                //     (default OFF). Setting the WHOLE CAR's default HOME on every boot is a system-state change and
+                //     must be explicit-scope + user-consented (CLAUDE.md §4) — the primary path is the Settings
+                //     button. This boot reassert is a best-effort convenience for ROMs that reset HOME after reboot
+                //     ([SUY] — chưa đo, chờ P7). `am start` in (4) still brings Kachi UP regardless; that only STARTS
+                //     the launcher, it does not make it the default HOME.
+                //     2026-09-15 (HOME-alias): cũng re-assert khi `homeChosen` — người dùng ĐÃ bấm "Đặt làm màn hình
+                //     chính"; lối vào HOME là alias tắt sẵn nên sau nâng cấp/boot phải BẬT alias trước rồi mới
+                //     `set-home-activity` (khôi phục lựa chọn đã bày tỏ, idempotent — không phải đổi state mới).
+                val prefs = WorkspacePrefs(app)
+                //     (2.96 · R8 `HomeGuard` — nhịp giành lại HOME từ launcher BYD 5.7.5 — gỡ ở Android box B2 · W1/W2f.)
+                if (HomeActivityCmd.wantsKachiHome(prefs.homeChosen(), prefs.keepHomeOnBoot())) {
+                    val enabled = DefaultHome.enableHomeEntry(app)
+                    Log.i(TAG, "home entry (alias) enabled=$enabled — reasserting HOME (keepOnBoot=${prefs.keepHomeOnBoot()} chosen=${prefs.homeChosen()})")
+                    ensureHomeActivity(seam, comp)
+                } else {
+                    Log.i(TAG, "keep-home-on-boot OFF + home not chosen — not reasserting default HOME on boot")
+                }
+
+                // (3) Android box B2 · W2c — log "boot plan" của phối hợp chiếu cụm (launcher vs cast) gỡ cùng chiếu cụm.
+
+                // (4) Ensure the HOME Activity is up so it restores + mounts the saved slots (Activity does the VD mounting).
+                //     Covers MY_PACKAGE_REPLACED (installer kills us, does not relaunch). No --display ⇒ gate ALLOWs.
+                //     2.96 · R18: màn chính đã RESUMED trong tiến trình này ⇒ bỏ lệnh thừa trên kênh shell ([BootHomeUp], KDoc ở đó).
+                if (BootHomeUp.needsStart(HomeResumed.count())) {
+                    seam("am start -n $launchComp")
+                    Log.i(TAG, "requested HOME up ($launchComp) — Activity restores + mounts saved slots")
+                } else {
+                    Log.i(TAG, "HOME already resumed in-process — skip am start (R18)")
+                }
+
+                // (5) W-WAKE — bật FGS "Hey Kachi" nếu công tắc ON (sync tự stopSelf khi OFF). Mặc định TẮT.
+                //     Kèm THỬ LẠI lượt tải model KWS: cú gạt công tắc có thể đã hỏng vì không mạng, và nếu không
+                //     thử lại thì "Hey Kachi" bật mà không bao giờ nhận, im lặng (xem KDoc ensureWakeModelIfEnabled).
+                runCatching { com.kachi.box.launcher.voice.VoiceWakeService.sync(app) }
+                runCatching { com.kachi.box.launcher.ensureWakeModelIfEnabled(app) }
+
+                // (6) AUTOMATION (1.85, spec kachi-automation R4/R5) — dựng lại động cơ nền nếu có automation
+                //     nào BẬT. Cấu hình lưu bền theo XE, nhưng vòng nhịp là RAM ⇒ mỗi lần nổ máy phải re-arm,
+                //     nếu không thì hai automation chỉ chạy đúng phiên người dùng gạt công tắc. `sync` tự no-op
+                //     khi không còn việc (và tự dừng service) ⇒ gọi vô điều kiện là an toàn + idempotent.
+                runCatching { com.kachi.box.automation.AutomationService.sync(app) }
+            }.onFailure { Log.w(TAG, "kachi auto-start failed (degrade-safe, retried next trigger): ${it.message}") }
+        } finally {
+            finishRun()
+        }
+    }
+
+    /**
+     * `cmd package set-home-activity` the launcher — ONLY if it is not already the resolved HOME (idempotent).
+     * Reads the current HOME via `resolve-activity` (parsed by [FreeformLaunch.parseComponent]); if it already
+     * equals [comp], skip. Degrade-safe: on the emulator (no dadb loopback) the seam returns "" ⇒ parse is null ⇒
+     * we attempt the set (also a no-op via the dead seam) — never throws.
+     */
+    private fun ensureHomeActivity(seam: (String) -> String, comp: String) {
+        // S5 — cùng chuỗi lệnh với đường Cài đặt (`HomeActivityCmd`) để hai đường không lệch một byte (DRY §4.1).
+        val resolved = runCatching { seam(HomeActivityCmd.RESOLVE) }.getOrNull()
+        val current = resolved?.let { FreeformLaunch.parseComponent(it) }
+        // Review Pass 3 · P1: `--brief` in dạng SHORT (`com.kachi.box/.launcher.KachiHome`) — so theo nghĩa, không chuỗi trần.
+        if (resolved != null && HomeActivityCmd.isHome(resolved, comp)) {
+            Log.i(TAG, "Kachi already the HOME activity ($comp) — skip set-home")
+            return
+        }
+        seam(HomeActivityCmd.set(comp))
+        Log.i(TAG, "set Kachi as HOME activity (was ${current ?: "unresolved"})")
+    }
+
+}

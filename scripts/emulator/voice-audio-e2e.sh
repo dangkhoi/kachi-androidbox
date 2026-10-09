@@ -21,7 +21,7 @@ VOICE="${VOICE:-Linh}"
 WD=/tmp/kachi-audio-e2e; mkdir -p "$WD"; chmod 700 "$WD" 2>/dev/null || true
 # shellcheck disable=SC2034
 OUT="$WD"
-BRIDGE="am broadcast -a com.kachi.box.TEST -n com.kachi.box/com.byd.clusternav.launcher.testbridge.KachiTestBridge"
+BRIDGE="am broadcast -a com.kachi.box.TEST -n com.kachi.box/com.kachi.box.launcher.testbridge.KachiTestBridge"
 # 2.93 DEBT-VOICE-COMMON-SH — bật/tắt cầu kiểm thử + kiểm ngôn ngữ đi MỘT bản dùng chung với voice-e2e.sh.
 # shellcheck source=voice-common.sh
 . "$HERE/voice-common.sh"

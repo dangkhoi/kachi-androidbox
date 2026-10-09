@@ -1,10 +1,10 @@
 # Kachi Android box
 
 > **(VI)** Màn hình chính (launcher) cho ô tô dùng **Android box / đầu Android** bất kỳ — không phụ thuộc hãng xe hay hãng box.
-> Tách từ Kachi cho BYD (bản 2.98) và chỉ giữ phần launcher. **Chưa đăng bản nào** — thư mục `apk/` đang trống.
+> Tách từ Kachi cho BYD (bản 2.98) và chỉ giữ phần launcher. Bản đầu **1.0** đã lên kênh OTA: [`apk/Kachi-box-1.0-release.apk`](apk/) (chưa thử trên box thật).
 >
 > **(EN)** A home-screen launcher for cars running any **Android box / Android head unit** — no car-brand or box-brand
-> dependency. Split from Kachi for BYD (2.98), launcher part only. **No release published yet** — `apk/` is empty.
+> dependency. Split from Kachi for BYD (2.98), launcher part only. First release **1.0** is on the OTA channel: [`apk/Kachi-box-1.0-release.apk`](apk/) (not yet tried on a real box).
 
 ## Tính năng
 

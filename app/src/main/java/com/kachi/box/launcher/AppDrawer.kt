@@ -1,0 +1,448 @@
+package com.kachi.box.launcher
+
+import android.content.Context
+import android.text.TextUtils
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import com.kachi.box.R
+import com.kachi.box.launcher.KachiTheme.c
+import com.kachi.box.launcher.KachiTheme.dpi
+import com.kachi.box.launcher.KachiSpace as Sp
+import com.kachi.box.launcher.trip.TripAppCodec
+
+/**
+ * Ngăn kéo app — **ba chế độ** (cùng một view, không nhân bản UI):
+ *  - [Mode.ASSIGN_SLOT] (như cũ): "Đặt widget / mở app vào ô này". **Widget**: chọn NHIỀU (1..8) → tô sáng, bấm
+ *    **Đặt** để áp vào ô. **Ứng dụng**: chạm 1 app → đặt vào ô (1 app / ô).
+ *  - [Mode.OPEN_APP] (gói 1 · U3): "Mở ứng dụng" — KHÔNG có mục widget, chạm app là **mở toàn màn**, không gắn vào
+ *    ô nào. Có thêm hàng **Gần đây** (nguồn: [RecentApps], không cần quyền nào).
+ *  - [Mode.PICK_DOCK] (T6 · spec `kachi-settings-ia-v2.html` R-UI **(m)**): "Chọn nút cho thanh nút xe" — đa chọn
+ *    trên ĐÚNG tập ô mà màn Cài đặt đang bày cho thanh nút, chọn sẵn theo `dock.enabled`, bấm **Áp dụng (N)**.
+ *
+ * ## Vì sao chế độ thứ ba nằm Ở ĐÂY chứ không là một lưới thứ hai trong Cài đặt
+ * [ĐO] soát ảnh 2026-09-12: màn Cài đặt có lưới 123 ô của riêng nó ⇒ nhóm "Màn hình chính" dài **10.5 màn cuộn**, và
+ * hai lưới cùng bày một tập ô đã lệch nhau ba lần (cột 4-vs-5, thụt 6px, cỡ chữ ngoài thang). R-UI (m) chốt **một bộ
+ * chọn, hai lối vào** ⇒ mọi phép vá nhịp lưới (R5) chỉ phải làm một lần. Bám prototype kachi-workspace.html.
+ */
+class AppDrawer(
+    context: Context,
+    internal val widgets: List<WidgetDef>,
+    initialWidgets: List<String>,
+    private val onPickApp: (String) -> Unit,
+    private val onPickWidgets: (List<String>) -> Unit,
+    private val onClose: () -> Unit,
+    private val mode: Mode = Mode.ASSIGN_SLOT,
+    private val recentApps: List<String> = emptyList(),
+    /**
+     * Mục "Widget của app khác" (T4). Mặc định rỗng ⇒ chế độ mở-app và mọi chỗ gọi cũ **không đổi hành vi**;
+     * ở chế độ gán ô thì mục vẫn hiện tiêu đề kèm câu "máy chưa có widget nào" thay vì mất tăm.
+     */
+    private val appWidgetPicks: List<AppWidgetPick> = emptyList(),
+    /** [Mode.PICK_DOCK] — tập khả năng người dùng vừa chốt cho **thanh nút xe**. Mặc định rỗng ⇒ chỗ gọi cũ y nguyên. */
+    private val onApply: (Set<String>) -> Unit = {},
+    /** 2.93 `WIDGET-CAPACITY-HINT` — sức chứa của Ô đang gán cho một tập mục ([WidgetCapacity]); `null` ⇒ không nói. */
+    internal val fitOf: ((List<String>) -> WidgetCapacity.Hint?)? = null,
+) : FrameLayout(context) {
+
+    /**
+     * Ngăn kéo dùng để GÁN VÀO Ô (như cũ), MỞ APP toàn màn (U3), CHỌN NÚT cho thanh nút xe (T6), hay CHỌN APP cho lối tắt
+     * (F1 · U1 — đa chọn trên danh sách app, phần dựng ở `AppDrawerShortcutPick.kt`; 2.92: hết trần 8 — trần của bảng =
+     * trần KỸ THUẬT `AppShortcutCodec.MAX`, xem [cap]).
+     */
+    enum class Mode { ASSIGN_SLOT, OPEN_APP, PICK_DOCK, PICK_SHORTCUTS, PICK_TRIP }
+
+    /** Hai chế độ chọn APP đa chọn (F1 lối tắt · F2 app nổ máy) — cùng lưới, cùng nút *Áp dụng (N)*, khác trần + chữ. */
+    private val appPick: Boolean get() = mode == Mode.PICK_SHORTCUTS || mode == Mode.PICK_TRIP
+
+    /**
+     * Trần số mục **của bảng này** — không phải một hằng toàn cục.
+     *
+     * Ô giữa màn chứa tối đa [MAX] = 8 WIDGET (giới hạn hình học của ô nhiều thẻ có chữ). **Thanh nút xe KHÔNG có
+     * trần**: `DockConfig` lưu `List<String>` dài tuỳ ý và `ControlRegistry.defaultEnabledIds()` đã 8 mục — mở bảng chọn
+     * với trần 8 cho một cấu hình đang có 10 nút sẽ **cắt mất 2 nút mà không nói gì**, đúng họ lỗi "chặn im lặng" mà
+     * [toggleSelection] sinh ra để chống.
+     *
+     * 2.92 (owner 06/10 *"không nên giới hạn 8 app trong shortcut app đâu, bao nhiêu kệ người ta thôi"*, spec
+     * `kachi-292-shortcut-widget.html` R2): LỐI TẮT không còn dùng [MAX] — trần của bảng là trần KỸ THUẬT của chính danh
+     * sách (`AppShortcutCodec.MAX`, chống tệp hồ sơ hỏng/độc; ≫ số app có màn khởi chạy), vẫn đi đường nói-ra
+     * ([toggleSelection]) nếu có ai chạm tới.
+     */
+    internal val cap: Int = when (mode) {
+        Mode.PICK_DOCK -> NO_CAP
+        Mode.PICK_TRIP -> TripAppCodec.MAX   // F2 R2.1 — tối đa 6 app khi nổ máy (`:core`, một nguồn)
+        Mode.PICK_SHORTCUTS -> AppShortcutCodec.MAX   // 2.92 — hết trần 8; trần kỹ thuật của danh sách (`:core`)
+        else -> MAX
+    }
+
+    internal val selected = ArrayList<String>().apply { addAll(initialWidgets.take(cap)) }
+    internal val widgetTiles = HashMap<String, LinearLayout>()
+
+    /** F1 · U1 — ô app của chế độ [Mode.PICK_SHORTCUTS] (gói → ô). Riêng [widgetTiles]: ô app không nhuộm icon. */
+    internal val appPickTiles = HashMap<String, View>()
+    private var placeBtn: TextView? = null
+
+    /** Phần danh sách ứng dụng (tách tệp vì trần 500 dòng) — xem [AppDrawerApps]. */
+    private val apps = AppDrawerApps(context, onPickApp, onLongPressApp = if (mode == Mode.OPEN_APP) AppDrawerApps.teachMenu(context) { onClose() } else null)
+
+    /** Câu nhắc trần ô ở thanh đáy — rỗng khi chưa đầy (đủ thì im lặng). */
+    private var capHint: TextView? = null
+
+    init {
+        setBackgroundColor(c(KachiTheme.SCRIM_PANEL))
+        isClickable = true
+        setOnClickListener { onClose() }
+
+        val panel = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            background = KachiTheme.card(context, Sp.RADIUS_XXL, KachiTheme.PANEL)
+            setPadding(dpi(context, Sp.XXL), dpi(context, Sp.XL), dpi(context, Sp.XXL), dpi(context, Sp.XL))
+            isClickable = true
+        }
+        val plp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT).also {
+            it.setMargins(dpi(context, Sp.XXL), dpi(context, Sp.XXL), dpi(context, Sp.XXL), dpi(context, Sp.XXL)); it.gravity = Gravity.CENTER
+        }
+        val assign = mode == Mode.ASSIGN_SLOT; val dock = mode == Mode.PICK_DOCK; val pick = appPick
+
+        panel.addView(TextView(context).apply {
+            text = context.getString(
+                when (mode) {
+                    Mode.ASSIGN_SLOT -> R.string.kachi_drawer_title_assign
+                    Mode.OPEN_APP -> R.string.kachi_drawer_title_open
+                    Mode.PICK_DOCK -> R.string.kachi_drawer_title_dock
+                    Mode.PICK_SHORTCUTS -> R.string.kachi_drawer_title_shortcuts
+                    Mode.PICK_TRIP -> R.string.kachi_drawer_title_trip
+                },
+            )
+            setTextColor(c(KachiTheme.INK))
+            KachiType.apply(this, KachiType.TITLE, bold = true)
+        })
+        panel.addView(TextView(context).apply {
+            text = context.getString(
+                when (mode) {
+                    Mode.ASSIGN_SLOT -> R.string.kachi_drawer_hint_assign
+                    Mode.OPEN_APP -> R.string.kachi_drawer_hint_open
+                    Mode.PICK_DOCK -> R.string.kachi_drawer_hint_dock
+                    Mode.PICK_SHORTCUTS -> R.string.kachi_drawer_hint_shortcuts
+                    Mode.PICK_TRIP -> R.string.kachi_drawer_hint_trip
+                },
+            )
+            setTextColor(c(KachiTheme.MUT)); KachiType.apply(this, KachiType.CAPTION)
+            setPadding(0, dpi(context, Sp.XS), 0, dpi(context, Sp.M))
+        })
+
+        val body = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        // Đệm ĐẦU thân cuộn (thay `setPadding` trên ScrollView — xem khối BUG (O) ở chỗ dựng ScrollView).
+        body.addView(View(context), LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpi(context, Sp.XS)))
+
+        if (dock) {
+            // ĐÚNG tập ô mà màn Cài đặt bày cho thanh nút, cùng thứ tự — không chép danh sách, cả hai đường đi qua
+            // `CapabilityPicker`/`CapabilityCatalog` ở `:core`. KHÔNG có widget dựng tay / widget app khác / danh sách
+            // app: `DockConfig.setEnabled` chỉ nhận mã trong `CapabilityCatalog` ⇒ bày chúng ở đây là bày nút chết.
+            // S4 · R12 — khối **Launcher** (2 ô: Ứng dụng · Cài đặt) đứng ĐẦU, và CHỈ có ở chế độ này. Nguồn vẫn
+            // là `:core` như mọi khối khác (không chép danh sách mã thứ hai); vì sao đứng đầu và vì sao chế độ
+            // gán-ô không có nó: KDoc [CapabilityPicker.launcherPicks] + [LauncherActions].
+            body.addView(sectionLabel(CapabilityPicker.LAUNCHER_TITLE))
+            body.addView(note(CapabilityPicker.LAUNCHER_NOTE))
+            addPickGrid(body, CapabilityPicker.launcherPicks(), cols = COLS_TILE)
+            // Android box B2 · W3: mục NHÓM + TỪNG MỤC RIÊNG (nút / datum xe theo lĩnh vực) gỡ cùng bộ đăng ký xe.
+        } else if (assign) {
+            // #7 (owner 2026-09-21): thứ tự App → Widget của app → Thông tin khác. App là thứ người dùng đưa vào
+            // ô nhiều nhất nên bày TRƯỚC; "Thông tin khác" (nhóm xe · thẻ dựng tay · mục lẻ) xuống cuối.
+
+            // ── App (chạm đặt vào ô) — ĐẦU ──
+            body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_apps)))
+            apps.grid(body, apps.load(), cols = COLS_APP)
+
+            // ── Widget của APP KHÁC (T4) ──
+            // Rỗng thì VẪN hiện tiêu đề kèm câu nói rõ "máy chưa có app nào cung cấp widget" (không im lặng bỏ mục).
+            body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_appwidgets)).also { it.setPadding(0, dpi(context, Sp.L), 0, dpi(context, Sp.XS)) })
+            if (appWidgetPicks.isEmpty()) {
+                body.addView(note(context.getString(R.string.kachi_drawer_note_appwidgets_none)))
+            } else {
+                body.addView(note(context.getString(R.string.kachi_drawer_note_appwidgets)))
+                apps.grid(body, appWidgetPicks.map { p -> AppDrawerApps.Item(APPWIDGET_PKG, p.title, { p.icon }, p.onTap) }, cols = COLS_TILE)
+            }
+
+            // ── Thẻ dựng tay (Android box B2 · W1/W3: khối camera, mục nhóm và mục lẻ xe đã gỡ) ──
+            body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_widgets)).also { it.setPadding(0, dpi(context, Sp.L), 0, dpi(context, Sp.XS)) })
+            addWidgetGrid(body, cols = COLS_TILE)
+        } else if (pick) {
+            body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_apps)))
+            shortcutPickSection(body, apps, COLS_APP)   // F1 · U1 — lưới app đa chọn (AppDrawerShortcutPick.kt)
+        } else {
+            // ── Chế độ MỞ THƯỜNG: gần đây trước, rồi tất cả ──
+            val all = apps.load()
+            val recent = apps.recent(all, recentApps)
+            if (recent.isNotEmpty()) {
+                body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_recent)))
+                apps.grid(body, recent, cols = COLS_APP)
+                body.addView(sectionLabel(context.getString(R.string.kachi_drawer_section_all_apps)).also { it.setPadding(0, dpi(context, Sp.L), 0, dpi(context, Sp.XS)) })
+            }
+            apps.grid(body, all, cols = COLS_APP)
+        }
+
+        // ⚠⚠ [BUG (O) UI-PICKER-OVERLAP — ĐÃ CHỨNG MINH 2026-09-16] Đệm của vùng cuộn phải là HAI VIEW ĐỆM TRONG THÂN,
+        // KHÔNG phải `setPadding` + `clipToPadding = false`. Owner chụp trên xe: một hàng ô giữa lưới bị "cắt ngang +
+        // dải đè"; máy ảo tái hiện đúng (dump `uiautomator`: bounds mọi ô ĐÚNG, nhưng ảnh cắt tại y = 834 = đáy khung
+        // 918 − đệm đáy 84px). Đọc `android-10.0.0_r47/core/java/android/view/View.java`:
+        //  • `getFadeHeight` (:20893-20897) = `mBottom - mTop - mPaddingBottom - mPaddingTop` ⇒ mép mờ ĐÁY nằm tại
+        //    `đáy khung − paddingBottom` (:21500-21501), không phải đáy khung;
+        //  • lớp mờ `saveUnclippedLayer(left, bottom - length, right, bottom)` (:21539) rồi xoá alpha bằng gradient
+        //    (:21592-21603).
+        // Với `clipToPadding = false` nội dung vẫn vẽ tràn xuống vùng đệm, nên dải mờ rơi vào GIỮA nội dung: hàng nào
+        // đi qua y ấy bị nhạt chữ rồi hụt một khúc — trên xe là hàng 3, máy ảo là hàng 2, tuỳ vị trí cuộn. Đưa đệm vào
+        // THÂN cuộn thì `mPaddingBottom = 0` ⇒ mép mờ về đúng đáy khung, và hàng cuối vẫn cuộn tới được nhờ view đệm.
+        body.addView(View(context), LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpi(context, Sp.TOUCH) + dpi(context, Sp.S)))
+        panel.addView(
+            ScrollView(context).apply {
+                addView(body)
+                // ⚠ [KIỂM TOÁN UX mục 5c] Mép cuộn trước đây CẮT NGANG chữ: [ĐO] 3 nhãn chỉ còn ~40% nét ở đường
+                // biên, đọc thành chữ lỗi chứ không đọc thành "còn nữa, cuộn đi". Mép mờ nói đúng điều đó, và là
+                // cách nền tảng có sẵn (không phải một lớp phủ tự vẽ phải tự nhớ đổi màu theo nền).
+                isVerticalFadingEdgeEnabled = true
+                setFadingEdgeLength(dpi(context, Sp.M))
+                // ⚠ KHÔNG `setPadding`, KHÔNG `clipToPadding = false` ở đây — xem khối chú thích BUG (O) ngay trên.
+                // Đệm đầu = view đệm đầu thân (dưới), đệm đáy = view đệm cuối thân (trên). [R-UI (e)] "đệm đáy > dải
+                // mờ" vẫn giữ (Sp.TOUCH + Sp.S = 56 > Sp.M = 12) để hàng cuối ra khỏi vùng mờ khi cuộn hết cỡ.
+            },
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
+        )
+        // ⚠⚠ [KIỂM TOÁN UX mục 5a] Nút áp cấu hình GHIM Ở ĐÁY BẢNG, **ngoài** vùng cuộn.
+        //
+        // [ĐO] trước đây nó nằm trong thân cuộn (cạnh tiêu đề mục đầu), nên cuộn xuống là **mất nút**: điểm sáng ở
+        // vùng nút đi 7242 → 83 → 0. Người dùng chọn xong ở cuối danh sách thì không còn đường áp — phải cuộn ngược
+        // lên mới thấy, mà không có gì nói cho họ biết điều đó. Nút quyết định phải luôn ở trong tầm mắt.
+        if (assign || dock || pick) {
+            panel.addView(placeBar(), LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            refreshPlaceBtn()
+        }
+        addView(panel, plp)
+    }
+
+    /** Thanh đáy ghim: câu nhắc trần ô (bên trái) + nút áp (bên phải). */
+    private fun placeBar(): View = LinearLayout(context).apply {
+        orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+        setPadding(0, dpi(context, Sp.M), 0, 0)
+        val hint = TextView(context).apply {
+            setTextColor(c(KachiTheme.MUT)); KachiType.apply(this, KachiType.CAPTION)
+        }
+        capHint = hint
+        addView(hint, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        val btn = TextView(context).apply {
+            // ⚠ [R7] Đích chạm 48dp khai TẠI ĐÂY: [ĐO] soát ảnh v2 nút QUYẾT ĐỊNH của bảng cao **34.7dp**, thấp
+            // hơn mọi nút phụ của Settings (48dp) — đúng bệnh "bốn chiều cao cho ba vai" mà `SettingsRows` đã gom.
+            KachiType.apply(this, KachiType.BODY, bold = true); gravity = Gravity.CENTER; minHeight = dpi(context, Sp.TOUCH)
+            setPadding(dpi(context, Sp.L), dpi(context, Sp.S), dpi(context, Sp.L), dpi(context, Sp.S))
+            background = KachiTheme.gradient(context, Sp.RADIUS_PILL); setTextColor(c(KachiTheme.ON_ACCENT))
+            // Một nút, hai đích đến theo chế độ — KHÔNG hai nút: thanh đáy chỉ có chỗ cho một quyết định, và hai nút
+            // trong đó thì lúc nào cũng có đúng một cái là nút chết.
+            setOnClickListener {
+                if (mode == Mode.PICK_DOCK || mode == Mode.PICK_TRIP || mode == Mode.PICK_SHORTCUTS) onApply(selected.toSet()) else onPickWidgets(selected.toList())
+            }
+        }
+        placeBtn = btn; addView(btn)
+    }
+
+    /**
+     * Câu nói khi đã đủ trần — nêu **cả trần lẫn đường đi tiếp**.
+     *
+     * Một chỗ duy nhất vì nó xuất hiện ở HAI nơi (câu nhắc ở thanh đáy + toast khi bấm): hai bản chữ sẽ lệch nhau
+     * đúng lúc ai đó sửa một chỗ, và lúc đó hai bề mặt nói hai điều về cùng một luật.
+     *
+     * ⚠ U5·T3 — đây từng là `const val CAP_NOTE` nội suy `$MAX`. Nay là HÀM vì chuỗi nằm trong tài nguyên (cần
+     * `Context`), và trần vẫn lấy từ [MAX] chứ không gõ lại — `PickerCapNoticeContractTest` đọc CHÍNH tệp tài nguyên
+     * để chốt hai tính chất cũ (nêu số trần · nói cách đi tiếp), nên phép kiểm không yếu đi khi chữ dời chỗ.
+     */
+    private fun capNote(): String =
+        when (mode) {
+            Mode.PICK_SHORTCUTS -> context.getString(R.string.kachi_sc_cap_note, cap)
+            Mode.PICK_TRIP -> context.getString(R.string.kachi_trip_cap_note, cap)
+            else -> context.getString(R.string.kachi_drawer_cap_note, MAX)
+        }
+
+    private fun refreshPlaceBtn() {
+        placeBtn?.text = when {
+            // Chọn nút cho thanh xe: nút luôn là "Áp dụng (N)" kể cả N = 0 — bỏ HẾT nút khỏi thanh là một lựa chọn
+            // hợp lệ (thanh ẩn đi), không phải một trạng thái phải đổi tên nút.
+            mode == Mode.PICK_DOCK || appPick -> context.getString(R.string.kachi_drawer_apply_n, selected.size)
+            selected.isEmpty() -> context.getString(R.string.kachi_drawer_place_none)
+            else -> context.resources.getQuantityString(R.plurals.kachi_drawer_place_n, selected.size, selected.size)
+        }
+        // Câu nhắc chỉ hiện KHI ĐẦY (đủ thì im lặng — cùng luật với vòng kiểm quyền). Nói cả trần LẪN cách đi tiếp,
+        // vì "đã đủ 8" một mình không cho người dùng biết phải làm gì.
+        // Và **trả dòng này về dáng THÔNG TIN** (mực mờ, không nền): dáng CẢNH BÁO chỉ thuộc về cú bấm vừa bị từ chối
+        // (xem [notice]). Không trả về thì cái nền hổ phách còn nằm đó sau khi người dùng đã bỏ một mục ra — tức nó
+        // nói một điều không còn đúng.
+        capHint?.let { v ->
+            v.text = if (selected.size >= cap) capNote() else ""
+            if (selected.size < cap) scheduleFitHint(v)   // 2.93 WIDGET-CAPACITY-HINT (AppDrawerFitHint.kt)
+            v.setTextColor(c(KachiTheme.MUT))
+            v.background = null
+            v.setPadding(0, 0, 0, 0)
+        }
+    }
+
+    /**
+     * ĐƯỜNG DUY NHẤT bật/tắt một lựa chọn — cho cả widget dựng tay lẫn mục khả năng.
+     *
+     * ## ⚠⚠ [KIỂM TOÁN UX mục 5b] Trần 8 mục trước đây CHẶN IM LẶNG
+     * Bản cũ viết `else if (selected.size < MAX) selected.add(id)` ở **hai** chỗ (widget và mục khả năng). [ĐO] đang
+     * chọn 8 mục rồi bấm thêm Lốp/Kính/Khí hậu: vẫn 8, **không một lời nào** — không toast, không đổi màu, không câu
+     * nhắc; bỏ một mục xuống 7 thì lại bấm được. Người dùng không thể biết vì sao cú bấm của họ "mất".
+     *
+     * Đây đúng họ lỗi mà dự án đã trả giá ở `DockConfig.setEnabled` (*"mã không phải nút ⇒ return this"*, bỏ qua im
+     * lặng), nên cách chữa cũng phải giống: **nói ra**, và nói cả đường đi tiếp. Có bài canh
+     * `PickerCapNoticeContractTest` cấm nhánh bỏ-qua-im-lặng mọc lại.
+     *
+     * Gộp về một hàm cũng là để hai chỗ không thể lệch nhau — hai bản sao của cùng một luật là cách chắc chắn để
+     * một bản được sửa và bản kia không.
+     */
+    internal fun toggleSelection(id: String) {
+        if (id in selected) {
+            selected.remove(id)
+        } else if (selected.size >= cap) {
+            notice(capNote())
+            return
+        } else {
+            selected.add(id)
+        }
+        refreshTiles(); refreshPlaceBtn()
+    }
+
+    /**
+     * ═══ [KIỂM TOÁN 2026-09-12 mục 1] KÊNH NÓI CỦA NGĂN KÉO — KHÔNG THỂ LÀ TOAST ══════════════════════════════
+     *
+     * ## [ĐO] bằng số, không suy luận — 2026-09-12, máy ảo
+     * Ngăn kéo mở dưới dạng **cửa sổ phủ** (`TYPE_APPLICATION_OVERLAY`, xem [DrawerController]). `dumpsys window`
+     * lúc toast đang lên:
+     *  • toast: `ty=TOAST`, `mBaseLayer=81000`, khung `[655,969][1264,1044]`;
+     *  • ngăn kéo: `ty=APPLICATION_OVERLAY`, `mBaseLayer=**121000**`, khung `[0,0][1920,1080]`.
+     *
+     * 121000 > 81000 ⇒ ngăn kéo nằm **TRÊN** toast, và nó phủ **cả màn**. So hai ảnh chụp (trước / sau cú bấm bị từ
+     * chối): trong dải CHỮ của toast (`y 969..1037`) có **0 pixel** đổi; chỉ dải `y 1037..1044` — 7px lọt ra dưới đáy
+     * bảng — đổi (4018 px, (8,11,16) → (47,49,54)), tức thấy được **mép hộp** toast mà không thấy một nét chữ nào.
+     *
+     * Vì vậy toast ở bề mặt này là một **kênh im lặng**: mã có gọi, người dùng không nhận được gì. Cùng họ lỗi
+     * `DockConfig.setEnabled` (bỏ qua im lặng) và trần-8-mục (bấm không một lời nào) — dự án đã vá ba lần.
+     *
+     * ## Vì sao dòng chữ nằm trong THANH ĐÁY
+     * Nó **ghim ngoài vùng cuộn** (cùng hàng với nút áp cấu hình), nên luôn thấy được dù người dùng đang cuộn ở đâu —
+     * khác toast, nó không thể bị cửa sổ nào che vì nó là con của chính bảng. Đổi **màu + nền** (không chỉ đổi chữ)
+     * để một cú bấm bị từ chối tạo ra thay đổi **nhìn ra được**: khi đã đủ trần thì dòng này vốn đã hiện sẵn câu nhắc,
+     * nên nếu chỉ đặt lại cùng một chữ thì trên màn **không có gì đổi**.
+     *
+     * Toast ở màn Cài đặt thì vẫn dùng được (bảng đó là con của cửa sổ Activity, `mBaseLayer` ~21000 < 81000) — nên
+     * đây là luật của **bề mặt phủ**, không phải "bỏ toast trong toàn dự án".
+     */
+    private fun notice(msg: String) {
+        val v = capHint ?: return
+        v.text = msg
+        v.setTextColor(c(KachiTheme.AMBER))
+        // WP1 · R1.1 — viền hổ phách gỡ; nền AMBER_SOFT một mình đã đủ ([ĐO] tách thẻ 1.56/1.36×, chữ 5.52/5.02).
+        v.background = KachiTheme.card(context, Sp.RADIUS_PILL, KachiTheme.AMBER_SOFT)
+        val px = dpi(context, Sp.S)
+        v.setPadding(px, dpi(context, Sp.XS), px, dpi(context, Sp.XS))
+    }
+
+    /**
+     * Nói một câu ra thanh đáy **từ ngoài** (T4: kết quả ràng buộc widget bên thứ ba).
+     *
+     * Có mặt vì việc ràng buộc widget là **không đồng bộ** (phải mở kênh shell để xin bind-grant) nên câu trả lời tới
+     * khi bảng này vẫn đang mở — và đây là kênh nói DUY NHẤT dùng được ở bề mặt phủ (xem KDoc [notice]: toast nằm
+     * DƯỚI lớp `APPLICATION_OVERLAY`, [ĐO] `dumpsys window` 81000 < 121000).
+     *
+     * ⚠ Khai SAU [notice], không phải trước: đặt trước thì KDoc *"vì sao không dùng Toast"* của [notice] (một luật của
+     * dự án, có bài canh riêng) bị **tách khỏi hàm nó nói về** — hai khối KDoc liền nhau thì Kotlin chỉ nhận khối
+     * cuối, nên [notice] mất tài liệu và chính lời dẫn "xem KDoc [notice]" ở trên trỏ vào chỗ trống.
+     */
+    fun say(msg: String) = notice(msg)
+
+    // Lưới ô: `addWidgetGrid` · `widgetTile` · `addPickGrid` · `kindPill` · `pickTile` → `AppDrawerTiles.kt` (tách THUẦN theo trần
+    // 500 dòng, L6-debt 2026-09-27): hàm mở rộng `internal` cùng package, thân giữ nguyên byte; `selected` · `widgetTiles` ·
+    // `cap` · `widgets` · `toggleSelection` · `applyTileState` vì thế là `internal`.
+    private fun refreshTiles() { widgetTiles.keys.forEach { applyTileState(it) }; appPickTiles.keys.forEach { applyAppPickState(it) } }
+
+    /**
+     * ⚠ U7 · R6 — hàm `iconWithBadge` CŨ đã dời sang [PickerBadge.icon].
+     *
+     * Không phải dọn cho gọn: `TopStripPicker` bày **đúng những ô ấy** mà lại **không** vẽ chấm nào, tức cùng một
+     * mã thì hai màn nói hai điều khác nhau về độ tin cậy của nó. Gom về một nơi là cách duy nhất để hai màn không
+     * lệch tiếp — cùng lẽ với [CapabilityPicker.COLS].
+     */
+
+    /** Độ mờ ô hết chỗ — MỘT hằng ([DIMMED]) cho cả ô khả năng lẫn ô app của [Mode.PICK_SHORTCUTS]. */
+    internal val dimmedAlpha: Float get() = DIMMED
+
+    internal fun applyTileState(id: String) {
+        val tile = widgetTiles[id] ?: return
+        val on = id in selected
+        // ⚠ [R-UI (g)] Ô CHƯA CHỌN cũng có NỀN, trước đây là `null`.
+        //
+        // [ĐO] soát ảnh pha 2: không nền thì hai ô cạnh nhau "nền liền mạch" — mắt không tách được ranh giới ô, và
+        // cái chấm "chưa kiểm trên xe" ở góc icon không có mặt phẳng nào để thuộc về.
+        //
+        // VISUAL-REFRESH P1 · T3: hai trạng thái nay đi qua CÙNG [KachiTheme.surface], chỉ khác `tone` — trước đây
+        // nhánh BẬT dựng `GradientDrawable` tại chỗ còn nhánh TẮT gọi `card()`, tức hai cách vẽ cho hai trạng thái
+        // của **một** ô. (Sắc lĩnh vực xe gỡ ở Android box B2 · W3.)
+        tile.background = KachiTheme.surface(context, Sp.RADIUS_L, if (on) SurfaceTone.ACTIVE else SurfaceTone.NEUTRAL)
+        // [KIỂM TOÁN UX mục 5b] Đầy trần ⇒ LÀM MỜ những ô không còn chọn được, để trạng thái "không bấm được nữa"
+        // nhìn ra được TRƯỚC khi bấm; toast chỉ là lớp thứ hai cho người đã bấm.
+        tile.alpha = if (on || selected.size < cap) 1f else DIMMED
+        (tile as? ViewGroup)?.getChildAt(0)?.let { PickerBadge.retint(it, Sp.ICON_XL, on) }
+    }
+
+    private fun sectionLabel(text: String) = TextView(context).apply {
+        // [SOÁT UI 2026-09-12] Header nhóm TRƯỚC ĐÂY màu MUT2 (mờ) + 12sp ⇒ mờ và nhỏ HƠN chữ nội dung (INK ~14.5sp)
+        // nên không ra "đầu mục", các phần dồn thành một dải. Header phải NỔI hơn body: màu INK sáng + đậm + thưa chữ.
+        // ⚠ [type scale] Bản vá đó nâng lên 13sp — vẫn **dưới** [KachiType.BODY] (13.5) nên tỉ số cỡ với nội dung là
+        // 0.96: mắt không đọc ra thứ bậc, chỉ còn màu+nét gánh. Đây là TIÊU ĐỀ NHÓM ⇒ đúng bậc của nó là
+        // [KachiType.SECTION] (16, tỉ số 1.19) — cùng bậc `SettingsRows.sectionHeader` đang dùng cho cùng vai.
+        this.text = text; setTextColor(c(KachiTheme.INK)); KachiType.apply(this, KachiType.SECTION, bold = true)
+        letterSpacing = 0.06f; setPadding(0, 0, 0, dpi(context, Sp.S))
+    }
+
+    /** Câu phụ dưới tiêu đề mục — cùng khuôn với câu mô tả ở đầu bảng, không phải cỡ chữ mới. */
+    private fun note(text: String) = TextView(context).apply {
+        this.text = text; setTextColor(c(KachiTheme.MUT)); KachiType.apply(this, KachiType.CAPTION)
+        setPadding(0, 0, 0, dpi(context, Sp.S))
+    }
+
+    private companion object {
+        /**
+         * Trần WIDGET của MỘT Ô GIỮA MÀN (giới hạn hình học của ô nhiều thẻ có chữ) — xem [cap] về vì sao thanh nút xe và
+         * (từ 2.92) lối tắt không dùng nó.
+         */
+        const val MAX = 8
+
+        /**
+         * "KHÔNG có trần" — dùng cho [Mode.PICK_DOCK].
+         *
+         * Là một con số (không phải `null`) để mọi phép so `selected.size >= cap` giữ **một** hình dạng duy nhất:
+         * thêm một nhánh `cap == null` là thêm một chỗ nữa có thể quên, đúng họ lỗi "hai bản sao của một luật".
+         */
+        const val NO_CAP = Int.MAX_VALUE
+
+        // [SOÁT UI 2026-09-12] MỘT vùng cuộn = MỘT lưới cột, và con số đó do `:core` giữ (màn Cài đặt bày CHÍNH những ô này — xem KDoc [CapabilityPicker.COLS]). Danh sách app khác loại nên có số riêng.
+        const val COLS_TILE = CapabilityPicker.COLS
+        const val COLS_APP = 6
+
+        /**
+         * Gói giả cho mục widget bên thứ ba.
+         *
+         * [AppDrawerApps.Item.pkg] chỉ dùng để tra hàng **"Gần đây"** (`recent` khớp theo gói). Widget bên thứ ba
+         * không phải app để mở nên không bao giờ vào hàng đó; đưa một giá trị KHÔNG trùng gói thật vào đây để nó
+         * không thể tình cờ khớp — dùng tên gói thật sẽ làm mục widget hiện lại ở hàng "Gần đây" như một app.
+         */
+        const val APPWIDGET_PKG = "\u0000appwidget"
+
+        /** Độ mờ của ô KHÔNG còn chọn được (đã đủ trần). */
+        const val DIMMED = 0.4f
+    }
+}

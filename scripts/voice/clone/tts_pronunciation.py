@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 ═══ BẢN PYTHON CỦA `TtsPronunciation.normalise` — CHỮ HIỂN THỊ → CHỮ ĐỌC ĐƯỢC ═════════════════════════
-Nguồn duy nhất của bảng: `core/src/main/kotlin/com/byd/clusternav/launcher/voice/TtsPronunciation.kt`.
+Nguồn duy nhất của bảng: `core/src/main/kotlin/com/kachi/box/launcher/voice/TtsPronunciation.kt`.
 Spec: `docs/specs/kachi-voice-fast-natural.html` §9 · `docs/specs/kachi-voice-clone.html` §4.5.
 
 ## Vì sao ĐỌC bảng từ Kotlin thay vì chép sang đây
@@ -28,7 +28,7 @@ import os
 import re
 
 REPO = os.environ.get("REPO") or os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-KT = os.path.join(REPO, "core", "src", "main", "kotlin", "com", "byd", "clusternav",
+KT = os.path.join(REPO, "core", "src", "main", "kotlin", "com", "kachi", "box",
                   "launcher", "voice", "TtsPronunciation.kt")
 
 _PAIR = re.compile(r'"((?:[^"\\]|\\.)*)"\s+to\s+"((?:[^"\\]|\\.)*)"')

@@ -11,7 +11,7 @@ set -uo pipefail
 SERIAL="${1:-emulator-5554}"
 VOICES="${2:-Linh}"
 ADB="$HOME/Library/Android/sdk/platform-tools/adb -s $SERIAL"
-B="am broadcast -a com.kachi.box.TEST -n com.kachi.box/com.byd.clusternav.launcher.testbridge.KachiTestBridge"
+B="am broadcast -a com.kachi.box.TEST -n com.kachi.box/com.kachi.box.launcher.testbridge.KachiTestBridge"
 WD=/tmp/kachi-wake-e2e; mkdir -p "$WD"
 
 # id \t câu \t nhóm(POS=phải wake / NEG=không được wake)
@@ -31,7 +31,7 @@ if [ -n "$BID" ] && [ "$UPMS" != 0 ]; then
   $ADB push "$WD/tb.xml" /data/local/tmp/tb.xml >/dev/null 2>&1
   $ADB shell "su 0 sh -c 'cp /data/local/tmp/tb.xml /data/data/com.kachi.box/shared_prefs/kachi_test_bridge.xml; chown u0_a163:u0_a163 /data/data/com.kachi.box/shared_prefs/kachi_test_bridge.xml'" >/dev/null 2>&1
   $ADB shell am force-stop com.kachi.box >/dev/null 2>&1; sleep 2
-  $ADB shell am start -n com.kachi.box/com.byd.clusternav.launcher.KachiHomeActivity >/dev/null 2>&1; sleep 4
+  $ADB shell am start -n com.kachi.box/com.kachi.box.launcher.KachiHomeActivity >/dev/null 2>&1; sleep 4
 fi
 
 pos_hit=0; pos_n=0; neg_bad=0; neg_n=0; n=0

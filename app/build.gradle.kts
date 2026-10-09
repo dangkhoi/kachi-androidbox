@@ -34,7 +34,7 @@ val hasKeystore = keystorePropsFile.exists()
 val keystoreProps = Properties().apply { if (hasKeystore) keystorePropsFile.inputStream().use { load(it) } }
 
 android {
-    namespace = "com.byd.clusternav"
+    namespace = "com.kachi.box"
     compileSdk = 37
 
     // ═══ CLOSE-4 · WAKE-MALLOPT — build native (một tệp C, xem `src/main/cpp/`) ═══════════════════════════
@@ -146,8 +146,7 @@ android {
 
     buildFeatures {
         // BuildConfig.APPLICATION_ID is the single source of truth for this app's own package at runtime
-        // (self-grants, self-component names, cast self-exclusion). Enables true app isolation from the
-        // legacy com.byd.clusternav app while keeping the internal code namespace unchanged.
+        // (self-grants, self-component names). Kotlin namespace = applicationId = com.kachi.box (BOX-RENAME-PACKAGE).
         buildConfig = true
     }
 
@@ -757,7 +756,7 @@ abstract class CollectAuthorizedApk : org.gradle.api.DefaultTask() {
         val pkgMatch = Regex("package: name='([^']+)'").find(output)
             ?: throw org.gradle.api.GradleException("APK verification: cannot extract package name from aapt2 output")
         val actualPkg = pkgMatch.groupValues[1]
-        val expectedPkg = "com.byd.clusternav"
+        val expectedPkg = "com.kachi.box"
         if (actualPkg != expectedPkg) {
             throw org.gradle.api.GradleException(
                 "APK verification FAILED: package='$actualPkg', expected='$expectedPkg'"

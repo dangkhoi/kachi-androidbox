@@ -1,0 +1,233 @@
+package com.kachi.box
+
+import com.kachi.box.carexec.LocalInstallOutcome
+import com.kachi.box.carexec.LocalShellFailure
+import com.kachi.box.launcher.Lang as CoreLang
+import com.kachi.box.launcher.Strings as CoreStrings
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+
+/** So sánh version — thuần, test off-device. Khoá logic quyết định "có bản mới". */
+class UpdateCheckerTest {
+    @Test fun `moi hon`() {
+        assertTrue(UpdateChecker.cmp("0.57", "0.56") > 0)
+        assertTrue(UpdateChecker.cmp("0.56", "0.9") > 0, "0.56 > 0.9 vì 56 > 9 (không phải so chuỗi)")
+        assertTrue(UpdateChecker.cmp("1.0", "0.99") > 0)
+        assertTrue(UpdateChecker.cmp("0.56.1", "0.56") > 0)
+    }
+    @Test fun `bang hoac cu hon`() {
+        assertEquals(0, UpdateChecker.cmp("0.56", "0.56"))
+        assertEquals(0, UpdateChecker.cmp("0.56", "0.56.0"))
+        assertTrue(UpdateChecker.cmp("0.55", "0.56") < 0)
+    }
+
+    /**
+     * 2.89 · B4 OTA-SUFFIX-COMPARE — [ĐO máy ảo 05/10] hộp "Có bản mới: v2.88 … Đang dùng v2.89-thử1. Tải v2.88 và cài đè?".
+     * Bản cũ đọc `2.89-thử1` thành 2.0 (khúc `"89-thử1"` → 0) ⇒ mời HẠ cấp. Khoá: so PHẦN SỐ, không bao giờ mời số thấp hơn.
+     */
+    @Test fun `ban thu co duoi so bang phan so - 2_88 khong bao gio duoc moi de len 2_89-thu1`() {
+        assertTrue(UpdateChecker.cmp("2.88", "2.89-thử1") < 0, "2.88 < 2.89 (đuôi bỏ qua khi so số)")
+        assertEquals(0, UpdateChecker.cmp("2.89", "2.89-thử1"))
+        assertFalse(UpdateChecker.offers("2.88", "2.89-thử1"), "đúng ca đo được 05/10 — không mời hạ cấp")
+        assertFalse(UpdateChecker.offers("2.88", "2.88"), "bằng nhau, không đuôi ⇒ đã mới nhất")
+        assertFalse(UpdateChecker.offers("2.87", "2.88"))
+        assertTrue(UpdateChecker.offers("2.90", "2.89-thử1"), "số kênh lớn hơn ⇒ mời")
+        assertTrue(UpdateChecker.offers("2.89", "2.89-thử1"), "bản chính thức cùng số đi SAU bản thử của nó ⇒ mời")
+        assertFalse(UpdateChecker.offers("2.89", "2.89.0"), "bằng số, không đuôi ⇒ không mời")
+        assertTrue(UpdateChecker.offers("2.89.1", "2.89-thử1"))
+    }
+
+    @Test fun `phan so dau va duoi`() {
+        assertEquals(listOf(2, 89), UpdateChecker.numericPrefix("2.89-thử1"))
+        assertEquals(listOf(1, 2, 3), UpdateChecker.numericPrefix("1.2.3"))
+        assertEquals(listOf(2, 89), UpdateChecker.numericPrefix("2.89.thu"), "khúc không phải số kết thúc phần số")
+        assertEquals(emptyList<Int>(), UpdateChecker.numericPrefix("?"))
+        assertTrue(UpdateChecker.hasSuffix("2.89-thử1"))
+        assertTrue(UpdateChecker.hasSuffix("2.89 beta"))
+        assertFalse(UpdateChecker.hasSuffix("2.89"))
+        assertFalse(UpdateChecker.hasSuffix("?"), "không đọc được phiên bản ≠ bản thử")
+        // Đọc phiên bản hỏng (`currentVersion` = "?") ⇒ giữ hành vi cũ: kênh nào cũng mới hơn.
+        assertTrue(UpdateChecker.offers("2.88", "?"))
+    }
+
+    @Test fun `check dung offers - khong con so cmp tran o cho quyet hasUpdate`() {
+        val src = java.nio.file.Path.of(System.getProperty("user.dir")).let { d ->
+            val f = d.resolve("src/main/java/com/kachi/box/UpdateChecker.kt")
+            (if (java.nio.file.Files.exists(f)) f else d.resolve("app").resolve("src/main/java/com/kachi/box/UpdateChecker.kt")).toFile().readText()
+        }
+        assertTrue(src.contains("Result(cur, bestVer, bestUrl, offers(bestVer!!, cur), null)"), "hasUpdate phải đi qua offers()")
+        assertFalse(src.contains("cmp(bestVer!!, cur) > 0"), "đường cũ so trần (đọc 2.89-thử1 thành 2.0) đã bỏ")
+    }
+
+    /** Android box B1 — kênh riêng: CHỈ `Kachi-box-<ver>-release.apk`; khuôn BYD (`Kachi-`/`ClusterNav-`) bị bỏ qua. */
+    @Test fun `ten tep phat hanh Kachi-box doc ra phien ban, khuon BYD bi bo qua`() {
+        assertEquals("1.0", UpdateChecker.apkVersion("Kachi-box-1.0-release.apk"))
+        assertEquals("1.12", UpdateChecker.apkVersion("Kachi-box-1.12-release.apk"))
+        assertEquals(null, UpdateChecker.apkVersion("Kachi-2.98-release.apk"), "APK Kachi BYD không bao giờ là bản OTA của box")
+        assertEquals(null, UpdateChecker.apkVersion("ClusterNav-1.38-release.apk"))
+        assertEquals(null, UpdateChecker.apkVersion("Kachi-box-1.0-debug.apk"))
+        assertEquals(null, UpdateChecker.apkVersion("Kachi-box-1.0-abc123-release.apk"), "tên có lát cắt không phải bản OTA")
+        assertEquals(null, UpdateChecker.apkVersion("README.md"))
+    }
+
+    @Test fun `kenh cap nhat la repo kachi-androidbox, khong phai byd-kachi`() {
+        val src = java.nio.file.Path.of(System.getProperty("user.dir")).let { d ->
+            val f = d.resolve("src/main/java/com/kachi/box/UpdateChecker.kt")
+            (if (java.nio.file.Files.exists(f)) f else d.resolve("app").resolve("src/main/java/com/kachi/box/UpdateChecker.kt")).toFile().readText()
+        }
+        assertTrue(src.contains("REPO = \"dangkhoi/kachi-androidbox\""), "OTA của box phải dò repo của box")
+        assertFalse(src.contains("REPO = \"dangkhoi/byd-kachi\""), "box dò kênh BYD ⇒ tự cài thành bản BYD")
+    }
+
+    // ── U11 · LÝ DO CÀI HỎNG → CÂU NÓI ─────────────────────────────────────────────────────────────
+    //
+    // Bệnh khoá lại: MỌI thất bại đều ra *"cài thất bại (khác chữ ký/phiên bản?)"*. [ĐO] máy ảo 2026-09-13 —
+    // thiếu `adb reverse tcp:5555 tcp:5555` ⇒ không có kênh dadb nào, mà câu hiện ra vẫn đổ cho chữ ký ⇒ người
+    // đọc đi sửa nhầm bệnh. Ánh xạ lý do→câu là hàm THUẦN nên khoá được off-device, không cần xe.
+
+    @BeforeEach fun vietnamese() { CoreStrings.current = CoreLang.VI }
+    @AfterEach fun restore() { CoreStrings.current = CoreLang.VI }
+
+    @Test fun `khong co kenh shell KHONG duoc doc thanh loi chu ky`() {
+        val msg = UpdateChecker.installMessage(
+            LocalInstallOutcome.NoShellChannel(LocalShellFailure.PORT_CLOSED), "/data/x/update.apk",
+        )
+        assertTrue(msg.contains("kênh shell"), "phải nói đúng chỗ hỏng: không mở được kênh tới xe — $msg")
+        assertTrue(msg.contains("Hệ thống & quyền"), "và chỉ đường tới trang làm được việc đó — $msg")
+        assertTrue(msg.contains("PORT_CLOSED"), "kèm lý do đã phân loại để ảnh chụp màn đủ chẩn đoán — $msg")
+        assertFalse(msg.contains("chữ ký"), "KHÔNG được đổ cho chữ ký khi pm còn chưa thấy APK — đó là bệnh U11")
+        assertTrue(msg.contains("/data/x/update.apk"), "bản đã tải vẫn nằm đó, phải nói chỗ để cài tay")
+    }
+
+    /**
+     * ⚠ Soát senior 2026-09-13 — **bên trong "không có kênh" cũng phải tách việc phải làm.**
+     *
+     * Bản đầu của U11 tách tới mức *kênh* vs *pm* rồi lại gộp cả năm lý do kênh vào một câu "xem Cài đặt › Hệ thống
+     * & quyền". Ca hay gặp nhất của OTA là [LocalShellFailure.AWAITING_APPROVAL]: hộp thoại *"Cho phép gỡ lỗi USB?"*
+     * đang bung NGAY trên màn hình đó ⇒ bảo đi vào Cài đặt là chỉ sai chỗ, đúng họ bệnh U11 sinh ra để chữa.
+     * `AssistantLauncher.failureMessage` đã nói đúng việc cho cùng phân loại này từ 2026-08-24.
+     */
+    @Test fun `dang cho bam Cho phep thi phai noi dung cai nut do, khong day vao Cai dat`() {
+        listOf(LocalShellFailure.AWAITING_APPROVAL, LocalShellFailure.AUTH_REJECTED).forEach { reason ->
+            val msg = UpdateChecker.installMessage(LocalInstallOutcome.NoShellChannel(reason), "/data/x/update.apk")
+            assertTrue(msg.contains("Cho phép"), "$reason: phải chỉ đúng nút đang ở trước mặt — $msg")
+            assertTrue(msg.contains("luôn cho phép"), "$reason: nhắc tích ô, vì mỗi lần thử là một kết nối MỚI — $msg")
+            assertFalse(msg.contains("Hệ thống & quyền"), "$reason: việc cần làm KHÔNG nằm trong Cài đặt — $msg")
+            assertTrue(msg.contains(reason.name), "$reason: mã lý do vẫn phải có để ảnh chụp màn đủ chẩn đoán — $msg")
+        }
+        CoreStrings.current = CoreLang.EN
+        val en = UpdateChecker.installMessage(
+            LocalInstallOutcome.NoShellChannel(LocalShellFailure.AWAITING_APPROVAL), "/p.apk",
+        )
+        assertTrue(en.contains("USB-debugging dialog"), "bản Anh phải là câu Anh thật — $en")
+    }
+
+    @Test fun `pm tu choi thi chuyen NGUYEN VAN ly do cua pm`() {
+        val msg = UpdateChecker.installMessage(
+            LocalInstallOutcome.PmRejected("\tpkg: /data/local/tmp/x.apk\nFailure [INSTALL_FAILED_UPDATE_INCOMPATIBLE]"),
+            "/data/x/update.apk",
+        )
+        assertTrue(msg.contains("pm install"), "phải nói rõ chính pm là bên từ chối — $msg")
+        assertTrue(msg.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE"), "mã lỗi thật của pm phải tới được người đọc — $msg")
+        assertFalse(msg.contains("kênh shell"), "kênh đã lên rồi thì không được nói ngược lại")
+    }
+
+    /** Thành công vẫn đi qua CÙNG một chỗ dựng câu (không có bản sao chuỗi nào ở [UpdateChecker.install]). */
+    @Test fun `cai duoc thi van la cau cu`() {
+        assertTrue(UpdateChecker.installMessage(LocalInstallOutcome.Ok, "/data/x/update.apk").contains("đã cài"))
+    }
+
+    /** pm in nhiều dòng tiến trình rồi mới tới phán quyết ⇒ lấy dòng NÓI LỖI, không lấy dòng đầu. */
+    @Test fun `chon dung dong dang doc trong output cua pm`() {
+        assertEquals(
+            "Failure [INSTALL_FAILED_VERSION_DOWNGRADE]",
+            UpdateChecker.pmReason("Performing Streamed Install\nFailure [INSTALL_FAILED_VERSION_DOWNGRADE]\n"),
+        )
+        assertEquals("Success-ish tail", UpdateChecker.pmReason("first\n  Success-ish tail  "), "không có dòng lỗi ⇒ dòng cuối còn chữ")
+        assertEquals("pm không in gì", UpdateChecker.pmReason("   \n\n"), "pm câm cũng phải nói ra, không bịa nguyên nhân")
+    }
+
+    // ── [SOÁT OCR 2026-09-16 · P1] OTA: "có bản mới" KHÔNG kéo theo "có link tải" ──────────────────
+    //
+    // [UpdateChecker.check] đặt `bestUrl = o.optString("download_url").takeIf { it.isNotBlank() }` — GitHub trả
+    // chuỗi rỗng cho submodule / con trỏ LFS / tệp > 100 MB — trong khi `hasUpdate` chỉ so PHIÊN BẢN. Bản cũ của
+    // [UpdateFlow.start] viết `r.downloadUrl!!` ⇒ NPE **trên main thread**, tức sập màn đang mở trên xe đang chạy.
+
+    /** Trạng thái "có bản mới mà thiếu link" là DỰNG ĐƯỢC — nên nó phải có đường đi, không phải một `!!`. */
+    @Test fun `co ban moi ma thieu link tai la trang thai hop le cua Result`() {
+        val r = UpdateChecker.Result(current = "1.68", latest = "1.69", downloadUrl = null, hasUpdate = true, error = null)
+        assertTrue(r.hasUpdate && r.downloadUrl == null, "hai trường này độc lập nhau — không có bất biến nào ghép chúng")
+    }
+
+    /**
+     * Bài quét NGUỒN: nhánh "có bản mới" của [UpdateFlow] không được `!!`, và phải NÓI RA khi kênh thiếu link.
+     *
+     * Quét nguồn vì [UpdateFlow.start] cần một `Activity` thật (dựng luồng + `runOnUiThread` + `AlertDialog`) nên
+     * không dựng được trong JVM thuần; thứ cần khoá lại là **hình dạng của nhánh**, và nó quét được.
+     */
+    @Test fun `UpdateFlow khong con bang bang tren downloadUrl`() {
+        val src = com.kachi.box.testsupport.SourceRoots.codeOf("src/main/java/com/kachi/box/UpdateFlow.kt")
+        assertFalse("r.downloadUrl!!" in src, "một `!!` ở đây là NPE trên main thread khi kênh thiếu link tải")
+        assertFalse("r.latest!!" in src, "cùng lý do: `latest` cũng chỉ là `String?`")
+        assertTrue("url.isNullOrBlank()" in src, "phải có nhánh kiểm link rỗng/null trước khi mở hộp xác nhận")
+    }
+
+    /**
+     * [kachi-i18n-zh-th-ms T1b] `installMessage` chuyển từ mẫu `$` + cờ `vi: Boolean` sang `Lang.f` với `{n}` — VI/EN
+     * phải ra Y TỪNG BYTE như câu cũ. Câu mong đợi viết tay theo đúng phép ghép của bản cũ (`"…(${reason.name}) —
+     * ${channelRemedy(…, vi)}. " + "APK đã tải ở: $apkPath"`), không suy từ mã mới.
+     */
+    @Test fun `cau cai hong VI va EN y byte nhu ban mau cu`() {
+        val p = "/data/x/update.apk"
+        val noCh = LocalInstallOutcome.NoShellChannel(LocalShellFailure.PORT_CLOSED)
+        val wait = LocalInstallOutcome.NoShellChannel(LocalShellFailure.AWAITING_APPROVAL)
+        assertEquals(
+            "không có kênh shell tới máy (PORT_CLOSED) — xem Cài đặt › Hệ thống & quyền. APK đã tải ở: $p",
+            UpdateChecker.installMessage(noCh, p),
+        )
+        assertEquals(
+            "không có kênh shell tới máy (AWAITING_APPROVAL) — bấm \"Cho phép/Allow\" (tích \"luôn cho phép\") trên hộp " +
+                "thoại gỡ lỗi USB rồi cài lại. APK đã tải ở: $p",
+            UpdateChecker.installMessage(wait, p),
+        )
+        assertEquals("pm install từ chối: pm không in gì. APK đã tải ở: $p", UpdateChecker.installMessage(LocalInstallOutcome.PmRejected(""), p))
+        CoreStrings.current = CoreLang.EN
+        assertEquals(
+            "no shell channel to the device (PORT_CLOSED) — see Settings › System & permissions. APK saved at: $p",
+            UpdateChecker.installMessage(noCh, p),
+        )
+        assertEquals(
+            "pm install rejected: Failure [X]. APK saved at: $p",
+            UpdateChecker.installMessage(LocalInstallOutcome.PmRejected("Failure [X]"), p),
+        )
+        assertEquals("pm printed nothing", UpdateChecker.pmReason(" \n"))
+    }
+
+    /**
+     * ZH/TH/MS: bảng dịch chưa có dòng ⇒ câu TIẾNG ANH (R3), không bao giờ tiếng Việt — kể cả mảnh lồng
+     * (`channelRemedy`) đi qua `Lang.t` riêng. Bảng trong repo có thể đã có dòng khi T4 ráp bản dịch, nên bài này chỉ
+     * khoá điều luôn đúng: KHÔNG còn chữ Việt, và mã lý do + đường dẫn vẫn nằm trong câu.
+     */
+    @Test fun `tieng moi khong bao gio ra tieng Viet`() {
+        for (lang in listOf(CoreLang.ZH, CoreLang.TH, CoreLang.MS)) {
+            CoreStrings.current = lang
+            val msg = UpdateChecker.installMessage(LocalInstallOutcome.NoShellChannel(LocalShellFailure.IO_ERROR), "/p.apk")
+            assertFalse(msg.contains("kênh") || msg.contains("Cài đặt"), "$lang: lọt tiếng Việt — $msg")
+            assertTrue(msg.contains("IO_ERROR") && msg.contains("/p.apk"), "$lang: mất đối số — $msg")
+        }
+    }
+
+    /** Bản Anh phải là câu ANH thật, không phải tiếng Việt lọt lưới (cả hai câu mới của U11). */
+    @Test fun `hai cau moi co ban tieng Anh`() {
+        CoreStrings.current = CoreLang.EN
+        val noChannel = UpdateChecker.installMessage(LocalInstallOutcome.NoShellChannel(LocalShellFailure.IO_ERROR), "/p.apk")
+        val rejected = UpdateChecker.installMessage(LocalInstallOutcome.PmRejected("Failure [X]"), "/p.apk")
+        assertTrue(noChannel.contains("no shell channel"), noChannel)
+        assertTrue(noChannel.contains("System & permissions"), noChannel)
+        assertTrue(rejected.contains("pm install rejected"), rejected)
+    }
+}

@@ -1,5 +1,5 @@
 # Lời gọi dịch có đối số KHÔNG phải chữ cố định — I18nSourceGuardTest luật (ii).
-# Cột: <module>:<đường sau com/byd/clusternav/>:<khai báo gần nhất><TAB>lý do (dữ liệu được duyệt ở đâu).
+# Cột: <module>:<đường sau com/kachi/box/>:<khai báo gần nhất><TAB>lý do (dữ liệu được duyệt ở đâu).
 # Mọi dòng phải còn lời gọi khớp (dòng thừa = đỏ). Dữ liệu của chúng phải nằm trong I18nPairs.runtime().
 core:launcher/Lang.kt:displayLabel	Localized.displayLabel — mọi registry; duyệt ở I18nPairs.runtime (localizedRows + picker/nhóm phím)
 core:launcher/Lang.kt:labelIn	Localized.labelIn — cùng dữ liệu với displayLabel

@@ -56,7 +56,7 @@ bridge() {
 state_json() { bridge "--es cmd state"; }
 json_get() { python3 "$HERE/voice_e2e_json.py" get "$1"; }
 
-HOME_ACT="${HOME_ACT:-$PKG/com.byd.clusternav.launcher.KachiHomeActivity}"
+HOME_ACT="${HOME_ACT:-$PKG/com.kachi.box.launcher.KachiHomeActivity}"
 start_home() { adbs shell am start -n "$HOME_ACT" >/dev/null; sleep 3; }
 
 # ── Cách ghi vào vùng dữ liệu của app: `run-as` (bản debuggable) HOẶC root (máy ảo eng/userdebug) ──

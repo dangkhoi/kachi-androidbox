@@ -37,7 +37,7 @@
            • dựng test-provider hay ghi vị trí giả,
            • bám định vị liên tục (đăng ký nhận cập nhật / listener),
            • xin thêm bất kỳ quyền định vị nào khác (thô, nền, hay quyền foreground-service định vị).
-         Cả sáu điều trên bị hai bài canh trong `app/src/test/java/com/byd/clusternav/` khoá (lớp canh việc gỡ
+         Cả sáu điều trên bị hai bài canh trong `app/src/test/java/com/kachi/box/` khoá (lớp canh việc gỡ
          nguồn vị-trí-giả năm 2026-07). ⚠ Hai bài đó GIỮ
          DANH SÁCH TÊN QUYỀN và quét chính tệp này, nên KHÔNG viết lại tên các quyền ấy ở đây — viết ra là tự làm
          đỏ bài canh. Đường đọc duy nhất là `GpsAvailability` (`isProviderEnabled` + `getLastKnownLocation`, đọc
@@ -96,7 +96,7 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:noHistory="true"
-            android:taskAffinity="com.byd.clusternav.behind"
+            android:taskAffinity="${applicationId}.behind"
             android:theme="@android:style/Theme.NoDisplay" />
 
         <!-- L4 · D2(a) — lớp che trên màn ảo dàn dựng ẨN của Kachi (StagingDisplay): đóng vai app của ô để X không ở đỉnh
@@ -106,7 +106,7 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:resizeableActivity="true"
-            android:taskAffinity="com.byd.clusternav.stage"
+            android:taskAffinity="${applicationId}.stage"
             android:theme="@android:style/Theme.Black.NoTitleBar" />
 
         <!-- ⚠ `.MainActivity` (màn ClusterNav cũ) đã GỠ 2026-09-13 — docs/specs/kachi-remove-legacy-screen.html
@@ -221,7 +221,7 @@
 
         <!-- #0 (2026-09-18): PIPER TTS Ở TIẾN TRÌNH RIÊNG `:tts`.
              [ĐO tombstone xe, docs/diagnostics/oncar-piper-crash-binding-2026-09-18.md] `OfflineTts.generate`
-             SIGSEGV (SEGV_MAPERR, luồng KachiSpeak) → chết CẢ tiến trình launcher → NavAccessibilityService
+             SIGSEGV (SEGV_MAPERR, luồng KachiSpeak) → chết CẢ tiến trình launcher → KachiKeyService
              unbind → rebind kẹt "Binding" → PHÍM GÁN CHẾT. SIGSEGV native không bắt được bằng runCatching trong
              cùng tiến trình ⇒ ranh giới tiến trình là bản vá duy nhất khả thi. Nay Piper nổ thì chỉ `:tts` chết;
              launcher thấy onServiceDisconnected và mở mọi chỗ đang chờ (RemotePiperSpeaker).
@@ -249,7 +249,7 @@
 
         <!-- Lắng nghe notification dẫn đường -->
         <service
-            android:name=".NavNotificationListener"
+            android:name=".MediaSessionListener"
             android:exported="false"
             android:label="@string/nav_listener_label"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
@@ -267,7 +267,7 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
-                <action android:name="com.byd.clusternav.REBIND_WATCHDOG" />
+                <action android:name="${applicationId}.REBIND_WATCHDOG" />
             </intent-filter>
         </receiver>
 
@@ -293,7 +293,7 @@
         <!-- MODULE navaccess (booster): đọc UI GMaps trên màn -> tinh chỉnh cự ly tới rẽ. User tự bật trong
              Cài đặt > Hỗ trợ. Xoá module navaccess → xoá dòng <service> này + res/xml/nav_accessibility_config.xml. -->
         <service
-            android:name=".modules.navaccess.NavAccessibilityService"
+            android:name=".modules.navaccess.KachiKeyService"
             android:exported="false"
             android:label="@string/acc_label"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

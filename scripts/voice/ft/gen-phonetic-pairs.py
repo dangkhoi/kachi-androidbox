@@ -18,7 +18,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-SRC = os.path.join(REPO, "core/src/main/kotlin/com/byd/clusternav/launcher/voice",
+SRC = os.path.join(REPO, "core/src/main/kotlin/com/kachi/box/launcher/voice",
                    "VoicePhoneticConfusions.kt")
 DST = os.path.join(HERE, "phonetic_pairs.py")
 

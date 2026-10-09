@@ -1,0 +1,224 @@
+package com.kachi.box.launcher.trip
+
+import com.kachi.box.launcher.ShellAppLauncher
+import com.kachi.box.launcher.behind.BehindHomePlan
+import com.kachi.box.system.HomeGate
+import com.kachi.box.system.StackEntry
+
+/**
+ * Một app tự mở khi nổ máy (F2, owner 01/10: *"Tự khởi động chọn app trong list app đang có trong xe, cho chọn là khởi
+ * động nền hay không"*). [background] `true` = **Chạy nền** (R0.3: mở qua một ô sống rồi ra sau màn nhà); `false` =
+ * **Mở bình thường** (lên trước, CUỐI chuỗi, qua cổng màn nhà — R2.5).
+ */
+data class TripApp(val pkg: String, val background: Boolean)
+
+/** Cấu hình chuyến của MỘT hồ sơ: hai khoá theo hồ sơ `ignition_apps` + `ignition_music` (spec §4.7). */
+data class TripConfig(val apps: List<TripApp> = emptyList(), val music: TripMusic = TripMusic.OFF) {
+    /** Có việc gì để chạy không — rỗng thì chuyến vẫn được CLAIM (R2.2: cấu hình giữa chuyến không bắn ngay). */
+    val empty: Boolean get() = apps.isEmpty() && !music.mode.plays
+}
+
+/**
+ * Mã hoá `ignition_apps`: `pkg|B,pkg|N` — cùng khuôn [com.kachi.box.launcher.AppShortcutCodec] (đọc dễ dãi, ghi chặt).
+ * Tối đa [MAX] app, tối đa MỘT app *Mở bình thường* (lên trước màn nhà là việc của đúng một app — hai app cùng giành
+ * màn trước là hai lượt che nhau). Chuỗi không bao giờ chứa tab/xuống dòng (dấu ngăn của `ProfileTransfer`).
+ */
+object TripAppCodec {
+    const val MAX = 6
+    private const val BG = "B"
+    private const val NORMAL = "N"
+
+    fun encode(items: List<TripApp>): String =
+        sanitize(items).joinToString(",") { "${it.pkg}|${if (it.background) BG else NORMAL}" }
+
+    /** Gói lạ ⇒ bỏ; kiểu lạ ⇒ *Chạy nền* (không lên trước màn nhà là chỗ lùi an toàn); trùng ⇒ giữ lần đầu; quá trần ⇒ cắt. */
+    fun decode(raw: String?): List<TripApp> {
+        if (raw.isNullOrBlank()) return emptyList()
+        return sanitize(
+            raw.split(',').mapNotNull { item ->
+                val cut = item.indexOf('|')
+                val pkg = (if (cut < 0) item else item.substring(0, cut)).trim()
+                TripApp(pkg, cut < 0 || item.substring(cut + 1).trim() != NORMAL)
+            },
+        )
+    }
+
+    /** Hợp lệ để GHI: gói khớp [ShellAppLauncher.PKG], không trùng, ≤ [MAX], ≤ 1 app *Mở bình thường* (cái đầu thắng). */
+    fun sanitize(items: List<TripApp>): List<TripApp> {
+        var normalSeen = false
+        return items.filter { it.pkg.isNotEmpty() && it.pkg.matches(ShellAppLauncher.PKG) }.distinctBy { it.pkg }.take(MAX)
+            .map { if (!it.background && normalSeen) it.copy(background = true) else { if (!it.background) normalSeen = true; it } }
+    }
+
+    /** Ngăn kéo vừa chốt [picked] (thứ tự chạm): giữ kiểu cũ của app còn được chọn, app mới = *Chạy nền*. */
+    fun apply(cur: List<TripApp>, picked: List<String>): List<TripApp> =
+        sanitize(picked.map { p -> cur.firstOrNull { it.pkg == p } ?: TripApp(p, background = true) })
+
+    /** Đổi kiểu của [pkg]; chọn *Mở bình thường* thì app *Mở bình thường* cũ (nếu có) về *Chạy nền* — một lựa chọn duy nhất. */
+    fun setMode(cur: List<TripApp>, pkg: String, background: Boolean): List<TripApp> =
+        sanitize(cur.map { if (it.pkg == pkg) it.copy(background = background) else if (!background) it.copy(background = true) else it })
+
+    fun remove(cur: List<TripApp>, pkg: String): List<TripApp> = cur.filterNot { it.pkg == pkg }
+}
+
+/**
+ * ═══ F2/F3 — KẾ HOẠCH CHUYẾN: thứ tự + loại trừ + chờ + "mở bình thường" (thuần, `:core`) ═════════════════════════
+ *
+ * Spec R2.3–R2.5 · R3.6 · §4.5 (C6). Thứ tự cố định: **mọi app Chạy nền → nhạc → app Mở bình thường** (cuối cùng, vì
+ * nó là thứ duy nhất lên TRƯỚC màn nhà; chạy sớm hơn thì các bước sau phải làm việc khi HOME không còn ở trước).
+ *
+ * Loại trừ ở bước LẬP KẾ HOẠCH chỉ là thứ đo được trong tiến trình (không shell): chính Kachi · chưa cài · app hệ thống
+ * (`FLAG_SYSTEM`, R0.6 — tiền lệ CarPlay move-task làm sập surfaceflinger) · app đang nằm trong một ô của bố cục đang
+ * hiện (đã mở rồi). Phần cần shell (app đang chạy / đang chiếu
+ * cụm / không có ô sống) do chuỗi chạy ngầm tự đo ngay trước lệnh (`BehindHomeSequence.startBehind`: có task ⇒
+ * `ALREADY_RUNNING`, không ô sống ⇒ `NO_STAGE`) — không đoán trước ở đây.
+ */
+object TripPlan {
+
+    /** R2.3(c) — HOME phải đứng yên ở đỉnh display 0 qua chừng này lần đọc liên tiếp, cách nhau [HOME_READ_GAP_MS]. */
+    const val HOME_STEADY_READS = 3
+    const val HOME_READ_GAP_MS = 1_000L
+
+    /** R2.5 — *Mở bình thường*: hạn riêng + nhịp thử lại khi lượt đọc chưa kết luận được. */
+    const val NORMAL_DEADLINE_MS = 60_000L
+    const val NORMAL_RETRY_MS = 3_000L
+
+    /**
+     * Android box W0 (2026-10-09): `CAMERA_UNKNOWN` đã GỠ — nó chỉ phục vụ việc CHẶN *Mở bình thường* khi đời xe chưa
+     * biết dấu màn camera; Android box không có camera ⇒ không chặn ([normalCmd] chỉ còn cổng màn nhà).
+     * `TripStepCode.CAMERA_UNKNOWN` giữ lại chỉ để sổ chuyến cũ (`kachi_trip_last`) còn đọc được.
+     */
+    enum class Why { SELF, NOT_INSTALLED, SYSTEM_APP, IN_SLOT }
+
+    sealed interface Step {
+        data class Background(val pkg: String) : Step
+        data class Music(val music: TripMusic) : Step
+        data class Normal(val pkg: String) : Step
+        data class Skip(val pkg: String, val why: Why) : Step
+    }
+
+    /** Sự thật đo trong tiến trình lúc lập kế hoạch. [inSlots] = gói của các ô app ĐANG HIỆN (lớp lưu + lớp tạm). */
+    data class Facts(
+        val selfPkg: String,
+        val installed: Set<String>,
+        val system: Set<String>,
+        val inSlots: Set<String>,
+    )
+
+    fun steps(cfg: TripConfig, f: Facts): List<Step> {
+        val bg = cfg.apps.filter { it.background }.map { a -> exclusion(a, f)?.let { Step.Skip(a.pkg, it) } ?: Step.Background(a.pkg) }
+        val music = if (cfg.music.mode.plays) listOf(Step.Music(cfg.music)) else emptyList()
+        val normal = cfg.apps.filter { !it.background }.map { a -> exclusion(a, f)?.let { Step.Skip(a.pkg, it) } ?: Step.Normal(a.pkg) }
+        return bg + music + normal
+    }
+
+    private fun exclusion(a: TripApp, f: Facts): Why? = when {
+        a.pkg == f.selfPkg -> Why.SELF
+        a.pkg !in f.installed -> Why.NOT_INSTALLED
+        a.pkg in f.inSlots -> Why.IN_SLOT
+        a.background && a.pkg in f.system -> Why.SYSTEM_APP
+        else -> null
+    }
+
+    // ── R2.3 — chờ bằng sự thật ────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Thứ chuyến đang chờ. [SLOT_APP] (A2 · 2.89) KHÔNG phải cổng chung của [waitFor]: là bước nhạc chờ CHÍNH ô của app nhạc
+     * ([TripMusicPlace.await]) — có ở đây để sổ / Cài đặt gọi tên mọi thứ chuyến chờ bằng MỘT bảng ([TripWaitMark]).
+     */
+    enum class Wait { BOOT, HOME_SCREEN, SLOTS, HOME_STEADY, SLOT_APP }
+
+    /**
+     * A2 (3) — trần chờ "có ô app sống" tính từ lần THỨC đầu: quá chừng này mà chưa ô nào được đo thấy sống ⇒ thôi chờ, các
+     * bước chạy nền đi đường cuối của chúng (màn ảo ẩn). [SUY] 90 s = nửa hạn chuyến ([TripGate.TRIP_DEADLINE_MS]), dư chỗ cho
+     * các bước — chờ tới hết hạn là chuyến `EXPIRED` không làm gì ([ĐO xe 05/10] owner: *"hết hạn chờ – chuyến này không mở app"*).
+     */
+    const val SLOTS_GIVE_UP_MS = 90_000L
+
+    /**
+     * Còn phải chờ gì (theo thứ tự), `null` = đủ. [homeBound] = màn chính đã dựng và có kênh; [appSlots] = số ô app của
+     * bố cục đang hiện; [liveStages] = số ô app đã thấy app sống (`SlotLiveProbe`); [homeStreak] = số lần đọc liên tiếp
+     * thấy HOME của Kachi ở đỉnh display 0 ([homeTopVisible]).
+     *
+     * A2 (3) — [Wait.SLOTS] chỉ khi chuyến CẦN một ô dàn dựng ([needsStage]: có app *Chạy nền* ngoài ô) và chưa quá
+     * [SLOTS_GIVE_UP_MS] từ lần thức ([sinceWakeMs]). Nhạc KHÔNG cần: app nhạc ở ô thì chờ CHÍNH ô đó ([TripMusicPlace]), ngoài ô
+     * thì vào ô 7 (màn ảo ẩn của Kachi) — trước 2.89 cấu hình chỉ có nhạc vẫn chờ ô sống tới hết hạn chuyến.
+     */
+    fun waitFor(
+        bootReady: Boolean,
+        homeBound: Boolean,
+        appSlots: Int,
+        liveStages: Int,
+        homeStreak: Int,
+        needsStage: Boolean = true,
+        sinceWakeMs: Long = 0L,
+    ): Wait? = when {
+        !bootReady -> Wait.BOOT
+        !homeBound -> Wait.HOME_SCREEN
+        needsStage && appSlots > 0 && liveStages == 0 && sinceWakeMs < SLOTS_GIVE_UP_MS -> Wait.SLOTS
+        homeStreak < HOME_STEADY_READS -> Wait.HOME_STEADY
+        else -> null
+    }
+
+    /**
+     * A2 (3) — chuyến có cần một ô app SỐNG làm chỗ dàn dựng không: có app *Chạy nền* KHÔNG nằm trong ô đang hiện ([inSlots])
+     * và không bị loại sẵn ([skip] = app hệ thống / chưa cài — bước của chúng là `SYSTEM_APP` / `NOT_INSTALLED`, 0 lệnh). App ở
+     * ô ⇒ bước của nó là `IN_SLOT` (ô tự mở); nhạc ⇒ không bao giờ cần (KDoc [waitFor]).
+     */
+    fun needsStage(cfg: TripConfig, inSlots: Set<String>, skip: Set<String> = emptySet()): Boolean =
+        cfg.apps.any { it.background && it.pkg !in inSlots && it.pkg !in skip }
+
+    /**
+     * Stack ĐANG HIỆN trên cùng của display 0 chứa HOME của Kachi — một trong [homeComps] (`pkg/cls` như `am stack list`
+     * in: alias `…KachiHome` khi hệ mở màn nhà bằng ý-định HOME, `…KachiHomeActivity` khi task dựng bằng `am start -n`).
+     * "Đang hiện", không phải "đầu danh sách": sau lần BYD giết Kachi, stack rỗng của `KachiHomeActivity` có thể nằm trên
+     * cùng mà không hiện ([ĐO] fixture `tm1-killed-surfaced`). Đọc hỏng / rỗng ⇒ `false` (không bao giờ coi là yên).
+     *
+     * Vì sao nhận CẢ HAI dạng [ĐO máy ảo 02/10, E2E `c5a-trip-generic`, fixture `e2e-standard-home`]: sau lượt
+     * `MY_PACKAGE_REPLACED` (`KachiAutostart` → `am start -n …KachiHomeActivity`) màn nhà đang hiện là task
+     * `…KachiHomeActivity` trong stack `standard` (stack `home` rỗng), sống qua nhiều lần BYD giết Kachi; chỉ nhận alias
+     * thì chuyến chờ `HOME_STEADY` (streak = 0) tới hết hạn — mọi chuyến sau một lần OTA.
+     *
+     * Cửa sổ PIP (stack `pinned`, luôn trên cùng) KHÔNG tính ([BehindHomePlan.topVisibleStackId]): GMaps dẫn đường thu về
+     * PIP trên màn nhà thì màn nhà vẫn là thứ đang hiện — tính PIP là streak = 0 tới hết hạn chuyến (cùng hậu quả lỗi E2E
+     * ở trên), trong khi K10 ([normalCmd]) nhận "một dòng đang hiện có HOME" và vẫn mở được.
+     */
+    fun homeTopVisible(entries: List<StackEntry>, homeComps: Collection<String>): Boolean {
+        val top = BehindHomePlan.topVisibleStackId(entries, BehindHomePlan.MAIN_DISPLAY) ?: return false
+        return entries.any { it.stackId == top && it.comp in homeComps }
+    }
+
+    // ── R2.5 — Mở bình thường (K10) ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Lệnh mở [comp] toàn màn trên display 0. KHÔNG nháy đơn (cổng [HomeGate] cấm `'` vì chuỗi có thể nằm trong
+     * `sh -c '…'`): component đã lọc bằng [BehindHomePlan.safeComponent] (chữ/số/`_`/`.`/`$`/một `/`), `$` của lớp lồng
+     * thoát thành `\$` ⇒ shell đọc đúng chữ `$`, không mở rộng biến.
+     */
+    fun launchCmd(comp: String): String {
+        require(BehindHomePlan.safeComponent(comp)) { "component không hợp lệ: $comp" }
+        return "am start --display ${BehindHomePlan.MAIN_DISPLAY} --windowingMode 1 -a android.intent.action.MAIN " +
+            "-c android.intent.category.LAUNCHER -n ${comp.replace("$", "\\$")}"
+    }
+
+    /**
+     * K10 — một chuỗi: đọc display 0 → HOME của Kachi (một trong [homeComps], xem [homeTopVisible]) đang hiện ⇒ mở; khác
+     * (app khác ở trước) / đọc hỏng ⇒ không ([HomeGate.onHome]). Android box B2 · W2b: rào camera BYD đã gỡ.
+     */
+    fun normalCmd(homeComps: List<String>, comp: String): String =
+        HomeGate.onHome(homeComps, launchCmd(comp))
+
+    /** Android box B2 · W2b: `CAMERA` gỡ (không màn camera); `TripStepCode.CAMERA` giữ để sổ chuyến cũ còn đọc được. */
+    enum class Normal { OPENED, OTHER_FRONT, UNREAD }
+
+    /**
+     * Kết quả một lượt K10. `am start` in `Starting: Intent` khi nhánh mở đã chạy ⇒ [Normal.OPENED]. Không ⇒ đọc lại
+     * [after]: HOME của Kachi không ở đỉnh ⇒ [Normal.OTHER_FRONT] (app khác vừa lên — không giành màn hình, bỏ); đọc hỏng / HOME vẫn ở đỉnh ⇒
+     * [Normal.UNREAD] (thử lại).
+     */
+    fun normalOutcome(out: String, after: List<StackEntry>, homeComps: Collection<String>): Normal {
+        if (out.contains("Starting: Intent") && !out.contains("Error")) return Normal.OPENED
+        if (after.isEmpty()) return Normal.UNREAD
+        return if (homeTopVisible(after, homeComps)) Normal.UNREAD else Normal.OTHER_FRONT
+    }
+}
