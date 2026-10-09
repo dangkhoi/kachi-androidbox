@@ -113,13 +113,7 @@ object TripStart {
         return TripGate.now(current, s.ledger(), s.last())
     }
 
-    /** Một dòng cho màn Chẩn đoán (CLAUDE.md §11 — anh em chụp màn gửi về). */
-    fun describe(ctx: Context): String {
-        val s = TripLedgerStore(ctx)
-        // ASCII cố ý (cùng luật dòng `KachiReady`): bản chụp màn từ máy tiếng Việt và tiếng Anh phải so được với nhau.
-        return "trip ledger=${s.ledger()?.let(TripGate::encode) ?: "-"} | last=${s.last()?.let(TripGate::encodeResult) ?: "-"} | " +
-            "boot=${bootKey(ctx)} (seen=${s.bootSeen() ?: "-"}) | firstWake=${KachiReadyLog.firstWakeAt()}"
-    }
+    // Android box B2 · W2c — `describe` (một dòng cho màn Chẩn đoán cụm `DiagActivity`) gỡ cùng màn đó: không còn chỗ gọi.
 }
 
 /**

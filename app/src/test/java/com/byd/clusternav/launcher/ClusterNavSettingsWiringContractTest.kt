@@ -32,10 +32,10 @@ class ClusterNavSettingsWiringContractTest {
 
     /** Bốn section dựng lại điều khiển của màn ClusterNav (IA v2 §4.1 nhóm 5–8). */
     private val sections = listOf(
-        "SettingsSectionsNav.kt", "SettingsSectionsCast.kt", "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
+        // Android box B2 · W2c — `SettingsSectionsNav.kt` (khối cụm/HUD/biển báo/bong bóng, không ai dựng từ W1) + `SettingsSectionsCast*.kt`
+        // gỡ; hàng app dẫn đường mặc định (`SettingsSectionsNavApp.kt`) vào thay.
+        "SettingsSectionsNavApp.kt", "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
         // (`SettingsSectionsCamera.kt` 2.76 · R1 — xoá ở Android box B2 · W2b.)
-        // V-CLUSTER (2026-09-30) — khối khung/DPI tách khỏi `SettingsSectionsCast` (trần 500 dòng): vẫn 100 % qua cầu.
-        "SettingsSectionsCastGeometry.kt",
     )
 
     /**
@@ -154,28 +154,5 @@ class ClusterNavSettingsWiringContractTest {
             "mỗi mã đúng một khoá tài nguyên",
         )
         assertEquals(keys.size, keys.toSet().size, "không được hai mã dùng chung một câu — chúng nói hai việc khác nhau")
-    }
-
-    /**
-     * ═══ HAI CHỖ KHAI DẢI TỈ LỆ CHIA CỤM — PHẢI BẰNG NHAU ════════════════════════════════════════════════════
-     *
-     * [SOÁT SENIOR 2026-09-13] `ClusterNavSettingsModel.splitRatioOptions()` (`:core`, dựng dải cho màn Cài đặt) và
-     * [com.byd.clusternav.modules.clustercast.simplified.CastProfile.SPLIT_PERCENTS] (`:core`, dải mà bộ chiếu
-     * THẬT nhận) là **hai lời khai độc lập** của cùng một dải — cả hai đang là `(10..90 step 10)`, nhưng không có
-     * gì bắt chúng đi cùng nhau.
-     *
-     * Trôi một bước là hỏng **im lặng, chỉ trên xe**: màn Cài đặt bày một nấc mà `CastProfile.of(...)` không có
-     * hồ sơ ⇒ `normalizePercent` kéo về nấc gần nhất (hoặc cú chạm không có tác dụng gì) — đúng họ lỗi "chặn im
-     * lặng" mà `DockConfig.setEnabled` và trần-8-mục đã phải vá. Bài này đứng ở `:app` vì đây là tầng **ghép** hai
-     * nguồn đó lại (`ClusterNavBridge.splitPctOptions`).
-     */
-    @Test
-    fun `dai ti le cua man Cai dat khop dai cua bo chieu`() {
-        assertEquals(
-            com.byd.clusternav.modules.clustercast.simplified.CastProfile.SPLIT_PERCENTS.toList(),
-            ClusterNavSettingsModel.splitRatioOptions(),
-            "hai chỗ khai dải tỉ lệ đã trôi khỏi nhau: màn Cài đặt sẽ bày một nấc mà bộ chiếu không có hồ sơ ⇒ " +
-                "cú chạm bị kéo về nấc khác (hoặc không có tác dụng) mà không nói một lời nào",
-        )
     }
 }

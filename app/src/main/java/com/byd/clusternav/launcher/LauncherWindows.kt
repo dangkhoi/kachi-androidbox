@@ -36,13 +36,12 @@ class LauncherWindows(
 
     /**
      * B2b: ghi vị trí ban đầu của các ô App vào registry → bất biến MỘT-VỊ-TRÍ có mặt ngay khi mở app.
-     * B6 (cast coordination): dùng quyết định THUẦN [LauncherBootPlan] + [AppLocationRegistry.isCastable] để
-     * BỎ QUA app mà cluster-cast đang sở hữu trên cụm (màn ảo cụm dò LIVE — B4, không phải hằng display 1) — KHÔNG ghi đè vị trí cast (không "giành" app
-     * khỏi cụm). App chưa ở cụm ⇒ launcher sở hữu ô như cũ. Registry rỗng lúc boot ⇒ mọi app castable ⇒ y hệt cũ.
+     * Quyết định THUẦN [LauncherBootPlan]. Android box B2 · W2c: không còn chiếu cụm ⇒ không app nào "đã trên cụm"
+     * ([LauncherBootPlan.NO_CAST]) ⇒ launcher sở hữu mọi ô app — y hệt bản BYD lúc registry rỗng.
      */
     fun seedLocations() {
         val d = dispatcher() ?: return
-        LauncherBootPlan.plan(state().effectiveWorkspace.slots) { pkg -> !d.locations.isCastable(pkg) }
+        LauncherBootPlan.plan(state().effectiveWorkspace.slots, LauncherBootPlan.NO_CAST)
             .mount.forEach { d.place(it.pkg, 0, it.slot) }
     }
 
@@ -54,8 +53,7 @@ class LauncherWindows(
      *
      *  • **mount** (từ [LauncherBootPlan.reconcile]) → `d.place(pkg,0,slot)`: registry khớp đúng ô của state.
      *  • **evict** = app đang ở màn launcher (display 0) mà state KHÔNG còn ô nào giữ → `d.remove` + `closeApp` +
-     *    [sweepFloating]. App cụm đang giữ (`!isCastable`) bị loại khỏi mount ⇒ launcher không giành với cụm; nó ở
-     *    display cụm nên KHÔNG lọt vào tập display-0 ⇒ KHÔNG bị evict.
+     *    [sweepFloating].
      *
      * ⚠ ĐÍNH CHÍNH (PROFILE-SWITCH-SLOTS R-B5, [ĐO mã + máy ảo 2026-10-01]): bản trước ghi `closeApp` "đóng cửa sổ
      *   freeform off-car" — SAI. `closeApp` là no-op ở MỌI đường: chưa có kênh thì bộ mở là [NoCar] (2.93 · OQ6 — trước đó
@@ -68,7 +66,7 @@ class LauncherWindows(
     fun reconcileLocations(slots: List<SlotContent>) {
         val d = dispatcher() ?: return
         val placedOnLauncher = d.locations.onDisplay(0).map { it.pkg }.toSet()
-        val r = LauncherBootPlan.reconcile(slots, placedOnLauncher) { pkg -> !d.locations.isCastable(pkg) }
+        val r = LauncherBootPlan.reconcile(slots, placedOnLauncher, LauncherBootPlan.NO_CAST)
         r.mount.forEach { d.place(it.pkg, 0, it.slot) }
         r.evict.forEach { pkg -> d.remove(pkg); closeApp(pkg) }
         if (r.evict.isNotEmpty()) sweepFloating("evict")

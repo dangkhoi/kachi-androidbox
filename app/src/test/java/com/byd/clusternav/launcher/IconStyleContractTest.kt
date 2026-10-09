@@ -45,27 +45,20 @@ class IconStyleContractTest {
         // của seat + CHẤM VÔ-LĂNG, owner: lái/phụ chỉ khác lật gương là chưa đủ), đi qua gen-icons.py như mọi glyph.
         "ic_kind_view.xml" to "huy hiệu THÔNG TIN (mắt) của picker — vẽ nét trắng trên nền pill màu, không thuộc đường ống icon lĩnh vực (owner 2026-09-22)",
         "ic_kind_act.xml" to "huy hiệu HÀNH ĐỘNG (nút bấm) của picker — vẽ nét trắng trên nền pill màu, không thuộc đường ống icon lĩnh vực (owner 2026-09-22)",
-        "ic_turn_left.xml" to "mũi tên rẽ của màn dẫn đường (bảng NEW_ICON/CAN 2026-08-14), không thuộc launcher",
-        "ic_turn_right.xml" to "mũi tên rẽ của màn dẫn đường — như trên",
-        "ic_turn_straight.xml" to "mũi tên đi thẳng của màn dẫn đường — như trên",
+        // (`ic_turn_left` · `ic_turn_right` · `ic_turn_straight` — mũi tên thẻ dẫn đường trên cụm — xoá ở Android box B2 · W2d.)
         "ic_turn_right_g.xml" to "mũi tên rẽ cockpit cũ (turn_tile_bg) — cùng họ dẫn đường",
         // ⚠ WP6 · R6.2 (2026-09-20) — `ic_bubble_nav.xml` (mũi tên xanh `#1565C0`) đã **XOÁ**: nút nổi nay vẽ
         // `launcher_fg` = chính icon app Kachi (owner *"đổi icon nút nổi thành icon app Kachi"*). Dòng legacy phải
         // rời theo, vì bài `danh sach legacy tu rua hai chieu` đòi mọi tệp khai ở đây còn tồn tại thật.
-        "ic_menu_config.xml" to "bảng con nút nổi Cast (bề mặt đã chạy trên xe), không có bước tint",
-        "ic_menu_left.xml" to "cùng bảng con nút nổi Cast — không tint",
-        "ic_menu_right.xml" to "cùng bảng con nút nổi Cast — không tint",
+        // (`ic_menu_config` · `ic_menu_left` · `ic_menu_right` — bảng con nút nổi Cast — xoá ở Android box B2 · W2c.)
         "ic_chevron_down.xml" to "nằm TRONG layer-list @drawable/spinner_bg ⇒ không có View nào để tint; màu phải ở trong tệp",
     )
 
     /** Icon CHƯA có chỗ dùng, giữ lại có lý do — nợ nhìn thấy được, không phải chỗ cất rác. */
     // RES-CLEAN 2026-09-26: hai icon mồ côi (`ic_check_selected`, `ic_corner_cut`) đã XOÁ cùng 39 resource không dùng
     // (lint UnusedResources) — danh sách nay rỗng, nhưng giữ để nợ mới (nếu có) vẫn phải ghi lý do tại chỗ.
-    private val orphanPending: Map<String, String> = mapOf(
-        "ic_turn_left.xml" to "Android box B2 · W1: chỉ thẻ dẫn đường dự phòng trên cụm (ClusterNavActivity, đã gỡ khỏi manifest) dùng — W2d xoá cùng mã dẫn đường cụm",
-        "ic_turn_right.xml" to "Android box B2 · W1: chỉ thẻ dẫn đường dự phòng trên cụm (ClusterNavActivity, đã gỡ khỏi manifest) dùng — W2d xoá cùng mã dẫn đường cụm",
-        "ic_turn_straight.xml" to "Android box B2 · W1: chỉ thẻ dẫn đường dự phòng trên cụm (ClusterNavActivity, đã gỡ khỏi manifest) dùng — W2d xoá cùng mã dẫn đường cụm",
-    )
+    // Android box B2 · W2d — ba `ic_turn_*` (thẻ dẫn đường dự phòng trên cụm) xoá cùng dẫn đường cụm; bảng chờ nay rỗng.
+    private val orphanPending: Map<String, String> = emptyMap()
 
     // ── hạ tầng đọc tệp ─────────────────────────────────────────────────────────────────────────────
 

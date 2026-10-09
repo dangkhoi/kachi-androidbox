@@ -263,7 +263,8 @@ class ReadyAtHomeWiringContractTest {
             "wireReadyAtHome(" to "KachiHomeActivity.kt",
             "ShellAccessUi.slotTap" to "LauncherWindows.kt",
             "ShellAccessUi.tileHint(" to "WorkspaceViewCards.kt",
-            "ShellAccessUi.allowOrPrompt(" to "ClusterNavBridgeCast.kt",
+            // Android box B2 · W2c: `ClusterNavBridgeCast.kt` gỡ — chỗ gọi tiêu biểu còn lại là trang Chuyến.
+            "ShellAccessUi.allowOrPrompt(" to "SettingsSectionsTrip.kt",
             "KachiReadyLog.tile(" to "VdAppHost.kt",
             "KeyReady.holdTileIfEscalating(" to "ShellChannelGate.kt",
             "KeyReady.prepare(" to "EarlyShellChannel.kt",

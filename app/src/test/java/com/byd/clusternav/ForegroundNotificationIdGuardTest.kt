@@ -50,7 +50,8 @@ class ForegroundNotificationIdGuardTest {
     fun `bang ID trong KDoc VoiceKeyKeepAliveService khop voi ma nguon`() {
         // Chống "đạt test" bằng cách đổi ID mà quên bảng nguồn-duy-nhất; và chống quét rỗng (test giả).
         val byFile = declaredIds()
-        assertTrue(byFile.size >= 7, "quét phải thấy ≥ 7 tệp FGS (thấy ${byFile.keys})")
+        // Android box B2 · W2c: 7 → 5 (nút nổi chiếu cụm + tự mở VietMap gỡ).
+        assertTrue(byFile.size >= 5, "quét phải thấy ≥ 5 tệp FGS (thấy ${byFile.keys})")
         val doc = SourceRoots.text("src/main/java/com/byd/clusternav/VoiceKeyKeepAliveService.kt")
         val tableIds = Regex("""\|\s*(\d{4})\s*\|""").findAll(doc).map { it.groupValues[1].toInt() }.toSet()
         val codeIds = byFile.values.flatten().toSet()

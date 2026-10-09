@@ -1,17 +1,9 @@
 package com.byd.clusternav.modules.navaccess
 
-import com.byd.clusternav.navigation.ScreenTextItem
-import com.byd.clusternav.navigation.NavScreenReading
-import com.byd.clusternav.navigation.NavScreenScan
-import com.byd.clusternav.launcher.voice.NavApps
-import com.byd.clusternav.navigation.TurnDistanceInterpolator
 import android.accessibilityservice.AccessibilityService
-import android.graphics.Rect
-import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityNodeInfo
 import com.byd.clusternav.AppContainer
 import com.byd.clusternav.Prefs
 import com.byd.clusternav.modules.voicekey.AssistantLauncher
@@ -27,28 +19,13 @@ import com.byd.clusternav.voicekey.KeyLearnTail
 import com.byd.clusternav.voicekey.VoiceKeyMatcher
 
 /**
- * BOOSTER TẦNG 1 (chỉ Google Maps) + NÚT VẬT LÝ → TRỢ LÝ.
+ * Dịch vụ Hỗ trợ của Kachi — CHỈ còn NÚT VẬT LÝ → trợ lý / app / Kachi nghe ([onKeyEvent]).
  *
- * ── ĐỌC DẪN ĐƯỜNG VIETMAP/WAZE ĐÃ GỠ (2026-08-28) ────────────────────────────────────────────────────
- * Toàn bộ đường ĐỌC dẫn đường của VietMap/Waze qua a11y (duyệt cửa sổ mọi-display, dò view-id kiểu OpenBYD,
- * parse content-desc Flutter, đo bbox mũi tên/camera cho screen-capture) đã bị GỠ theo quyết định owner
- * (chậm/lag/thiếu data). File này chỉ còn hai việc, tất cả device-agnostic:
- *   1. **onKeyEvent** — nút vật lý → trợ lý giọng nói (key event KHÔNG bị `packageNames` lọc).
- *   2. **Booster cự-ly Google Maps** — đọc UI GMaps ĐANG HIỆN để lấy cự ly tới rẽ CHÍNH XÁC, TƯƠI hơn noti,
- *      rồi TINH CHỈNH interpolator (`TurnDistanceInterpolator.refine`) + nuôi `NavAccessibilitySource`
- *      (`ClusterBroadcaster.freshScreenRead` đọc lại). GMaps KHÔNG có view-id sạch → dò theo MẪU CHỮ (cự ly
- *      m/km) + TOẠ ĐỘ (thẻ rẽ ở NỬA TRÊN màn). Chỉ là booster: KHÔNG tự khởi tạo nav (refine bỏ qua khi chưa
- *      có anchor noti). KHÔNG root, chỉ xin quyền hỗ trợ.
- *
- * VietMap speed badge đi qua widget (gói `vietmapwidget`, AppWidgetHost — KHÔNG qua a11y), không đụng ở đây.
- *
- * KEEP/KILL: xoá module = xoá modules/navaccess/ + dòng Registry + <service> trong Manifest + res/xml/nav_accessibility_config.xml.
+ * Android box B2 · W2d (2026-10-09): bộ đọc màn Google Maps (cự ly tới rẽ tinh chỉnh nội suy cho cụm/HUD BYD) gỡ cùng
+ * dẫn đường cụm; `res/xml/nav_accessibility_config.xml` không còn xin đọc cửa sổ lẫn nhận sự kiện. Tên lớp GIỮ (đổi tên =
+ * component mới ⇒ máy đã cài mất quyền Hỗ trợ — `docs/_handoff/androidbox-b2-brief.md`).
  */
 class NavAccessibilityService : AccessibilityService() {
-
-    private var lastProcessed = 0L
-    /** Chỉ GMaps: nhánh quét cự-ly-trên-màn (ground truth). `NavApps.ALL` cũng chỉ còn GMAPS từ 2026-08-28. */
-    private val maps = NavApps.GMAPS
 
     // T3: nút vật lý → trợ lý giọng nói. Matcher thuần ở :core; service chỉ map KeyEvent + phóng intent.
     private val voiceKeyMatcher = VoiceKeyMatcher()
@@ -70,7 +47,7 @@ class NavAccessibilityService : AccessibilityService() {
         // 2.88 · KEY-SOURCE-SPLIT tầng 2 — có dòng gán theo nguồn ⇒ đọc mồi MỘT lượt trên luồng `kachi-keysrc-sync` (chỉ
         // gửi việc, main không chờ) để lần nhấn đầu không trả giá nạp bảng feature-id + getInstance.
         if (VoiceKeyBindings.anySource(Prefs.voiceKeyBindings(app))) keySource?.primeSource()
-        Log.i(TAG, "accessibility booster connected")
+        Log.i(TAG, "accessibility key service connected")
     }
 
     override fun onUnbind(intent: android.content.Intent?): Boolean {
@@ -179,77 +156,12 @@ class NavAccessibilityService : AccessibilityService() {
         }
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        event ?: return
-        val pkg = event.packageName?.toString() ?: return
-        // GMaps-only booster: chỉ đọc cự-ly ground-truth của Google Maps. VietMap/Waze KHÔNG còn đọc qua a11y.
-        if (pkg !in maps) return
-        if (!Prefs.enabled(applicationContext) || !Prefs.accBooster(applicationContext)) return
-        val now = SystemClock.elapsedRealtime()
-        NavAccessibilitySource.lastEventAt = now
-        if (now - lastProcessed < THROTTLE_MS) return         // GMaps bắn event dày -> tiết lưu 200ms
-        lastProcessed = now
-
-        val root = runCatching { rootInActiveWindow }.getOrNull() ?: return
-        runCatching { scan(root, now) }.onFailure { Log.e(TAG, "scan failed", it) }
-        runCatching { root.recycle() }
-    }
-
-    /**
-     * Gom mọi node có text + toạ độ rồi giao phần QUYẾT ĐỊNH cho [NavScreenScan] trong `:core`.
-     *
-     * Trước 2026-07-27 heuristic chia dải trên/đáy, chọn token cự ly và chọn tên đường nằm ngay tại đây,
-     * nên đúng đoạn quyết định con số tài xế thấy trên cụm lại không có bài kiểm nào. Ở đây giờ chỉ còn
-     * việc đi cây `AccessibilityNodeInfo` và ghi kết quả — hai thứ thật sự cần Android.
-     */
-    private fun scan(root: AccessibilityNodeInfo, now: Long) {
-        val items = ArrayList<Triple<String, Int, Int>>(64)
-        val screen = Rect(); root.getBoundsInScreen(screen)
-        collect(root, items, 0)
-        if (items.isEmpty()) return
-
-        val reading = NavScreenScan.scan(
-            items.map { ScreenTextItem(it.first, it.second, it.third) },
-            screen.height(),
-        )
-
-        if (reading.road.isNotEmpty()) NavAccessibilitySource.road = reading.road
-        if (reading.bottomInfo.isNotEmpty()) NavAccessibilitySource.bottomInfo = reading.bottomInfo
-
-        if (reading.turnMeters != NavScreenReading.UNKNOWN_METERS) {
-            NavAccessibilitySource.turnMeters = reading.turnMeters
-            NavAccessibilitySource.lastReadAt = now
-            // Ghi đè anchor bằng cự ly đọc trên màn; refine tự bỏ qua nếu noti chưa mở nav.
-            TurnDistanceInterpolator.refine(reading.turnMeters, now)
-            NavAccessibilitySource.refines++
-        }
-    }
-
-    private fun collect(
-        node: AccessibilityNodeInfo?,
-        out: ArrayList<Triple<String, Int, Int>>,
-        depth: Int,
-    ) {
-        node ?: return
-        if (out.size >= MAX_NODES || depth > MAX_DEPTH) return
-        val t = node.text?.toString()?.trim()
-        if (!t.isNullOrEmpty() && t.length <= 80) {
-            val r = Rect(); node.getBoundsInScreen(r)
-            out.add(Triple(t, r.top, r.left))
-        }
-        for (i in 0 until node.childCount) {
-            val c = node.getChild(i) ?: continue
-            collect(c, out, depth + 1)
-            runCatching { c.recycle() }
-        }
-    }
+    /** Không nhận sự kiện nào (cấu hình không khai `accessibilityEventTypes` ⇒ eventTypes = 0); lớp gốc bắt buộc override. */
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
 
     companion object {
         private const val TAG = "NavAccess"
         /** `src=` của dòng `voice-key fire` khi lần nhấn KHÔNG tra nguồn (mã không có dòng gán theo nguồn). */
         private const val NO_SOURCE_READ = "-"
-        private const val THROTTLE_MS = 200L
-        private const val MAX_NODES = 250
-        private const val MAX_DEPTH = 40
     }
 }

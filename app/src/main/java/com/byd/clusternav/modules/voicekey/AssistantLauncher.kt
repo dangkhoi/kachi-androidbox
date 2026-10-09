@@ -17,7 +17,6 @@ import com.byd.clusternav.carexec.LocalDeviceShell
 import com.byd.clusternav.carexec.LocalShellFailure
 import com.byd.clusternav.carexec.LocalShellResult
 import com.byd.clusternav.carexec.LocalShellRetry
-import com.byd.clusternav.core.FloatAppList
 import com.byd.clusternav.launcher.KeyCtlTargets
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -308,13 +307,11 @@ object AssistantLauncher {
                 Thread.sleep(300)   // như 8hare: để clear settle trước khi set lại (nếu không, set lại có thể bị bỏ qua)
                 sh("settings put secure voice_interaction_service $GSA_ASSIST")
                 sh("settings put secure voice_recognition_service $GSA_RECOG")
-                // byd_float_app_list: APPEND (không clobber app khác) googlequicksearchbox + bard + chính mình.
-                val cur = sh("settings get global byd_float_app_list").output.trim()
-                val merged = FloatAppList.merge(cur, listOf(PKG_GSA, PKG_BARD, app.packageName))
-                sh("settings put global byd_float_app_list $merged")
+                // Android box B2 · W2c — bước `byd_float_app_list` (danh sách cửa sổ nổi của ROM BYD) gỡ: khoá global chỉ BYD
+                // đọc; trên Android box quyền vẽ nổi là appop chuẩn ở hai dòng dưới.
                 sh("appops set $PKG_GSA SYSTEM_ALERT_WINDOW allow")
                 sh("appops set $PKG_BARD SYSTEM_ALERT_WINDOW allow")
-                Log.i(TAG, "system assistant → Google/Gemini (full 8hare recipe); float_app_list=$merged")
+                Log.i(TAG, "system assistant → Google/Gemini (8hare recipe)")
                 true
             }
             when (result) {

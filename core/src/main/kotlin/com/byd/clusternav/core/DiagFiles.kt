@@ -19,7 +19,7 @@ object DiagFiles {
     /** `KachiLog` — usage/snapshot/crash/captest + tệp đo của cầu kiểm thử (camera/featmap/sweep) + log inputd. */
     const val KACHI_LOGS = "kachi-logs"
 
-    /** `ClusterDiag` — nút "Chẩn đoán" (`diag-<stamp>.txt`, tự giữ 20 tệp). */
+    /** `diag-<stamp>.txt` của `ClusterDiag` (chiếu cụm BYD — bộ ghi gỡ ở Android box B2 · W2c) — chỉ còn tàn dư để dọn. */
     const val DIAG = "diag"
 
     /** `TestBridgeReply` — tệp kết quả lệnh cầu kiểm thử (`<stamp>-<lệnh>.json`, tự giữ một số tệp). */
@@ -40,8 +40,8 @@ object DiagFiles {
      * (vd `kachi-voice-backup.zip`, `kachi-voice--.zip`) vẫn KHÔNG khớp.
      */
     val ROOT_FILES: List<Pair<String, String>> = listOf(
-        "nav_notif_log_" to ".csv",   // NavNotifLog
-        "nav_notif_raw_" to ".csv",   // NavNotifRawLog
+        "nav_notif_log_" to ".csv",   // NavNotifLog (bộ ghi gỡ ở Android box B2 · W2d — mẫu giữ để dọn tàn dư)
+        "nav_notif_raw_" to ".csv",   // NavNotifRawLog (như trên)
         "kachi-voice-" to ".zip",     // VoiceUtteranceLog — đường lùi khi ROM không cho ghi vào Download
     )
 

@@ -52,19 +52,12 @@ class DiagStorageCapWiringContractTest {
             Kind.DIAG, listOf("""FOLDER = "kachi-logs""""),
             listOf("kachi-logs/usage-1759740000000.log", "kachi-logs/crash-1759740000000-4242.log", "kachi-logs/captest-report.txt"),
         ),
-        "com/byd/clusternav/modules/clustercast/ClusterDiag.kt" to Writer(
-            Kind.DIAG, listOf("""getExternalFilesDir(null), "diag")""", """"diag-${'$'}stamp.txt""""),
-            listOf("diag/diag-20261006-093000.txt"),
-        ),
+        // Android box B2 · W2c — `ClusterDiag` (bộ ghi `diag/`) gỡ cùng chiếu cụm; `diag/` còn trong `DiagFiles` để dọn tàn dư.
         "com/byd/clusternav/launcher/testbridge/TestBridgeReply.kt" to Writer(
             Kind.DIAG, listOf("getExternalFilesDir(DIR)"), listOf("${TestBridgeReply.DIR}/20261006-093000-123-state.json"),
         ),
-        "com/byd/clusternav/NavNotifLog.kt" to Writer(
-            Kind.DIAG, listOf(""""nav_notif_log_${'$'}{System.currentTimeMillis()}.csv""""), listOf("nav_notif_log_1759740000000.csv"),
-        ),
-        "com/byd/clusternav/NavNotifRawLog.kt" to Writer(
-            Kind.DIAG, listOf(""""nav_notif_raw_${'$'}{System.currentTimeMillis()}.csv""""), listOf("nav_notif_raw_1759740000000.csv"),
-        ),
+        // Android box B2 · W2d — `NavNotifLog` / `NavNotifRawLog` (CSV thông báo dẫn đường ở gốc) gỡ cùng dẫn đường cụm;
+        // mẫu tên `nav_notif_*_<mốc>.csv` còn trong `DiagFiles` để dọn tàn dư.
         "com/byd/clusternav/launcher/voice/VoiceUtteranceLog.kt" to Writer(
             Kind.DIAG, listOf("""EXPORT_PREFIX + stampFormat.format(Date()) + ".zip"""", """SimpleDateFormat("yyyyMMdd-HHmmss-SSS""""),
             listOf("${VoiceUtteranceLog.EXPORT_PREFIX}20261006-093000-123.zip"),

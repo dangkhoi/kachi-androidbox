@@ -46,8 +46,7 @@ object ProfileSharePolicy {
     private const val R_KEYS =
         "phím vô-lăng: mã phím (+ nguồn knob/wheel, 2.88) + đích là gói app/mã việc (Prefs.VK_TARGET_*) / mã nút xe ctl:<nút>:<việc> — không vị trí"
     private const val R_COMFORT = "tiện nghi xe theo người lái (ghế, lọc bụi, lấy gió) — không vị trí"
-    private const val R_CAMERA = "sở thích hiển thị camera (ProfileScopeCluster.CAMERA_PROFILE_KEYS) — không vị trí"
-    private const val R_CAST = "chiếu cụm: công tắc, gói app tự chiếu, tỉ lệ chia đôi, kiểu Bo tròn/Chữ nhật — không vị trí"
+    private const val R_CAMERA = "sở thích hiển thị camera (RetiredCameraKeys.PROFILE) — không vị trí"
     private const val R_APPS = "gói app mặc định / dịch vụ nền lúc nổ máy — không vị trí"
 
     /** Khoá theo hồ sơ ĐÃ SOÁT, không mang vị trí/riêng tư → lý do. Bản chia sẻ mang nguyên. */
@@ -68,7 +67,6 @@ object ProfileSharePolicy {
         listOf(
             "enabled", "nav_cluster_screen_mode", "marquee", "badge_enabled", "show_upcoming_badge", "show_alert_chip",
             "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x", "vm_bubble_y",
-            "bubbleX", "bubbleY",
         ).forEach { put(it, R_CLUSTER) }
         listOf("voicekey_enabled", "voicekey_bindings", "voicekey_custom_buttons").forEach { put(it, R_KEYS) }
         listOf(
@@ -82,39 +80,30 @@ object ProfileSharePolicy {
         // 2.93 — cấu hình riêng từng camera: góc (TL/TR) · vị trí = phần nghìn của vùng trên MÀN (không toạ độ địa lý) · cỡ ·
         // hình · kiểu — cùng họ camera_pos_left/camera_shape.
         RetiredCameraKeys.PROFILE_KEYS.forEach { put(it, R_CAMERA) }
-        listOf(
-            "cast_enabled", "cast_bubble_visible", "split_ratio_left_pct", "autostart_enabled", "autostart_package",
-            "autostart_split_enabled", "autostart_left_package", "autostart_right_package", "cast_style",
-        ).forEach { put(it, R_CAST) }
         listOf("voice_music_default_app", "headless_autostart").forEach { put(it, R_APPS) }
         // F2/F3 — `pkg|B,pkg|N` (tên gói + kiểu) và `ytmusic|<từ khoá/link mã hoá>`: lựa chọn app/nhạc, không vị trí.
         listOf("ignition_apps", "ignition_music").forEach { put(it, R_APPS) }
     }
 
     /**
-     * Tiền tố khoá dựng động ĐÃ SOÁT → lý do. `slot_` = nội dung từng ô; họ `cast_geometry` = DPI/khung từng GÓI app
-     * trên màn cụm (px/dpi). Họ MỚI (một [SnapshotFamily] khác) không tự vào đây ⇒ bài canh đỏ cho tới khi có người soát.
+     * Tiền tố khoá dựng động ĐÃ SOÁT → lý do. `slot_` = nội dung từng ô. Android box B2 · W2c: họ `cast_geometry`
+     * (khung/DPI chiếu cụm) gỡ cùng mã — tiền tố mới không tự vào đây ⇒ bài canh đỏ cho tới khi có người soát.
      */
-    val SHAREABLE_PREFIXES: Map<String, String> = buildMap {
-        put(SettingsCatalog.SLOT_KEY_PREFIX, R_LAYOUT)
-        ProfileScopeCluster.CAST_GEOMETRY.prefixes.forEach {
-            put(it, "hình học cửa sổ từng gói app khi chiếu (px/dpi) — không vị trí")
-        }
-    }
+    val SHAREABLE_PREFIXES: Map<String, String> = mapOf(SettingsCatalog.SLOT_KEY_PREFIX to R_LAYOUT)
 
     /** Khoá ô do `WorkspacePrefs.save` sinh (`slot_<số>`) — neo hai đầu, không phải mọi chuỗi mở đầu bằng `slot_`. */
     private val SLOT_KEY = Regex("^" + Regex.escape(SettingsCatalog.SLOT_KEY_PREFIX) + "[0-9]+$")
 
     /**
      * Khoá [key] có THẬT thuộc một họ dựng động đã soát không: vừa mang tiền tố ở [SHAREABLE_PREFIXES], vừa đúng dạng
-     * của họ đó (`slot_<số>`, hoặc [SnapshotFamily.owns] — neo hai đầu).
+     * của họ đó (`slot_<số>` — neo hai đầu).
      *
      * Senior review PROFILE-IO-0930 lượt 2 [P3]: bản trước chỉ so TIỀN TỐ ⇒ một khoá mới đặt tên `slot_…`/`config_size_…`
      * mà chưa ai soát vẫn đi ra ngoài — trái lời hứa "danh sách trắng, kể cả khi tắt bài canh" ở KDoc lớp.
      */
     private fun reviewedDynamic(key: String): Boolean =
         SHAREABLE_PREFIXES.keys.any { key.startsWith(it) } &&
-            (SLOT_KEY.matches(key) || ProfileScopeCluster.FAMILIES.any { it.owns(key) })
+            SLOT_KEY.matches(key)
 
     /** Khoá [key] (trần) có được đi ra ngoài trong bản chia sẻ không. Chưa soát ⇒ `false`. */
     fun shareable(key: String): Boolean = key !in PRIVATE && (key in SHAREABLE || reviewedDynamic(key))

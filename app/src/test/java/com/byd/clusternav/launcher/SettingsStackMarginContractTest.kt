@@ -31,11 +31,11 @@ class SettingsStackMarginContractTest {
         "SettingsSections.kt", "SettingsSectionsHome.kt",
         // T4 · IA v2 — năm section mới. Chúng gọi `rows.*` dày đặc nên đây đúng là chỗ dễ tái phạm "tự chèn
         // khoảng cách" nhất; để ngoài phạm vi thì luật lề STACK chỉ còn đúng ở ba tệp cũ.
-        "SettingsSectionsBars.kt", "SettingsSectionsNav.kt", "SettingsSectionsCast.kt",
+        // Android box B2 · W2c — `SettingsSectionsNav.kt` (khối cụm/HUD/biển báo/bong bóng, không ai dựng từ W1) + `SettingsSectionsCast*.kt`
+        // gỡ; hàng app dẫn đường mặc định (`SettingsSectionsNavApp.kt`) vào thay.
+        "SettingsSectionsBars.kt", "SettingsSectionsNavApp.kt",
         "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
         // (`SettingsSectionsCamera.kt` 2.76 · R1 — xoá ở Android box B2 · W2b.)
-        // V-CLUSTER (2026-09-30) — khối khung/DPI tách khỏi `SettingsSectionsCast` (trần 500 dòng): cùng bề mặt, vào NGAY.
-        "SettingsSectionsCastGeometry.kt",
         // 2.74 · R3 — nhóm Giọng nói cũng dựng bằng `rows.*` (và nay có cả khối gập/mở).
         "SettingsVoiceSection.kt",
         // 2.89 · B3 — hàng cỡ thanh nút (thanh kéo + dải mẫu + ghi chú) dựng bằng `rows.*`.

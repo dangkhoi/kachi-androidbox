@@ -33,9 +33,8 @@ class ProfileSharePolicyTest {
         ProfileScope.CLUSTERNAV_KEYS.values.flatten().forEach { add(it) }
     }
 
-    /** Tiền tố dựng động theo hồ sơ đi vào tệp: `slot_` + họ `cast_geometry` (mọi họ ở [ProfileScopeCluster.FAMILIES]). */
-    private val profilePrefixes: Set<String> =
-        setOf(SettingsCatalog.SLOT_KEY_PREFIX) + ProfileScopeCluster.FAMILIES.flatMap { it.prefixes }
+    /** Tiền tố dựng động theo hồ sơ đi vào tệp: `slot_` (Android box B2 · W2c: họ `cast_geometry` gỡ cùng chiếu cụm). */
+    private val profilePrefixes: Set<String> = setOf(SettingsCatalog.SLOT_KEY_PREFIX)
 
     /**
      * Gốc từ mang dáng dữ liệu vị trí / lịch đi lại / nhật ký chuyến. So theo TỪNG TỪ của tên khoá (tách `_`/`-`/chữ
@@ -95,7 +94,8 @@ class ProfileSharePolicyTest {
             assertFalse(ProfileSharePolicy.shareable(it), "`$it` chưa soát mà đi ra ngoài")
         }
         assertTrue(ProfileSharePolicy.shareable("slot_3"))
-        assertTrue(ProfileSharePolicy.shareable("config_density_vn.vietmap.live"))
+        // Android box B2 · W2c — khung chiếu cụm `config_*` gỡ cùng mã ⇒ không còn trong danh sách trắng.
+        assertFalse(ProfileSharePolicy.shareable("config_density_vn.vietmap.live"))
         assertTrue(ProfileSharePolicy.shareable("preset"))
     }
 
@@ -109,8 +109,10 @@ class ProfileSharePolicyTest {
             "slot_home_address", "slot_", "slot_3x", "config_size_", "config_density_last_destination",
             "config_bounds_not a package", "config_density_vn.vietmap.live;rm",
         ).forEach { assertFalse(ProfileSharePolicy.shareable(it), "`$it` không thuộc họ nào đã soát") }
-        ProfileScopeCluster.CAST_GEOMETRY.prefixes.forEach {
-            assertTrue(ProfileSharePolicy.shareable("${it}com.example.app"), "khoá họ hợp lệ của `$it`")
+        // Android box B2 · W2c — họ `config_*` (khung chiếu cụm) gỡ: khoá họ cũ hợp lệ cũng KHÔNG còn đi ra bản chia sẻ.
+        listOf("config_size_", "config_overscan_", "config_density_", "config_bounds_").forEach {
+            assertFalse(ProfileSharePolicy.shareable("${it}com.example.app"), "họ `$it` đã gỡ")
         }
+        assertTrue(ProfileSharePolicy.shareable("slot_0"), "ô sinh theo số vẫn chia sẻ được")
     }
 }

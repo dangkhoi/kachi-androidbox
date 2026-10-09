@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.modules.clustercast.simplified.CastEnableDeferral
 import com.byd.clusternav.testsupport.SourceRoots
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -12,13 +11,10 @@ import java.nio.file.Paths
 /**
  * ═══ V-CLUSTER (owner 2026-09-30: *"Phần cụm lưu hết thành profile nhé"*) — DÂY NỐI phía `:app` của lớp lưu trữ ═════
  *
- * Spec `docs/specs/kachi-profiles-are-everything.html` §11.3 VC-R1 · VC-R3 · VC-R4 · VC-R7 · VC-R8. Phép tính thuần đã có
- * bài chạy thật ở `:core` (`ClusterSnapshotPlanTest`, `ProfileScopeMigrationTest`, `CastGeometryGuardTest`,
- * `CastEnableDeferralTest`). Bài này hỏi câu mà `:core` không hỏi được: *mã Android có THẬT SỰ đi qua các phép đó chưa*.
- *
- * ## VC-R1 — đóng lỗ "bài canh chỉ quét khoá ĐÃ khai" (`ProfileScopeTest` chỉ nhìn danh mục)
- * Quét **mã nguồn thật** (khoá literal ở `get*`/`put*`/`remove`/`contains`) của hai tệp prefs cụm/chiếu và đòi mỗi khoá
- * có phạm vi ≠ UNKNOWN. Thêm một khoá mới mà quên xếp loại ⇒ đỏ tại đây, không đợi người lái đổi hồ sơ trên xe.
+ * Spec `docs/specs/kachi-profiles-are-everything.html` §11.3 VC-R3 · VC-R7 · VC-R8. Phép tính thuần đã có bài chạy thật ở
+ * `:core` (`ProfileScopeMigrationTest`, `ProfileTransferTest`). Bài này hỏi câu mà `:core` không hỏi được: *mã Android có
+ * THẬT SỰ đi qua các phép đó chưa*. Android box B2 · W2c: phần chiếu cụm (`SimpleCastRuntime`, `CastAppCatalog`, họ
+ * `cast_geometry`, khoá hoãn `cast_enabled`, lượt rót V-CLUSTER, merge khung lúc nhập) gỡ — các bài của nó gỡ theo.
  *
  * Mọi phép cắt vùng dùng [SourceRoots.body] (đếm ngoặc, nổ nếu mốc vắng) — không `substringAfter/Before`.
  */
@@ -26,40 +22,25 @@ class ClusterProfileScopeCoverageTest {
 
     private fun code(file: String) = SourceRoots.codeOf("src/main/java/com/byd/clusternav/$file")
 
-    private val runtime by lazy { code("modules/clustercast/simplified/SimpleCastRuntime.kt") }
-    private val catalog by lazy { code("cast/platform/CastAppCatalog.kt") }
     private val snapshot by lazy { code("launcher/WorkspacePrefsSnapshot.kt") }
     private val migrations by lazy { code("launcher/WorkspacePrefsMigrations.kt") }
     private val profileIo by lazy { code("launcher/WorkspacePrefsProfile.kt") }
     private val repo by lazy { code("launcher/PrefsWorkspaceRepository.kt") }
 
-    /** Khoá literal ở lời gọi prefs; `$x` (khoá dựng động) thay bằng một tên gói mẫu để hỏi phạm vi theo tiền tố. */
-    private fun literalKeys(src: String): Set<String> =
-        Regex("""\b(?:get(?:String|Boolean|Int|Long|Float|StringSet)|put(?:String|Boolean|Int|Long|Float|StringSet)|remove|contains|immutableCsv)\("([^"]+)"""")
-            .findAll(src).map { it.groupValues[1].replace(Regex("""\$\w+"""), "a.b") }.toSet()
-
-    // ── VC-R1 · phủ khoá ───────────────────────────────────────────────────────────────────────
-
+    /** Android box B2 · W2c — mã chiếu cụm (hai tệp prefs của nó) gỡ hẳn khỏi `:app`. */
     @Test
-    fun `moi khoa literal cua prefs chieu cum deu da xep loai`() {
-        val keys = literalKeys(SourceRoots.body(runtime, "private class SharedPrefsSimpleCastPrefs"))
-        assertTrue(keys.size >= 14, "bộ quét phải thấy đủ khoá (đang thấy ${keys.size}: $keys) — ít hơn là nó hỏng")
-        assertTrue("config_bounds_a.b" in keys && "cast_bubble_visible" in keys, "mẫu quét phải phủ cả khoá dựng động: $keys")
-        assertEquals(emptySet<String>(), ProfileScope.unclassified(keys), "khoá chiếu cụm CHƯA xếp loại")
-    }
-
-    @Test
-    fun `moi khoa literal cua CastAppCatalog deu da xep loai`() {
-        val keys = literalKeys(catalog)
-        assertTrue(keys.size >= 15, "bộ quét phải thấy đủ khoá (đang thấy ${keys.size}: $keys)")
-        assertEquals(emptySet<String>(), ProfileScope.unclassified(keys), "khoá CastAppCatalog CHƯA xếp loại")
-        assertEquals(ProfileScope.Scope.PROFILE, ProfileScope.scopeOf("bubbleX"))
+    fun `ma chieu cum da go, ten khoa van xep loai`() {
+        listOf("modules/clustercast/simplified/SimpleCastRuntime.kt", "cast/platform/CastAppCatalog.kt").forEach {
+            assertFalse(SourceRoots.exists("src/main/java/com/byd/clusternav/$it"), "$it còn")
+        }
+        assertEquals(emptySet<String>(), ProfileScope.unclassified(RetiredClusterKeys.DEVICE_KEYS.keys))
         assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf("scale-dpi:a.b"))
+        assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf("config_density_a.b"))
     }
 
     /**
      * Android box B2 · W2b (2026-10-09): mã camera BYD (đọc/ghi `camera_*`) gỡ khỏi `:app`. TÊN khoá vẫn được xếp phạm vi ở
-     * `:core` ([ProfileScopeCluster], [RetiredCameraKeys]) để tệp hồ sơ cũ không thành "khoá không phân loại" tới W4 — nhưng
+     * `:core` ([RetiredCameraKeys]) để tệp hồ sơ cũ không thành "khoá không phân loại" tới W4 — nhưng
      * KHÔNG một dòng mã `:app` nào còn đọc/ghi chúng (mọc lại một chỗ đọc là mọc lại tính năng camera mà không ai nối).
      */
     @Test
@@ -69,63 +50,47 @@ class ClusterProfileScopeCoverageTest {
             Regex(""""camera_[a-z_]+"""").containsMatchIn(SourceRoots.codeOf("src/main/java/" + root.relativize(p).joinToString("/")))
         }.map { it.fileName.toString() }
         assertEquals(emptyList<String>(), hits, "mã :app còn literal khoá camera")
-        val names = ProfileScopeCluster.CAMERA_PROFILE_KEYS.keys + ProfileScopeCluster.CAMERA_DEVICE_KEYS.keys
+        val names = RetiredCameraKeys.PROFILE.keys + RetiredCameraKeys.DEVICE.keys
         assertEquals(emptySet<String>(), ProfileScope.unclassified(names), "tên khoá camera cũ phải còn xếp loại tới W4")
     }
 
     /** Khoá theo hồ sơ KHÔNG có mục Cài đặt phải có mặt NGUYÊN VĂN ở tệp khai nó (chặt ngang `ClusterNavKeysContractTest`). */
     @Test
     fun `khoa them theo ho so co nguyen van o tep khai`() {
-        assertTrue(catalog.contains("\"${ProfileScopeCluster.CAST_CATALOG_FILE}\""), "tên tệp ảnh chụp phải khớp tệp thật")
-        listOf("bubbleX", "bubbleY").forEach { assertTrue(catalog.contains("\"$it\""), it) }
-        assertTrue(code("PrefsAutomation.kt").contains("getSharedPreferences(\"${ProfileScopeCluster.CLUSTERNAV_FILE}\""))
+        assertTrue(code("PrefsAutomation.kt").contains("getSharedPreferences(\"clusternav_prefs\""))
     }
 
-    // ── VC-R3 · di trú một lần ─────────────────────────────────────────────────────────────────
+    // ── 2.92 · PROFILE-NEW-KEYS ────────────────────────────────────────────────────────────────
 
     @Test
-    fun `di tru cum chay o init, SAU lich dan duong, TRUOC load`() {
-        val init = SourceRoots.body(repo, "    init {")
-        val scenes = init.indexOf("prefs.migrateScenesOnce()")
-        val nav = init.indexOf("prefs.migrateNavScheduleOnce()")
-        val cluster = init.indexOf("prefs.migrateClusterProfileOnce()")
-        assertTrue(scenes in 0 until nav && nav < cluster, "thứ tự init phải là cảnh → lịch → cụm: $scenes/$nav/$cluster")
-        assertTrue(repo.indexOf("init {") < repo.indexOf("override fun load()"))
-    }
-
-    @Test
-    fun `di tru cum mot Editor, mot dau, di qua phep thuan`() {
-        val fn = SourceRoots.body(migrations, "internal fun WorkspacePrefs.migrateClusterProfileOnce()")
-        assertTrue(fn.contains("if (sp.getBoolean(K_MIGRATED_CLUSTER, false)) return"), "chạy ĐÚNG MỘT LẦN")
-        assertTrue(fn.contains("e.putBoolean(K_MIGRATED_CLUSTER, true).apply()"), "dấu trên CHÍNH Editor đã ghi dữ liệu")
-        assertEquals(1, Regex("""\bsp\.edit\(\)""").findAll(fn).count(), "một Editor duy nhất")
-        assertTrue(fn.contains("ProfileScopeMigration") && fn.contains(".rotDown("), "phép rót ở :core (có test chạy thật)")
-        assertTrue(fn.contains("ProfileScopeCluster.MOVED_TO_PROFILE") && fn.contains("ProfileScopeCluster.DEFERRED"))
-        assertTrue(migrations.contains("K_MIGRATED_CLUSTER = \"${ProfileScopeCluster.MIGRATED_KEY}\""), "literal phải BẰNG hằng :core")
+    fun `luot ro V-CLUSTER (cum, chieu, nut noi) da go khoi init`() {
+        assertFalse(SourceRoots.body(repo, "    init {").contains("migrateClusterProfileOnce"))
+        assertFalse(migrations.contains("migrateClusterProfileOnce"))
     }
 
     /**
      * 2.92 · PROFILE-NEW-KEYS — khoá vào phạm vi hồ sơ ở bản SAU (QA máy ảo 2.92 [ĐO]: kiểu hình/thu phóng camera của hồ
-     * sơ vừa rời rò sang hồ sơ lưu bằng 2.91). Lượt rót theo sổ phải chạy ở `init`, SAU lượt cụm, TRƯỚC `load()`.
+     * sơ vừa rời rò sang hồ sơ lưu bằng 2.91). Lượt rót theo sổ phải chạy ở `init`, SAU lượt lịch dẫn đường, TRƯỚC `load()`.
      */
     @Test
     fun `khoa moi vao pham vi ho so duoc rot theo so, o init, mot Editor`() {
         val init = SourceRoots.body(repo, "    init {")
-        val cluster = init.indexOf("prefs.migrateClusterProfileOnce()")
+        val nav = init.indexOf("prefs.migrateNavScheduleOnce()")
         val fill = init.indexOf("prefs.fillNewProfileKeysOnce()")
-        assertTrue(cluster in 0 until fill, "thứ tự init: cụm → khoá mới ($cluster/$fill)")
+        assertTrue(nav in 0 until fill, "thứ tự init: lịch → khoá mới ($nav/$fill)")
+        assertTrue(repo.indexOf("init {") < repo.indexOf("override fun load()"))
         val fn = SourceRoots.body(migrations, "internal fun WorkspacePrefs.fillNewProfileKeysOnce()")
         assertEquals(1, Regex("""\bsp\.edit\(\)""").findAll(fn).count(), "một Editor duy nhất")
-        // 2.93 · PROFILE-NEW-FILE-FILL — sổ duyệt bảng ảnh chụp + MỐC họ (họ mới cũng thành mục sổ).
         assertTrue(
-            fn.contains("ProfileScopeMigration.ledgerScope(ProfileScope.CLUSTERNAV_KEYS, ProfileScopeCluster.FAMILIES)") &&
-                fn.contains("ProfileScopeMigration.pendingKeys(scope, done)"),
-            "sổ duyệt ĐÚNG bảng ảnh chụp + mốc họ",
+            fn.contains("val scope = ProfileScope.CLUSTERNAV_KEYS") && fn.contains("ProfileScopeMigration.pendingKeys(scope, done)"),
+            "sổ duyệt ĐÚNG bảng ảnh chụp",
         )
         // "Đã chụp" xét trên ảnh của MỌI tệp (không riêng tệp đang rót) — khoá ở tệp MỚI phải được rót. Thử ĐỎ: bỏ `captured`.
         assertTrue(fn.contains("scope.keys.associateWith") && fn.contains("ProfileScopeMigration.captured(shots)"))
-        assertTrue(fn.contains("captured, ProfileScopeCluster.familiesOf(file)"), "fillNewKeys phải nhận tập đã-chụp + họ của tệp")
-        assertTrue(fn.contains(".fillNewKeys(") && fn.contains("ProfileScopeCluster.DEFERRED"), "phép rót ở :core (có test chạy thật)")
+        assertTrue(
+            fn.contains(".fillNewKeys(shots.getValue(file), clusterNavPrefs(file).all, newKeys, captured)"),
+            "fillNewKeys phải nhận tập đã-chụp — phép rót ở :core (có test chạy thật)",
+        )
         assertTrue(fn.contains("storedSnapshot(stored,"), "ảnh sai kiểu không được làm init ném")
         assertFalse(fn.contains("getStringSet("), "đọc sổ bằng ép kiểu an toàn, không getStringSet (ném ClassCastException ở init)")
         assertTrue(
@@ -140,38 +105,35 @@ class ClusterProfileScopeCoverageTest {
 
     /**
      * 2.92 · PROFILE-IMPORT-GAP-KEYS — NHẬP tệp xuất từ bản cũ (thiếu khoá theo hồ sơ mới): mọi ảnh ClusterNav của hồ sơ nhập đi qua
-     * CÙNG phép điền chỗ trống của lượt nâng cấp, SAU lớp làm sạch + merge (giá trị của xe cũng đã qua bộ kiểm). Thử ĐỎ: ghi `merged`.
+     * CÙNG phép điền chỗ trống của lượt nâng cấp, SAU lớp làm sạch. Android box B2 · W2c: lượt merge khung chiếu cụm gỡ.
      */
     @Test
-    fun `nhap tep cu - anh ClusterNav dien cho trong bang gia tri song, sau lam sach va merge`() {
+    fun `nhap tep cu - anh ClusterNav dien cho trong bang gia tri song, sau lam sach`() {
         val importFn = SourceRoots.body(profileIo, "internal fun WorkspacePrefs.importProfile(data: String, name: String? = null)")
         val captured = importFn.indexOf("val captured = importedCaptured(plan.writes)")
         val clean = importFn.indexOf("cleanImportedSnapshot(suffix, v)")
-        val merge = importFn.indexOf("mergeImportedCast(suffix, clean)")
-        val fill = importFn.indexOf("val value = fillImportedSnapshot(suffix, merged, captured)")
+        val fill = importFn.indexOf("val value = fillImportedSnapshot(suffix, clean, captured)")
         assertTrue(captured in 0 until clean, "2.93 PROFILE-NEW-FILE-FILL: 'đã chụp' tính TRƯỚC vòng ghi, trên MỌI ảnh của tệp")
-        assertTrue(clean in 0 until merge && merge < fill, "thứ tự: làm sạch → merge → điền ($clean/$merge/$fill)")
+        assertTrue(clean in 0 until fill, "thứ tự: làm sạch → điền ($clean/$fill)")
+        assertFalse(importFn.contains("mergeImportedCast"), "lượt merge khung chiếu cụm đã gỡ")
         val fn = SourceRoots.body(snapshot, "internal fun WorkspacePrefs.fillImportedSnapshot(suffix: String, value: Any?, captured: Boolean)")
         assertTrue(fn.contains("ProfileScopeMigration.fillNewKeys(") && fn.contains("ProfileScope.CLUSTERNAV_KEYS"), "cùng phép :core")
-        assertTrue(fn.contains("ProfileScopeCluster.DEFERRED"), "khoá hoãn đi đúng đường bản chờ")
         // Ảnh VẮNG chỉ được dựng khi hồ sơ nhập đã chụp ở tệp khác (S4 · R5 giữ cho tệp không có ảnh ClusterNav nào).
         assertTrue(fn.contains("if (value == null && captured) \"\" else return value"), fn)
         val cap = SourceRoots.body(snapshot, "internal fun importedCaptured(writes: Map<String, Any?>): Boolean")
-        assertTrue(cap.contains("ClusterSnapshotPlan.sanitize(") && cap.contains("ProfileScopeCluster.DECLARED_TYPES"),
+        assertTrue(cap.contains("PrefSnapshotPlan.sanitize(") && cap.contains("ProfileScopeTypes.CLUSTERNAV"),
             "'đã chụp' đo trên ảnh ĐÃ làm sạch bằng cùng phép của cleanImportedSnapshot")
     }
 
     // ── VC-R2/R7/R8 · chụp–áp–nhập đi qua phép thuần ──────────────────────────────────────────
 
     @Test
-    fun `chup va ap di qua ClusterSnapshotPlan voi ho, khoa hoan va kieu khai san`() {
+    fun `chup va ap di qua PrefSnapshotPlan voi kieu khai san`() {
         val snap = SourceRoots.body(snapshot, "internal fun WorkspacePrefs.snapshotClusterNav(profile: String)")
-        assertTrue(snap.contains("ClusterSnapshotPlan.snapshot(") && snap.contains("ProfileScopeCluster.DEFERRED"))
-        assertTrue(snap.contains("ProfileScopeCluster.familiesOf(file)"), "họ tiền tố phải vào ảnh")
+        assertTrue(snap.contains("keys.associateWith { all[it] }"), "khoá VẮNG cũng phải vào ảnh (null tường minh)")
         val apply = SourceRoots.body(snapshot, "internal fun WorkspacePrefs.applyClusterNav(profile: String)")
-        listOf("ClusterSnapshotPlan.apply(", "ProfileScopeCluster.DECLARED_TYPES", "ProfileScopeCluster.DEFERRED", "target.all")
+        listOf("PrefSnapshotPlan.inScope(", "PrefSnapshotPlan.apply(", "ProfileScopeTypes.CLUSTERNAV", "target.all")
             .forEach { assertTrue(apply.contains(it), "lượt áp thiếu `$it`") }
-        assertFalse(Regex("""put\w*\(\s*"cast_enabled"""").containsMatchIn(apply), "lượt áp KHÔNG được ghi thẳng khoá sống")
     }
 
     @Test
@@ -179,7 +141,7 @@ class ClusterProfileScopeCoverageTest {
         val fn = SourceRoots.body(profileIo, "internal fun WorkspacePrefs.importProfile(data: String, name: String? = null): ProfileImportReport?")
         assertTrue(fn.contains("cleanImportedSnapshot(suffix, v)"), "mọi hậu tố nhập phải qua lớp làm sạch")
         val clean = SourceRoots.body(snapshot, "internal fun cleanImportedSnapshot(suffix: String, value: Any?): Any?")
-        assertTrue(clean.contains("ClusterSnapshotPlan.sanitize(") && clean.contains("ProfileScopeCluster.DECLARED_TYPES"))
+        assertTrue(clean.contains("PrefSnapshotPlan.sanitize(") && clean.contains("ProfileScopeTypes.CLUSTERNAV"))
     }
 
     /**
@@ -192,7 +154,7 @@ class ClusterProfileScopeCoverageTest {
     @Test
     fun `doc anh chup da luu khong nem khi sai kieu`() {
         listOf(
-            "migrateClusterProfileOnce" to SourceRoots.body(migrations, "internal fun WorkspacePrefs.migrateClusterProfileOnce()"),
+            "fillNewProfileKeysOnce" to SourceRoots.body(migrations, "internal fun WorkspacePrefs.fillNewProfileKeysOnce()"),
             "applyClusterNav" to SourceRoots.body(snapshot, "internal fun WorkspacePrefs.applyClusterNav(profile: String)"),
             // Senior review bản gộp 2.84: lượt di trú THỨ HAI trong `init` cùng đọc ảnh — máy nâng thẳng từ ≤ 2.81 (lượt
             // này chưa từng chạy) với ảnh sai kiểu từ tệp nhập là HOME sập mỗi lần mở, y hệt ca Pass 3 đã vá.
@@ -206,32 +168,6 @@ class ClusterProfileScopeCoverageTest {
         assertTrue(helper.contains("if (v is String) return v"), "chỉ chuỗi mới là ảnh chụp")
         assertTrue(helper.contains("Log.w("), "ảnh sai kiểu phải để lại vết, không im lặng")
         assertFalse(Regex("""\bget(String|Boolean|Int|Long|Float|StringSet)\(""").containsMatchIn(helper))
-    }
-
-    // ── VC-R4/R7 · SimpleCastRuntime đọc–ghi ───────────────────────────────────────────────────
-
-    @Test
-    fun `doc cau hinh qua bo kiem, khong con toInt tran`() {
-        val read = SourceRoots.body(runtime, "override fun displayConfigFor(pkg: String, profile: CastProfile): DisplayConfig?")
-        assertTrue(read.contains("CastGeometryGuard.readConfig("), "lớp 3: đọc qua bộ kiểm")
-        assertFalse(read.contains(".toInt()"), "toInt() trần ném NumberFormatException trong dịch vụ đang chạy")
-        assertFalse(read.contains("getString("), "getString ném ClassCastException khi giá trị sai kiểu")
-        val save = SourceRoots.body(runtime, "override fun saveDisplayConfig(pkg: String, profile: CastProfile, config: DisplayConfig)")
-        assertTrue(save.contains("CastGeometryGuard.sanitizeForSave(config)"), "chỉ lưu thứ lượt đọc sau không phải bỏ")
-    }
-
-    @Test
-    fun `bat tat tuong minh xoa ban cho trong CUNG luot ghi`() {
-        val set = SourceRoots.body(runtime, "override fun setCastEnabled(enabled: Boolean)")
-        assertTrue(
-            Regex("""putBoolean\("cast_enabled", enabled\)\s*\.remove\(CastEnableDeferral\.PENDING_KEY\)\s*\.apply\(\)""")
-                .containsMatchIn(set),
-            "ý người lái vừa bấm phải thắng bản chờ, trong CÙNG một Editor",
-        )
-        val commit = SourceRoots.body(runtime, "override fun commitCastEnabledPending(): CastEnableDeferral.AtStart")
-        assertTrue(commit.contains("CastEnableDeferral.onProcessStart("), "quyết định chốt ở :core")
-        assertTrue(commit.contains(".remove(CastEnableDeferral.PENDING_KEY).commit()"), "chốt + xoá chờ trong MỘT commit đồng bộ")
-        assertEquals("cast_enabled_pending", CastEnableDeferral.PENDING_KEY)
     }
 
     // ── VC-R8 · kiểu KHAI SẴN phải là kiểu mã THẬT ghi (senior review Pass 2) ────────────────────
@@ -250,10 +186,14 @@ class ClusterProfileScopeCoverageTest {
     )
 
     /**
-     * Android box B2 · W2b — khoá camera đã gỡ mã ghi (tên còn khai kiểu ở [ProfileScopeCluster.DECLARED_TYPES] để tệp hồ sơ
-     * cũ còn đọc đúng kiểu tới W4). Bộ quét không thấy lời ghi nào ⇒ đúng tập này nằm ngoài `seen`, và chỉ nó.
+     * Khoá đã gỡ mã ghi (tên còn khai kiểu ở [ProfileScopeTypes.CLUSTERNAV] để tệp hồ sơ cũ còn đọc đúng kiểu tới W4): camera
+     * (Android box B2 · W2b) + biển báo tốc độ / bong bóng VietMap (W2c). Bộ quét không thấy lời ghi nào ⇒ đúng tập này nằm
+     * ngoài `seen`, và chỉ nó.
      */
-    private val retiredNoWriter: Set<String> by lazy { ProfileScopeCluster.DECLARED_TYPES.keys.filter { it.startsWith("camera_") }.toSet() }
+    private val retiredNoWriter: Set<String> by lazy {
+        ProfileScopeTypes.CLUSTERNAV.keys.filter { it.startsWith("camera_") || it.startsWith("badge_") || it.startsWith("vm_bubble_") }
+            .toSet() + setOf("show_upcoming_badge", "show_alert_chip")
+    }
 
     /**
      * Khai SAI kiểu thì lượt đổi hồ sơ bỏ đúng giá trị HỢP LỆ của người lái ở mọi lượt — mất cấu hình im lặng, đắt
@@ -262,7 +202,7 @@ class ClusterProfileScopeCoverageTest {
      */
     @Test
     fun `kieu khai san khop luot ghi that trong ma`() {
-        val declared = ProfileScopeCluster.DECLARED_TYPES
+        val declared = ProfileScopeTypes.CLUSTERNAV
         val root = SourceRoots.moduleSourceRoots().first { it.endsWith(Paths.get("app", "src", "main", "java")) }
         val typeOf = mapOf(
             "Boolean" to PrefType.BOOLEAN, "Int" to PrefType.INT, "Long" to PrefType.LONG, "Float" to PrefType.FLOAT,
@@ -291,8 +231,8 @@ class ClusterProfileScopeCoverageTest {
             emptyMap<String, Set<PrefType>>(), seen.filter { (k, types) -> types != setOf(declared.getValue(k)) },
             "kiểu khai ≠ kiểu mã ghi ⇒ đổi hồ sơ bỏ giá trị hợp lệ",
         )
-        assertTrue(retiredNoWriter.size >= 20, "bộ khoá camera đã gỡ phải còn khai kiểu (đang thấy ${retiredNoWriter.size})")
-        assertTrue(retiredNoWriter.none { it in seen }, "khoá camera đã gỡ mà vẫn có lời ghi: ${retiredNoWriter.filter { it in seen }}")
+        assertTrue(retiredNoWriter.size >= 30, "bộ khoá đã gỡ phải còn khai kiểu (đang thấy ${retiredNoWriter.size})")
+        assertTrue(retiredNoWriter.none { it in seen }, "khoá đã gỡ mà vẫn có lời ghi: ${retiredNoWriter.filter { it in seen }}")
         assertEquals(indirect.keys + retiredNoWriter, declared.keys - seen.keys, "khoá quét hụt phải nằm ở `indirect`/đã gỡ (và chỉ chúng)")
         indirect.forEach { (key, ev) ->
             val (type, evidence) = ev

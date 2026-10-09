@@ -3,9 +3,9 @@ package com.byd.clusternav.launcher
 /**
  * ═══ PROFILE-IMPORT-TYPES — KIỂU khai sẵn của MỌI hậu tố theo hồ sơ phía LAUNCHER ═════════════════════════════════════
  *
- * Spec `docs/specs/kachi-profiles-are-everything.html` §12 (IO-R7 · §12.4.4). Cùng khuôn [ProfileScopeCluster.DECLARED_TYPES]
+ * Spec `docs/specs/kachi-profiles-are-everything.html` §12 (IO-R7 · §12.4.4). Cùng khuôn [ProfileScopeTypes.CLUSTERNAV]
  * (khoá BÊN TRONG ảnh chụp ClusterNav), nhưng cho chính các hậu tố của tệp `kachi_workspace`: bố cục · cá nhân · `slot_*` ·
- * bốn hậu tố ảnh chụp `__cn__*` (bản thân chuỗi ảnh là `String`; khoá bên trong nó do bảng kia lo).
+ * các hậu tố ảnh chụp `__cn__*` (bản thân chuỗi ảnh là `String`; khoá bên trong nó do bảng kia lo).
  *
  * ## Bệnh nó chữa [ĐO source + code]
  * `SharedPreferencesImpl.getString` ép kiểu thẳng — `String v = (String)mMap.get(key);` (android-10.0.0_r47

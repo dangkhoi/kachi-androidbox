@@ -99,9 +99,5 @@ class A11yFixReturnHomeWiringTest {
             .map { it.fileName.toString() }
             .distinct()
         assertEquals(listOf("HomeActivityCmd.kt"), owners, "literal Home hệ thống chỉ được khai ở HomeActivityCmd")
-        assertTrue(
-            SourceRoots.codeOf("src/main/java/com/byd/clusternav/VietMapAutostart.kt").contains("sh(HomeActivityCmd.GO_HOME)"),
-            "đường trả nền VietMap lúc boot giữ nguyên hành vi (cùng byte), chỉ đổi sang hằng dùng chung",
-        )
     }
 }

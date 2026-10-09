@@ -7,8 +7,7 @@ import com.byd.clusternav.launcher.voice.VoiceWakeService
 /**
  * ═══ S4 · R5 — ÁP LẠI cấu hình ClusterNav cho dịch vụ ĐANG CHẠY, sau một lượt đổi hồ sơ ═══════════════════════
  *
- * Hàm mở rộng của [ClusterNavBridge] ở tệp riêng vì tệp chính đã 491 dòng (trần 500 — CLAUDE.md §4.1), cùng cách
- * `ClusterNavBridgeCast.kt` / `ClusterNavBridgeKeys.kt` đã tách.
+ * Hàm mở rộng của [ClusterNavBridge] ở tệp riêng (trần 500 dòng — CLAUDE.md §4.1), cùng cách `ClusterNavBridgeKeys.kt` đã tách.
  *
  * ## ⚠⚠ Vì sao BẮT BUỘC phải có bước này
  * `WorkspacePrefsProfile.applyClusterNav` ghi giá trị của hồ sơ mới vào đúng tệp `SharedPreferences` mà runtime
@@ -21,17 +20,9 @@ import com.byd.clusternav.launcher.voice.VoiceWakeService
  * ## Ba loại khoá, và vì sao chỉ MỘT loại cần gọi lại
  * [ĐO] đọc từng consumer:
  *  1. **Tự áp** — consumer đọc lại khoá ở **mỗi sự kiện** (mỗi thông báo dẫn đường, mỗi khung HUD, mỗi lần bấm
- *     phím vô-lăng, mỗi lượt dispatch cast). Chúng tự đúng ở nhịp kế tiếp, gọi thêm chỉ là nhiễu:
- *     `marquee` (`ClusterBroadcaster.kt:129`, mỗi khung), `voicekey_enabled`/`voicekey_bindings`
- *     (`modules/navaccess/NavAccessibilityService.kt:91,95`, mỗi phím),
- *     `cast_bubble_visible` (vòng 2 s `FloatingBubbleService.syncBubbleWindow` — ẩn/hiện cửa sổ, KHÔNG dựng lại dịch
- *     vụ), 6 khoá camera sở thích (`CameraSignalController.openSession` đọc lại ở MỖI lượt xi-nhan; riêng
- *     `camera_signal_enabled` còn cần [AutomationService.sync], xem thân hàm). ⚠ 2.93: camera THEO YÊU CẦU không có lượt
- *     mở kế theo nhịp xi-nhan (không hẹn giờ tắt) ⇒ khung đang hiện của nó cần gọi lại — bước `camera.demand` (D6).
- *     ⚠ V-CLUSTER (2026-09-30): `split_ratio_left_pct` + họ `config_*` (DPI/khung từng app) KHÔNG còn "tự áp giữa
- *     phiên" — phiên chiếu GHIM chúng lúc bắt đầu (`CastSessionPin.kt`), nên giá trị của hồ sơ mới có hiệu lực ở
- *     **lượt chiếu kế** (sửa refute C2/B6: trước đây repin + ô thứ hai đọc lại prefs ⇒ hình học của hồ sơ mới tự nổ
- *     lên cụm giữa chuyến).
+ *     phím vô-lăng). Chúng tự đúng ở nhịp kế tiếp, gọi thêm chỉ là nhiễu: `voicekey_enabled`/`voicekey_bindings`
+ *     (`modules/navaccess/NavAccessibilityService.kt`, mỗi phím). Android box B2 · W2c: khoá chiếu cụm (`cast_*`,
+ *     `config_*`, nút nổi) gỡ cùng mã — tệp `simple_cast_prefs` rời ảnh chụp hồ sơ.
  *  2. **Có applier sống** — phải GỌI LẠI, và đó là toàn bộ nội dung của [reapplyAll] dưới đây.
  *  3. **Chỉ đọc lúc khởi động / lúc dựng màn** — không có gì để gọi, và cố gọi là **đổi nghĩa của khoá**. Danh
  *     sách + lý do ở KDoc từng dòng bị bỏ qua, cuối hàm.
@@ -47,10 +38,8 @@ internal fun ClusterNavBridge.reapplyAll() {
     // (`SettingsCatalogRetired`), chỉ không còn gì đang chạy để áp — đổi hồ sơ không chạm HAL / cụm / app khác nữa.
 
     // ── Tự động hoá (luật dẫn đường theo lịch) ──────────────────────────────────────────────────
-    // V-CLUSTER A3: `camera_signal_enabled` (theo hồ sơ từ 2026-09-30) và `nav_automation_rules` (theo hồ sơ từ
-    // 2026-09-28) quyết việc FGS tự động hoá có sống không. Đổi hồ sơ mà không đồng bộ thì hồ sơ B tắt camera vẫn để
-    // engine của A chạy (và ngược lại: B bật mà FGS đang dừng thì camera câm tới lần khởi động kế). Đúng hàm mà
-    // `setCameraSignal`/`setRainDefrost*` gọi sau khi ghi — idempotent, tự gác theo `anyEnabled`, không ném.
+    // `nav_automation_rules` (theo hồ sơ từ 2026-09-28) quyết việc FGS tự động hoá có sống không. Đổi hồ sơ mà không đồng
+    // bộ thì hồ sơ B không lịch vẫn để engine của A chạy (và ngược lại). Idempotent, tự gác theo `anyEnabled`, không ném.
     step("automation.sync") { AutomationService.sync(app) }
 
     // ── Giọng nói: chế độ `:wake` (FIX286 · VK2/VK4) ─────────────────────────────────────────────────
@@ -66,20 +55,6 @@ internal fun ClusterNavBridge.reapplyAll() {
     //    (`RecircApplier.kt:56-58`) nên gọi nó ở đây là bật quạt lấy gió trong mỗi lần đổi hồ sơ.
     //  • `headless_autostart` — chỉ rẽ nhánh một quyết định của `RebindReceiver` lúc nhận BOOT_COMPLETED
     //    (`RebindReceiver.kt:42,64`). Không có dịch vụ nào đang chạy để báo.
-    //  • `autostart_enabled` · `autostart_package` · `autostart_split_enabled` · `autostart_left_package` ·
-    //    `autostart_right_package` — hai cờ đọc ở `FloatingBubbleService.onCreate`, tên gói đọc khi phiên tới Idle
-    //    (`modules/clustercast/BubbleAutostart.kt:76-117`). "Tự chiếu **khi nổ máy**" mà áp ngay lúc đổi hồ sơ là
-    //    bung một app lên cụm của xe đang chạy.
-    //  • `cast_enabled` — theo HỒ SƠ từ V-CLUSTER (owner 2026-09-30) nhưng lượt áp ảnh chụp KHÔNG BAO GIỜ ghi khoá sống:
-    //    giá trị của hồ sơ đợi ở `cast_enabled_pending` (`ClusterSnapshotPlan` + `CastEnableDeferral`) và được chốt ở
-    //    `SimpleCastRuntime.create` của tiến trình kế (≈ lần nổ máy kế). Lý do của chốt S4-OQ2 cũ vẫn đúng: mọi cổng
-    //    đọc đều live (`ClusterNavLaneWidget.kt:110` · `NavRepository.kt:215` · `FloatingBubbleService.kt:152,313`)
-    //    nên đổi giá trị giữa phiên là cụm hai chủ; còn gọi `setCastEnabled` ở đây thì làm cụm trước mặt người lái tối
-    //    đi/sáng lên vì một cú chạm chip. Người lái muốn áp ngay ⇒ nút *Áp ngay* ở Cài đặt › Chiếu cụm (đường thật).
-    //  • `split_ratio_left_pct` · họ `config_*` — lượt chiếu kế (bản GHIM của phiên, xem đầu tệp). CẤM gọi
-    //    `applySplitRatioLive`/`applyPinned`/`resize*`/`setDensity*` ở đây: đó là lệnh `am`/`wm` lên cụm (VC-R5).
-    //  • `bubbleX`/`bubbleY` (tệp `cast-v2-app-catalog`) — lần dựng cửa sổ nút nổi kế (`FloatingBubbleService.showBubble`,
-    //    kẹp theo màn). Dời cửa sổ đang hiện có thể đánh nhau với một lượt kéo đang dở (spec OQ-VC1).
     //  • `theme_choice` — `ThemeMode.setChoice` đọc ở `attachBaseContext`, và KDoc của nó
     //    (`ThemeMode.kt:47`) nói rõ *"caller chịu trách nhiệm recreate Activity đang hiện"*. Màn ClusterNav đang
     //    mở là ca hiếm (người dùng đang ở màn chính để chạm chip hồ sơ); lần mở sau đã đúng.
@@ -94,9 +69,8 @@ internal fun ClusterNavBridge.reapplyAll() {
  * Chạy một applier, **ghi log khi nó ném**, và đi tiếp.
  *
  * ## Vì sao bắt ở đây chứ không để nó nổ lên
- * Mọi applier trong [reapplyAll] đều chạm lớp ngoài app: HAL xe (ghế · lọc bụi), cửa sổ overlay (biển báo),
- * broadcast sang gói khác (bong bóng VietMap). Trên một chiếc xe thật chúng **được phép hỏng** — off-car, chưa
- * provision, quyền overlay vừa bị thu hồi. Để một cái ném ra ngoài thì `switchProfile` chết giữa chừng: hồ sơ đã
+ * Mọi applier trong [reapplyAll] đều chạm lớp ngoài app (dịch vụ nền, tiến trình `:wake`). Chúng **được phép hỏng**
+ * (quyền vừa bị thu hồi, dịch vụ không bật được từ nền). Để một cái ném ra ngoài thì `switchProfile` chết giữa chừng: hồ sơ đã
  * đổi trên đĩa, ảnh chụp đã áp, nhưng những applier **sau nó** không bao giờ chạy — tức người dùng nhận một nửa
  * cấu hình mà không ai nói gì.
  *

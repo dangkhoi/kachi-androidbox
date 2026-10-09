@@ -68,15 +68,6 @@ internal fun Activity.clusterNavBridge(): ClusterNavBridge = ClusterNavBridge(
  * phải nói cùng một lời — lệch một câu là người dùng tưởng hai tính năng khác nhau.
  */
 internal fun bridgeMsgRes(msg: BridgeMsg): Int = when (msg) {
-    BridgeMsg.GRANTING_NOTIFICATION -> R.string.kachi_bridge_granting_notification
-    BridgeMsg.NOTIFICATION_GRANTED -> R.string.kachi_bridge_notification_granted
-    BridgeMsg.NOTIFICATION_FALLBACK -> R.string.kachi_bridge_notification_fallback
-    BridgeMsg.RECONNECTING -> R.string.kachi_bridge_reconnecting
-    BridgeMsg.CAST_ON -> R.string.kachi_bridge_cast_on
-    BridgeMsg.CAST_OFF -> R.string.kachi_bridge_cast_off
-    BridgeMsg.CAST_RETURNING -> R.string.kachi_bridge_cast_returning
-    BridgeMsg.CLUSTER_RESET_REOPENING -> R.string.kachi_bridge_cluster_reset
-    BridgeMsg.DEEP_RESCUE_RUNNING -> R.string.kachi_bridge_deep_rescue_running
     BridgeMsg.ENABLING_ACCESSIBILITY -> R.string.kachi_bridge_enabling_accessibility
     BridgeMsg.ACCESSIBILITY_ENABLED -> R.string.kachi_bridge_accessibility_enabled
     BridgeMsg.ACCESSIBILITY_FAILED -> R.string.kachi_bridge_accessibility_failed

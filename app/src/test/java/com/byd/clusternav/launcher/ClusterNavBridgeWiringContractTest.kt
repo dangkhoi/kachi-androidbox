@@ -31,13 +31,11 @@ import org.junit.jupiter.api.Test
 class ClusterNavBridgeWiringContractTest {
 
     private val BRIDGE = "src/main/java/com/byd/clusternav/launcher/ClusterNavBridge.kt"
-    private val CAST = "src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeCast.kt"
     private val KEYS = "src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeKeys.kt"
     private val MSG = "src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeMsg.kt"
 
     /** MÃ đã bỏ chú thích — mọi phép "phải/không được chứa chuỗi X" đều chạy trên bản này. */
     private fun bridge() = SourceRoots.codeOf(BRIDGE)
-    private fun cast() = SourceRoots.codeOf(CAST)
     private fun keys() = SourceRoots.codeOf(KEYS)
 
     private fun body(src: String, signature: String) = SourceRoots.body(src, signature)
@@ -45,58 +43,6 @@ class ClusterNavBridgeWiringContractTest {
     // ─────────────────────────────────────────────────────────────────────────────────────────────
     // 1. Công tắc Dẫn đường — mắt xích dài nhất, và là nơi "quên một dòng" tốn cả chuyến đi
     // ─────────────────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * `setNavEnabled` phải lặp ĐỦ chuỗi của `MainActivity.kt:97–128`. Thiếu từng mảnh thì:
-     *  - `Prefs.setLane(app, true)` — làn cụm ở `false` với bản cài cũ ⇒ nav không bao giờ lên cụm;
-     *  - `setOutputEnabled(CLUSTER_LANE, true)` — coordinator dựng trước màn hình giữ làn TẮT;
-     *  - `selfGrant(` — chưa có quyền đọc thông báo thì bật xong vẫn câm (IVI khoá màn Settings, dadb
-     *    là đường DUY NHẤT);
-     *  - `grantAccessibility(` — bộ đọc màn GMaps mồ côi ⇒ đã [ĐO] hai chuyến screenRead RỖNG;
-     *  - `NavRepository.stop(` — tắt công tắc mà luồng gửi vẫn chạy.
-     */
-    @Test
-    fun `setNavEnabled lap du chuoi bat va tat cua man cu`() {
-        val b = body(bridge(), "fun setNavEnabled(on: Boolean, onDone: (Boolean) -> Unit = {})")
-        listOf(
-            "Prefs.setEnabled(app, on)",
-            "speedSign.onMasterEnabled(on)",
-            "Prefs.setLane(app, true)",
-            "setLane(",
-            "NavRepository.setOutputEnabled(app, NavigationOutputTarget.CLUSTER_LANE, true)",
-            "speedSign.onOutputEnabled(SpeedSignOutput.CLUSTER, true)",
-            "NavConnect.ensureConnected(app)",
-            "selfGrant(",
-            "grantAccessibility(",
-            "NavRepository.stop(",
-        ).forEach { token ->
-            assertTrue(token in b, "setNavEnabled thiếu `$token` — mất một mắt xích của MainActivity.kt:97–128")
-        }
-    }
-
-    /**
-     * Đường cấp quyền Hỗ trợ phải escalate khi **thiếu setting HOẶC service chưa bound**.
-     *
-     * [ĐO 2026-09-01] Sau reboot, `enabled_accessibility_services` còn nguyên nhưng service KHÔNG
-     * bound ⇒ `onKeyEvent` chết. Gate chỉ-kiểm-setting sẽ bỏ qua đúng ca cần chữa (CLAUDE.md §3:
-     * "không gate đường phục hồi bằng dữ liệu mà chỉ chính đường đó làm mới được").
-     */
-    @Test
-    fun `cap quyen Ho tro escalate ca khi enabled nhung chua bound`() {
-        val b = body(bridge(), "fun setNavEnabled(on: Boolean, onDone: (Boolean) -> Unit = {})")
-        assertTrue(
-            Regex("""!accessibilityBoosterGranted\(\)\s*\|\|\s*!accessibilityBound\(\)""").containsMatchIn(b),
-            "phải là `!granted || !bound` — chỉ kiểm setting thì sau reboot phím/booster không bao giờ tự lành",
-        )
-    }
-
-    /** `setClusterMode` phải áp NGAY, không chờ frame kế bị dedup nuốt (`MainActivity.kt:190–194`). */
-    @Test
-    fun `setClusterMode persist roi reapply ngay`() {
-        val b = body(bridge(), "fun setClusterMode(mode: Int)")
-        assertTrue("Prefs.setNavClusterScreenMode(app, mode)" in b, "phải ghi đúng khoá nav_cluster_screen_mode")
-        assertTrue("NavRepository.reapplyClusterMode(app)" in b, "thiếu re-assert ⇒ đổi chế độ chỉ có tác dụng sau reboot")
-    }
 
     // ─────────────────────────────────────────────────────────────────────────────────────────────
     // 2. Mỗi setter ghi ĐÚNG khoá thật (bản đồ khoá spec §4.3) — không tạo khoá song song
@@ -111,14 +57,8 @@ class ClusterNavBridgeWiringContractTest {
     fun `moi setter goi dung Prefs set cua khoa that`() {
         val b = bridge()
         val expected = listOf(
-            "fun setMarquee(on: Boolean)" to "Prefs.setMarquee(app, on)",
-            "fun setBadgeEnabled(on: Boolean)" to "Prefs.setBadgeEnabled(app, on)",
-            "fun setUpcomingBadge(on: Boolean)" to "Prefs.setShowUpcomingBadge(app, on)",
-            "fun setAlertChip(on: Boolean)" to "Prefs.setShowAlertChip(app, on)",
-            "fun setBadgeSizeDp(sizeDp: Int)" to "Prefs.setBadgeSizeDp(app,",
-            // 2.91 · F1 — hai hàng, hai khoá: tự mở VietMap (`vm_bubble_enabled`) · hiện bóng (`vm_bubble_hidden`, nghịch).
-            "fun setVmBubbleAutostart(on: Boolean)" to "Prefs.setVmBubbleEnabled(app, on)",
-            "fun setVmBubbleShown(on: Boolean)" to "Prefs.setVmBubbleHidden(app, !on)",
+            // Android box B2 · W2d — `setMarquee` (chạy chữ tên đường trên cụm) gỡ cùng dẫn đường cụm.
+            // Android box B2 · W2c — setter biển báo tốc độ + bong bóng VietMap gỡ cùng mã của chúng.
             "fun setSeatEnabled(on: Boolean)" to "Prefs.setSeatComfortEnabled(app, on)",
             "fun setSeatMode(mode: Int)" to "Prefs.setSeatComfortMode(app, mode)",
             "fun setSeatLevel(seatIndex: Int, level: Int)" to "Prefs.setSeatComfortLevel(app, seatIndex, level)",
@@ -139,57 +79,12 @@ class ClusterNavBridgeWiringContractTest {
         )
     }
 
-    /** Toạ độ/cỡ badge phải đi qua bộ kẹp THUẦN ở `:core` — không tự viết lại phép kẹp trong UI. */
+    /** Android box B2 · W2c — biển báo tốc độ + bong bóng VietMap gỡ khỏi cầu (không mọc lại). */
     @Test
-    fun `badge dung BadgeLayout clamp cua core`() {
-        assertTrue(
-            "BadgeLayout.clampSizeDp(" in body(bridge(), "fun setBadgeSizeDp(sizeDp: Int)"),
-            "cỡ badge phải kẹp bằng BadgeLayout.clampSizeDp (dải 60..240)",
-        )
-        val center = body(bridge(), "fun setBadgeCenter(cx: Int, cy: Int)")
-        assertTrue("BadgeLayout.clampCenter(" in center, "tâm badge phải kẹp bằng BadgeLayout.clampCenter")
-        assertTrue("clusterSize()" in center, "phải kẹp trên kích cụm THẬT đang chiếu, không hằng 1920×720 viết cứng")
-        assertTrue("badgeSizePx()" in center, "kẹp phải tính theo cỡ badge hiện tại, nếu không badge lọt ra ngoài cụm")
-    }
-
-    /** Badge/bong bóng bật ⇒ auto-start VietMap một lần (`BadgePlacementController.kt:52`, `MainActivity.kt:1094`). */
-    @Test
-    fun `bat badge va bong bong keo theo autostart VietMap`() {
-        listOf("fun setBadgeEnabled(on: Boolean)", "fun setVmBubbleAutostart(on: Boolean)").forEach { sig ->
-            val b = body(bridge(), sig)
-            assertTrue(
-                "if (on) VietMapAutostartService.startForAppOpen(app)" in b,
-                "`$sig` phải auto-start VietMap khi BẬT (widget mới có nguồn tốc độ) — và CHỈ khi bật",
-            )
-        }
-    }
-
-    /** Mỗi công tắc badge phải đánh thức lớp phủ DÙNG CHUNG, nếu không phải mở lại app mới thấy đổi. */
-    @Test
-    fun `cac cong tac badge danh thuc lop phu dung chung`() {
-        val pairs = listOf(
-            "fun setBadgeEnabled(on: Boolean)" to "speedSign.onBadgeEnabledChanged()",
-            "fun setUpcomingBadge(on: Boolean)" to "speedSign.onUpcomingBadgeEnabledChanged()",
-            "fun setAlertChip(on: Boolean)" to "speedSign.onAlertChipEnabledChanged()",
-            "fun setBadgeSizeDp(sizeDp: Int)" to "speedSign.debugRefreshBadgeLayout()",
-            "fun setBadgeCenter(cx: Int, cy: Int)" to "speedSign.debugRefreshBadgeLayout()",
-        )
-        pairs.forEach { (sig, call) ->
-            assertTrue(call in body(bridge(), sig), "`$sig` thiếu `$call` ⇒ đổi xong cụm không đổi gì")
-        }
-    }
-
-    /**
-     * Vị trí bong bóng phải đi qua [com.byd.clusternav.VmOverlayPosition] — nơi vừa kẹp, vừa ghi prefs,
-     * vừa **bắn broadcast** `VM_BUBBLE_POS`. Ghi thẳng prefs thì mod VietMap không bao giờ nhận được.
-     */
-    @Test
-    fun `vi tri bong bong di qua VmOverlayPosition`() {
-        assertTrue(
-            "VmOverlayPosition.setAbsoluteTopLeft(app, absX, absY)" in
-                body(bridge(), "fun setVmBubblePos(absX: Int, absY: Int)"),
-            "phải gọi VmOverlayPosition (ghi + broadcast), không ghi thẳng vm_bubble_x/y",
-        )
+    fun `cau khong con badge va bong bong VietMap`() {
+        val b = bridge()
+        listOf("BadgeLayout", "VmOverlayPosition", "VietMapAutostartService", "speedSign", "setBadge", "setVmBubble", "SimpleCastRuntime")
+            .forEach { assertTrue(it !in b, "cầu còn `$it`") }
     }
 
     /**
@@ -247,7 +142,7 @@ class ClusterNavBridgeWiringContractTest {
      */
     @Test
     fun `cau khong giu View`() {
-        listOf(BRIDGE to bridge(), CAST to cast(), KEYS to keys(), MSG to SourceRoots.codeOf(MSG))
+        listOf(BRIDGE to bridge(), KEYS to keys(), MSG to SourceRoots.codeOf(MSG))
             .forEach { (name, src) ->
             listOf("import android.view.", "import android.widget.").forEach { bad ->
                 assertTrue(
@@ -269,7 +164,7 @@ class ClusterNavBridgeWiringContractTest {
      */
     @Test
     fun `cau khong mang chu`() {
-        listOf(BRIDGE to bridge(), CAST to cast(), KEYS to keys()).forEach { (name, src) ->
+        listOf(BRIDGE to bridge(), KEYS to keys()).forEach { (name, src) ->
             assertTrue(
                 "com.byd.clusternav.Lang" !in src,
                 "$name dùng `Lang` — cầu phải trả MÃ (BridgeMsg/VoiceKeyStatus), để tầng Settings dịch bằng tài nguyên",

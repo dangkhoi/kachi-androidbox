@@ -377,27 +377,20 @@ class AppWidgetWiringContractTest {
         assertTrue("toldW = wDp" in body && "toldH = hDp" in body, "phải NHỚ lại cỡ vừa khai, không thì chốt vô nghĩa")
     }
 
-    // ── Không lấn sang cầu VietMap ────────────────────────────────────────────────
+    // ── Android box B2 · W2c: cầu VietMap (host `0x564D`) gỡ — MỘT host duy nhất trong app ─────────────────
 
     /**
-     * ⚠ HostId phải KHÁC cầu badge tốc-độ VietMap.
-     *
-     * [ĐO] `dumpsys appwidget` cho thấy `com.byd.launcher` đã có host `hostId:22093` (`0x564D`, cầu VietMap kế thừa từ
-     * ClusterNav). Dùng lại số đó thì hai bộ **chia nhau một tập id** ⇒ lượt dọn rác của launcher sẽ xoá id của badge
-     * tốc-độ (bố cục launcher không dùng nó) ⇒ badge chết không ai hiểu vì sao.
+     * Kachi BYD có host thứ hai (`0x564D`, cầu badge tốc-độ VietMap) nên hai host phải khác số. Cầu đó đã gỡ ⇒ bài đổi thành
+     * "chỉ một tệp khai `HOST_ID`": mọc lại host thứ hai là phải quay lại câu hỏi trùng số (dọn rác xoá oan id của nhau).
      */
     @Test
-    fun `hostId khac hostId cua cau VietMap`() {
+    fun `chi mot AppWidgetHost trong app`() {
         val re = Regex("""HOST_ID\s*=\s*(0x[0-9A-Fa-f]+|\d+)""")
-        val launcherId = re.find(code(host()))?.groupValues?.get(1)
-        val vietmapId = re
-            .find(code(SourceRoots.text("src/main/java/com/byd/clusternav/vietmapwidget/VietMapWidgetBridge.kt")))
-            ?.groupValues?.get(1)
-        assertTrue(launcherId != null && vietmapId != null, "cả hai bộ phải khai HOST_ID tường minh")
-        assertTrue(
-            launcherId != vietmapId,
-            "hostId trùng cầu VietMap ($vietmapId) ⇒ dọn rác của launcher sẽ xoá id badge tốc-độ",
-        )
+        assertTrue(re.containsMatchIn(code(host())), "host của launcher phải khai HOST_ID tường minh")
+        val root = SourceRoots.moduleSourceRoots().first { it.endsWith(java.nio.file.Paths.get("app", "src", "main", "java")) }
+        val owners = java.nio.file.Files.walk(root).use { st -> st.filter { it.toString().endsWith(".kt") }.toList() }
+            .filter { re.containsMatchIn(code(it.toFile().readText())) }.map { it.fileName.toString() }
+        assertEquals(listOf("AppWidgetSlotHost.kt"), owners, "host thứ hai mọc lại")
     }
 
     /** Tầng vẽ chỉ **là bề mặt**: không được tự dựng `AppWidgetHost` (một host cho mỗi lượt dựng view = rò id). */
@@ -425,7 +418,6 @@ class AppWidgetWiringContractTest {
             "src/main/java/com/byd/clusternav/launcher/AppWidgetSlotHost.kt",
             "src/main/java/com/byd/clusternav/launcher/WorkspaceView.kt",
             "src/main/java/com/byd/clusternav/launcher/AppDrawer.kt",
-            "src/main/java/com/byd/clusternav/vietmapwidget/VietMapWidgetBridge.kt",
         ).forEach {
             assertTrue(SourceRoots.exists(it), "tệp bài này quét không tồn tại: $it (bài đã thành no-op)")
             assertTrue(SourceRoots.text(it).isNotBlank(), "đọc ra rỗng: $it")

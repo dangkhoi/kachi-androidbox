@@ -15,7 +15,8 @@ import org.junit.jupiter.api.Test
  */
 class TestBridgeCommandTest {
 
-    private val files = setOf("kachi_workspace", "clusternav_prefs", "simple_cast_prefs")
+    // Android box B2 · W2c: `simple_cast_prefs` (chiếu cụm) rời danh mục ⇒ mẫu thứ ba là `clusternav_theme`.
+    private val files = setOf("kachi_workspace", "clusternav_prefs", "clusternav_theme")
 
     private fun parse(vararg extras: Pair<String, Any?>) = TestBridgeCommands.parse(mapOf(*extras), files)
 
@@ -50,9 +51,8 @@ class TestBridgeCommandTest {
                 extras[key] = when (key) {
                     TestBridgeCommands.EXTRA_SLOT -> 2
                     TestBridgeCommands.EXTRA_FILE -> files.first()
-                    // `prefs_set` · `diag_screen` (2.93 wave 2B) kiểm khoá / tên màn ngay ở tầng phân tích (danh sách trắng) ⇒ chuỗi bừa là lỗi.
+                    // `prefs_set` kiểm khoá ngay ở tầng phân tích (danh sách trắng) ⇒ chuỗi bừa là lỗi.
                     TestBridgeCommands.EXTRA_KEY -> TestBridgeCommands.WRITABLE_PREFS_KEYS.first()
-                    TestBridgeCommands.EXTRA_ARG -> if (spec.name in TestBridgeScreenCommands.NAMES) TestBridgeScreenCommands.TARGETS.first() else "x"
                     else -> "x"
                 }
             }

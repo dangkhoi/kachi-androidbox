@@ -84,7 +84,8 @@ class LauncherLocaleContractTest {
     fun `moi Activity ap ngon ngu nguoi dung o attachBaseContext`() {
         val sites = allAppSources().filter { "override fun attachBaseContext(" in code(it) }
         // Android box B2 · W1: 5 → 4 — `ClusterNavActivity` (thẻ dẫn đường dự phòng trên cụm) đã xoá cùng manifest.
-        assertTrue(sites.size >= 4, "chỉ thấy ${sites.size} chỗ attachBaseContext — bộ quét hỏng?")
+        // W2c: 4 → 1 — `DiagActivity` · `VietMapWidgetDiagActivity` · `ClusterBlackActivity` xoá; còn `KachiHomeActivity`.
+        assertEquals(listOf("KachiHomeActivity.kt"), sites.map { it.fileName.toString() }, "bộ quét hỏng hoặc Activity mới?")
         val bad = sites.filterNot { f ->
             Regex("""LangHost\.(wrap|localized)\(""").containsMatchIn(SourceRoots.body(code(f), "override fun attachBaseContext("))
         }.map { it.fileName.toString() }

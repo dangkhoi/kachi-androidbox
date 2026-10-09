@@ -70,6 +70,12 @@ object SettingsCatalog {
      */
     val RETIRED_UI_KEYS: Map<String, String> = SettingsCatalogRetired.KEYS
 
+    /**
+     * Android box B2 · W2c — tập con của [RETIRED_UI_KEYS] mà MÃ đọc/ghi cũng đã gỡ (biển báo tốc độ · bong bóng VietMap):
+     * tên còn trong [CLUSTERNAV_KEYS] (đi theo hồ sơ tới W4) nhưng KHÔNG còn nguyên văn trong tệp nguồn nào.
+     */
+    val RETIRED_CODE_REMOVED_KEYS: Set<String> = SettingsCatalogRetired.CODE_REMOVED
+
     /** Tiền tố khoá dựng động phía ClusterNav → lý do (nay chỉ có `seat_level_`). */
     val CLUSTERNAV_DYNAMIC_KEY_PREFIXES: Map<String, String> = SettingsCatalogClusterNav.DYNAMIC_KEY_PREFIXES
 

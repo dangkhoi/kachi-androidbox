@@ -1,6 +1,7 @@
 package com.byd.clusternav.launcher
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -30,7 +31,9 @@ class SettingsCatalogRetiredTest {
         // (`DEVICE_KEYS`) — không khoá nào rơi về UNKNOWN (= lượt chụp/áp/xuất hồ sơ bỏ sót, tức mất dữ liệu).
         val unknown = SettingsCatalog.RETIRED_UI_KEYS.keys.filter { ProfileScope.scopeOf(it) == ProfileScope.Scope.UNKNOWN }
         assertEquals(emptyList<String>(), unknown, "khoá rời UI phải còn được xếp phạm vi (W4 mới dọn)")
-        assertEquals(ProfileScope.Scope.PROFILE, ProfileScope.scopeOf("cast_enabled"))
+        // Android box B2 · W2c — khoá `simple_cast_prefs` rời bảng này cùng mã chiếu cụm: theo XE ([RetiredClusterKeys]).
+        assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf("cast_enabled"))
+        assertFalse("cast_enabled" in SettingsCatalog.RETIRED_UI_KEYS)
         assertEquals(ProfileScope.Scope.PROFILE, ProfileScope.scopeOf("badge_size_dp"))
         val clusterNav = SettingsCatalog.RETIRED_UI_KEYS.keys - SettingsCatalogRetired.LAUNCHER_KEYS
         assertTrue(SettingsCatalog.CLUSTERNAV_KEYS.keys.containsAll(clusterNav), "khoá ClusterNav rời UI rơi khỏi CLUSTERNAV_KEYS")

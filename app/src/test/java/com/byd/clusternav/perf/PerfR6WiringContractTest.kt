@@ -26,11 +26,4 @@ class PerfR6WiringContractTest {
         assertTrue(code("launcher/SlotVdOwner.kt").contains("fun liveNames(): Set<String>"))
     }
 
-    /** R6 [ĐO log xe SL6 08/10]: 2 797 dòng `emit lane` / ~37 phút vì khoá log theo cửa sổ chạy chữ (đổi mỗi 700 ms). */
-    @Test
-    fun `emit lane log theo ten duong day du, khong theo cua so chay chu`() {
-        val cb = code("ClusterBroadcaster.kt")
-        assertTrue(cb.contains("val emitKey = \"\$emitIcon|\$emitSeg|\$lastCleanRoad\""))
-        assertFalse(cb.contains("val emitKey = \"\$emitIcon|\$emitSeg|\$emitRoad\""))
-    }
 }

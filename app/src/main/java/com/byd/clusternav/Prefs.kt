@@ -2,7 +2,6 @@ package com.byd.clusternav
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.byd.clusternav.contracts.SpeedLimitSource
 import com.byd.clusternav.launcher.voice.VoiceWakePrefsMain
 import com.byd.clusternav.modules.voicekey.VoiceKeyBindingStore
 import com.byd.clusternav.modules.voicekey.VoiceKeyCustomButtonStore
@@ -14,12 +13,8 @@ import com.byd.clusternav.voicekey.VoiceKeyCustomButtons
 
 /** Lưu lựa chọn người dùng (bật/tắt đẩy cụm + chế độ chọn nguồn). Đọc trực tiếp trong listener. */
 object Prefs {
-    // Giá trị thật nằm ở :core (NavSourceMode) để bộ quyết định không phải phụ thuộc Android chỉ vì hai
-    // con số. Giữ alias ở đây nên caller cũ không đổi và dữ liệu đã lưu vẫn đọc đúng.
-    const val AUTO = com.byd.clusternav.navigation.NavSourceMode.AUTO
-    const val PREFER_GMAPS = com.byd.clusternav.navigation.NavSourceMode.PREFER_GMAPS
-    const val PREFER_WAZE = com.byd.clusternav.navigation.NavSourceMode.PREFER_WAZE
-    const val PREFER_VIETMAP = com.byd.clusternav.navigation.NavSourceMode.PREFER_VIETMAP
+    // Android box B2 · W2d — bốn hằng chế độ nguồn dẫn đường (`NavSourceMode` ở `:core`) gỡ cùng dẫn đường cụm; khoá
+    // `source_mode` + mọi khoá dẫn đường cụm/HUD còn ở đây tới đợt dọn prefs W4 (danh mục ClusterNav còn khai chúng).
 
     private const val FILE = "clusternav_prefs"
     private const val K_ENABLED = "enabled"
@@ -37,20 +32,10 @@ object Prefs {
     fun enabled(ctx: Context): Boolean = sp(ctx).getBoolean(K_ENABLED, false)
     fun setEnabled(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean(K_ENABLED, v).apply()
 
-    fun sourceMode(ctx: Context): Int = sp(ctx).getInt(K_SOURCE, AUTO)
+    fun sourceMode(ctx: Context): Int = sp(ctx).getInt(K_SOURCE, 0)
     fun setSourceMode(ctx: Context, v: Int) = sp(ctx).edit().putInt(K_SOURCE, v).apply()
 
-    /**
-     * Nguồn biển báo tốc độ. **Chỉ còn MỘT nguồn có thật** nên đây là hằng, không phải lựa chọn.
-     *
-     * 2026-08-22: gỡ hẳn lựa chọn "Waze Mod (HLP)" khỏi code + UI. Đường đó đọc tag logcat `WazeHudLink`
-     * của WazeMod, mà WazeMod chỉ phát tag này khi có **peer HUD BT/BLE** kết nối. Đo trên máy không có
-     * HUD BLE, Waze ĐANG dẫn: **0 dòng**. Chọn nó = badge trắng im lặng, người dùng không hiểu vì sao.
-     * Nguồn còn lại (widget VietMap) đã proven bằng data thật (50/60/70/80 + đếm lùi cự ly).
-     *
-     * Khoá prefs cũ (chuỗi "speed_source") KHÔNG còn được đọc; máy đã lưu giá trị Waze cũng tự về VietMap.
-     */
-    fun speedLimitSource(ctx: Context): SpeedLimitSource = SpeedLimitSource.VIETMAP
+    // Android box B2 · W2d — `speedLimitSource` (nguồn biển tốc độ, luôn VietMap) gỡ cùng biển tốc độ + `contracts.SpeedLimit*`.
 
     // Nav-on-cluster: op 39 "simple navigation" (Giữa + ETA) là chế độ DUY NHẤT (owner chốt 2026-08-12).
     // Bỏ hẳn biến thể "nhỏ/ở trên" (không dò được opcode trên xe) + nút chọn mode + nút test trên UI.

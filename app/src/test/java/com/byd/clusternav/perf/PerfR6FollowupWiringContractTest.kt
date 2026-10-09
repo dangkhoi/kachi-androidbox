@@ -14,33 +14,6 @@ class PerfR6FollowupWiringContractTest {
 
     private fun code(p: String) = SourceRoots.codeOf("src/main/java/com/byd/clusternav/$p")
 
-    /** D — lệnh chỉ-đọc qua cổng; lệnh đổi trạng thái vẫn log `shell:` TRƯỚC khi chạy (pháp y), lỗi vẫn log. */
-    @Test
-    fun `D lenh chi-doc qua ShellLogGate, lenh doi trang thai log du`() {
-        val shell = SourceRoots.body(code("modules/clustercast/simplified/SimpleCastRuntime.kt"), "private class DadbSimpleCastShell")
-        assertTrue(shell.contains("val readOnly = ShellLogGate.isReadOnly(command)"))
-        assertTrue(shell.contains("if (!readOnly) android.util.Log.i(\"SimpleCast\", \"shell: \$command\")"))
-        assertTrue(shell.contains("READ_LOG_GATE.decide(command, result.exitCode, result.stdout, result.stderr"))
-        assertTrue(shell.contains("\"shell FAIL: command=\$command"), "ngoại lệ vẫn log kèm lệnh")
-        assertTrue(shell.contains("logPlacementEvidence(command, shellResult)"), "bằng chứng đặt app giữ nguyên")
-        // Lỗi (exit ≠ 0) của lệnh chỉ-đọc lên mức W ⇒ KachiLog không tiết chế, xả ngay.
-        assertTrue(shell.contains("android.util.Log.w(\"SimpleCast\", line)"))
-    }
-
-    /** F — hai writer CSV chẩn đoán có trần từng tệp, ghi nhận byte sau mỗi dòng. */
-    @Test
-    fun `F nav notif csv xoay theo FileByteBudget`() {
-        listOf("NavNotifLog.kt", "NavNotifRawLog.kt").forEach { f ->
-            val src = code(f)
-            assertTrue(src.contains("private val budget = FileByteBudget()"), f)
-            assertTrue(src.contains("budget.mustRotateBefore(rowBytes)"), f)
-            assertTrue(src.contains("budget.startFile("), f)
-            assertTrue(src.contains("budget.record(n)"), f)
-            assertTrue(src.contains("ensureLocked(ctx, n)"), f)
-            assertTrue(src.contains("old.close()"), "$f: tệp cũ phải được đóng khi xoay")
-        }
-    }
-
     /** E/G/H — một lượt dọn mỗi tiến trình, cài ở Application TRƯỚC dòng chốt cuối `EarlyShellChannel.start`. */
     @Test
     fun `EGH don mot lan moi tien trinh tu KachiApplication`() {
@@ -72,13 +45,4 @@ class PerfR6FollowupWiringContractTest {
         assertTrue(code("UpdateChecker.kt").contains("File(ctx.applicationContext.filesDir, UPDATE_DIR)"), "một nguồn tên thư mục")
     }
 
-    /** E — fail-safe: chỉ NameNotFound là "không cài"; lỗi khác ⇒ null ⇒ không gỡ gì; tính cả gói gỡ-giữ-dữ-liệu. */
-    @Test
-    fun `E go khoa chieu qua CastPrefsPrune, fail-safe`() {
-        val e = code("housekeeping/CastPrefsHousekeeping.kt")
-        assertTrue(e.contains("PackageQueries.packageInfo(pm, p, PackageManager.MATCH_UNINSTALLED_PACKAGES) != null"))
-        assertTrue(e.contains("catch (e: RuntimeException)"))
-        assertTrue(e.contains("if (plan.aborted) return"))
-        assertTrue(e.contains("listOf(ProfileScopeCluster.SIMPLE_CAST_FILE, ProfileScopeCluster.CAST_CATALOG_FILE)"))
-    }
 }

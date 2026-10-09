@@ -167,15 +167,14 @@ class VoiceKeyKeepAliveService : Service() {
          *
          * | ID   | Service                                   |
          * |------|-------------------------------------------|
-         * | 1042 | `clustercast.BubbleForegroundNotice.ID` (FloatingBubbleService) |
          * | 1043 | `BootSetupService`                        |
          * | 1044 | `automation.AutomationService`            |
          * | 1045 | `VoiceKeyKeepAliveService` (file này)     |
-         * | 1046 | `VietMapAutostartService`                 |
          * | 1047 | `KachiAutostartService`                   |
          * | 4801 | `launcher.voice.VoiceWakeService`         |
          *
-         * Thêm FGS mới: lấy số kế tiếp, ghi vào bảng này; test sẽ đỏ nếu trùng.
+         * Android box B2 · W2c: 1042 (nút nổi chiếu cụm) + 1046 (tự mở VietMap) gỡ cùng dịch vụ của chúng — không tái dùng.
+         * Thêm FGS mới: lấy số kế tiếp (1048), ghi vào bảng này; test sẽ đỏ nếu trùng.
          */
         private const val NOTIFICATION_ID = 1045
 

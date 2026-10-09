@@ -142,10 +142,9 @@ class SettingsProfilesSection(
     }
 
     /**
-     * Nhập một tệp rồi **nói thật nội dung của nó** (FIX286 · PI3, báo cáo hiện trường 2.84 *"phải bật lại + chỉnh khung
-     * tay"*): tệp có/không phần chiếu cụm, chiếu cụm theo tệp hay giữ của xe này, khung của mấy app theo tệp / giữ của xe.
-     * Hai lựa chọn: *Dùng hồ sơ này ngay* (đổi hồ sơ + áp chiếu cụm ngay nếu cụm không đang chiếu app — [useImported]) và
-     * *Để sau* (hồ sơ đã nằm trong danh sách, không có gì để huỷ).
+     * Nhập một tệp rồi hỏi *Dùng hồ sơ này ngay* (đổi hồ sơ) / *Để sau* (hồ sơ đã nằm trong danh sách, không có gì để huỷ).
+     * Thân hộp thoại nói loại tệp (đầy đủ / để chia sẻ). Android box B2 · W2c: dòng báo phần chiếu cụm của tệp (FIX286
+     * PI3) gỡ cùng chiếu cụm — ảnh chiếu cụm trong tệp Kachi BYD bị bỏ im lặng.
      */
     private fun importFile(entry: ProfileFiles.Entry) {
         val created = deps.onImportProfileFile(entry.fileName) ?: run {
@@ -155,53 +154,21 @@ class SettingsProfilesSection(
         SettingsDialogs.offer(
             context,
             context.getString(R.string.kachi_profile_imported, ProfileNames.display(created.name)),
-            importMessage(created.cluster),
+            kindLabel(created.kind),
             context.getString(R.string.kachi_profile_import_use_now),
             context.getString(R.string.kachi_profile_import_later),
-        ) { useImported(created.name) }
+        ) { deps.onSwitchProfile(created.name) }
     }
 
-    /** Thân hộp thoại sau khi nhập — đếm theo DỮ LIỆU của tệp ([ClusterImportSummary]), không theo số phiên bản. */
-    private fun importMessage(c: ClusterImportSummary): String {
-        val lines = mutableListOf<String>()
-        if (!c.hasClusterPart) lines += context.getString(R.string.kachi_profile_import_no_cluster)
-        val cast = context.getString(if (c.castOn) R.string.kachi_cast_state_on_short else R.string.kachi_cast_state_off_short)
-        lines += context.getString(
-            if (c.castFromFile) R.string.kachi_profile_import_cast_file else R.string.kachi_profile_import_cast_kept, cast,
-        )
-        // Đếm theo KHUNG (một app × toàn cụm/nửa cụm), không theo app — xem KDoc [ClusterImportSummary.fileRecords].
-        // [Senior review FIX286 Pass 1 · P3] không thay khung nào ⇒ câu riêng (bản đầu in "thay 0 khung khác" — E2E F4).
-        if (c.fileRecords > 0) lines += if (c.replacingRecords > 0) {
-            context.getString(R.string.kachi_profile_import_geom_file, c.fileRecords, c.replacingRecords)
-        } else {
-            context.getString(R.string.kachi_profile_import_geom_file_new, c.fileRecords)
-        }
-        if (c.keptRecords > 0) lines += context.getString(R.string.kachi_profile_import_geom_kept, c.keptRecords)
-        if (c.fileRecords == 0 && c.keptRecords == 0) lines += context.getString(R.string.kachi_profile_import_geom_none)
-        if (c.castOn != deps.bridge.castEnabled()) lines += context.getString(R.string.kachi_profile_import_use_cast, cast)
-        return lines.joinToString("\n\n")
-    }
-
-    /**
-     * *Dùng hồ sơ này ngay* — người lái CHẠM (VC-R5: lượt đổi hồ sơ tự nó không bao giờ dựng/gỡ chiếu). Đổi hồ sơ (chỉ
-     * prefs), rồi áp bản chờ chiếu cụm bằng ĐÚNG đường của nút *Áp ngay* — chỉ khi cụm không đang chiếu app
-     * ([applyCastPendingIfIdle]). Còn bản chờ (đang chiếu) ⇒ nói ra: áp từ lần nổ máy sau hoặc Cài đặt › Chiếu cụm › Áp ngay.
-     * Khung chiếu: lượt đổi hồ sơ đã ghi vào prefs ⇒ áp từ lần chiếu kế (phiên đang chiếu giữ bản đã ghim — VC-R6).
-     */
-    private fun useImported(name: String) {
-        deps.onSwitchProfile(name)
-        if (!deps.bridge.applyCastPendingIfIdle() && deps.bridge.castEnabledPending() != null) {
-            toast(context.getString(R.string.kachi_profile_import_cast_deferred))
-        }
+    private fun kindLabel(kind: ProfileTransfer.Kind?): String = when (kind) {
+        ProfileTransfer.Kind.FULL -> context.getString(R.string.kachi_profile_kind_full)
+        ProfileTransfer.Kind.SHARE -> context.getString(R.string.kachi_profile_kind_share)
+        null -> context.getString(R.string.kachi_profile_kind_unknown)
     }
 
     /** Một dòng của hộp chọn: tên hồ sơ · kiểu · ngày giờ, dòng dưới là tên tệp (hai tệp cùng hồ sơ phân biệt được). */
     private fun fileLabel(e: ProfileFiles.Entry): String {
-        val kind = when (e.header?.kind) {
-            ProfileTransfer.Kind.FULL -> context.getString(R.string.kachi_profile_kind_full)
-            ProfileTransfer.Kind.SHARE -> context.getString(R.string.kachi_profile_kind_share)
-            null -> context.getString(R.string.kachi_profile_kind_unknown)
-        }
+        val kind = kindLabel(e.header?.kind)
         val time = SimpleDateFormat(LIST_TIME, Locale.US).format(Date(e.modifiedMs))
         val name = e.header?.name?.let(ProfileNames::display) ?: e.fileName
         return "$name · $kind · $time\n${e.fileName}"

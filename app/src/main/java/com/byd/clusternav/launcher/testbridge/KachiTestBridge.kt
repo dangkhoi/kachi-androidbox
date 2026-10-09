@@ -14,13 +14,9 @@ import com.byd.clusternav.launcher.SlotCodec
 import com.byd.clusternav.launcher.reapplyAll
 import com.byd.clusternav.launcher.voice.VoiceIntent
 import com.byd.clusternav.launcher.voice.VoiceReply
-import com.byd.clusternav.modules.clustercast.ClusterDiag
 import com.byd.clusternav.system.PackageQueries
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.Collections
-import java.util.Date
-import java.util.Locale
 
 /**
  * ═══ T-BRIDGE · CẦU KIỂM THỬ QUA adb ═════════════════════════════════════════════════════════════════════════
@@ -164,7 +160,6 @@ class KachiTestBridge : BroadcastReceiver() {
             TestBridgeCommands.SLOT_CLEAR -> runSlotClear(cmd, hooks, reply)
             TestBridgeCommands.OPEN -> runOpen(app, cmd, hooks, reply)
             TestBridgeCommands.REAPPLY -> runReapply(hooks, reply)
-            TestBridgeCommands.DIAG -> runDiag(app, hooks, reply)
             in TestBridgeTeachCommands.NAMES -> TestBridgeTeach.run(app, cmd, hooks, reply)   // 2.91 · A7 (tệp riêng)
             else -> reply.fail(TestBridgeCommands.ERR_UNKNOWN_CMD)
         }
@@ -396,29 +391,6 @@ class KachiTestBridge : BroadcastReceiver() {
             }
     }
 
-    /**
-     * Chụp chẩn đoán bằng **đúng** [ClusterDiag] mà màn *Chẩn đoán* dùng.
-     *
-     * Đòi kênh shell TRƯỚC: `ClusterDiag.capture` mở một phiên dadb và nếu không có kênh thì nó chỉ trả về một
-     * tệp toàn dòng rỗng sau nhiều giây chờ — tức một lượt đo trông như "đã chụp" mà không có gì bên trong.
-     * Nói `no_shell_channel` ngay thì người đo biết phải đi sửa cái gì.
-     */
-    private fun runDiag(app: Context, hooks: TestBridgeHooks, reply: TestBridgeReply) {
-        if (!hooks.shellUsable()) {
-            reply.fail(ERR_NO_SHELL)
-            return
-        }
-        Thread({
-            val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-            runCatching { ClusterDiag.capture(app, BuildConfig.APPLICATION_ID, NO_VD, stamp) }
-                .onSuccess { (path, summary) -> reply.ok("file" to path, "summary" to summary) }
-                .onFailure { t ->
-                    Log.w(TAG, "ClusterDiag nem: ${t.javaClass.simpleName}", t)
-                    reply.fail(ERR_THREW, "exception" to t.javaClass.simpleName)
-                }
-        }, "KachiTestDiag").start()
-    }
-
     internal companion object {
 
         const val TAG = TestBridgeReply.TAG
@@ -439,8 +411,6 @@ class KachiTestBridge : BroadcastReceiver() {
         /** Trần tệp WAV nhận qua `--es path` (16 MB ≈ 8 phút PCM16 16 kHz — dài hơn mọi câu lệnh). */
         const val MAX_WAV_BYTES = 16L * 1024L * 1024L
 
-        /** `ClusterDiag` nhận cờ RAM "đang chiếu ở VD nào"; cầu này không chiếu gì ⇒ để nó TỰ ĐO (xem KDoc ClusterDiag). */
-        const val NO_VD = -1
 
         private const val TAG_CAP = 24
         private const val UNNAMED = "cmd"
@@ -466,7 +436,6 @@ class KachiTestBridge : BroadcastReceiver() {
         const val ERR_BAD_ACTION = "bad_action"
         const val ERR_TIMEOUT = "timeout"
         const val ERR_THREW = "threw"
-        const val ERR_NO_SHELL = "no_shell_channel"
         const val ERR_UNKNOWN_PROFILE = "unknown_profile"
 
         /** `--es pkg` không phải một app đang cài — xem [installed]. */

@@ -9,7 +9,6 @@ import com.byd.clusternav.launcher.FreeformLaunch
 import com.byd.clusternav.launcher.HomeActivityCmd
 import com.byd.clusternav.launcher.HomeGuardPolicy
 import com.byd.clusternav.launcher.HomeResumed
-import com.byd.clusternav.launcher.LauncherBootPlan
 import com.byd.clusternav.launcher.WorkspacePrefs
 import com.byd.clusternav.system.FreeformSeedStore
 
@@ -29,8 +28,7 @@ import com.byd.clusternav.system.FreeformSeedStore
  *   2. S5 — reassert Kachi as the current HOME activity (`cmd package set-home-activity`, only if not already)
  *      ONLY when the user opted into "keep home on boot" ([WorkspacePrefs.keepHomeOnBoot], default OFF); the
  *      primary way to become HOME is the Settings button (`ClusterNavBridge.setDefaultHome`);
- *   3. compute + log the cast-coordination boot plan ([LauncherBootPlan]) — surface-independent (the actual mount
- *      is the Activity's job, and the slot-seed path skips cast-owned apps too);
+ *   3. (Android box B2 · W2c: the cast-coordination boot-plan log was removed with cluster cast);
  *   4. ensure the HOME Activity is up (`am start` the HOME component) so it restores + mounts the saved slots —
  *      covers the MY_PACKAGE_REPLACED case where the installer kills us and does NOT relaunch.
  *
@@ -118,8 +116,7 @@ object KachiAutostart {
                     Log.i(TAG, "keep-home-on-boot OFF + home not chosen — not reasserting default HOME on boot")
                 }
 
-                // (3) Cast-coordination decision (surface-independent): what the launcher owns vs what cast owns.
-                logBootPlan(container)
+                // (3) Android box B2 · W2c — log "boot plan" của phối hợp chiếu cụm (launcher vs cast) gỡ cùng chiếu cụm.
 
                 // (4) Ensure the HOME Activity is up so it restores + mounts the saved slots (Activity does the VD mounting).
                 //     Covers MY_PACKAGE_REPLACED (installer kills us, does not relaunch). No --display ⇒ gate ALLOWs.
@@ -165,15 +162,4 @@ object KachiAutostart {
         Log.i(TAG, "set Kachi as HOME activity (was ${current ?: "unresolved"})")
     }
 
-    /**
-     * Compute + log the cast-coordination boot plan for the active profile: from the persisted workspace slots,
-     * which apps the launcher owns (mount) vs which cluster-cast owns/will-cast onto the cluster (skip). The
-     * launcher must NOT fight cast — `castOwns(pkg)` = `!AppLocationRegistry.isCastable(pkg)` (already on the cluster VD the cast path detected live — B4, not a fixed display 1).
-     */
-    private fun logBootPlan(container: AppContainer) {
-        val slots = runCatching { container.workspaceRepository.load().slots }.getOrDefault(emptyList())
-        val registry = container.windowDispatcher.locations
-        val plan = LauncherBootPlan.plan(slots) { pkg -> !registry.isCastable(pkg) }
-        Log.i(TAG, "boot plan (active profile): mount=${plan.mount.map { it.pkg }} skipToCast=${plan.skippedToCast.map { it.pkg }}")
-    }
 }

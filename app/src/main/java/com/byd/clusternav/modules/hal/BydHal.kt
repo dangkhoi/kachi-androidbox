@@ -3,7 +3,6 @@ package com.byd.clusternav.modules.hal
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
-import com.byd.clusternav.navigation.LaneInfo
 
 /**
  * Hạ tầng HAL DÙNG CHUNG cho các module chạm xe IN-PROCESS (không shell-out dadb).
@@ -274,139 +273,9 @@ object BydHal {
         return sdkMethodCache[key] ?: dev.javaClass.getMethod(name, *params).also { sdkMethodCache[key] = it }
     }
 
-    /** Ghi 1 frame nav IN-PROCESS lên cụm (status=2 + chọn mode nav-screen + icon/khoảng-cách/tên-đường) qua
-     *  bypass-context. Đây là CƠ CHẾ THẬT tạo "Giữa + ETA" (khớp navopen), KHÁC ch1000 op39 (no-op trên xe này).
-     *  [screenMode] = giá trị SET_NAVI_SCREEN_STATUS_SET (xem [NAV_SCREEN_MODE_ON]). Trả tóm tắt rc.
-     *  Owner hợp lệ DUY NHẤT: [com.byd.clusternav.NavigationHudOwner] (giữ ownership boundary — xem PhysicalHudOwnershipTest). */
-    fun writeNavFrame(
-        ctx: Context, icon: Int, segMeters: Int, road: String, screenMode: Int = NAV_SCREEN_MODE_ON,
-        routeSeconds: Int = -1, routeMeters: Int = -1, arrivalClock: String? = null,
-        keepAlive: Boolean = false, writeSurface: Boolean = true,
-    ): String {
-        val sys = systemBypassContext()
-        val instr = device(INSTRUMENT, sys, bypass(ctx)) ?: return "InstrumentDevice null (không ghi được)"
-        val setting = device(SETTING, sys, bypass(ctx))
-        val rc = StringBuilder()
-        // TASK 5: mọi INT write đi qua cachedSetInt (skip id đã bị HAL từ chối; cache khi gặp sentinel not-provisioned).
-        fun w(name: String, v: Int) { featureId(name)?.let { id -> rc.append(" $name=").append(cachedSetInt(instr, id, v)) } }
-        // Ghi 1 feature INT theo TÊN (reflect BYDAutoFeatureIds), FALLBACK raw-id cho các tên OVERSEA vắng trong lớp reflect.
-        fun wi(name: String, rawId: Int, v: Int, tag: String) {
-            (featureId(name) ?: rawId).let { id -> rc.append(" $tag=").append(cachedSetInt(instr, id, v)) }
-        }
-        // TASK 2: status + screen-mode là cờ SESSION LATCH → CHỈ ghi lúc real push; BỎ ở keep-alive (đỡ churn ~4×/s).
-        // TÁCH NỘI DUNG / BỀ MẶT (2026-08-24, docs/diagnostics/nav-io-asis-2026-08-24.html §B, owner OQ1/OQ4):
-        //  • SEND_NAVI_STATUS = latch "đang dẫn", thuộc NỘI DUNG (HUD kính đọc) ⇒ ghi theo real-push, KHÔNG gate writeSurface.
-        //  • SET_NAVI_SCREEN_STATUS = dựng BỀ MẶT nav giữa CỤM (tranh display cụm với Cast) ⇒ chỉ ghi khi writeSurface
-        //    (caller truyền = navOnlyMode: Cast OFF). Cast ON ⇒ writeSurface=false ⇒ chỉ nội dung lên HUD, KHÔNG dựng cụm.
-        if (!keepAlive) w("INSTRUMENT_SEND_NAVI_STATUS_SET", 2)
-        if (!keepAlive && writeSurface) featureId("SET_NAVI_SCREEN_STATUS_SET")?.let { id -> setting?.let { s -> rc.append(" NAVI_SCREEN=").append(cachedSetInt(s, id, screenMode)) } }
-        // CONTENT (LUÔN ghi, kể cả keep-alive): guidance icon + dualIcon + cự ly + tên đường.
-        w("INSTRUMENT_GUIDE_INFO_SIMPLE_SET", icon)
-        w("INSTRUMENT_GUIDE_INFO_AND_ROAD_AHEAD_DISTANCE_SET", icon)   // OpenBYD "dualIcon" (0x43F01030) — ghi icon vào cả feature này
-        w("INSTRUMENT_FRONT_CROSSING_DISTANCE_SET", segMeters)
-        featureId("INSTRUMENT_TARGET_NEXT_PATHNAME_INFO_SET")?.let { id -> rc.append(" PATHNAME=").append(cachedSetBytes(instr, id, road.toByteArray(Charsets.UTF_16LE))) }
-        // THỬ NGHIỆM (2026-08-15, insight owner): guidance có bản OVERSEA (export) song song domestic (suffix id trùng,
-        // prefix 0x1F7 vs 0x43F). Xe export (Seal) đọc họ 0x1F7 → HUD không lên GÌ khi app chỉ ghi 0x43F. Ghi THÊM
-        // bản oversea cho mũi tên + cự ly + tên đường (KHÔNG bỏ domestic). Feature hiển thị → ghi lành tính; null-safe;
-        // fallback raw-id (BYDAutoFeatureIds thiếu tên oversea). Xác nhận trên xe: HUD export lên mũi tên/cự ly/tên chưa.
-        (featureId("INSTRUMENT_EASY_NAVI_GUIDE_INFOR_SET") ?: EASY_NAVI_GUIDE_OVERSEA_ID).let { id ->
-            rc.append(" GUIDE_OVERSEA=").append(cachedSetInt(instr, id, icon))
-        }
-        (featureId("INSTRUMENT_DISTANCE_TARGET_HEAD_SET") ?: CROSSING_DIST_OVERSEA_ID).let { id ->
-            rc.append(" DIST_OVERSEA=").append(cachedSetInt(instr, id, segMeters))
-        }
-        (featureId("INSTRUMENT_TARGET_NEXT_PATHNAME_INFO_OVERASEA_SET") ?: PATHNAME_OVERSEA_ID).let { id ->
-            rc.append(" PATHNAME_OVERSEA=").append(cachedSetBytes(instr, id, road.toByteArray(Charsets.UTF_16LE)))
-        }
-        // FULL DATA HUD (2026-08-15, owner "ghi hết data lên HUD, domestic + oversea"): thời-gian-còn-lại (giờ/phút/
-        // giây/ngày), quãng-đường-còn-lại, giờ-tới (ETA) — CHƯA từng ghi lên HUD (trước chỉ vào CỤM qua broadcast).
-        // Ghi vào CẢ 2 họ; CHỈ khi có giá trị hợp lệ (bỏ qua lúc keep-alive/absent để không xoá trắng số đang hiện).
-        // Toàn feature HIỂN THỊ (không phải switch) → lành tính. Id: DiCarServer Instrument.java (0x43F dom / 0x1F7 oversea).
-        if (routeSeconds >= 0) {
-            val d = routeSeconds / 86400; val h = (routeSeconds % 86400) / 3600
-            val m = (routeSeconds % 3600) / 60; val s = routeSeconds % 60
-            wi("INSTRUMENT_NAVI_TRIP_INFO_HOUR_SET", 0x43F02010, h, "RT_H");   wi("INSTRUMENT_REMAIN_DRIVE_TIME_HOUR_SET", 0x1F702010, h, "RT_HO")
-            wi("INSTRUMENT_NAVI_TRIP_INFO_MINUTE_SET", 0x43F02018, m, "RT_M"); wi("INSTRUMENT_REMAIN_DRIVE_TIME_MINUTE_SET", 0x1F702018, m, "RT_MO")
-            wi("INSTRUMENT_NAVI_TRIP_REMAINING_SECOND_SET", 0x43F0201E, s, "RT_S"); wi("INSTRUMENT_REMAIN_DRIVE_TIME_SECOND_SET", 0x1F70201E, s, "RT_SO")
-            wi("INSTRUMENT_REMAIN_DRIVING_TIME_DAY_SET", 0x43F02024, d, "RT_D")   // day: domestic only (oversea không có ô ngày riêng)
-        }
-        if (routeMeters >= 0) {
-            wi("INSTRUMENT_NAVI_TRIP_INFO_MILEAGE_SET", 0x43F02028, routeMeters, "MILE"); wi("INSTRUMENT_REMAIN_MILEAGE_SET", 0x1F702028, routeMeters, "MILE_O")
-        }
-        arrivalClock?.split(":")?.let { p ->
-            p.getOrNull(0)?.trim()?.toIntOrNull()?.let { h ->
-                wi("INSTRUMENT_EXPECTED_ARRIVE_HOUR_SET", 0x43F09018, h, "ETA_H"); wi("INSTRUMENT_EXPECT_ARRIVAL_TIME_HOUR_SET", 0x1F705018, h, "ETA_HO")
-            }
-            p.getOrNull(1)?.trim()?.toIntOrNull()?.let { m ->
-                wi("INSTRUMENT_EXPECTED_ARRIVE_MINUTE_SET", 0x43F09020, m, "ETA_M"); wi("INSTRUMENT_EXPECT_ARRIVAL_TIME_MINUTE_SET", 0x1F705020, m, "ETA_MO")
-            }
-        }
-        // 1.26 — GỌI THÊM OEM SDK method của BYDAutoInstrumentDevice (như OpenBYD CarControlImpl): ngoài ghi raw
-        // feature, gọi thẳng method native. GIẢ THUYẾT: method SDK mới là cái bật TÊN ĐƯỜNG + guidance lên HUD kính
-        // (raw feature chỉ tới cụm-centre). Reflect + invoke trên instr; null-safe (method vắng/lỗi → bỏ qua, log rc).
-        // TASK 2: 3 SDK call BỎ ở keep-alive (chỉ real push). TASK 5: cachedSdk cache theo tên method — ném lỗi lần
-        // đầu (no-permission / method absent, cả hai ỔN ĐỊNH theo process) → skip lần sau (hết spam 'no permission
-        // device 1007'). Xe provision oversea (Sealion 6) SDK chạy OK → không ném → không cache → vẫn gọi.
-        if (!keepAlive) {
-            cachedSdk("sendSimpleGuidanceInfo", rc, "sdk.guide") {
-                sdkMethod(instr, "sendSimpleGuidanceInfo", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(instr, icon, segMeters)
-            }
-            if (road.isNotBlank()) cachedSdk("sendNextPathName", rc, "sdk.road") {
-                sdkMethod(instr, "sendNextPathName", String::class.java).invoke(instr, road)
-            }
-            if (routeSeconds >= 0 && routeMeters >= 0) cachedSdk("sendRestRouteInfo", rc, "sdk.rest") {
-                sdkMethod(instr, "sendRestRouteInfo", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Long::class.javaPrimitiveType)
-                    .invoke(instr, routeSeconds / 3600, (routeSeconds % 3600) / 60, routeMeters.toLong())
-            }
-        }
-        return rc.toString().trim()
-    }
-
-    /** TẮT nav HUD (status=4 + clear guide/dist) khi hết dẫn đường — như DashCast setNaviActive(false). */
-    fun clearNavFrame(ctx: Context): String {
-        val instr = device(INSTRUMENT, systemBypassContext(), bypass(ctx)) ?: return "InstrumentDevice null"
-        val rc = StringBuilder()
-        fun w(name: String, v: Int) { featureId(name)?.let { id -> rc.append(" $name=").append(runCatching { setInt(instr, id, v) }.getOrElse { root(it) }) } }
-        w("INSTRUMENT_SEND_NAVI_STATUS_SET", 4)
-        w("INSTRUMENT_GUIDE_INFO_SIMPLE_SET", 0)
-        w("INSTRUMENT_FRONT_CROSSING_DISTANCE_SET", -1)
-        return rc.toString().trim()
-    }
-
-    // ── B3 T4 (spec b3-full-nav-capture §R3/§R4/§R5): payload gốc cho nguồn ẢNH (NavOutputOwner) ──────────
-    // 3 method THÊM (additive) — KHÔNG đổi hành vi [writeNavFrame]. "CỨ BẮN đủ field" (R3a/OQ4): ghi thẳng
-    // register, HUD/cụm hỗ trợ thì lên, không thì kệ (cache reject nuốt spam). Tất cả CONTENT-only: KHÔNG chạm
-    // session latch (SEND_NAVI_STATUS / SET_NAVI_SCREEN_STATUS / 3 SDK) — latch vẫn là ĐỘC QUYỀN của
-    // [com.byd.clusternav.NavigationHudOwner] (PhysicalHudOwnershipTest: chỉ owner đó gọi writeNavFrame). Nguồn ẢNH
-    // chỉ lên khi kênh DATA im (SourceArbiter IMAGE<DATA) nên hai owner KHÔNG cùng ghi. Nhận [instr] đã-resolve từ
-    // owner (device() cache handle reflect). Mọi write qua cachedSetInt/cachedSetBytes (skip id đã bị HAL từ chối).
-
-    // Register làn cụm (DiCarServer). Lane 1: arrow=0x19802058, recommended=0x19802064; bước mỗi làn = 0x10.
-    // ⚠ ON-CAR-VERIFY (OQ3): id làn 2..8 SUY từ bước 0x10 (chỉ lane-1 có bằng chứng trong spec); ưu tiên tên
-    // reflect nếu ROM có, fallback raw-id (giống lối oversea của writeNavFrame). Trim không provision → overlay
-    // tự vẽ (T5) là đường SONG SONG, không phải fallback.
-    const val LANE_1_GUIDANCE_ARROW_ID = 0x19802058
-    const val LANE_1_RECOMMENDED_ID = 0x19802064
-    const val LANE_ID_STRIDE = 0x10
-    const val MAX_CLUSTER_LANES = 8
-    // Camera (0x43F03* domestic — RE docs/_handoff/re-hud-track4-hal-can.md Phụ lục A).
-    const val GUIDE_INFO_CAMERA_ID = 0x43F03010
-    const val CAMERA_DISPLAY_STATE_ID = 0x43F03018
-    const val NAVI_CAM_REMAINING_MILEAGE_ID = 0x43F0301C
-
-    // pushNavigation / blankNavDistance — thân ở [BydHalContentPush] (tách theo VAI, DEBT-500); KDoc mức bằng chứng
-    // (OQ13: -1 vào ô cự-ly khi widget đang hiện CHƯA probe on-car) nằm trên [NAV_DISTANCE_BLANK] + ở tệp đó.
-    fun pushNavigation(instr: Any, icon: Int, segMeters: Int = -1, road: String? = null): String =
-        BydHalContentPush.pushNavigation(instr, icon, segMeters, road)
-    fun blankNavDistance(instr: Any): String = BydHalContentPush.blankNavDistance(instr)
-
-    /** Giá trị "không có cự-ly" mà cụm/HUD hiểu là xoá trắng ô — cùng giá trị `clearNavFrame` đang dùng. */
-    const val NAV_DISTANCE_BLANK = -1
-
-    // pushLane / pushCamera — thân ở [BydHalContentPush] (tách theo VAI, DEBT-500).
-    fun pushLane(instr: Any, info: LaneInfo): String = BydHalContentPush.pushLane(instr, info)
-    fun pushCamera(instr: Any, iconCode: Int, distanceMeters: Int = -1): String =
-        BydHalContentPush.pushCamera(instr, iconCode, distanceMeters)
+    // Android box B2 · W2d — đường ghi dẫn đường lên cụm/HUD (`writeNavFrame` · `clearNavFrame`) + payload nguồn ẢNH
+    // (`pushNavigation` · `blankNavDistance` · `pushLane` · `pushCamera`, thân `BydHalContentPush`) + hằng register làn/camera
+    // gỡ cùng dẫn đường cụm. Phần còn lại (đọc/ghi feature chung) gỡ ở W3.
 
     // firstReadable / readValue / methods — thân ở [BydHalRead] (tách theo VAI, DEBT-500).
     fun firstReadable(dev: Any, ids: List<Pair<String, Int>>): Pair<String, String>? = BydHalRead.firstReadable(dev, ids)

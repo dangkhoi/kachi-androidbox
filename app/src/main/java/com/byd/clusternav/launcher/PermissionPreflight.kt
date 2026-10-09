@@ -178,7 +178,7 @@ object PermissionPreflight {
 
     // ── Đọc trạng thái — KHÔNG cần kênh shell ────────────────────────────────────────────────────
 
-    /** `null` nếu không đọc được (ROM lạ). `internal` (FIX286): cổng "đã cấp" của `NlsHeal` đọc CHUNG hàm này. */
+    /** `null` nếu không đọc được (ROM lạ). `internal` (FIX286 — người đọc thứ hai `NlsHeal` gỡ ở Android box B2 · W2d). */
     internal fun notificationListenerGranted(ctx: Context): Boolean? = runCatching {
         val flat = Settings.Secure.getString(ctx.contentResolver, "enabled_notification_listeners") ?: return false
         val expected = ComponentName(ctx, NavNotificationListener::class.java)

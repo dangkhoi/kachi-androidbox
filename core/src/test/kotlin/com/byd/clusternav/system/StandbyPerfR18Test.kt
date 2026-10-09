@@ -3,7 +3,6 @@ package com.byd.clusternav.system
 import com.byd.clusternav.launcher.BootHomeUp
 import com.byd.clusternav.launcher.HomeGuardPolicy
 import com.byd.clusternav.modules.navaccess.A11yBindJournal
-import com.byd.clusternav.navigation.HudKeepAlivePolicy
 import com.byd.clusternav.testsupport.SourceRoots
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -53,15 +52,7 @@ class StandbyPerfR18Test {
         assertNull(StackListSnapshot.fresh(notBeforeMs = Long.MIN_VALUE, nowMs = 1_500L))
     }
 
-    @Test
-    fun `repin ghi ban doc cua no ngay sau lenh doc`() {
-        val ops = SourceRoots.codeOf("src/main/kotlin/com/byd/clusternav/modules/clustercast/simplified/SimpleCastCoordinatorOps.kt")
-        val read = ops.indexOf("shell.execute(\"am stack list\").let { if (it.success) it.stdout else null }")
-        val rec = ops.indexOf("StackListSnapshot.record(stackOut)")
-        assertTrue(read >= 0 && rec > read, "lượt dò repin phải ghi bản đọc cho nhịp đo ô")
-        val coord = SourceRoots.codeOf("src/main/kotlin/com/byd/clusternav/modules/clustercast/simplified/SimpleCastCoordinator.kt")
-        assertTrue(coord.contains("StandbyCadence.repinMinIntervalMs(interactive)"), "khoảng dò repin theo màn")
-    }
+    // Android box B2 · W2c — ca `repin ghi ban doc …` (lượt dò repin của chiếu cụm) gỡ cùng `SimpleCastCoordinator`.
 
     /** [ĐO máy ảo 07/10] `kachi-home-guard` thức 0,6 lần/giây cả khi màn tắt. */
     @Test
@@ -99,14 +90,5 @@ class StandbyPerfR18Test {
         assertTrue(A11yBindJournal.wokeFromLongSleep(0L, 2 * 3_600_000L, 2 * 3_600_000L))
     }
 
-    /** [ĐO máy ảo 07/10] `hud-keepalive` thức 4 lần/giây kể cả khi không có frame nào (79 % số lần thức lúc màn tắt). */
-    @Test
-    fun `nhip giu HUD bao het viec khi khong co frame`() {
-        val p = HudKeepAlivePolicy()
-        assertFalse(p.hasFrame())
-        p.onFrameWritten(1_000L, realPush = true)
-        assertTrue(p.hasFrame())
-        p.onCleared()
-        assertFalse(p.hasFrame())
-    }
+    // Android box B2 · W2d — ca "nhịp giữ HUD báo hết việc" (`HudKeepAlivePolicy`) gỡ cùng dẫn đường cụm/HUD.
 }

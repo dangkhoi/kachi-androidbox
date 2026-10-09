@@ -11,17 +11,16 @@ import android.util.Log
  * trần 500 dòng (CLAUDE.md §4.1). Cùng khuôn hàm mở rộng của CHÍNH [WorkspacePrefs] (dùng lại `sp`, không mở cửa thứ
  * hai vào `kachi_workspace`).
  *
- * Ba lượt, cùng một hợp đồng *"rót xuống, chỉ điền chỗ trống, dấu ghi CÙNG một Editor với dữ liệu"*:
+ * Hai lượt, cùng một hợp đồng *"rót xuống, chỉ điền chỗ trống, dấu ghi CÙNG một Editor với dữ liệu"*:
  *  • [migrateNavScheduleOnce] — lịch tự dẫn đường (2026-09-28), dời NGUYÊN VĂN (bài canh
  *    `NavScheduleProfileScopeWiringTest` khoá thân hàm; CLAUDE.md §6: không viết lại đường đang chạy tốt) — trừ đúng MỘT
  *    lượt đọc ảnh đổi sang [storedSnapshot] (senior review 2.84: ảnh sai kiểu không được làm `init` ném);
- *  • [migrateClusterProfileOnce] — cụm/chiếu/camera/nút nổi (V-CLUSTER), phép tính thuần ở `:core`
- *    [ProfileScopeMigration.rotDown] (có test chạy thật, không chỉ đọc chữ);
  *  • [fillNewProfileKeysOnce] — 2.92 PROFILE-NEW-KEYS: khoá vào phạm vi hồ sơ ở bản SAU, theo sổ đã-rót.
  *
  * Lối mở tệp prefs ClusterNav ([clusterNavPrefs]) cũng nằm ở đây: tệp có lời gọi mở prefs là tệp mà
  * `SettingsCoverageContractTest` quét hằng khoá, nên hai dấu boolean bên dưới vẫn bị đòi lý do ở `NOT_SETTINGS`; sổ đã-rót
- * (StringSet — bộ quét chưa đọc `putStringSet`) có lý do ở đó và ở `ProfileScopeCluster.DEVICE_KEYS` bằng tay.
+ * (StringSet — bộ quét chưa đọc `putStringSet`) có lý do ở đó và ở `ProfileScope.DEVICE_KEYS` bằng tay. Android box B2 · W2c:
+ * lượt rót một lần V-CLUSTER (`migrateClusterProfileOnce`, cụm/chiếu/nút nổi) gỡ cùng chiếu cụm.
  */
 
 /**
@@ -94,47 +93,9 @@ private const val K_MIGRATED_NAV_SCHEDULE = "migrated_nav_schedule_v1"
 
 
 /**
- * DI TRÚ MỘT LẦN — V-CLUSTER (owner 2026-09-30: *"Phần cụm lưu hết thành profile nhé"*).
- *
- * Khoá đổi phạm vi ở bản này ([ProfileScopeCluster.MOVED_TO_PROFILE]): `cast_enabled` · `cast_bubble_visible` · 6 khoá
- * camera sở thích · `bubbleX/bubbleY` · cả họ `cast_geometry` (DPI/khung từng app). Không di trú thì ảnh chụp CŨ của mọi
- * hồ sơ không có chúng ⇒ lượt áp không chạm ⇒ hồ sơ nào được chụp trước thì chiếm cấu hình, các hồ sơ còn lại lệch dần.
- *
- * Rót giá trị ĐANG SỐNG vào ảnh của **mọi** hồ sơ, chỉ điền chỗ trống — phép tính ở [ProfileScopeMigration.rotDown]
- * (thuần, `ProfileScopeMigrationTest`). `cast_enabled` rót đúng giá trị HIỆU LỰC (trước bản này chưa có bản chờ).
- *
- * ⚠ Dấu ghi CÙNG một `Editor` với mọi ảnh (bài học [migrateScenesOnce]); chạy sau [migrateNavScheduleOnce] ở `init`
- * của `PrefsWorkspaceRepository`, tức TRƯỚC lượt `load()` đầu tiên (lượt đó kéo theo `applyClusterNav`).
- */
-internal fun WorkspacePrefs.migrateClusterProfileOnce() {
-    if (sp.getBoolean(K_MIGRATED_CLUSTER, false)) return
-    val e = sp.edit()
-    val names = profiles()
-    // Đọc ảnh qua [storedSnapshot], KHÔNG `sp.getString`: ảnh sai kiểu (tệp nhập ≤ 2.83) mà ném ở đây là launcher sập
-    // mỗi lần mở. Ảnh sai kiểu = "chưa có ảnh" ⇒ `rotDown` rót một ảnh sạch đè lên — lượt này đồng thời CHỮA nó.
-    val stored = sp.all
-    ProfileScopeCluster.MOVED_TO_PROFILE.forEach { (file, newKeys) ->
-        val suffix = ProfileScope.snapshotSuffix(file)
-        val shots = names.associateWith { PrefSnapshot.decode(storedSnapshot(stored, keyOf(it, suffix))) }
-        val live = clusterNavPrefs(file).all
-        ProfileScopeMigration
-            .rotDown(shots, live, newKeys, ProfileScopeCluster.familiesOf(file), ProfileScopeCluster.DEFERRED)
-            .forEach { (p, shot) -> e.putString(keyOf(p, suffix), PrefSnapshot.encode(shot)) }
-    }
-    e.putBoolean(K_MIGRATED_CLUSTER, true).apply()
-}
-
-/**
- * Dấu đã rót cấu hình cụm xuống mọi hồ sơ — xem [migrateClusterProfileOnce]. Literal (không trỏ hằng `:core`) để
- * `SettingsCoverageContractTest` đọc được và đòi lý do ở `SettingsCatalog.NOT_SETTINGS`; bài
- * `ClusterProfileScopeCoverageTest` khoá nó BẰNG [ProfileScopeCluster.MIGRATED_KEY].
- */
-private const val K_MIGRATED_CLUSTER = "migrated_cluster_profile_v1"
-
-/**
  * 2.92 · PROFILE-NEW-KEYS — rót mọi khoá ClusterNav theo hồ sơ CHƯA có trong sổ đã-rót xuống ảnh đã có của mọi hồ sơ.
  *
- * Hai lượt trên chạy MỘT lần cho một bảng khoá cố định, nên khoá vào phạm vi hồ sơ ở bản sau (2.89 `cast_style`, 2.90
+ * Lượt di trú một lần chỉ phủ một bảng khoá cố định, nên khoá vào phạm vi hồ sơ ở bản sau (2.90
  * `vm_bubble_hidden`, 2.92 `camera_projection`/`camera_zoom`) chưa từng được rót: [ĐO máy ảo 2.92] chọn *Thẳng rộng*
  * 120 % ở hồ sơ A rồi đổi sang hồ sơ lưu bằng 2.91 ⇒ hồ sơ đó cũng *Thẳng rộng* 120 %, và lượt rời nó chụp luôn giá trị
  * lạc. Sổ `tệp/khoá` thay cho cờ boolean ⇒ bản sau thêm khoá là tự rót, không phải nhớ viết thêm một lượt di trú.
@@ -143,18 +104,17 @@ private const val K_MIGRATED_CLUSTER = "migrated_cluster_profile_v1"
  * ĐÃ CHỤP, giá trị = đang sống (vắng ⇒ `null` tường minh ⇒ lượt áp trả về mặc định). Lần đầu (sổ rỗng) duyệt mọi khoá —
  * ảnh đủ khoá không đổi byte.
  *
- * 2.93 · PROFILE-NEW-FILE-FILL — *"đã chụp"* xét trên MỌI tệp ảnh chụp ([ProfileScopeMigration.captured]), và sổ duyệt cả
- * MỐC họ tiền tố ([ProfileScopeMigration.ledgerScope]) ⇒ khoá ở một tệp prefs MỚI hoặc một họ MỚI cũng được rót, không
- * còn ca *"sổ ghi xong mà không hồ sơ nào được rót"* (senior review 2.92 F1).
+ * 2.93 · PROFILE-NEW-FILE-FILL — *"đã chụp"* xét trên MỌI tệp ảnh chụp ([ProfileScopeMigration.captured]) ⇒ khoá ở một
+ * tệp prefs MỚI cũng được rót, không còn ca *"sổ ghi xong mà không hồ sơ nào được rót"* (senior review 2.92 F1).
  *
- * ⚠ Sổ ghi CÙNG một `Editor` với mọi ảnh (bài học [migrateScenesOnce]); chạy SAU [migrateClusterProfileOnce] ở `init`
+ * ⚠ Sổ ghi CÙNG một `Editor` với mọi ảnh (bài học [migrateScenesOnce]); chạy SAU [migrateNavScheduleOnce] ở `init`
  * của `PrefsWorkspaceRepository`, TRƯỚC lượt `load()` đầu tiên — tức trước khi người lái kịp chọn giá trị cho khoá mới.
  */
 internal fun WorkspacePrefs.fillNewProfileKeysOnce() {
     // Đọc qua `sp.all` + ép kiểu an toàn, KHÔNG `getStringSet`: giá trị sai kiểu mà ném ở `init` là HOME sập mỗi lần mở.
     val stored = sp.all
     val done = (stored[K_PROFILE_KEYS_FILLED] as? Set<*>)?.filterIsInstance<String>()?.toSet().orEmpty()
-    val scope = ProfileScopeMigration.ledgerScope(ProfileScope.CLUSTERNAV_KEYS, ProfileScopeCluster.FAMILIES)
+    val scope = ProfileScope.CLUSTERNAV_KEYS
     val pending = ProfileScopeMigration.pendingKeys(scope, done)
     if (pending.isEmpty()) return
     val e = sp.edit()
@@ -168,10 +128,7 @@ internal fun WorkspacePrefs.fillNewProfileKeysOnce() {
     pending.forEach { (file, newKeys) ->
         val suffix = ProfileScope.snapshotSuffix(file)
         ProfileScopeMigration
-            .fillNewKeys(
-                shots.getValue(file), clusterNavPrefs(file).all, newKeys, ProfileScopeCluster.DEFERRED,
-                captured, ProfileScopeCluster.familiesOf(file),
-            )
+            .fillNewKeys(shots.getValue(file), clusterNavPrefs(file).all, newKeys, captured)
             .forEach { (p, shot) -> e.putString(keyOf(p, suffix), PrefSnapshot.encode(shot)); filled++ }
     }
     e.putStringSet(K_PROFILE_KEYS_FILLED, ProfileScopeMigration.ledgerOf(scope)).apply()
@@ -180,8 +137,8 @@ internal fun WorkspacePrefs.fillNewProfileKeysOnce() {
 }
 
 /**
- * Sổ đã-rót của [fillNewProfileKeysOnce]. Literal (không trỏ hằng `:core`), cùng khuôn hai dấu trên; `ClusterProfileScopeCoverageTest`
- * khoá nó BẰNG [ProfileScopeMigration.FILLED_LEDGER_KEY]. Xếp loại theo XE: `ProfileScopeCluster.DEVICE_KEYS` + `SettingsCatalog.NOT_SETTINGS`.
+ * Sổ đã-rót của [fillNewProfileKeysOnce]. Literal (không trỏ hằng `:core`), cùng khuôn dấu lịch dẫn đường; `ClusterProfileScopeCoverageTest`
+ * khoá nó BẰNG [ProfileScopeMigration.FILLED_LEDGER_KEY]. Xếp loại theo XE: `ProfileScope.DEVICE_KEYS` + `SettingsCatalog.NOT_SETTINGS`.
  */
 private const val K_PROFILE_KEYS_FILLED = "profile_keys_filled_v1"
 

@@ -303,8 +303,7 @@ class HalBindingTable(
          */
         val LOCAL_TARGETS: Set<String> = setOf(
             "AudioManager",
-            // Tên service chỉ viết chữ ở `ProjectionRecipe` (CLUSTER-THEME-SAFE B1a — `ThemeOpcodeLiteralContractTest`).
-            com.byd.clusternav.modules.clustercast.simplified.ProjectionRecipe.SVC_DILINK3,
+            // Android box B2 · W2c — `AutoContainer` (service chiếu cụm BYD) gỡ: không binding nào dùng nó.
         )
 
         /**

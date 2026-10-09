@@ -39,7 +39,7 @@ class SysPropsContractTest {
         mapOf(
             // (`AvmCamera.kt` — nơi cũ thứ ba — xoá cùng camera BYD ở Android box B2 · W2b.)
             "src/main/java/com/byd/clusternav/comfort/SeatComfortApplier.kt" to "SysProps.get(key).takeIf { it.isNotBlank() }",
-            "src/main/java/com/byd/clusternav/modules/clustercast/ClusterProfile.kt" to "private fun getProp(key: String): String = SysProps.get(key)",
+            // (`ClusterProfile.kt` — nơi cũ thứ hai — xoá cùng chiếu cụm ở Android box B2 · W2c.)
         ).forEach { (rel, call) ->
             val code = SourceRoots.codeOf(rel)
             assertTrue(code.contains(call), "$rel phải uỷ quyền xuống SysProps: thiếu `$call`")

@@ -7,7 +7,6 @@ import com.byd.clusternav.launcher.HalGateway
 import com.byd.clusternav.launcher.HomeUiState
 import com.byd.clusternav.launcher.HomeViewModel
 import com.byd.clusternav.launcher.WorkspaceRepository
-import com.byd.clusternav.modules.clustercast.simplified.SimpleCastRuntime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -58,12 +57,6 @@ class AppContainerTest {
         inputDaemonClientInit = { error("inputDaemonClient không cần cho test thuần") },
         carGatewayInit = { NullGateway },
     )
-
-    @Test fun `castRuntime lo SimpleCastRuntime by reference`() {
-        val c = container(FakeRepo(HomeUiState()))
-        assertSame(SimpleCastRuntime, c.castRuntime, "castRuntime phải trả đúng singleton SimpleCastRuntime (by reference)")
-        assertSame(c.castRuntime, c.castRuntime, "getter trả CÙNG một tham chiếu")
-    }
 
     @Test fun `workspaceRepository la MOT instance (lazy memoize)`() {
         val repo = FakeRepo(HomeUiState())

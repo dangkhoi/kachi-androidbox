@@ -1,7 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.speedbadge.BadgeLayout
-
 /**
  * QUYẾT ĐỊNH THUẦN của các điều khiển ClusterNav dựng lại trong Kachi Settings (IA v2 · §4.2, cuối mục).
  *
@@ -14,8 +12,8 @@ import com.byd.clusternav.speedbadge.BadgeLayout
  * màn có thể chỉ vào cùng một chỗ.
  *
  * ⚠ Mọi con số/mã chuỗi ở đây đều **đọc từ mã đang chạy**, không đoán: mã lưu của chủ đề lấy từ
- * `com.byd.clusternav.ThemeMode.Choice.code` (`"system"`/`"light"`/`"dark"` — KHÔNG phải `"auto"`), biên cỡ biển báo
- * lấy từ [BadgeLayout.SIZE_MIN_DP]/[BadgeLayout.SIZE_MAX_DP], giá trị chế độ cụm lấy từ `Prefs.NAV_SCREEN_*`.
+ * `com.byd.clusternav.ThemeMode.Choice.code` (`"system"`/`"light"`/`"dark"` — KHÔNG phải `"auto"`), giá trị chế độ cụm
+ * lấy từ `Prefs.NAV_SCREEN_*`. Android box B2 · W2c: nấc cỡ biển báo tốc độ gỡ cùng biển báo.
  */
 object ClusterNavSettingsModel {
 
@@ -40,56 +38,7 @@ object ClusterNavSettingsModel {
         ThemeMode.AUTO -> "system"
     }
 
-    // ── Chiếu màn: tỉ lệ chia đôi ────────────────────────────────────────────────────────────────
-
-    /**
-     * Chín tỉ lệ chia đôi, tính theo **phần trăm bề ngang của nửa TRÁI** — đúng đơn vị của khoá
-     * `split_ratio_left_pct` (`SimpleCastRuntime.kt:219–222`, mặc định 50).
-     *
-     * Chỉ 9 nấc tròn chứ không phải thanh trượt liên tục: đây là màn hình trên xe, và [ĐO] màn cũ cũng đang là 9 nút
-     * (`split_ratio_buttons`). Một thanh trượt cho 81 giá trị không giúp gì thêm mà lại khó bấm khi xe đang chạy.
-     */
-    fun splitRatioOptions(): List<Int> = (10..90 step 10).toList()
-
-    /** Nhãn của một tỉ lệ: 10 → `"1:9"`, 50 → `"5:5"`, 90 → `"9:1"`. Trái trước, phải sau — như thứ tự trên màn. */
-    fun splitRatioLabel(leftPct: Int): String = "${leftPct / 10}:${(100 - leftPct) / 10}"
-
-    // ── Chiếu màn: hai công tắc tự-chiếu LOẠI TRỪ nhau ───────────────────────────────────────────
-
-    /** Công tắc vừa bị chạm trong [autostartExclusive]. */
-    enum class AutostartToggle { FULL, SPLIT }
-
-    /**
-     * Bật một công tắc tự-chiếu thì tắt công tắc kia; **tắt thì không đụng gì tới cái kia**.
-     *
-     * [ĐO] `CastAutostart.kt:32–61` — đúng hai nhánh `if (isChecked) { …setAutoStart*Enabled(false) }`, không có
-     * nhánh `else`. Giữ nguyên tính bất đối xứng đó, vì nó có nghĩa: *"cả hai cùng tắt"* là trạng thái hợp lệ (không
-     * tự chiếu gì cả), còn *"cả hai cùng bật"* thì không — hai bộ tự-chiếu sẽ tranh cùng một cụm, đúng cuộc đua
-     * `SLOT_OCCUPIED` đã xoá mất CastingSplit một lần.
-     *
-     * @return cặp `(tự chiếu toàn màn, tự chiếu chia đôi)` sau khi chạm.
-     */
-    fun autostartExclusive(full: Boolean, split: Boolean, toggled: AutostartToggle): Pair<Boolean, Boolean> =
-        when (toggled) {
-            AutostartToggle.FULL -> if (full) full to false else full to split
-            AutostartToggle.SPLIT -> if (split) false to split else full to split
-        }
-
-    // ── Biển báo tốc độ: cỡ ──────────────────────────────────────────────────────────────────────
-
-    /**
-     * Các nấc cỡ biển báo, dựng từ **biên + bước** mà [BadgeLayout] khai — lớp này chỉ giữ **thuật toán**, không
-     * giữ một con số dp nào.
-     *
-     * Hai lý do, cả hai đều đã có tiền lệ trong dự án:
-     *  • *một nguồn sự thật*: nới biên ở [BadgeLayout] mà quên ở đây thì bộ chọn hoặc thiếu nấc, hoặc chào ra một
-     *    nấc bị [BadgeLayout.clampSizeDp] kẹp ngược lại ngay khi lưu — cú chạm không có tác dụng, kiểu hỏng im lặng
-     *    nhất;
-     *  • *`:core` không giữ số dp* (`SpacingScaleContractTest.core khong giu so dp`): khoảng cách là việc của tầng
-     *    vẽ, và dải cỡ này thuộc về [BadgeLayout] — nơi đã khai ngoại lệ KÈM LÝ DO cho đúng dải đó.
-     */
-    fun badgeSizeOptions(): List<Int> =
-        (BadgeLayout.SIZE_MIN_DP..BadgeLayout.SIZE_MAX_DP step BadgeLayout.SIZE_STEP_DP).toList()
+    // Android box B2 · W2c — tỉ lệ chia đôi + hai công tắc tự-chiếu (chiếu cụm) + nấc cỡ biển báo gỡ cùng chiếu cụm.
 
     // ── Phím vô-lăng: ba trạng thái ──────────────────────────────────────────────────────────────
 

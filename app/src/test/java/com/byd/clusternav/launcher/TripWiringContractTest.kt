@@ -242,7 +242,6 @@ class TripWiringContractTest {
         mapOf(
             "TripStart.onReady(" to "EarlyShellChannel.kt",
             "TripStart.onBootCompleted(" to "RebindReceiver.kt",
-            "TripStart.describe(" to "DiagActivity.kt",
             "TripStart.last(" to "SettingsSectionsTrip.kt",
             "KachiReadyLog.firstWakeAt()" to "TripStart.kt",
             "TripHub.bind(" to "KachiHomeTrip.kt",

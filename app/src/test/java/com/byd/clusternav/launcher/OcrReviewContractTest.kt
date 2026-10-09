@@ -53,76 +53,8 @@ class OcrReviewContractTest {
         assertTrue("runCatching" in body, "và bọc khe hở còn lại giữa phép kiểm và lời gọi")
     }
 
-    /**
-     * **[P2] Bản đồ PiP của bong bóng bị HAI luồng chạm ⇒ phải là bảng đồng thời, và trả lại phải NGUYÊN TỬ.**
-     *
-     * Luồng `"pip-block"` ghi, luồng `"pip-restore"` (do `onDestroy` khởi) duyệt + xoá. `forEach` chạy trong lúc
-     * luồng kia còn `put` ném `ConcurrentModificationException` ⇒ luồng trả lại chết giữa chừng ⇒ `appops …
-     * PICTURE_IN_PICTURE deny` của GMaps/YouTube nằm lại **vĩnh viễn** (state ngoài tiến trình, sống qua reboot —
-     * CLAUDE.md §5).
-     *
-     * ⚠ WP6 (2026-09-20) — khối này **DỜI** khỏi `FloatingBubbleService.kt` (tệp đó 537 dòng > trần 500) sang
-     * `BubblePipGuard.kt`, không sửa một bước nào. Bài canh đi theo chỗ ở mới: **tính chất** được canh không đổi,
-     * chỉ đổi tệp được quét — ghim tệp cũ là biến một lượt tách hợp lệ thành đỏ giả.
-     */
-    @Test
-    fun `BubblePipGuard giu bang PiP dong thoi va tra lai tung goi mot lan`() {
-        val src = code("src/main/java/com/byd/clusternav/modules/clustercast/BubblePipGuard.kt")
-        assertTrue("ConcurrentHashMap<String, String>()" in src, "bảng bị hai luồng chạm — `mutableMapOf` là CME chờ sẵn")
-        val restore = SourceRoots.body(src, "fun restore(")
-        assertTrue("previousModes.remove(pkg)" in restore, "lấy ra bằng `remove` nguyên tử ⇒ mỗi gói trả lại đúng một lần")
-        assertTrue("runCatching" in restore, "một lệnh shell hỏng ở gói này không được bỏ mặc gói sau ở trạng thái deny")
-        assertFalse("previousModes.forEach" in restore, "duyệt bản đồ dùng chung trong lúc luồng kia còn ghi")
-        // Và dịch vụ phải THẬT SỰ gọi cả hai nửa — tách tệp mà quên nối là trả-lại không bao giờ chạy.
-        val service = code("src/main/java/com/byd/clusternav/modules/clustercast/FloatingBubbleService.kt")
-        assertTrue("pipGuard.block(coordinator)" in service, "onCreate phải chặn PiP")
-        assertTrue("pipGuard.restore(coordinator)" in service, "onDestroy phải TRẢ LẠI PiP (state ngoài tiến trình)")
-    }
-
-    /**
-     * **[P2] `onStartCommand` không được deref `lateinit` mà `onCreate` có thể chưa kịp dựng.**
-     *
-     * `onCreate` `return` sớm ở ba cổng (`startForegroundOnce` / `castEnabledNow` / `requestOverlayIfMissing`)
-     * TRƯỚC khi dựng `renderer`/`gestureHandler`. Cổng lật giữa hai lượt (owner vừa bấm *Cho phép* ở màn hệ
-     * thống) ⇒ `showBubble()` → `renderer.buildBubble()` ném `UninitializedPropertyAccessException`.
-     * `onDestroy` đã canh đúng hai trường này; đường VÀO cũng phải canh.
-     */
-    @Test
-    fun `FloatingBubbleService canh lateinit o duong vao onStartCommand`() {
-        val start = SourceRoots.body(
-            code("src/main/java/com/byd/clusternav/modules/clustercast/FloatingBubbleService.kt"),
-            "override fun onStartCommand(",
-        )
-        val guardAt = start.indexOf("::renderer.isInitialized")
-        val showAt = start.indexOf("showBubble()")
-        assertTrue(guardAt >= 0 && "::gestureHandler.isInitialized" in start, "phải canh CẢ HAI trường lateinit")
-        assertTrue(showAt > guardAt, "canh sau khi đã dựng bong bóng thì không canh gì cả")
-    }
-
-    /**
-     * **[P2] Cổng "thế hệ" của callback widget VietMap phải đến TỪ NGOÀI, không đọc lại chính field đang so.**
-     *
-     * Bản cũ: `val callbackGeneration = listenerGeneration` rồi ba dòng sau `if (callbackGeneration !=
-     * listenerGeneration)` — điều kiện KHÔNG BAO GIỜ đúng, tức mã chết mang hình dạng lá chắn: một lượt
-     * RemoteViews của phiên nghe CŨ, đến sau `stop()`/`start()`, vẫn ghi đè snapshot của phiên mới. Thế hệ phải
-     * được chụp trong `updateAppWidget` — tức TRƯỚC lượt `post` sang main-looper, đúng chỗ cửa sổ đua mở ra.
-     */
-    @Test
-    fun `VietMap widget chup the he TRUOC luot post sang main-looper`() {
-        val host = code("src/main/java/com/byd/clusternav/vietmapwidget/VietMapAppWidgetHost.kt")
-        val update = SourceRoots.body(host, "override fun updateAppWidget(")
-        val capturedAt = update.indexOf("val generation = listenGeneration()")
-        val postAt = update.indexOf("main.post")
-        assertTrue(capturedAt >= 0, "phải đọc thế hệ ĐỒNG BỘ trong updateAppWidget")
-        assertTrue(postAt > capturedAt, "chụp sau khi đã post là chụp đúng cái giá trị mình định loại bỏ")
-        val bridge = code("src/main/java/com/byd/clusternav/vietmapwidget/VietMapWidgetBridge.kt")
-        val cb = SourceRoots.body(bridge, "private fun onHostViewUpdated(")
-        assertFalse(
-            "val callbackGeneration = listenerGeneration" in cb,
-            "đọc lại chính field đang so ⇒ `callbackGeneration != listenerGeneration` không bao giờ đúng",
-        )
-        assertTrue("callbackGeneration != listenerGeneration" in cb, "cổng thế hệ vẫn phải còn — chỉ đổi NGUỒN của nó")
-    }
+    // Android box B2 · W2c — ba bài của nút nổi chiếu cụm (`BubblePipGuard` · `FloatingBubbleService`) và widget VietMap
+    // (`VietMapAppWidgetHost` · `VietMapWidgetBridge`) gỡ cùng mã của chúng.
 
     /**
      * **[P2] `BydHal.root()` phải chặn VÒNG, không chỉ chặn tự-trỏ.**

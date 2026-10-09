@@ -24,16 +24,4 @@ class FreeformFlagsReadFirstWiringContractTest {
         assertFalse(read.contains("settings get"), "không phải lệnh shell")
     }
 
-    @Test
-    fun `duong launcher va duong chieu deu dung CUNG bo doc`() {
-        val store = code("system/FreeformSeedStore.kt")
-        assertTrue(SourceRoots.body(store, "fun forLauncher(").contains("readFlag = readGlobal(app)"), "launcher: FreeformSeedPolicy nhận bộ đọc")
-        val runtime = code("modules/clustercast/simplified/SimpleCastRuntime.kt")
-        assertTrue(runtime.contains("globalSettingReader = com.byd.clusternav.system.FreeformSeedStore.readGlobal(app)"), "chiếu: coordinator nhận bộ đọc")
-        assertTrue(
-            SourceRoots.codeOf("src/main/kotlin/com/byd/clusternav/modules/clustercast/simplified/SimpleCastCoordinator.kt")
-                .contains("readGlobalSetting = globalSettingReader"),
-            "coordinator chuyển bộ đọc xuống CastGeometryController",
-        )
-    }
 }

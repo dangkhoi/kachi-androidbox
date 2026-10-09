@@ -5,16 +5,12 @@ import android.util.Log
 /**
  * ═══ S4 · R5 + V-CLUSTER — CHỤP / ÁP ảnh cấu hình ClusterNav theo hồ sơ — phần của [WorkspacePrefs] ════════════════
  *
- * Tách khỏi `WorkspacePrefsProfile.kt` ở V-CLUSTER (2026-09-30, spec `kachi-profiles-are-everything.html` §11.4.9 — trần
- * 500 dòng). Tầng này chỉ **đọc tệp sống → gọi phép thuần → đổ kết quả vào `Editor`**: logic (họ tiền tố có mốc, khoá
- * hoãn `cast_enabled`, kiểm kiểu, bộ kiểm hình học) là [ClusterSnapshotPlan] ở `:core`, có test chạy thật.
+ * Tách khỏi `WorkspacePrefsProfile.kt` ở V-CLUSTER (2026-09-30 — trần 500 dòng). Tầng này chỉ **đọc tệp sống → gọi
+ * phép thuần → đổ kết quả vào `Editor`**: logic (kiểm kiểu, phạm vi) là [PrefSnapshotPlan] ở `:core`, có test chạy thật.
  *
- * ## Ba thứ V-CLUSTER thêm vào hợp đồng S4 (hợp đồng cũ giữ nguyên)
- *  1. **Họ tiền tố** `cast_geometry` (DPI/khung từng app khi chiếu) vào ảnh kèm **mốc có mặt**: ảnh có mốc ⇒ tệp sống
- *     sau khi áp bằng đúng họ của hồ sơ; ảnh cũ không mốc ⇒ không chạm (spec §11.4.2).
- *  2. **`cast_enabled` hoãn áp**: lượt áp KHÔNG BAO GIỜ ghi khoá sống (mọi cổng đọc là LIVE ⇒ cụm hai chủ) — chỉ ghi
- *     bản chờ `cast_enabled_pending`, chốt ở lần khởi động tiến trình kế (spec §11.4.3).
- *  3. **Kiểm kiểu + giá trị** trước khi ghi: ảnh trên đĩa sửa tay được và tệp nhập là dữ liệu người khác gửi.
+ * Android box B2 · W2c: họ tiền tố `cast_geometry`, khoá hoãn `cast_enabled` và lượt merge khung chiếu lúc nhập GỠ cùng
+ * chiếu cụm; tệp `simple_cast_prefs` không còn trong ảnh chụp ([RetiredClusterKeys]). Còn **kiểm kiểu** trước khi ghi:
+ * ảnh trên đĩa sửa tay được và tệp nhập là dữ liệu người khác gửi.
  */
 
 private const val TAG = "KachiProfile"
@@ -31,7 +27,6 @@ private const val TAG = "KachiProfile"
  * viễn, không có đường quay lại. [PrefSnapshot] có thẻ kiểu `n` đúng cho ca này, và [applyClusterNav] dịch nó thành
  * `remove(key)` — tức "trả khoá về đúng trạng thái chưa-ai-đặt".
  *
- * V-CLUSTER: họ + mốc + lựa chọn `cast_enabled` của hồ sơ (bản chờ nếu có) do [ClusterSnapshotPlan.snapshot] thêm vào.
  */
 internal fun WorkspacePrefs.snapshotClusterNav(profile: String) {
     val e = sp.edit()
@@ -39,9 +34,7 @@ internal fun WorkspacePrefs.snapshotClusterNav(profile: String) {
         val all = clusterNavPrefs(file).all
         // `associateWith` giữ CẢ khoá vắng (giá trị `null`) — xem KDoc ở trên, đây là nửa dễ quên nhất của phép chụp.
         val values: Map<String, Any?> = keys.associateWith { all[it] }
-        val shot = ClusterSnapshotPlan.snapshot(values, all, ProfileScopeCluster.familiesOf(file), ProfileScopeCluster.DEFERRED)
-        logDropped("snapshot $file/$profile", shot.dropped)
-        e.putString(keyOf(profile, ProfileScope.snapshotSuffix(file)), PrefSnapshot.encode(shot.values))
+        e.putString(keyOf(profile, ProfileScope.snapshotSuffix(file)), PrefSnapshot.encode(values))
     }
     e.apply()
 }
@@ -56,7 +49,7 @@ internal fun WorkspacePrefs.snapshotClusterNav(profile: String) {
  * ⚠ Ghi **đúng kiểu**: `getBoolean` trên giá trị ghi bằng `putString` **ném** `ClassCastException`, và chỗ đọc là dịch
  * vụ đang chạy trên xe (`FloatingBubbleService`, `NavAccessibilityService`) chứ không phải màn Cài đặt — mất kiểu thì
  * không hỏng lúc đổi hồ sơ mà hỏng **trên đường** (xem KDoc [PrefSnapshot]). V-CLUSTER: giá trị SAI kiểu (khai sẵn ở
- * [ProfileScopeCluster.DECLARED_TYPES], hoặc khác kiểu của giá trị sống) bị bỏ và ghi log thay vì ghi.
+ * [ProfileScopeTypes.CLUSTERNAV], hoặc khác kiểu của giá trị sống) bị bỏ và ghi log thay vì ghi.
  *
  * ⚠ Ghi bằng `apply()` chứ không `commit()`: `apply()` cập nhật bản đồ **trong RAM ngay lập tức** (lượt đọc kế tiếp
  * của dịch vụ thấy ngay) và đẩy xuống đĩa ở thread nền — còn `commit()` chặn luồng vẽ để chờ I/O đúng lúc người dùng
@@ -66,19 +59,14 @@ internal fun WorkspacePrefs.applyClusterNav(profile: String) {
     val stored = sp.all
     ProfileScope.CLUSTERNAV_KEYS.forEach { (file, keys) ->
         val raw = storedSnapshot(stored, keyOf(profile, ProfileScope.snapshotSuffix(file))) ?: return@forEach
-        val families = ProfileScopeCluster.familiesOf(file)
         // ⚠⚠ Lọc theo [ProfileScope] NGAY LÚC ÁP, không chỉ lúc chụp: ảnh chụp nằm trên đĩa của xe **lâu hơn** bản
         // phân loại đã sinh ra nó. Một khoá bị xếp lại phạm vi ở bản sau vẫn còn nguyên trong ảnh chụp cũ, và không có
         // phép lọc này thì lượt đổi hồ sơ **vẫn** ghi đè nó. [ProfileScope] phải là nguồn duy nhất ở CẢ hai đầu.
-        val values = PrefSnapshot.decode(raw).filterKeys { ClusterSnapshotPlan.inScope(it, keys, families) }
+        val values = PrefSnapshot.decode(raw).filterKeys { PrefSnapshotPlan.inScope(it, keys) }
         if (values.isEmpty()) return@forEach
         val target = clusterNavPrefs(file)
-        val plan = ClusterSnapshotPlan.apply(
-            target.all, values, keys, families, ProfileScopeCluster.DECLARED_TYPES, ProfileScopeCluster.DEFERRED,
-        )
+        val plan = PrefSnapshotPlan.apply(target.all, values, keys, ProfileScopeTypes.CLUSTERNAV)
         logDropped("apply $file/$profile", plan.dropped)
-        // FIX286 · PI5 — `cast=SetPending(…)|ClearPending` · khung ghi N · XOÁ M (refute: xoá khung của xe nhận phải lộ ra).
-        ClusterSnapshotPlan.describe(plan, families, ProfileScopeCluster.DEFERRED)?.let { Log.i(TAG, "áp «$profile» $file: $it") }
         if (plan.writes.isEmpty()) return@forEach
         val e = target.edit()
         plan.writes.forEach { (k, v) ->
@@ -103,7 +91,7 @@ internal fun WorkspacePrefs.applyClusterNav(profile: String) {
  * V-CLUSTER · VC-R8 lớp 1 — làm sạch giá trị của MỘT hậu tố hồ sơ trong **tệp nhập** trước khi nó chạm đĩa.
  *
  * Hậu tố không phải ảnh chụp ClusterNav ⇒ trả nguyên [value] (bố cục/chip… có bộ giải mã tự chữa riêng). Hậu tố ảnh
- * chụp ⇒ chỉ giữ khoá trong phạm vi, đúng kiểu khai sẵn, mốc đúng `true`, khoá họ + giá trị qua bộ kiểm hình học;
+ * chụp ⇒ chỉ giữ khoá trong phạm vi, đúng kiểu khai sẵn (khoá ngoài phạm vi — vd khoá chiếu cụm BYD — bỏ im lặng);
  * giá trị không phải chuỗi ⇒ `null` (chỗ gọi xoá khoá đích). Số khoá bị bỏ được ghi log — không ném, không im lặng.
  *
  * PROFILE-IO-0930: `null` = hậu tố VẮNG trong tệp ([ProfileTransfer.planImport] trả mọi hậu tố, vắng ⇒ `null` ⇒ chỗ gọi
@@ -116,9 +104,8 @@ internal fun cleanImportedSnapshot(suffix: String, value: Any?): Any? {
         Log.w(TAG, "nhập hồ sơ: bỏ ảnh $file — kiểu ${value?.let { it::class.simpleName }}, cần chuỗi")
         return null
     }
-    val clean = ClusterSnapshotPlan.sanitize(
-        PrefSnapshot.decode(raw), ProfileScope.CLUSTERNAV_KEYS.getValue(file), ProfileScopeCluster.familiesOf(file),
-        ProfileScopeCluster.DECLARED_TYPES,
+    val clean = PrefSnapshotPlan.sanitize(
+        PrefSnapshot.decode(raw), ProfileScope.CLUSTERNAV_KEYS.getValue(file), ProfileScopeTypes.CLUSTERNAV,
     )
     logDropped("import $file", clean.dropped)
     return PrefSnapshot.encode(clean.values)
@@ -129,21 +116,19 @@ internal fun cleanImportedSnapshot(suffix: String, value: Any?): Any? {
  * trị ĐANG SỐNG của xe nhận (vắng ⇒ `null` tường minh = mặc định lúc áp) — CÙNG phép [ProfileScopeMigration.fillNewKeys] của lượt
  * nâng cấp (`fillNewProfileKeysOnce`). Không thì lượt đổi đầu tiên sang hồ sơ nhập giữ giá trị của hồ sơ vừa rời rồi chụp luôn
  * vào ảnh của nó (cùng bệnh PROFILE-NEW-KEYS, kích hoạt khác). Khoá có mặt (kể cả `null` tường minh của bản chia sẻ) ⇒ của tệp;
- * họ đã có mốc ⇒ của tệp ([mergeImportedCast] lo họ chiếu cụm). Hậu tố khác / giá trị sai kiểu ⇒ trả nguyên [value].
+ * Hậu tố khác / giá trị sai kiểu ⇒ trả nguyên [value].
  *
  * 2.93 · PROFILE-NEW-FILE-FILL (review 2.92 Pass 2 G3) — [captured] = tệp nhập có ảnh ClusterNav KHÁC RỖNG ở ít nhất một tệp
  * ([importedCaptured]) ⇒ ảnh VẮNG/rỗng của tệp này cũng được điền (lối xuất luôn chụp đủ ảnh của hồ sơ đang dùng, nên ảnh vắng
- * = bản xuất cũ hơn — vd tệp ≤ 2.83 thiếu `cast-v2-app-catalog` ⇒ vị trí nút nổi theo lượt đổi đầu tiên). Tệp không có ảnh
+ * = bản xuất cũ hơn). Tệp không có ảnh
  * ClusterNav nào ⇒ hồ sơ nhập *"chưa chụp"* ⇒ ảnh vắng giữ nguyên (*"bản sao của hiện tại"*, S4 · R5).
  */
 internal fun WorkspacePrefs.fillImportedSnapshot(suffix: String, value: Any?, captured: Boolean): Any? {
     val file = ProfileScope.CLUSTERNAV_KEYS.keys.firstOrNull { ProfileScope.snapshotSuffix(it) == suffix } ?: return value
     val raw = value as? String ?: (if (value == null && captured) "" else return value)
-    val families = ProfileScopeCluster.familiesOf(file)
-    val entries = ProfileScopeMigration.ledgerScope(mapOf(file to ProfileScope.CLUSTERNAV_KEYS.getValue(file)), families).getValue(file)
     val filled = ProfileScopeMigration.fillNewKeys(
-        mapOf(file to PrefSnapshot.decode(raw)), clusterNavPrefs(file).all, entries, ProfileScopeCluster.DEFERRED,
-        captured = if (captured) setOf(file) else emptySet(), families = families,
+        mapOf(file to PrefSnapshot.decode(raw)), clusterNavPrefs(file).all, ProfileScope.CLUSTERNAV_KEYS.getValue(file),
+        captured = if (captured) setOf(file) else emptySet(),
     )[file] ?: return value
     return PrefSnapshot.encode(filled)
 }
@@ -151,37 +136,17 @@ internal fun WorkspacePrefs.fillImportedSnapshot(suffix: String, value: Any?, ca
 /**
  * 2.93 · PROFILE-NEW-FILE-FILL — tệp nhập ([writes] = kế hoạch nhập, hậu tố → giá trị CHƯA làm sạch) có ảnh ClusterNav KHÁC RỖNG
  * sau làm sạch ở ít nhất MỘT tệp không — tức hồ sơ nhập *"đã chụp"* ([ProfileScopeMigration.captured]). Làm sạch bằng CÙNG phép
- * thuần [ClusterSnapshotPlan.sanitize] của [cleanImportedSnapshot] nhưng không ghi log (lượt ghi thật sẽ ghi, một lần).
+ * thuần [PrefSnapshotPlan.sanitize] của [cleanImportedSnapshot] nhưng không ghi log (lượt ghi thật sẽ ghi, một lần).
  */
 internal fun importedCaptured(writes: Map<String, Any?>): Boolean =
     ProfileScope.CLUSTERNAV_KEYS.any { (file, keys) ->
         val raw = writes[ProfileScope.snapshotSuffix(file)] as? String ?: return@any false
-        ClusterSnapshotPlan.sanitize(
-            PrefSnapshot.decode(raw), keys, ProfileScopeCluster.familiesOf(file), ProfileScopeCluster.DECLARED_TYPES,
-        ).values.isNotEmpty()
+        PrefSnapshotPlan.sanitize(PrefSnapshot.decode(raw), keys, ProfileScopeTypes.CLUSTERNAV).values.isNotEmpty()
     }
 
-/**
- * FIX286 · PI1/PI2 — merge MỘT lần lúc nhập cho ảnh `simple_cast_prefs` ([ClusterSnapshotPlan.mergeImport]): [clean] =
- * giá trị ĐÃ qua [cleanImportedSnapshot] (`null` = tệp không có ảnh này ⇒ coi như ảnh rỗng: mọi thứ lấy của xe nhận).
- * Tệp sống của xe được đọc ĐÚNG một lần ở đây. Hậu tố khác ⇒ `null` (chỗ gọi giữ nguyên [clean]).
- *
- * ⚠ Hàm này là chỗ DUY NHẤT nới refute C4, và chỉ ghi vào ảnh chụp của hồ sơ VỪA TẠO — [applyClusterNav] không gọi nó.
- */
-internal fun WorkspacePrefs.mergeImportedCast(suffix: String, clean: Any?): Pair<String, ClusterImportSummary>? {
-    val file = ProfileScopeCluster.SIMPLE_CAST_FILE
-    if (suffix != ProfileScope.snapshotSuffix(file)) return null
-    val merge = ClusterSnapshotPlan.mergeImport(
-        PrefSnapshot.decode(clean as? String), clusterNavPrefs(file).all, ProfileScope.CLUSTERNAV_KEYS.getValue(file),
-        ProfileScopeCluster.familiesOf(file), ProfileScopeCluster.DEFERRED,
-    )
-    logDropped("import merge $file (car values)", merge.dropped)
-    return PrefSnapshot.encode(merge.values) to ClusterImportSummary.of(merge)
-}
-
-/** FIX286 · PI5 — một dòng log lúc nhập: tệp có/không phần cụm, chiếu cụm theo tệp hay giữ của xe, khung tệp/giữ. */
+/** FIX286 · PI5 — một dòng log lúc nhập: tên hồ sơ vừa tạo + loại tệp. */
 internal fun logImported(report: ProfileImportReport) {
-    Log.i(TAG, report.cluster.logLine(report.name, report.kind))
+    Log.i(TAG, "nhập hồ sơ «${report.name}» (${report.kind.code})")
 }
 
 /**
@@ -190,7 +155,7 @@ internal fun logImported(report: ProfileImportReport) {
  *
  * Senior review V-CLUSTER Pass 3 — không đọc bằng `sp.getString`: [ĐO code b5c0e87] lượt nhập hồ sơ tới 2.83 chép thẳng
  * giá trị đã giải mã (`copyValue`, chưa có [cleanImportedSnapshot]), nên một tệp nhập đặt `<hồ sơ>__cn__<tệp>` thành
- * Boolean/Int là nằm yên trên đĩa. `getString` trên nó NÉM `ClassCastException` — ở [migrateClusterProfileOnce] (chạy
+ * Boolean/Int là nằm yên trên đĩa. `getString` trên nó NÉM `ClassCastException` — ở [fillNewProfileKeysOnce] (chạy
  * trong `init` của `PrefsWorkspaceRepository`, trước màn nhà) đó là launcher sập ở MỌI lần mở, không bao giờ tới được
  * dấu chạy-một-lần; ở [applyClusterNav] là sập đúng lúc chạm chip hồ sơ.
  */

@@ -5,6 +5,12 @@ package com.byd.clusternav.system
  * Tách khỏi ClusterCast để (a) test được kích cụm/dò VD mà không cần xe, (b) giữ ClusterCast dưới ngưỡng LOC.
  */
 object DisplayParse {
+    /**
+     * Lệnh dò display (bản grep) mà [ownedVirtualDisplayIds] đọc — Android box B2 · W2c dời từ `ClusterDisplayResolver`
+     * (gỡ cùng chiếu cụm) nguyên chuỗi, không đổi byte (đường chữa phím `NavConnect` đã chạy với đúng lệnh này).
+     */
+    const val DETECT_CMD: String = "dumpsys display | grep -iE 'Display [0-9]+:|fission|xdja|virtual:'"
+
     // ★ biên dịch 1 LẦN (trước đây nằm trong thân hàm → biên dịch lại mỗi lần dò VD, mà vòng dò chạy tới 16 lần).
     private val RE_DISPLAY_ANY = Regex("(?:Display |mDisplayId=|Display Id=)(\\d+)")
     private val RE_DISPLAY_HDR = Regex("Display (\\d+):")
@@ -179,7 +185,7 @@ object DisplayParse {
 
     /**
      * Tập id logical-display của các VirtualDisplay do CHÍNH [ownerPkg] tạo (ô/slot của launcher — `kachi-slot-N`),
-     * đọc từ `dumpsys display` (bản đầy đủ HOẶC bản grep của `ClusterDisplayResolver.DETECT_CMD`).
+     * đọc từ `dumpsys display` (bản đầy đủ HOẶC bản grep [DETECT_CMD]).
      *
      * Vì sao (R2 spec `kachi-hal187-cast-remediation` · CLAUDE §5 guard ở tầng thi hành): [ĐO] xe 2026-09-15 sau
      * reboot, display **1** = `kachi-slot-0` (`uniqueId="virtual:com.byd.launcher,10138,kachi-slot-0-…,0"`,

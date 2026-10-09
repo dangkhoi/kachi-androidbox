@@ -4,8 +4,8 @@ package com.byd.clusternav.carexec
  * ═══ 2.91 · F3 — "MỘT LẦN THỨC" là gì, và chuỗi SẴN chạy lượt của lần thức nào (spec `kachi-291-small-fixes.html` §4.3) ═══
  *
  * Bệnh [SUY từ nguồn 2.90, ghi chú QA 2.89 Q3, chưa bắt được trên xe]: ngay sau khởi động, màn tắt rồi bật lại trong ~10 s ⇒
- * lượt kiểm điều kiện nền của VietMap (`AppPrereqs.onReady`, trong chuỗi SẴN `EarlyShellChannel.readyChain`) bị BỎ ở lần thức
- * thật. Hai mắt xích, cả hai đọc ở `:app` [ĐO nguồn]:
+ * một lượt của chuỗi SẴN (`EarlyShellChannel.readyChain` — ở Kachi BYD là kiểm điều kiện nền VietMap `AppPrereqs.onReady`,
+ * gỡ ở Android box B2 · W2c; nay còn kiểm phím, trả màn nhà, chuyến lên xe) bị BỎ ở lần thức thật. Hai mắt xích, cả hai đọc ở `:app` [ĐO nguồn]:
  *  1. `KachiReadyLog.wake` gộp mọi tín hiệu "màn bật" cách mốc hiện tại < 10 s vào CÙNG một lần thức — kể cả khi giữa hai tín
  *     hiệu màn đã TẮT. Lần thức thật sau một lượt tắt-bật nhanh nhận lại mốc cũ.
  *  2. `readyChain` ghi "đã chạy cho mốc này" TRƯỚC khi kiểm cổng (kênh lên + màn tương tác). Lượt xếp hàng cho tín hiệu cũ chạy

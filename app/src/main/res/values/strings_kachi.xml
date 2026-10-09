@@ -153,18 +153,9 @@
     <string name="kachi_profile_kind_unknown">không đọc được</string>
     <string name="kachi_profile_import_none">Chưa có tệp hồ sơ (.kachi) nào. Chép tệp vào thư mục:\n%1$s</string>
     <!-- FIX286 · PI3 — hộp thoại sau khi nhập: nói thật phần chiếu cụm của tệp (đếm theo dữ liệu tệp, không theo số bản). -->
-    <string name="kachi_profile_import_no_cluster">Tệp không có phần chiếu cụm (xuất từ bản trước 2.84) — hồ sơ này giữ cấu hình chiếu đang có trên xe này. Xuất lại từ bản mới để sao lưu đủ.</string>
-    <string name="kachi_profile_import_cast_file">Chiếu cụm theo tệp: %1$s.</string>
-    <string name="kachi_profile_import_cast_kept">Tệp không ghi bật/tắt chiếu cụm — giữ của xe này: %1$s.</string>
-    <string name="kachi_profile_import_geom_file">Tệp mang %1$d khung chiếu (mỗi app toàn cụm hoặc nửa cụm là một khung) — thay %2$d khung khác đang có trên xe này.</string>
     <!-- Senior review FIX286 Pass 1 · P3: không thay khung nào của xe ⇒ không in "thay 0 khung". -->
-    <string name="kachi_profile_import_geom_file_new">Tệp mang %1$d khung chiếu (mỗi app toàn cụm hoặc nửa cụm là một khung) — không thay khung nào đang có trên xe này.</string>
-    <string name="kachi_profile_import_geom_kept">Giữ %1$d khung chiếu đang có trên xe này mà tệp không có.</string>
-    <string name="kachi_profile_import_geom_none">Chưa có khung chiếu riêng cho app nào — dùng khung mặc định.</string>
-    <string name="kachi_profile_import_use_cast">Chiếu cụm của hồ sơ này (%1$s) khác xe đang chạy. Dùng ngay sẽ áp luôn nếu cụm không đang chiếu app; đang chiếu thì áp từ lần nổ máy sau.</string>
     <string name="kachi_profile_import_use_now">Dùng hồ sơ này ngay</string>
     <string name="kachi_profile_import_later">Để sau</string>
-    <string name="kachi_profile_import_cast_deferred">Cụm đang chiếu hoặc đang chuyển trạng thái — chiếu cụm của hồ sơ này áp dụng từ lần nổ máy sau (hoặc Cài đặt › Chiếu cụm › Áp ngay).</string>
     <string name="kachi_profiles_note">Mỗi hồ sơ giữ RIÊNG gần như mọi thứ: bố cục, nội dung ô, thanh nút, chip, hình nền, giao diện, đơn vị, ngôn ngữ, cấu hình dẫn đường, cụm đồng hồ, chiếu lên cụm và camera. Chạm một hồ sơ để đổi sang nó — chip hồ sơ ở thanh trên cũng đổi được, nhưng tạo và xoá thì chỉ ở đây. Tệp xuất đầy đủ có địa chỉ đã lưu và lịch dẫn đường — gửi người khác thì dùng Xuất để chia sẻ.</string>
     <string name="kachi_profiles_add">Thêm hồ sơ (bản sao của %1$s)</string>
     <string name="kachi_profile_sub_active">Đang dùng · %1$s</string>
@@ -318,15 +309,6 @@
     <!-- ── IA v2 · §4.2 — CÂU của cầu [ClusterNavBridge]. Mã BridgeMsg → khoá ở KachiHomeWiring.bridgeMsgRes().
          Chép NGUYÊN VĂN câu của màn ClusterNav cũ (KDoc từng giá trị BridgeMsg ghi rõ dòng gốc): hai màn
          phải nói cùng một lời, lệch một câu là người dùng tưởng hai tính năng khác nhau. ── -->
-    <string name="kachi_bridge_granting_notification">Đang cấp quyền đọc thông báo…</string>
-    <string name="kachi_bridge_notification_granted">Đã cấp quyền — đã kết nối nguồn dẫn đường.</string>
-    <string name="kachi_bridge_notification_fallback">Không mở được cài đặt. Vào Cài đặt → Ứng dụng → Truy cập đặc biệt → Truy cập thông báo → bật ClusterNav.</string>
-    <string name="kachi_bridge_reconnecting">Đang kết nối lại nguồn dẫn đường…</string>
-    <string name="kachi_bridge_cast_on">Đã bật Cluster Cast</string>
-    <string name="kachi_bridge_cast_off">Đã tắt Cluster Cast · cụm về đồng hồ</string>
-    <string name="kachi_bridge_cast_returning">Đang trả app về…</string>
-    <string name="kachi_bridge_cluster_reset">Đã trả cụm về đồng hồ · đang mở lại…</string>
-    <string name="kachi_bridge_deep_rescue_running">Đang dọn sạch cụm…</string>
     <string name="kachi_bridge_enabling_accessibility">Đang bật dịch vụ Hỗ trợ…</string>
     <string name="kachi_bridge_accessibility_enabled">Đã bật. Bấm nút đã gán để mở app.</string>
     <string name="kachi_bridge_accessibility_not_bound">Đã bật quyền Hỗ trợ nhưng dịch vụ chưa gắn được — thử lại sau vài giây, hoặc bật/tắt tay ở Cài đặt hệ thống > Hỗ trợ.</string>
@@ -346,8 +328,6 @@
 
     <!-- ── Dùng chung (hộp thoại của Cài đặt · SettingsDialogs) ── -->
     <string name="kachi_save">Lưu</string>
-    <string name="kachi_dp_value">%1$d dp</string>
-    <string name="kachi_px_value">%1$d px</string>
 
     <!-- ── IA v2 nhóm 2 — Thanh trạng thái & thanh nút (SettingsBarsSection · TopStripPicker) ── -->
     <!-- S4 · R11 (c): ba khoá kachi_topstrip_more/_on/_none đã xoá cùng hộp thoại "Thêm chip khác…" —
@@ -435,146 +415,15 @@
     <string name="kachi_days_weekdays">T2–T6</string>
 
     <!-- ── IA v2 nhóm 5 — Dẫn đường & cụm đồng hồ (SettingsNavSection) ── -->
-    <string name="kachi_sec_nav">Dẫn đường + HUD</string>
-    <string name="kachi_nav_enabled_title">Dẫn đường lên cụm đồng hồ</string>
-    <string name="kachi_nav_enabled_sub">Bật là tự xin quyền đọc thông báo qua kênh của xe — không phải vào Cài đặt hệ thống.</string>
-    <string name="kachi_nav_source_none">Đang dẫn: —</string>
-    <string name="kachi_nav_source">Đang dẫn: %1$s</string>
-    <string name="kachi_nav_source_stale">Đang dẫn: %1$s (dữ liệu đã cũ)</string>
-    <string name="kachi_nav_channel_notification">thông báo</string>
-    <string name="kachi_nav_channel_screen">đọc màn hình</string>
-    <string name="kachi_nav_output">Cụm: %1$s</string>
-    <string name="kachi_nav_out_unknown">—</string>
-    <string name="kachi_nav_out_off">tắt</string>
-    <string name="kachi_nav_out_starting">đang khởi động</string>
-    <string name="kachi_nav_out_emitting">đang gửi</string>
-    <string name="kachi_nav_out_verified">cụm báo đã nhận</string>
-    <string name="kachi_nav_out_stale">đã cũ</string>
-    <string name="kachi_nav_out_fault">lỗi</string>
-    <string name="kachi_nav_cluster_mode">Chế độ hiện trên cụm</string>
-    <string name="kachi_nav_cluster_off">Tắt</string>
-    <string name="kachi_nav_cluster_on">Bật (Giữa + ETA)</string>
-    <string name="kachi_nav_marquee_title">Chạy chữ tên đường dài</string>
-    <string name="kachi_nav_marquee_sub">Tên dài hơn bề ngang sẽ chạy ngang thay vì bị cắt.</string>
     <string name="kachi_nav_default_app">App dẫn đường mặc định</string>
     <string name="kachi_nav_app_gmaps">Google Maps</string>
     <string name="kachi_nav_app_vietmap">VietMap</string>
     <string name="kachi_nav_app_waze">Waze</string>
-    <string name="kachi_nav_reconnect">Kết nối lại nguồn dẫn đường</string>
-    <string name="kachi_nav_hud_off">HUD — nguồn thông báo: không kiểm (công tắc Dẫn đường đang tắt)</string>
-    <string name="kachi_nav_hud_no_access">HUD — nguồn thông báo: chưa cấp quyền đọc thông báo</string>
-    <string name="kachi_nav_hud_live">HUD — nguồn thông báo: đã gắn (hệ thống xác nhận lúc %1$s)</string>
-    <string name="kachi_nav_hud_not_live">HUD — nguồn thông báo: CHƯA gắn (hệ thống, lúc %1$s)</string>
-    <string name="kachi_nav_hud_bound">HUD — nguồn thông báo: đã gắn lúc %1$s</string>
-    <string name="kachi_nav_hud_unknown">HUD — nguồn thông báo: chưa kiểm được (kênh lệnh của xe chưa sẵn hoặc đang có lượt khác chạy)</string>
     <!-- Senior review FIX286 Pass 4 · P3: đã đọc trạng thái hệ thống mà không ra khối Live (khuôn lạ — OC-HUD1) ≠ "kênh chưa sẵn". -->
-    <string name="kachi_nav_hud_unreadable">HUD — nguồn thông báo: không đọc được trạng thái hệ thống (lúc %1$s) — Kachi không tự gắn lại</string>
-    <string name="kachi_nav_hud_write">Ghi tới xe lúc %1$s (%2$s) · nhận %3$d · từ chối %4$d · bỏ qua %5$d · app: %6$s</string>
-    <string name="kachi_nav_hud_write_nodev">Ghi tới xe lúc %1$s: không mở được thiết bị cụm</string>
-    <string name="kachi_nav_hud_write_none">Chưa ghi khung dẫn đường nào tới xe trong lần chạy này</string>
-    <string name="kachi_nav_hud_app_none">—</string>
-    <string name="kachi_nav_hud_kind_guide">khung dẫn</string>
-    <string name="kachi_nav_hud_kind_keepalive">giữ nhịp</string>
-    <string name="kachi_nav_hud_kind_clear">xoá</string>
-    <string name="kachi_nav_hud_kind_mode_off">chế độ cụm Tắt</string>
-    <string name="kachi_nav_hud_last">Gắn lại gần nhất lúc %1$s (%2$s): %3$s</string>
-    <string name="kachi_nav_hud_last_none">Gắn lại gần nhất: chưa có lượt nào</string>
-    <string name="kachi_nav_hud_trig_auto">tự động</string>
-    <string name="kachi_nav_hud_trig_switch">công tắc</string>
-    <string name="kachi_nav_hud_trig_button">nút Kết nối lại</string>
-    <string name="kachi_nav_hud_trig_read">đọc trạng thái</string>
-    <string name="kachi_nav_hud_o_live_already">đã gắn sẵn, không cần chữa</string>
-    <string name="kachi_nav_hud_o_bound">đã gắn (không cần lệnh)</string>
-    <string name="kachi_nav_hud_o_healed">đã gắn lại</string>
-    <string name="kachi_nav_hud_o_still">đã chạy lệnh nhưng vẫn chưa gắn</string>
-    <string name="kachi_nav_hud_o_not_live">chưa gắn</string>
-    <string name="kachi_nav_hud_o_unreadable">không đọc được trạng thái hệ thống</string>
-    <string name="kachi_nav_hud_o_skipped">bỏ qua (công tắc hoặc màn vừa đổi)</string>
-    <string name="kachi_nav_hud_o_no_shell">chưa chạy được lệnh — cần bấm Cho phép gỡ lỗi USB trên xe</string>
-    <string name="kachi_nav_hud_o_shell_failed">kênh lệnh của xe lỗi</string>
-    <string name="kachi_nav_hud_o_busy">đang có lượt khác chạy</string>
-    <string name="kachi_nav_hud_note">HUD kính lái chỉ nhận dẫn đường từ Google Maps — VietMap và Waze không lên HUD.</string>
-    <string name="kachi_nav_hud_toast">Kết nối lại nguồn dẫn đường: %1$s</string>
-    <string name="kachi_sub_badge">Biển báo tốc độ</string>
-    <string name="kachi_badge_enabled_title">Hiện biển báo tốc độ</string>
-    <string name="kachi_badge_enabled_sub">Lấy từ VietMap; bật là mở VietMap một lần để có nguồn tốc độ.</string>
-    <string name="kachi_badge_upcoming_title">Hiện giới hạn sắp tới</string>
-    <string name="kachi_badge_upcoming_sub">Biển nhỏ thứ hai cho đoạn đường phía trước.</string>
-    <string name="kachi_badge_alert_title">Hiện cảnh báo camera</string>
-    <string name="kachi_badge_alert_sub">Chip cảnh báo của VietMap (camera, đoạn nguy hiểm).</string>
-    <string name="kachi_badge_size">Cỡ biển báo</string>
-    <string name="kachi_badge_pos_x">Vị trí biển báo — ngang</string>
-    <string name="kachi_badge_pos_y">Vị trí biển báo — dọc</string>
-    <string name="kachi_badge_drag_hint">Kéo biển trong khung để đặt chỗ cho nó trên cụm; hai nút −/+ ở trên chỉnh từng 10 px.</string>
-    <string name="kachi_sub_bubble">Bong bóng VietMap</string>
-    <string name="kachi_bubble_enabled_title">Hiện bong bóng VietMap trên cụm</string>
-    <string name="kachi_bubble_enabled_sub">Ô chỉ đường thu nhỏ do bản VietMap sửa đổi vẽ.</string>
-    <string name="kachi_bubble_autostart_title">Tự mở VietMap cho bong bóng</string>
-    <string name="kachi_bubble_autostart_sub">Nổ máy hoặc mở Kachi thì mở VietMap chạy nền để bóng có sẵn trên cụm. Tắt thì bóng chỉ hiện khi VietMap đang chạy.</string>
-    <string name="kachi_bubble_need_cast">Chỉ đổi được chỗ khi cụm đang chiếu — chưa chiếu thì giá trị vẫn lưu, nhưng cụm chưa đổi theo.</string>
-    <string name="kachi_bubble_need_toggle">Bật công tắc \"Hiện bong bóng VietMap trên cụm\" ở trên để chỉnh vị trí.</string>
-    <string name="kachi_bubble_pos_x">Vị trí bong bóng — ngang</string>
-    <string name="kachi_bubble_pos_y">Vị trí bong bóng — dọc</string>
-    <string name="kachi_bubble_drag_hint">Kéo ô trong khung để đặt chỗ cho bong bóng trên cụm.</string>
 
     <!-- ── IA v2 nhóm 6 — Chiếu màn lên cụm (SettingsCastSection) ── -->
-    <string name="kachi_sec_cast">Cluster Cast</string>
-    <string name="kachi_cast_enabled_title">Bật Cluster Cast</string>
-    <string name="kachi_cast_enabled_sub">Mở cụm để nhận cửa sổ app. Tắt là trả cụm về đồng hồ ngay.</string>
-    <string name="kachi_cast_enabled_pending">Đang chạy: %1$s · hồ sơ này: %2$s — áp dụng từ lần nổ máy sau.</string>
-    <string name="kachi_cast_enabled_apply_now">Áp ngay</string>
-    <string name="kachi_cast_state_on_short">BẬT</string>
-    <string name="kachi_cast_state_off_short">TẮT</string>
     <!-- FIX286 · PI5 — mốc bền của lượt chốt lúc khởi động (ca TẮT→BẬT chưa từng đo trên xe, OC-PI3). -->
-    <string name="kachi_cast_commit_mark">Lần khởi động lúc %1$s đã áp lựa chọn chiếu cụm của hồ sơ: %2$s (bản %3$s).</string>
-    <string name="kachi_cast_bubble_title">Hiện nút nổi chiếu cụm</string>
-    <string name="kachi_cast_bubble_sub">Nút hoa Kachi nổi trên màn, chạm để chiếu. Tắt chỉ ẩn nút — vẫn chiếu được bằng bốn nút Chiếu ngay ở dưới, bằng giọng nói, và tự chiếu khi nổ máy.</string>
-    <string name="kachi_cast_split">Tỉ lệ chia đôi</string>
     <!-- B1b · CLUSTER-RECT-OPTION (2.89) — Kiểu chiếu cụm: Bo tròn / Chữ nhật (SettingsSectionsCastStyle.kt) -->
-    <string name="kachi_cast_style_label">Kiểu chiếu cụm</string>
-    <string name="kachi_cast_style_curved">Bo tròn</string>
-    <string name="kachi_cast_style_rect">Chữ nhật</string>
-    <string name="kachi_cast_style_rect_note">Chữ nhật: ở kiểu này khung ADAS trắng bên phải do phần mềm của xe vẽ cố định — không thu nhỏ được (phím menu chỉ đổi hình bên trong, khung vẫn còn). Muốn ô ADAS nhỏ thì chọn Bo tròn — ở kiểu đó phím menu thu nhỏ được. Cụm mất số km/h gốc (HUD, bản đồ và bóng VietMap vẫn có tốc độ). Khung app mặc định trọn cụm — tự chỉnh vị trí, kích thước, DPI ở mục \"Khung và DPI\" bên dưới.</string>
-    <string name="kachi_cast_style_apply_note">Áp dụng ở lượt mở chiếu kế tiếp khi cụm trống (không app, không cửa sổ nào trên cụm). Không gửi lệnh nào tới cụm khi đang chiếu.</string>
-    <string name="kachi_cast_style_session">Cụm đang: %1$s. Kiểu mới áp ở lần nổ máy sau hoặc khi cụm trống.</string>
-    <string name="kachi_cast_style_unknown">chưa rõ kiểu</string>
-    <string name="kachi_cast_style_apply_now">Áp ngay (tắt rồi mở lại chiếu)</string>
-    <string name="kachi_cast_style_apply_busy">Đang chiếu app — dừng chiếu trước rồi bấm Áp ngay.</string>
-    <string name="kachi_cast_style_unconfirmed">Chưa xác nhận được cụm đang ở kiểu nào (lần chạy này Kachi chưa đổi được kiểu cụm) ⇒ khung app dùng khung đã lưu của kiểu bạn chọn. Cụm hiện sai kiểu thì bấm «Áp ngay».</string>
-    <string name="kachi_cast_style_blocked">Chưa đổi được kiểu cụm: bóng nổi của %1$s đang nằm trên cụm. Tắt bóng %1$s rồi bấm Áp ngay.</string>
-    <string name="kachi_cast_style_bubble_old_mod">Chưa đổi được kiểu cụm: bản mod %1$s cũ chưa hỗ trợ ẩn bóng — tắt %1$s rồi bấm Áp ngay.</string>
-    <string name="kachi_cast_split_session_differs">Đang chia %1$s · hồ sơ này %2$s — áp dụng lần chia đôi sau (chạm một tỉ lệ để áp ngay).</string>
-    <string name="kachi_sub_cast_autostart">Tự chiếu khi nổ máy</string>
-    <string name="kachi_cast_autostart_title">Tự chiếu toàn cụm</string>
-    <string name="kachi_cast_autostart_sub">Nổ máy là đưa một app lên chiếm cả cụm. Loại trừ với tự chiếu chia đôi.</string>
-    <string name="kachi_cast_autostart_split_title">Tự chiếu chia đôi</string>
-    <string name="kachi_cast_autostart_split_sub">Nổ máy là đưa hai app lên hai nửa cụm. Loại trừ với tự chiếu toàn cụm.</string>
-    <string name="kachi_cast_app_full">App toàn cụm: %1$s</string>
-    <string name="kachi_cast_app_left">App nửa trái: %1$s</string>
-    <string name="kachi_cast_app_right">App nửa phải: %1$s</string>
-    <string name="kachi_cast_app_none">chưa chọn</string>
-    <string name="kachi_cast_pick_app">Chọn ứng dụng</string>
-    <string name="kachi_cast_no_apps">Máy chưa có ứng dụng nào chiếu lên cụm được.</string>
-    <string name="kachi_sub_cast_now">Chiếu ngay</string>
-    <string name="kachi_cast_state_off">Tắt</string>
-    <string name="kachi_cast_state_opening">Đang mở cụm…</string>
-    <string name="kachi_cast_state_idle">Sẵn sàng · bấm nút nổi để chiếu</string>
-    <string name="kachi_cast_state_full">Đang chiếu: %1$s</string>
-    <string name="kachi_cast_state_split">Chia đôi: %1$s | %2$s</string>
-    <string name="kachi_cast_state_stopping">Đang trả app về…</string>
-    <string name="kachi_cast_state_closing">Đang đóng cụm…</string>
-    <string name="kachi_cast_state_error">Lỗi: %1$s</string>
-    <string name="kachi_cast_now_full">Chiếu toàn cụm…</string>
-    <string name="kachi_cast_now_left">Chiếu nửa trái…</string>
-    <string name="kachi_cast_now_right">Chiếu nửa phải…</string>
-    <string name="kachi_cast_now_stop">Dừng chiếu</string>
-    <string name="kachi_sub_cast_rescue">Cứu hộ</string>
-    <string name="kachi_cast_restore">Trả cụm về đồng hồ</string>
-    <string name="kachi_cast_deep">Dọn sạch cụm (gỡ kẹt DashCast)</string>
-    <string name="kachi_cast_deep_confirm">Việc này dừng chiếu, tắt các app đang tranh chấp cụm và đặt lại cấu hình màn cụm. Không hoàn tác được.</string>
-    <string name="kachi_cast_deep_ok">Dọn sạch</string>
-    <string name="kachi_cast_deep_done">Đã dọn: dừng chiếu + tắt %1$s + đặt lại cụm. Hãy GỠ DashCast rồi tắt/mở lại nguồn xe.</string>
-    <string name="kachi_cast_deep_none">(không thấy app tranh chấp đang chạy)</string>
 
     <!-- ── IA v2 nhóm 7 — Phím vô-lăng (SettingsKeysSection) ── -->
     <string name="kachi_sec_keys">Nút vật lý → app · nút xe</string>
@@ -671,27 +520,10 @@
     <string name="kachi_disclaimer_ok">Tôi hiểu</string>
 
     <!-- R2(d) — dòng trạng thái op-39 trên cụm (chuyển từ NavClusterOp39Status, đã gỡ). -->
-    <string name="kachi_nav_op39_idle">Giữa + ETA: chờ dẫn đường</string>
-    <string name="kachi_nav_op39_asserted">Giữa + ETA: đang hiện trên cụm</string>
-    <string name="kachi_nav_op39_gated">Giữa + ETA: Cast đang bật — nav nhường cụm</string>
-    <string name="kachi_nav_op39_unreachable">Giữa + ETA: chưa gửi được lệnh (kiểm tra kết nối 5555)</string>
 
     <!-- R2(b) — nhãn dưới ô xem trước cụm ở nhóm Chiếu cụm. -->
-    <string name="kachi_cast_preview_split">%1$s · %2$s (%3$d:%4$d)</string>
 
     <!-- R2(a) — khung &amp; DPI của ô đang chiếu (chuyển từ CastGeometryEditor, đã gỡ). -->
-    <string name="kachi_sub_cast_geometry">Khung và DPI (khi đang chiếu)</string>
-    <string name="kachi_cast_geom_slot">Ô đang chỉnh</string>
-    <string name="kachi_cast_geom_left">Trái</string>
-    <string name="kachi_cast_geom_right">Phải</string>
-    <string name="kachi_cast_geom_edge_left">Mép trái</string>
-    <string name="kachi_cast_geom_edge_top">Mép trên</string>
-    <string name="kachi_cast_geom_edge_right">Mép phải</string>
-    <string name="kachi_cast_geom_edge_bottom">Mép dưới</string>
-    <string name="kachi_cast_geom_dpi">DPI cụm</string>
-    <string name="kachi_cast_geom_dpi_note">DPI áp cho CẢ cụm, không riêng một ô (giới hạn của wm density trên Android 10).</string>
-    <string name="kachi_cast_geom_reset">Đặt lại khung</string>
-    <string name="kachi_cast_geom_profile_differs">Hồ sơ này: DPI %1$d, khung %2$d×%3$d, góc trên-trái %4$d,%5$d — áp dụng từ lần chiếu sau.</string>
 
     <!-- ══ U7 · R6 — dấu "chưa kiểm trên xe" đảo chiều (spec kachi-icon-set-v2 §3 R6) ══
          [ĐO] chỉ 21/195 mã ở mức PROVEN ⇒ gần như MỌI ô mang một chấm hổ phách sáng ở góc icon: một dấu mà
@@ -1001,5 +833,4 @@
     <string name="kachi_vn_named_reason">Tên «%1$s»: %2$s</string>
     <!-- 2.93 · CAMERA-ON-DEMAND + CAMERA-PER-CAM-CONFIG (spec docs/specs/kachi-293-cam.html) -->
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->
-    <string name="kachi_profile_nav_off">Hồ sơ «%1$s» đang TẮT dẫn đường lên cụm đồng hồ/HUD. Bật lại ở Cài đặt › Dẫn đường + HUD.</string>
 </resources>

@@ -2,7 +2,6 @@ package com.byd.clusternav
 
 import com.byd.clusternav.launcher.voice.WakeKeywordsSync
 import com.byd.clusternav.launcher.voice.WakeModelCatalog
-import com.byd.clusternav.modules.clustercast.BubblePipGuard
 import com.byd.clusternav.testsupport.SourceRoots
 import java.io.File
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -16,16 +15,12 @@ import org.junit.jupiter.api.Test
  * Số đo + dòng thời gian: `docs/diagnostics/startup-timeline-2026-10-07.md`. Mỗi bài khoá một lỗi [ĐO log xe 07/10]:
  *  1. TAT-MAY-CAST-HOLD — tiến trình bật lúc màn tắt chiếu trọn rồi mới bị lượt chữa phím giết ⇒ tiến trình con gỡ + chiếu lại.
  *  2. WAKE-RECOPY-LOOP — mỗi lần nổ máy xoá + chép 5 MB + nạp lại bộ nghe "Hey Kachi".
- *  3. PIP-QUERY-INSTALLED — 5 `appops get` trên kênh shell chung lúc lượt tự chiếu mở, gồm gói chưa cài (`exit=-1`).
+ *  3. PIP-QUERY-INSTALLED — 5 `appops get` lúc lượt tự chiếu mở (Android box B2 · W2c: gỡ cùng chiếu cụm).
  */
 class StartupContentionR11ContractTest {
 
     private val heal = SourceRoots.codeOf("src/main/java/com/byd/clusternav/A11yLifecycleHeal.kt")
-    private val autostart = SourceRoots.codeOf("src/main/java/com/byd/clusternav/modules/clustercast/BubbleAutostart.kt")
-    private val hold = SourceRoots.codeOf("src/main/java/com/byd/clusternav/TatMayCastHold.kt")
     private val wake = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeWake.kt")
-    private val pip = SourceRoots.codeOf("src/main/java/com/byd/clusternav/modules/clustercast/BubblePipGuard.kt")
-    private val service = SourceRoots.codeOf("src/main/java/com/byd/clusternav/modules/clustercast/FloatingBubbleService.kt")
 
     private fun order(src: String, vararg tokens: String) {
         val at = tokens.map { t -> src.indexOf(t).also { assertTrue(it >= 0, "thiếu '$t'") } }
@@ -42,19 +37,12 @@ class StartupContentionR11ContractTest {
         assertFalse("TatMayCastHold" in install, "không còn móc giữ tự chiếu")
     }
 
+    /** Android box B2 · W2c — `TatMayCastHold` (+ móc giữ tự chiếu của nút nổi) gỡ hẳn cùng chiếu cụm. */
     @Test
-    fun `tu chieu hoi giu TRUOC openProjection, hen lai bang chinh Runnable, khong tinh luot thu`() {
-        val run = SourceRoots.body(autostart, "override fun run() {")
-        order(run, "if (isDestroyed() || dispatched.get()) return", "if (holdForTatMayHeal()) return", "coordinator.openProjection()")
-        val fn = SourceRoots.body(autostart, "private fun holdForTatMayHeal(): Boolean {")
-        assertTrue("handler.postDelayed(open, hold)" in fn)
-        assertFalse("openAttempts" in fn, "lượt giữ không được ăn vào 5 lượt thử mở")
-        assertTrue("KachiReadyLog.line(" in fn, "buổi xe phải đo được lượt giữ (dòng cast-hold vào usage log)")
-    }
-
-    @Test
-    fun `tien trinh sap chet doc moc leo BEN, khong co RAM`() {
-        assertTrue("Prefs.a11yEscalatedAt(app)" in SourceRoots.body(hold, "fun holdMs(app: Context): Long ="))
+    fun `tep giu tu chieu da xoa`() {
+        listOf("TatMayCastHold.kt", "HealCastWait.kt", "modules/clustercast/BubbleAutostart.kt").forEach {
+            assertFalse(SourceRoots.exists("src/main/java/com/byd/clusternav/$it"), "$it còn")
+        }
     }
 
     @Test
@@ -82,23 +70,5 @@ class StartupContentionR11ContractTest {
         assertTrue(asset.isFile, "thiếu ${asset.path}")
         val bytes = asset.readBytes()
         assertFalse(WakeKeywordsSync.needsRecopy(bytes.copyOf(), bytes) { false })
-    }
-
-    // ─── 3 · PIP-QUERY-INSTALLED ───────────────────────────────────────────────────────────────────────────────
-
-    @Test
-    fun `chi hoi PiP cua goi da cai, giu thu tu, hoi hong thi coi nhu co cai`() {
-        val installed = setOf("com.google.android.apps.maps", "com.google.android.youtube")
-        assertEquals(listOf("com.google.android.apps.maps", "com.google.android.youtube"), BubblePipGuard.targets { it in installed })
-        assertEquals(5, BubblePipGuard.targets { error("PackageManager hỏng") }.size, "fail-open về hành vi cũ")
-        assertEquals(5, BubblePipGuard.targets { true }.size)
-    }
-
-    @Test
-    fun `block di qua targets, dich vu tiem PackageManager, restore khong loc`() {
-        assertTrue("targets(installed).forEach" in SourceRoots.body(pip, "fun block(coordinator: SimpleCastCoordinator) {"))
-        assertFalse("targets(" in SourceRoots.body(pip, "fun restore(coordinator: SimpleCastCoordinator) {"))
-        assertTrue("BubblePipGuard { pkg -> PackageQueries.packageInfo(packageManager, pkg) != null }" in service)
-        assertTrue("pipGuard.block(coordinator)" in service && "pipGuard.restore(coordinator)" in service)
     }
 }

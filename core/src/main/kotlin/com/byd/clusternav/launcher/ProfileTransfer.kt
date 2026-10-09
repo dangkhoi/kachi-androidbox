@@ -56,9 +56,6 @@ object ProfileTransfer {
     private val NAME_BREAKS = Regex("\\p{Cc}")
     private const val BOM = "\uFEFF"
 
-    /** Mốc có mặt của mọi họ — khớp NGUYÊN chuỗi (không theo tiền tố `@family:`): chỉ mốc thật đi vào bản chia sẻ. */
-    private val FAMILY_MARKERS: Set<String> = ProfileScopeCluster.FAMILIES.mapTo(HashSet()) { it.marker }
-
     /**
      * Tên hồ sơ an toàn cho một trường header: ký tự điều khiển thành khoảng trắng, cắt ở [MAX_NAME_CHARS]. Ô nhập tên
      * trong app không gõ được ký tự điều khiển, nên chỉ tên đến từ TỆP (sửa tay / tệp độc) bị đổi.
@@ -117,7 +114,7 @@ object ProfileTransfer {
      * IO-R3/R4 — bỏ mọi thứ chưa được [ProfileSharePolicy] soát là chia sẻ được (danh sách trắng).
      *
      * Hậu tố launcher không chia sẻ được ⇒ bỏ hẳn (lượt nhập `remove`). Khoá trong ảnh ClusterNav không chia sẻ được ⇒
-     * `null` TƯỜNG MINH, không được bỏ: [ClusterSnapshotPlan.apply] chỉ duyệt khoá CÓ trong ảnh, nên khoá vắng nghĩa là
+     * `null` TƯỜNG MINH, không được bỏ: [PrefSnapshotPlan.apply] chỉ duyệt khoá CÓ trong ảnh, nên khoá vắng nghĩa là
      * "không chạm tệp sống" ⇒ đổi sang hồ sơ nhập sẽ giữ nguyên lịch đang sống của hồ sơ vừa rời, rồi lượt rời hồ sơ nhập
      * chụp lịch đó vào ảnh của nó. `null` = `remove` ⇒ hồ sơ nhập thật sự không có lịch; lịch của hồ sơ vừa rời đã nằm
      * trong ảnh của chính nó (switchProfile chụp TRƯỚC khi áp). Không có ảnh ở nguồn mà tệp có khoá riêng tư ⇒ vẫn tạo
@@ -134,7 +131,7 @@ object ProfileTransfer {
             if (suffix !in values && hidden.isEmpty()) return@forEach
             val shot = LinkedHashMap<String, Any?>()
             PrefSnapshot.decode(values[suffix] as? String).forEach { (k, v) ->
-                if (k in FAMILY_MARKERS || ProfileSharePolicy.shareable(k)) shot[k] = v
+                if (ProfileSharePolicy.shareable(k)) shot[k] = v
             }
             hidden.forEach { shot[it] = null }
             out[suffix] = PrefSnapshot.encode(shot)

@@ -17,6 +17,12 @@ package com.byd.clusternav.launcher
  */
 object LauncherBootPlan {
 
+    /**
+     * Android box B2 · W2c — không có chiếu cụm ⇒ không app nào "cụm đang giữ". Chỗ gọi truyền hằng này thay cho
+     * `!AppLocationRegistry.isCastable(pkg)` của bản BYD (đã gỡ); tham số `castOwns` giữ để kế hoạch còn test được.
+     */
+    val NO_CAST: (String) -> Boolean = { false }
+
     /** One workspace slot that holds a real app package. */
     data class SlotApp(val slot: Int, val pkg: String)
 

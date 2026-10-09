@@ -53,11 +53,11 @@ class TypeScaleContractTest {
         "AppDrawerTiles.kt",
         // T4 · IA v2 — năm section mới của Cài đặt. Cùng lý do `AppDrawerApps.kt`: chúng là bề mặt Settings, tức
         // phạm vi GỐC của bài này; để ngoài thì một section mới có thể `setTextSize` số tay mà không ai thấy.
-        "SettingsSectionsBars.kt", "SettingsSectionsNav.kt", "SettingsSectionsCast.kt",
+        // Android box B2 · W2c — `SettingsSectionsNav.kt` (khối cụm/HUD/biển báo/bong bóng, không ai dựng từ W1) + `SettingsSectionsCast*.kt`
+        // gỡ; hàng app dẫn đường mặc định (`SettingsSectionsNavApp.kt`) vào thay.
+        "SettingsSectionsBars.kt", "SettingsSectionsNavApp.kt",
         "SettingsSectionsKeys.kt", "SettingsSectionsCar.kt",
         // (`SettingsSectionsCamera.kt` — camera tách khỏi `SettingsSectionsCar` 2.76 — xoá ở Android box B2 · W2b.)
-        // V-CLUSTER (2026-09-30) — khối khung/DPI tách khỏi `SettingsSectionsCast` (trần 500 dòng). Cùng lý do trên.
-        "SettingsSectionsCastGeometry.kt",
     )
 
     /**

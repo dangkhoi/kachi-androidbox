@@ -58,7 +58,7 @@ Họ màu theo lĩnh vực: ENERGY→energy (lục) · DRIVETRAIN→drive (tím)
 | `ic_car_*` (43) | hình xe theo vị trí — nguồn `design/car/*.svg` của B2 (§4.3) |
 | `ic_launcher` | icon app hoa anh đào (R7 xong 1.68) |
 | `ic_turn_left` · `ic_turn_right` · `ic_turn_straight` · `ic_turn_right_g` | mũi tên rẽ của màn dẫn đường (bảng NEW_ICON/CAN, `re-maneuver-icon-tables-2026-08-14.md`) — không thuộc launcher |
-| `ic_bubble_nav` · `ic_menu_config` · `ic_menu_left` · `ic_menu_right` | nút nổi Cast vẽ trực tiếp, xanh thương hiệu, bề mặt đã chạy trên xe (CLAUDE.md §6) |
+| `ic_bubble_nav` (+ `ic_menu_*`, gỡ ở Android box B2 · W2c cùng nút nổi Cast) | nút nổi Cast vẽ trực tiếp, xanh thương hiệu, bề mặt đã chạy trên xe (CLAUDE.md §6) |
 | `ic_check_selected` · `ic_chevron_down` · `ic_corner_cut` | màu là nghĩa / nằm trong layer-list / mặt nạ |
 
 Danh sách này nằm trong `EXCLUDED` của `icon-audit.py`; thêm/bớt phải có lý do.

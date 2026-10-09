@@ -3,6 +3,7 @@ package com.byd.clusternav
 import java.nio.file.Files
 import java.nio.file.Path
 import org.junit.jupiter.api.Assertions.assertTrue
+import com.byd.clusternav.testsupport.SourceRoots
 import org.junit.jupiter.api.Test
 
 /**
@@ -188,9 +189,12 @@ class HeadlessAutostartContractTest {
 
     @Test
     fun `the app-open setup survived the screen removal`() {
-        // Relocating to BootSetupService must NOT lose the setup that used to run when the user opened the app:
-        // self-grant + cluster-lane re-assert now live on the Nav master switch in the bridge (same order).
-        assertTrue(navBridge.contains("NavConnect.grantAccessibility("), "the nav switch still self-grants accessibility")
-        assertTrue(navBridge.contains("NavigationOutputTarget.CLUSTER_LANE"), "the nav switch still re-asserts cluster-lane")
+        // Relocating to BootSetupService must NOT lose the setup that used to run when the user opened the app.
+        // Android box B2 · W2d: the Nav-on-cluster master switch (which self-granted accessibility + re-asserted the
+        // cluster lane) is gone with cluster navigation; the app-open accessibility self-grant now lives ONLY in the
+        // permission preflight (key service), and the bridge no longer touches the cluster lane.
+        val preflight = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/PermissionPreflight.kt")
+        assertTrue(preflight.contains("NavConnect.grantAccessibility("), "app-open still self-grants accessibility (keys)")
+        assertTrue(!navBridge.contains("NavigationOutputTarget"), "the bridge no longer re-asserts the cluster lane")
     }
 }

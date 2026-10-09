@@ -147,7 +147,6 @@ object TestBridgeCommands {
     const val STATE = "state"
     const val PREFS = "prefs"
     const val REAPPLY = "reapply"
-    const val DIAG = "diag"
 
     /** Bắn MỘT control theo mã registry, đi qua ĐÚNG applier mà một cú chạm ô nút đi (`CarControlPort`). */
     const val CTL = "ctl"
@@ -360,7 +359,7 @@ object TestBridgeCommands {
         Spec(OPEN, listOf(EXTRA_PKG)),
         Spec(PREFS, listOf(EXTRA_FILE)),
         Spec(REAPPLY, emptyList()),
-        Spec(DIAG, emptyList()),
+        // Android box B2 · W2c — `diag` (chụp `ClusterDiag` của chiếu cụm BYD) gỡ cùng mã chiếu cụm.
         // Android box B2 · W1 — `ctl` · `hal` · `sweep` · `featmap` (nút/HAL BYDAuto) gỡ khỏi bảng lệnh.
         Spec(VOICE_DUMP, emptyList(), listOf(EXTRA_AUTO_CONFIRM)),
         // `text` là **tuỳ chọn** có chủ ý: vắng ⇒ giá trị rỗng ⇒ *"trả khoá về mặc định"* (tập rỗng / tắt), đúng
@@ -371,8 +370,7 @@ object TestBridgeCommands {
         Spec(A11YLOG, emptyList(), listOf(EXTRA_SLOT)),
         // Android box B2 · W1 — `ctllog` (nhật ký lệnh ghi xe) gỡ khỏi bảng lệnh.
         Spec(WAKELOG, emptyList(), listOf(EXTRA_SLOT)),   // FIX286 · VK6 — chỉ đọc, `n` tuỳ chọn, kẹp qua [wakeLogTail]
-        // 2.91 A7 — tệp riêng (trần 500). Android box B2 · W1: `diag_screen` (`TestBridgeScreenCommands`: hai màn chẩn đoán
-        // BYD đã rời manifest) KHÔNG còn nối vào bảng.
+        // Android box B2 · W1/W2c: `diag_screen` (hai màn chẩn đoán BYD) rời bảng ở W1, tệp `TestBridgeScreenCommands` gỡ ở W2c.
     ) + TestBridgeTeachCommands.SPECS
 
     /** Tên mọi lệnh — cho tài liệu và cho bài canh "mã lệnh không trùng nhau". */

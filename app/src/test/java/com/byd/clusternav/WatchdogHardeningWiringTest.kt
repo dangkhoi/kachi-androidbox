@@ -33,7 +33,8 @@ class WatchdogHardeningWiringTest {
         val src = code("NavConnect.kt")
         val at = src.indexOf("fun boundPerAccessibilityManager(ctx: Context): Boolean?")
         assertTrue(at >= 0, "phải có boundPerAccessibilityManager trả Boolean?")
-        val fn = src.substring(at, src.indexOf("fun reconnect(", at))
+        // Android box B2 · W2d: `reconnect` (hàm kế cũ) gỡ — cắt tới hàm kế tiếp mới.
+        val fn = src.substring(at, src.indexOf("fun grantAccessibility(", at))
         assertTrue(fn.contains(".getOrNull()"), "ném ⇒ null (đi shell), không phải connected-flag")
         assertEquals(0, Regex("NavAccessibilitySource\\.connected").findAll(fn).count(), "không đọc cờ kẹt để quyết định bỏ shell")
     }
@@ -57,16 +58,6 @@ class WatchdogHardeningWiringTest {
         assertTrue(start.contains("inProcessWatchdogAlive = false"), "nhánh phím-thoại OFF phải hạ cờ")
         val destroy = SourceRoots.body(src, "override fun onDestroy()")
         assertTrue(destroy.contains("inProcessWatchdogAlive = false"))
-    }
-
-    @Test
-    fun `VmOverlayPosition applyOnOpen gate goi VietMap co cai TRUOC ResendGate`() {
-        val fn = SourceRoots.body(code("VmOverlayPosition.kt"), "fun applyOnOpen(ctx: Context)")
-        val i = fn.indexOf("vietMapInstalled(app)")
-        val j = fn.indexOf("gate.shouldSend(")
-        assertTrue(i in 0 until j, "kiểm 'có cài' phải đứng TRƯỚC ResendGate (không ghi nhận lượt gửi hụt)")
-        val src = code("VmOverlayPosition.kt")
-        assertTrue(src.contains("InstalledPackageGate(PKG_TTL_MS)") && src.contains("PackageQueries.packageInfo("), "dùng cổng thuần + cửa PackageManager chung (DRY)")
     }
 
     @Test

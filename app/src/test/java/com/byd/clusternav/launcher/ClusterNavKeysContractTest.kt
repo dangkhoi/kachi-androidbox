@@ -31,14 +31,13 @@ class ClusterNavKeysContractTest {
     /**
      * Tệp prefs → các tệp nguồn được phép khai khoá của nó.
      *
-     * `clusternav_prefs` có **hai** tệp vì `VmOverlayPosition` mở cùng tệp đó để ghi `vm_bubble_x/y` (nó là phía GỬI
-     * của bong bóng VietMap, tách khỏi `Prefs` vì còn bắn broadcast sang bản mod). Đó là sự thật của mã, không phải
-     * một ngoại lệ nới cho bài test dễ qua.
+     * `clusternav_prefs` có nhiều tệp nguồn vì `Prefs` tách theo trần 500 dòng thành các tệp hàm mở rộng (cùng tệp prefs).
+     * Android box B2 · W2c: `VmOverlayPosition.kt` + `PrefsBadge.kt` (bong bóng VietMap · biển báo tốc độ) và tệp prefs
+     * `simple_cast_prefs` (chiếu cụm) gỡ cùng mã của chúng.
      */
     private val SOURCES: Map<String, List<String>> = mapOf(
         "clusternav_prefs" to listOf(
             "src/main/java/com/byd/clusternav/Prefs.kt",
-            "src/main/java/com/byd/clusternav/VmOverlayPosition.kt",
             // ⚠ 1.66 — tệp THỨ BA mở cùng `clusternav_prefs`: ba khoá V3 của đường giọng nói
             // (`voice_mic_source` · `voice_confirm_ids` · `voice_follow_up_ms`) nằm ở `PrefsVoiceV3.kt` dưới dạng
             // **hàm mở rộng của chính [Prefs]** (trần 500 dòng, CLAUDE.md §4.1). Cùng tệp prefs, cùng bề mặt gọi
@@ -52,13 +51,6 @@ class ClusterNavKeysContractTest {
             // `nav_automation_rules` · `nav_automation_fired`) tách sang `PrefsAutomation.kt` (hàm mở rộng của
             // [Prefs]) vì `Prefs.kt` đã 536 dòng — cùng tệp prefs, cùng lẽ V3/inputd, không phải cửa thứ hai.
             "src/main/java/com/byd/clusternav/PrefsAutomation.kt",
-            // L6-debt 2026-09-27 — tệp THỨ SÁU cùng `clusternav_prefs`: khoá biển báo tốc độ + bong bóng VietMap
-            // (`badge_*` · `show_*` · `vm_bubble_enabled` · `vm_float_whitelist_applied`) tách sang `PrefsBadge.kt` (hàm mở
-            // rộng của [Prefs], `Prefs.kt` 558 dòng) — cùng tệp prefs qua `Prefs.sp`, cùng lẽ V3/inputd/automation.
-            "src/main/java/com/byd/clusternav/PrefsBadge.kt",
-        ),
-        "simple_cast_prefs" to listOf(
-            "src/main/java/com/byd/clusternav/modules/clustercast/simplified/SimpleCastRuntime.kt",
         ),
         "clusternav_theme" to listOf("src/main/java/com/byd/clusternav/ThemeMode.kt"),
         "clusternav_lang" to listOf("src/main/java/com/byd/clusternav/Lang.kt"),
@@ -115,8 +107,10 @@ class ClusterNavKeysContractTest {
 
     @Test
     fun `moi khoa ClusterNav ton tai nguyen van trong dung tep nguon`() {
+        // Android box B2 · W2c — khoá mà mã đã gỡ (biển báo · bong bóng VietMap) được tha ĐÚNG danh sách khai ở `:core`,
+        // và phải THẬT SỰ vắng khỏi mọi tệp nguồn (bài dưới) — không tha theo mẫu.
         val missing = SettingsCatalog.CLUSTERNAV_KEYS.filterNot { (key, prefsFile) ->
-            sourcesFor(prefsFile).any { (_, src) -> declares(src, key) }
+            key in SettingsCatalog.RETIRED_CODE_REMOVED_KEYS || sourcesFor(prefsFile).any { (_, src) -> declares(src, key) }
         }
         assertEquals(
             emptyMap<String, String>(), missing,
@@ -124,6 +118,15 @@ class ClusterNavKeysContractTest {
                 "thì Settings vẫn lưu được, chỉ là lưu vào một khoá KHÔNG runtime nào đọc (bật lọc bụi mà xe không " +
                 "lọc, không báo lỗi gì)",
         )
+    }
+
+    @Test
+    fun `khoa da go ma that su vang khoi ma va van trong danh muc`() {
+        val removed = SettingsCatalog.RETIRED_CODE_REMOVED_KEYS
+        assertTrue(removed.size >= 10, "bảng khoá đã gỡ mã rỗng/hụt: $removed")
+        assertTrue(removed.all { it in SettingsCatalog.CLUSTERNAV_KEYS && it in SettingsCatalog.RETIRED_UI_KEYS })
+        val all = SOURCES.values.flatten().joinToString("\n") { codeOf(it) }
+        assertEquals(emptyList<String>(), removed.filter { declares(all, it) }, "khoá 'đã gỡ mã' mà mã còn đọc/ghi")
     }
 
     /**
@@ -165,8 +168,7 @@ class ClusterNavKeysContractTest {
     fun `moi tep nguon deu dong gop it nhat mot khoa`() {
         mapOf(
             "enabled" to "Prefs.kt (tệp chính của ClusterNav)",
-            "vm_bubble_x" to "VmOverlayPosition.kt (cùng tệp prefs, khác tệp nguồn)",
-            "cast_enabled" to "SimpleCastRuntime.kt (tệp prefs THỨ HAI của ClusterNav)",
+            "voice_mic_source" to "PrefsVoiceV3.kt (cùng tệp prefs, khác tệp nguồn)",
             "theme_choice" to "ThemeMode.kt (tệp prefs riêng, đọc được ở attachBaseContext)",
             "lang" to "Lang.kt (chỗ lưu ngôn ngữ dùng chung cả APK)",
         ).forEach { (key, branch) ->

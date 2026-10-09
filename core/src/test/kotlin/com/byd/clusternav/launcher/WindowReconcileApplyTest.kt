@@ -19,7 +19,7 @@ class WindowReconcileApplyTest {
     /** Đúng thân `LauncherWindows.reconcileLocations` nhưng thuần (không Android/closeApp): áp vào registry. */
     private fun applyReconcile(reg: AppLocationRegistry, slots: List<SlotContent>) {
         val placed = reg.onDisplay(0).map { it.pkg }.toSet()
-        val r = LauncherBootPlan.reconcile(slots, placed) { pkg -> !reg.isCastable(pkg) }
+        val r = LauncherBootPlan.reconcile(slots, placed, LauncherBootPlan.NO_CAST)
         r.mount.forEach { reg.place(it.pkg, 0, it.slot) }
         r.evict.forEach { reg.remove(it) }
     }

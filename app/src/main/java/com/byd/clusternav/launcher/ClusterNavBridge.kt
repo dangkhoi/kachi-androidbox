@@ -3,41 +3,11 @@ package com.byd.clusternav.launcher
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import com.byd.clusternav.NavConnect
-import com.byd.clusternav.NavRepository
-import com.byd.clusternav.NavigationSpeedSignOwner
 import com.byd.clusternav.Prefs
-import com.byd.clusternav.badgeEnabled
-import com.byd.clusternav.setBadgeEnabled
-import com.byd.clusternav.showUpcomingBadge
-import com.byd.clusternav.setShowUpcomingBadge
-import com.byd.clusternav.showAlertChip
-import com.byd.clusternav.setShowAlertChip
-import com.byd.clusternav.badgeSizeDp
-import com.byd.clusternav.setBadgeSizeDp
-import com.byd.clusternav.badgeCenterX
-import com.byd.clusternav.badgeCenterY
-import com.byd.clusternav.setBadgeCenterX
-import com.byd.clusternav.setBadgeCenterY
-import com.byd.clusternav.vmBubbleEnabled
-import com.byd.clusternav.setVmBubbleEnabled
-import com.byd.clusternav.setVmBubbleHidden
-import com.byd.clusternav.vmBubbleHidden
 import com.byd.clusternav.ThemeMode
-import com.byd.clusternav.VietMapAutostartService
-import com.byd.clusternav.VmOverlayPosition
 import com.byd.clusternav.comfort.Pm25FilterApplier
 import com.byd.clusternav.comfort.SeatComfort
 import com.byd.clusternav.comfort.SeatComfortApplier
-import com.byd.clusternav.modules.clustercast.ClusterNavLaneWidget
-import com.byd.clusternav.modules.clustercast.simplified.SimpleCastRuntime
-import com.byd.clusternav.modules.clustercast.simplified.SimpleCastState
-import com.byd.clusternav.navigation.NavSourceLabels
-import com.byd.clusternav.navigation.NavigationOutputStatus
-import com.byd.clusternav.navigation.NavigationOutputTarget
-import com.byd.clusternav.navigation.SourceArbiter
-import com.byd.clusternav.navigation.SpeedSignOutput
-import com.byd.clusternav.speedbadge.BadgeLayout
 
 /**
  * ═══ CẦU DUY NHẤT giữa Kachi Settings và cấu hình/hành động của ClusterNav ═══════════════════════
@@ -63,8 +33,7 @@ import com.byd.clusternav.speedbadge.BadgeLayout
  *  - [ui] = post một [Runnable] về luồng vẽ.
  *  - [activityProvider] chỉ dùng cho ĐÚNG một đường bắt buộc có Activity ([checkUpdate] →
  *    [UpdateFlow.start], mở dialog + cài APK). Mọi hàm khác chạy được không cần Activity.
- *  - Mọi hàm "trạng thái" trả **mã / dữ liệu thô** ([NavSourceView], [VoiceKeyStatus],
- *    `NavigationOutputStatus`, `SimpleCastState`, tên gói, mã phím) — không trả câu.
+ *  - Mọi hàm "trạng thái" trả **mã / dữ liệu thô** ([VoiceKeyStatus], tên gói, mã phím) — không trả câu.
  *
  *
  * ⚠ **2026-09-13 — màn cũ đã GỠ HẲN** (`docs/specs/kachi-remove-legacy-screen.html` R1/R3). Mọi chỉ dẫn
@@ -87,75 +56,9 @@ class ClusterNavBridge(
     /** LUÔN là applicationContext — chặn ngay tại cửa việc lỡ truyền Activity vào một vật sống lâu. */
     internal val app: Context = app.applicationContext
 
-    /**
-     * Chủ biển báo tốc độ — process-singleton (`NavigationSpeedSignOwner.get`), KHÔNG phải thành viên
-     * của Activity, nên gọi được từ ngoài màn cũ y hệt (lặp lại `MainActivity.kt:53`).
-     */
-    internal val speedSign: NavigationSpeedSignOwner get() = NavigationSpeedSignOwner.get(app)
-
-    // ── Dẫn đường (Nav + HUD) ────────────────────────────────────────────────────────────────────
-
-    /** Công tắc chính "Dẫn đường + HUD" — lặp lại `MainActivity.kt:96`. */
-    fun navEnabled(): Boolean = Prefs.enabled(app)
-
-    /**
-     * Bật/tắt "Dẫn đường + HUD" — **lặp lại `MainActivity.kt:97–128`** ĐÚNG THỨ TỰ:
-     * `Prefs.setEnabled` → `speedSign.onMasterEnabled` → (bật) `Prefs.setLane(true)` →
-     * `NavRepository.setOutputEnabled(CLUSTER_LANE, true)` → `speedSign.onOutputEnabled(CLUSTER, true)`
-     * → đã có quyền thông báo thì `NavConnect.ensureConnected`, chưa có thì toast + `NavConnect.selfGrant`
-     * → cuối cùng `NavConnect.grantAccessibility` khi thiếu setting **HOẶC** service chưa bound;
-     * (tắt) `NavRepository.stop`.
-     *
-     * [onDone] báo kết quả đường cấp quyền (gắn lại ⇒ kết quả THẬT của `NlsHeal`, FIX286 S2; selfGrant ⇒ theo callback), luôn
-     * được gọi trên luồng vẽ qua [ui]. Thất bại ⇒ toast câu hướng dẫn bật tay (lặp lại
-     * `promptNotificationAccessFallback`, `MainActivity.kt:681–702` — bridge KHÔNG mở màn Settings vì
-     * IVI khoá màn đó, đúng lý do màn cũ đã chọn đường dadb).
-     */
-    fun setNavEnabled(on: Boolean, onDone: (Boolean) -> Unit = {}) {
-        Prefs.setEnabled(app, on)
-        speedSign.onMasterEnabled(on)
-        if (on) {
-            Prefs.setLane(app, true)
-            NavRepository.setOutputEnabled(app, NavigationOutputTarget.CLUSTER_LANE, true)
-            speedSign.onOutputEnabled(SpeedSignOutput.CLUSTER, true)
-            if (notificationAccessGranted()) {
-                // FIX286 S2: [onDone] chờ kết quả THẬT của lượt gắn (đọc lại dump) — không còn `true` ngay lúc bấm.
-                NavConnect.ensureConnected(app) { r -> ui(Runnable { onDone(r.ok) }) }
-            } else {
-                toast(BridgeMsg.GRANTING_NOTIFICATION)
-                NavConnect.selfGrant(app) { ok ->
-                    ui(
-                        Runnable {
-                            toast(if (ok) BridgeMsg.NOTIFICATION_GRANTED else BridgeMsg.NOTIFICATION_FALLBACK)
-                            onDone(ok)
-                        },
-                    )
-                }
-            }
-            if (!accessibilityBoosterGranted() || !accessibilityBound()) NavConnect.grantAccessibility(app)
-        } else {
-            NavRepository.stop(app)
-            ui(Runnable { onDone(true) })
-        }
-    }
-
-    /** Chế độ nav trên CỤM: [Prefs.NAV_SCREEN_FULL] (Giữa + ETA) hay [Prefs.NAV_SCREEN_OFF] — `MainActivity.kt:186`. */
-    fun clusterMode(): Int = Prefs.navClusterScreenMode(app)
-
-    /**
-     * Đặt chế độ nav trên cụm — lặp lại `MainActivity.kt:190–194`: persist rồi **áp NGAY**
-     * ([NavRepository.reapplyClusterMode]) thay vì chờ frame kế bị dedup nuốt.
-     */
-    fun setClusterMode(mode: Int) {
-        Prefs.setNavClusterScreenMode(app, mode)
-        NavRepository.reapplyClusterMode(app)
-    }
-
-    /** "Chạy chữ tên đường dài" — lặp lại `MainActivity.kt:200–203`. */
-    fun marquee(): Boolean = Prefs.marquee(app)
-
-    /** Lặp lại `MainActivity.kt:203`. */
-    fun setMarquee(on: Boolean) = Prefs.setMarquee(app, on)
+    // ── Dẫn đường ────────────────────────────────────────────────────────────────────────────────
+    // Android box B2 · W2d — công tắc *Dẫn đường lên cụm* + chế độ cụm + chạy chữ + *Kết nối lại* + nguồn/đầu ra cụm gỡ cùng
+    // dẫn đường cụm/HUD BYD. Còn app dẫn đường / nhạc mặc định (giọng nói) dưới đây.
 
     /** App dẫn đường MẶC ĐỊNH khi câu KHÔNG nêu tên app (owner 2026-09-18) — key của [VoiceAppTargets]. */
     fun navDefaultApp(): String = Prefs.voiceNavDefaultApp(app)
@@ -174,31 +77,6 @@ class ClusterNavBridge(
         listOf("") + com.byd.clusternav.launcher.voice.VoiceAppTargets.MUSIC.map { it.key }
 
     /**
-     * "Kết nối lại nguồn dẫn đường" — lặp lại `MainActivity.kt:255–276`: có quyền ⇒
-     * [NavConnect.reconnect] + toast; chưa có ⇒ toast + [NavConnect.selfGrant] (KHÔNG mở màn Settings
-     * hệ thống: IVI khoá màn đó, xem KDoc gốc ở màn cũ).
-     */
-    fun reconnect(onDone: (Boolean) -> Unit = {}) {
-        if (notificationAccessGranted()) {
-            toast(BridgeMsg.RECONNECTING)
-            NavConnect.reconnect(app) { r -> ui(Runnable { onDone(r.ok) }) }
-        } else {
-            toast(BridgeMsg.GRANTING_NOTIFICATION)
-            NavConnect.selfGrant(app) { ok ->
-                ui(
-                    Runnable {
-                        toast(if (ok) BridgeMsg.NOTIFICATION_GRANTED else BridgeMsg.NOTIFICATION_FALLBACK)
-                        onDone(ok)
-                    },
-                )
-            }
-        }
-    }
-
-    /** Nút "Dừng dẫn đường" — lặp lại `MainActivity.kt:277–280`. */
-    fun navStop() = NavRepository.stop(app)
-
-    /**
      * Nút "Khởi động lại launcher" (owner 2026-09-25) — restart process Kachi cho sạch khi có lỗi (bind rớt, cụm
      * kẹt, overlay treo). Cách: mở lại [KachiHomeActivity] (NEW_TASK + CLEAR_TASK) rồi `Process.killProcess(myPid)`
      * — process chết, Activity vừa launch làm hệ thống dựng lại process từ đầu (state sạch). Kachi là HOME nên kể
@@ -215,194 +93,11 @@ class ClusterNavBridge(
         }, 300L)
     }
 
-    /**
-     * Nguồn đang dẫn — dữ liệu THÔ của dòng "Đang dẫn: …" (`MainActivity.kt:429–439`).
-     *
-     * [ĐO] Cả ba mảnh đều là **object process-singleton ở `:core`** ([SourceArbiter.activeSource],
-     * [SourceArbiter.isFresh], [NavSourceLabels]) ⇒ đọc được nguyên vẹn từ ngoài Activity, không phải
-     * trả "—". `null` = chưa có nguồn nào đang dẫn (màn cũ hiện "Đang dẫn: —").
-     *
-     * Trả [NavSourceView] chứ không trả câu: tên thương hiệu là danh từ riêng (không dịch), còn kênh
-     * đọc + cờ "cũ" là enum/boolean — tầng Settings ghép câu bằng tài nguyên của launcher.
-     */
-    fun navSource(): NavSourceView? {
-        val pkg = SourceArbiter.activeSource ?: return null
-        return NavSourceView(
-            packageName = pkg,
-            brand = NavSourceLabels.sourceLabel(pkg),
-            channel = NavSourceLabels.readChannel(pkg),
-            stale = !SourceArbiter.isFresh(System.currentTimeMillis()),
-        )
-    }
-
-    /**
-     * Trạng thái đầu ra CỤM (dòng `laneStatus`, lặp lại `MainActivity.kt:421`) — trả **enum `:core`**,
-     * tầng Settings tra câu trong tài nguyên (bảng nhãn gốc ở `MainActivity.kt:560–571`).
-     *
-     * KHÔNG gọi `NavRepository.setPermission` như `refresh()` làm ở dòng 397: đó là tác dụng phụ của
-     * vòng lặp 1 s ở màn cũ, không thuộc việc "đọc một trạng thái".
-     */
-    fun navOutputStatus(): NavigationOutputStatus? =
-        runCatching { NavRepository.snapshot(app).clusterLane.status }.getOrNull()
-
-    /**
-     * Kết quả op-39 ("Giữa + ETA" trên cụm) mà widget vừa công bố — trả **enum thô**, tầng Settings tra
-     * câu trong tài nguyên.
-     *
-     * Chuyển từ `NavClusterOp39Status` (đã gỡ 2026-09-13 cùng màn cũ): lớp đó chỉ làm đúng hai việc —
-     * `findViewById(R.id.txt_cluster_op39_status)` rồi đọc [ClusterNavLaneWidget.status]. Việc thứ nhất
-     * là hình (nay là một `statusRow` ở nhóm *Dẫn đường*), việc thứ hai là đây.
-     *
-     * CHỈ ĐỌC: nó phản chiếu kết quả của lớp khác, không tự gửi lệnh nào — đúng như KDoc bản gốc ghi
-     * ("never touches Cast state and issues no shell command").
-     */
-    fun clusterOp39(): ClusterNavLaneWidget.Op39Status =
-        runCatching { ClusterNavLaneWidget.status }.getOrDefault(ClusterNavLaneWidget.Op39Status.IDLE)
-
     // Quyền hệ thống (`notificationAccessGranted` · `accessibilityBoosterGranted` · `accessibilityBound`) + nhóm *Hệ thống*
     // (`checkUpdate` · `applyRecircNow`; hai cửa chẩn đoán 0 chỗ gọi gỡ ở 2.93 wave 2C) → `ClusterNavBridgeSystem.kt` (tách THUẦN
     // theo trần 500 dòng, L6-debt 2026-09-27; cùng khuôn `ClusterNavBridgeCast.kt` / `ClusterNavBridgeKeys.kt`).
 
-    // ── Biển báo tốc độ (badge trên cụm) — lặp lại BadgePlacementController.kt:44–112 ─────────────
-
-    /** `BadgePlacementController.kt:45`. */
-    fun badgeEnabled(): Boolean = Prefs.badgeEnabled(app)
-
-    /**
-     * Lặp lại `BadgePlacementController.kt:47–56` — kể cả TÁC DỤNG PHỤ khi BẬT: auto-start VietMap một
-     * lần ([VietMapAutostartService.startForAppOpen], dedup `pidof` bên trong) để widget có nguồn tốc độ
-     * ngay; tắt thì KHÔNG đụng gì. Sau cùng đánh thức lại lớp phủ dùng chung.
-     */
-    fun setBadgeEnabled(on: Boolean) {
-        Prefs.setBadgeEnabled(app, on)
-        if (on) VietMapAutostartService.startForAppOpen(app)
-        speedSign.onBadgeEnabledChanged()
-    }
-
-    /** "Hiện giới hạn sắp tới" — `BadgePlacementController.kt:62`. */
-    fun upcomingBadge(): Boolean = Prefs.showUpcomingBadge(app)
-
-    /** Lặp lại `BadgePlacementController.kt:64–67`. */
-    fun setUpcomingBadge(on: Boolean) {
-        Prefs.setShowUpcomingBadge(app, on)
-        speedSign.onUpcomingBadgeEnabledChanged()
-    }
-
-    /** "Hiện cảnh báo/camera VietMap" — `BadgePlacementController.kt:74`. */
-    fun alertChip(): Boolean = Prefs.showAlertChip(app)
-
-    /** Lặp lại `BadgePlacementController.kt:76–79`. */
-    fun setAlertChip(on: Boolean) {
-        Prefs.setShowAlertChip(app, on)
-        speedSign.onAlertChipEnabledChanged()
-    }
-
-    /** Cỡ biển báo (dp) — `BadgePlacementController.kt:105`. */
-    fun badgeSizeDp(): Int = Prefs.badgeSizeDp(app)
-
-    /**
-     * Lặp lại `BadgePlacementController.kt:106–110` (thanh trượt): kẹp về dải hợp lệ bằng
-     * [BadgeLayout.clampSizeDp] rồi persist + [NavigationSpeedSignOwner.debugRefreshBadgeLayout] để lớp
-     * phủ DÙNG CHUNG đổi cỡ ngay trên cụm.
-     */
-    fun setBadgeSizeDp(sizeDp: Int) {
-        Prefs.setBadgeSizeDp(app, BadgeLayout.clampSizeDp(sizeDp))
-        speedSign.debugRefreshBadgeLayout()
-    }
-
-    /** Tâm biển báo theo toạ độ CỤM — `BadgePlacementController.kt:88`. */
-    fun badgeCenter(): Pair<Int, Int> = Prefs.badgeCenterX(app) to Prefs.badgeCenterY(app)
-
-    /**
-     * Lặp lại `BadgePlacementController.kt:81–87` (thả kéo-thả): kẹp lại trên CỤM THẬT bằng
-     * [BadgeLayout.clampCenter] (cỡ badge px + kích cụm đang chiếu) rồi persist x/y + áp live.
-     */
-    fun setBadgeCenter(cx: Int, cy: Int) {
-        val (w, h) = clusterSize()
-        val (ccx, ccy) = BadgeLayout.clampCenter(cx, cy, badgeSizePx(), w, h)
-        Prefs.setBadgeCenterX(app, ccx)
-        Prefs.setBadgeCenterY(app, ccy)
-        speedSign.debugRefreshBadgeLayout()
-    }
-
-    /**
-     * Cỡ badge quy ra px trên cụm — `BadgePlacementController.kt:138`.
-     *
-     * Đổi đơn vị đi qua [KachiTheme.dpi] (hàm đổi dp DUY NHẤT của launcher) thay vì tự nhân với
-     * `displayMetrics.density`: `SpacingScaleContractTest.khong duoc khai ham doi dp nao ngoai danh sach`
-     * cấm mở thêm một đường đổi đơn vị mang tên lạ. Phép tính **y hệt** bản gốc — `KachiTheme.dpi` cũng
-     * là `(v * density).toInt()` — nên không đổi một pixel nào của badge.
-     */
-    fun badgeSizePx(): Int = KachiTheme.dpi(app, Prefs.badgeSizeDp(app)).coerceAtLeast(1)
-
-    /** W/H cụm từ cấu hình chiếu đang chạy; fallback 1920×720 (Seal) — `BadgePlacementController.kt:141–152`. */
-    fun clusterSize(): Pair<Int, Int> {
-        val wmSize = when (val state = SimpleCastRuntime.coordinator(app).state) {
-            is SimpleCastState.CastingFull -> state.displayConfig.wmSize
-            is SimpleCastState.CastingSplit -> state.left?.displayConfig?.wmSize ?: state.right?.displayConfig?.wmSize
-            else -> null
-        }
-        val parts = wmSize?.split("x")
-        return (parts?.getOrNull(0)?.toIntOrNull() ?: 1920) to (parts?.getOrNull(1)?.toIntOrNull() ?: 720)
-    }
-
-    // ── Bong bóng VietMap trên cụm — lặp lại MainActivity.kt:1086–1116 ───────────────────────────
-
-    /**
-     * 2.91 · F1 (spec `kachi-291-small-fixes.html` §4.1) — công tắc "Hiện bong bóng VietMap trên cụm" phản ánh SỰ THẬT của
-     * bóng: bản mod hiện bóng trừ khi người lái đã ẩn (`vm_bubble_hidden`, mặc định false). Trước 2.91 hàng này đọc
-     * `vm_bubble_enabled` (tự mở VietMap, mặc định TẮT) ⇒ người chưa từng chạm thấy "tắt" trong khi bóng đang hiện.
-     */
-    fun vmBubbleShown(): Boolean = !Prefs.vmBubbleHidden(app)
-
-    /** Ghi cờ ẩn rồi gửi NGAY `VM_BUBBLE_VIS` (TẮT ⇒ bản mod gỡ bóng; BẬT ⇒ hiện lại). Không đổi việc tự mở VietMap. */
-    fun setVmBubbleShown(on: Boolean) {
-        Prefs.setVmBubbleHidden(app, !on)
-        com.byd.clusternav.VmBubbleVisibility.apply(app, "toggle=$on", force = true)
-    }
-
-    /**
-     * Hàng riêng "Tự mở VietMap cho bong bóng" — đúng nghĩa CŨ của `vm_bubble_enabled` (`MainActivity.kt:1090–1095`): nổ máy /
-     * mở Kachi ⇒ mở VietMap chạy nền để bóng sẵn (+ điều kiện nền `AppPrereqPlan` Role.BUBBLE). BẬT ⇒ tự mở MỘT lần ngay.
-     */
-    fun vmBubbleAutostart(): Boolean = Prefs.vmBubbleEnabled(app)
-
-    fun setVmBubbleAutostart(on: Boolean) {
-        Prefs.setVmBubbleEnabled(app, on)
-        if (on) VietMapAutostartService.startForAppOpen(app)
-    }
-
-    /** Góc-trên-trái tuyệt đối của bong bóng trên cụm — `MainActivity.kt:1107`. */
-    fun vmBubblePos(): Pair<Int, Int> = VmOverlayPosition.absLeftX(app) to VmOverlayPosition.absTopY(app)
-
-    /**
-     * Lặp lại `MainActivity.kt:1102–1105`: [VmOverlayPosition.setAbsoluteTopLeft] tự kẹp trong khung,
-     * ghi prefs **và** bắn broadcast `VM_BUBBLE_POS` cho mod VietMap (gate `castOn` nằm trong đó).
-     */
-    fun setVmBubblePos(absX: Int, absY: Int) = VmOverlayPosition.setAbsoluteTopLeft(app, absX, absY)
-
-    /** Cụm đã "live" chưa (điều kiện chỉnh vị trí bong bóng) — `MainActivity.kt:1131`. */
-    fun vmBubbleAdjustable(): Boolean = vmBubbleShown() && VmOverlayPosition.castOn(app)
-
-    /**
-     * Khung (W×H) và cỡ bong bóng (W×H) mà bộ kéo-thả PHẢI dùng — lặp lại `MainActivity.kt:1096–1100`.
-     *
-     * ## ⚠⚠ [SOÁT SENIOR 2026-09-13] KHÔNG được dùng [clusterSize] cho bong bóng
-     * Hai thứ nghe giống nhau nhưng là hai khung KHÁC nhau:
-     *  • [clusterSize] = kích cụm **đang chiếu thật** (đọc `wmSize` của phiên cast, fallback 1920×720) — đúng cho
-     *    biển báo, vì `BadgeLayout.clampCenter` cũng nhận đúng khung đó;
-     *  • bong bóng thì [ĐO] `VmOverlayPosition.set` kẹp vào `X_MAX`/`Y_MAX` dựng từ hằng **CỐ ĐỊNH** 1920×720 và
-     *    371×158 — không đọc kích cụm thật lần nào.
-     *
-     * Cho bộ kéo-thả một khung mà đường ghi lại kẹp bằng khung khác = ngón tay thả một chỗ, bong bóng nhảy về chỗ
-     * khác ngay khi [setVmBubblePos] kẹp lại (rồi `syncBubble` vẽ lại theo giá trị đã kẹp). Đó là lý do màn cũ
-     * truyền **thẳng bốn hằng** của `VmOverlayPosition` vào `VmBubblePlacementView`, và cầu phơi lại đúng bốn số
-     * đó — section không được `import VmOverlayPosition` (N2).
-     */
-    fun vmBubbleFrame(): Pair<Int, Int> = VmOverlayPosition.CLUSTER_WIDTH to VmOverlayPosition.CLUSTER_HEIGHT
-
-    /** Xem [vmBubbleFrame] — cỡ bong bóng mà khung kẹp đang giả định. */
-    fun vmBubbleSize(): Pair<Int, Int> = VmOverlayPosition.BUBBLE_WIDTH to VmOverlayPosition.BUBBLE_HEIGHT
+    // Android box B2 · W2c — biển báo tốc độ + bong bóng VietMap trên cụm gỡ cùng mã (mục Cài đặt đã gỡ ở W1).
 
     // ── Tiện nghi xe: ghế + PM2.5 — lặp lại MainActivity.kt:1215–1325 ────────────────────────────
 

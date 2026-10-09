@@ -144,7 +144,8 @@ class VoiceKeyAdbApprovalWiringTest {
         // 4 đường NỀN của F6 (note: VietMapAutostart nặng nhất — chạy ĐỒNG BỘ trong FGS boot — rồi
         // UpdateChecker/NavConnect/ClusterDiag). Nay CHỤP MŨ chống-treo: 1 lần thử + hạn đọc 30 s ⇒ adbd im
         // lặng không treo VĨNH VIỄN. CAP ≠ RETRY.
-        for (file in listOf("VietMapAutostart.kt", "UpdateChecker.kt", "NavConnect.kt", "modules/clustercast/ClusterDiag.kt")) {
+        // Android box B2 · W2c: `VietMapAutostart.kt` + `ClusterDiag.kt` gỡ cùng VietMap / chiếu cụm.
+        for (file in listOf("UpdateChecker.kt", "NavConnect.kt")) {
             val source = read(file)
             assertTrue(
                 source.contains("LocalShellRetry.BACKGROUND_READ_CAP"),
@@ -155,11 +156,5 @@ class VoiceKeyAdbApprovalWiringTest {
                 "$file KHÔNG được CHỜ+THỬ-LẠI (~31 s, 4 lần): không owner nào đứng nhìn lúc boot ⇒ thử lại chỉ làm chậm boot mà chẳng ai bấm 'Cho phép'",
             )
         }
-        // VietMapWidgetDiagActivity là đường DIAG owner-CHỦ-ĐỘNG (không boot/FGS) ⇒ để nguyên session() cũ:
-        // owner đứng đó tự thoát được, không cần chụp mũ. Nhưng cũng KHÔNG được nhận chính sách chờ+thử-lại.
-        assertFalse(
-            read("vietmapwidget/VietMapWidgetDiagActivity.kt").contains("AWAIT_ADB_APPROVAL"),
-            "VietMapWidgetDiagActivity (diag owner-chủ-động) không được chờ+thử-lại",
-        )
     }
 }

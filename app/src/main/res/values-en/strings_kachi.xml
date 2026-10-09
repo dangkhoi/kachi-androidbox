@@ -143,17 +143,8 @@
     <string name="kachi_profile_kind_unknown">unreadable</string>
     <string name="kachi_profile_import_none">No profile files (.kachi) yet. Copy a file into this folder:\n%1$s</string>
     <!-- FIX286 · PI3 — dialog after import: tell what the file really carries for cluster casting (counted from the file). -->
-    <string name="kachi_profile_import_no_cluster">The file has no cluster-casting part (exported before 2.84) — this profile keeps the casting setup already on this car. Export again from a newer version for a full backup.</string>
-    <string name="kachi_profile_import_cast_file">Cluster casting from the file: %1$s.</string>
-    <string name="kachi_profile_import_cast_kept">The file does not say whether cluster casting is on — keeping this car\'s: %1$s.</string>
-    <string name="kachi_profile_import_geom_file">The file carries %1$d cast frame(s) (one per app, full cluster or half) — replacing %2$d different one(s) on this car.</string>
-    <string name="kachi_profile_import_geom_file_new">The file carries %1$d cast frame(s) (one per app, full cluster or half) — none of this car\'s frames are replaced.</string>
-    <string name="kachi_profile_import_geom_kept">Keeping %1$d cast frame(s) on this car that the file does not have.</string>
-    <string name="kachi_profile_import_geom_none">No app has its own cast frame yet — default frames are used.</string>
-    <string name="kachi_profile_import_use_cast">This profile\'s cluster casting (%1$s) differs from what is running. Use now applies it right away if no app is on the cluster; otherwise from the next ignition.</string>
     <string name="kachi_profile_import_use_now">Use this profile now</string>
     <string name="kachi_profile_import_later">Later</string>
-    <string name="kachi_profile_import_cast_deferred">The cluster is casting or changing state — this profile\'s cluster casting applies from the next ignition (or Settings › Cluster cast › Apply now).</string>
     <string name="kachi_profiles_note">Each profile keeps its OWN copy of nearly everything: layout, slot contents, button bar, chips, wallpaper, theme, units, language, navigation settings, instrument cluster, cluster casting and camera. Tap a profile to switch to it — the profile chip on the top bar switches too, but creating and deleting happen only here. A full export contains your saved addresses and navigation schedule — use Export for sharing when sending it to someone else.</string>
     <string name="kachi_profiles_add">Add profile (a copy of %1$s)</string>
     <string name="kachi_profile_sub_active">In use · %1$s</string>
@@ -304,15 +295,6 @@
     <!-- ── IA v2 · §4.2 — CÂU của cầu [ClusterNavBridge]. Mã BridgeMsg → khoá ở KachiHomeWiring.bridgeMsgRes().
          Chép NGUYÊN VĂN câu của màn ClusterNav cũ (KDoc từng giá trị BridgeMsg ghi rõ dòng gốc): hai màn
          phải nói cùng một lời, lệch một câu là người dùng tưởng hai tính năng khác nhau. ── -->
-    <string name="kachi_bridge_granting_notification">Granting notification access…</string>
-    <string name="kachi_bridge_notification_granted">Access granted — navigation connected.</string>
-    <string name="kachi_bridge_notification_fallback">Couldn\'t open settings. Go to Settings → Apps → Special access → Notification access → enable ClusterNav.</string>
-    <string name="kachi_bridge_reconnecting">Reconnecting navigation source…</string>
-    <string name="kachi_bridge_cast_on">Cluster cast on</string>
-    <string name="kachi_bridge_cast_off">Cluster cast off · cluster back to gauges</string>
-    <string name="kachi_bridge_cast_returning">Returning app…</string>
-    <string name="kachi_bridge_cluster_reset">Cluster reset · reopening…</string>
-    <string name="kachi_bridge_deep_rescue_running">Deep-cleaning cluster…</string>
     <string name="kachi_bridge_enabling_accessibility">Enabling accessibility service…</string>
     <string name="kachi_bridge_accessibility_enabled">Enabled. Press the mapped button to open the app.</string>
     <string name="kachi_bridge_accessibility_not_bound">Accessibility granted but the service isn\'t bound yet — retry in a few seconds, or toggle it in system Settings > Accessibility.</string>
@@ -332,8 +314,6 @@
 
     <!-- ── Dùng chung (hộp thoại của Cài đặt · SettingsDialogs) ── -->
     <string name="kachi_save">Save</string>
-    <string name="kachi_dp_value">%1$d dp</string>
-    <string name="kachi_px_value">%1$d px</string>
 
     <!-- ── IA v2 nhóm 2 — Thanh trạng thái & thanh nút (SettingsBarsSection · TopStripPicker) ── -->
     <string name="kachi_topstrip_count">On now · %1$d/%2$d</string>
@@ -419,144 +399,13 @@
     <string name="kachi_days_weekdays">Mon–Fri</string>
 
     <!-- ── IA v2 nhóm 5 — Dẫn đường & cụm đồng hồ (SettingsNavSection) ── -->
-    <string name="kachi_sec_nav">Navigation + HUD</string>
-    <string name="kachi_nav_enabled_title">Navigation on the cluster</string>
-    <string name="kachi_nav_enabled_sub">Turning this on grants notification access through the car\'s own channel — no system settings needed.</string>
-    <string name="kachi_nav_source_none">Active: —</string>
-    <string name="kachi_nav_source">Active: %1$s</string>
-    <string name="kachi_nav_source_stale">Active: %1$s (data is stale)</string>
-    <string name="kachi_nav_channel_notification">notification</string>
-    <string name="kachi_nav_channel_screen">screen-read</string>
-    <string name="kachi_nav_output">Cluster: %1$s</string>
-    <string name="kachi_nav_out_unknown">—</string>
-    <string name="kachi_nav_out_off">off</string>
-    <string name="kachi_nav_out_starting">starting</string>
-    <string name="kachi_nav_out_emitting">emitting</string>
-    <string name="kachi_nav_out_verified">cluster acknowledged</string>
-    <string name="kachi_nav_out_stale">stale</string>
-    <string name="kachi_nav_out_fault">error</string>
-    <string name="kachi_nav_cluster_mode">Cluster display mode</string>
-    <string name="kachi_nav_cluster_off">Off</string>
-    <string name="kachi_nav_cluster_on">On (centre + ETA)</string>
-    <string name="kachi_nav_marquee_title">Scroll long street names</string>
-    <string name="kachi_nav_marquee_sub">Names wider than the cluster scroll across instead of being cut off.</string>
     <string name="kachi_nav_default_app">Default navigation app</string>
     <string name="kachi_nav_app_gmaps">Google Maps</string>
     <string name="kachi_nav_app_vietmap">VietMap</string>
     <string name="kachi_nav_app_waze">Waze</string>
-    <string name="kachi_nav_reconnect">Reconnect the navigation source</string>
-    <string name="kachi_nav_hud_off">HUD — notification source: not checked (Navigation switch is off)</string>
-    <string name="kachi_nav_hud_no_access">HUD — notification source: notification access not granted</string>
-    <string name="kachi_nav_hud_live">HUD — notification source: bound (confirmed by the system at %1$s)</string>
-    <string name="kachi_nav_hud_not_live">HUD — notification source: NOT bound (system, at %1$s)</string>
-    <string name="kachi_nav_hud_bound">HUD — notification source: bound at %1$s</string>
-    <string name="kachi_nav_hud_unknown">HUD — notification source: not checked yet (the car\'s command channel is not ready, or another pass is running)</string>
-    <string name="kachi_nav_hud_unreadable">HUD — notification source: could not read the system state (at %1$s) — Kachi will not rebind on its own</string>
-    <string name="kachi_nav_hud_write">Written to the car at %1$s (%2$s) · accepted %3$d · rejected %4$d · skipped %5$d · app: %6$s</string>
-    <string name="kachi_nav_hud_write_nodev">Written to the car at %1$s: the cluster device could not be opened</string>
-    <string name="kachi_nav_hud_write_none">No navigation frame written to the car in this run yet</string>
-    <string name="kachi_nav_hud_app_none">—</string>
-    <string name="kachi_nav_hud_kind_guide">guidance</string>
-    <string name="kachi_nav_hud_kind_keepalive">keep-alive</string>
-    <string name="kachi_nav_hud_kind_clear">clear</string>
-    <string name="kachi_nav_hud_kind_mode_off">cluster mode Off</string>
-    <string name="kachi_nav_hud_last">Last re-bind at %1$s (%2$s): %3$s</string>
-    <string name="kachi_nav_hud_last_none">Last re-bind: none yet</string>
-    <string name="kachi_nav_hud_trig_auto">automatic</string>
-    <string name="kachi_nav_hud_trig_switch">switch</string>
-    <string name="kachi_nav_hud_trig_button">Reconnect button</string>
-    <string name="kachi_nav_hud_trig_read">status read</string>
-    <string name="kachi_nav_hud_o_live_already">already bound, nothing to fix</string>
-    <string name="kachi_nav_hud_o_bound">bound (no command needed)</string>
-    <string name="kachi_nav_hud_o_healed">re-bound</string>
-    <string name="kachi_nav_hud_o_still">command ran but still not bound</string>
-    <string name="kachi_nav_hud_o_not_live">not bound</string>
-    <string name="kachi_nav_hud_o_unreadable">could not read the system state</string>
-    <string name="kachi_nav_hud_o_skipped">skipped (switch or screen just changed)</string>
-    <string name="kachi_nav_hud_o_no_shell">could not run the command — tap Allow USB debugging on the car</string>
-    <string name="kachi_nav_hud_o_shell_failed">the car\'s command channel failed</string>
-    <string name="kachi_nav_hud_o_busy">another attempt is running</string>
-    <string name="kachi_nav_hud_note">The windscreen HUD only shows Google Maps guidance — VietMap and Waze do not reach the HUD.</string>
-    <string name="kachi_nav_hud_toast">Reconnect navigation source: %1$s</string>
-    <string name="kachi_sub_badge">Speed limit badge</string>
-    <string name="kachi_badge_enabled_title">Show the speed limit badge</string>
-    <string name="kachi_badge_enabled_sub">Read from VietMap; turning it on starts VietMap once so there is a speed source.</string>
-    <string name="kachi_badge_upcoming_title">Show the upcoming limit</string>
-    <string name="kachi_badge_upcoming_sub">A second, smaller badge for the road ahead.</string>
-    <string name="kachi_badge_alert_title">Show camera alerts</string>
-    <string name="kachi_badge_alert_sub">VietMap\'s alert chip (speed cameras, hazards).</string>
-    <string name="kachi_badge_size">Badge size</string>
-    <string name="kachi_badge_pos_x">Badge position — across</string>
-    <string name="kachi_badge_pos_y">Badge position — down</string>
-    <string name="kachi_badge_drag_hint">Drag the badge inside the frame to place it on the cluster; the −/+ buttons above nudge it 10 px at a time.</string>
-    <string name="kachi_sub_bubble">VietMap bubble</string>
-    <string name="kachi_bubble_enabled_title">Show the VietMap bubble on the cluster</string>
-    <string name="kachi_bubble_enabled_sub">The small turn-by-turn box drawn by the modified VietMap build.</string>
-    <string name="kachi_bubble_autostart_title">Auto-open VietMap for the bubble</string>
-    <string name="kachi_bubble_autostart_sub">Start VietMap in the background when the car starts or Kachi opens, so the bubble is ready on the cluster. Off: the bubble only shows while VietMap is running.</string>
-    <string name="kachi_bubble_need_cast">The position only moves while the cluster is casting — it is still saved, but the cluster will not follow yet.</string>
-    <string name="kachi_bubble_need_toggle">Turn on \"Show the VietMap bubble on the cluster\" above to adjust the position.</string>
-    <string name="kachi_bubble_pos_x">Bubble position — across</string>
-    <string name="kachi_bubble_pos_y">Bubble position — down</string>
-    <string name="kachi_bubble_drag_hint">Drag the box inside the frame to place the bubble on the cluster.</string>
 
     <!-- ── IA v2 nhóm 6 — Chiếu màn lên cụm (SettingsCastSection) ── -->
-    <string name="kachi_sec_cast">Cluster cast</string>
-    <string name="kachi_cast_enabled_title">Enable Cluster cast</string>
-    <string name="kachi_cast_enabled_sub">Opens the cluster so it can host app windows. Turning it off hands the cluster back to the gauges.</string>
-    <string name="kachi_cast_enabled_pending">Running: %1$s · this profile: %2$s — applies from the next ignition.</string>
-    <string name="kachi_cast_enabled_apply_now">Apply now</string>
-    <string name="kachi_cast_state_on_short">ON</string>
-    <string name="kachi_cast_state_off_short">OFF</string>
     <!-- FIX286 · PI5 — durable mark of the start-up commit (the OFF→ON case was never measured on a car, OC-PI3). -->
-    <string name="kachi_cast_commit_mark">The start-up at %1$s applied the profile\'s cluster-casting choice: %2$s (version %3$s).</string>
-    <string name="kachi_cast_bubble_title">Show the floating cast button</string>
-    <string name="kachi_cast_bubble_sub">The Kachi blossom that floats over the screen; tap it to cast. Turning this off only hides the button — you can still cast with the four Cast-now buttons below, by voice, and on engine start.</string>
-    <string name="kachi_cast_split">Split ratio</string>
-    <string name="kachi_cast_style_label">Cluster cast style</string>
-    <string name="kachi_cast_style_curved">Rounded</string>
-    <string name="kachi_cast_style_rect">Rectangle</string>
-    <string name="kachi_cast_style_rect_note">Rectangle: in this style the white ADAS panel on the right is drawn by the car\'s own firmware and cannot be shrunk (the menu key only changes the picture inside, the panel stays). For a small ADAS window, choose Rounded — the menu key shrinks it there. The cluster loses its own km/h (the HUD, maps and the VietMap bubble still show speed). The app frame defaults to the whole cluster — adjust position, size and DPI in the Frame and DPI section below.</string>
-    <string name="kachi_cast_style_apply_note">Applies at the next cast open while the cluster is empty (no app, no window on the cluster). Nothing is sent to the cluster while casting.</string>
-    <string name="kachi_cast_style_session">Cluster now: %1$s. The new style applies at the next ignition or when the cluster is empty.</string>
-    <string name="kachi_cast_style_unknown">unknown style</string>
-    <string name="kachi_cast_style_apply_now">Apply now (stop and reopen casting)</string>
-    <string name="kachi_cast_style_apply_busy">An app is being cast — stop casting first, then tap Apply now.</string>
-    <string name="kachi_cast_style_unconfirmed">Cluster style not confirmed (Kachi could not change the cluster style in this run) ⇒ the app uses the frame saved for the style you chose. If the cluster shows the wrong style, tap “Apply now”.</string>
-    <string name="kachi_cast_style_blocked">Could not change the cluster style: the %1$s bubble is on the cluster. Turn off the %1$s bubble, then tap Apply now.</string>
-    <string name="kachi_cast_style_bubble_old_mod">Could not change the cluster style: this older %1$s mod cannot hide its bubble — close %1$s, then tap Apply now.</string>
-    <string name="kachi_cast_split_session_differs">Splitting %1$s now · this profile %2$s — applies from the next split (tap a ratio to apply now).</string>
-    <string name="kachi_sub_cast_autostart">Cast on engine start</string>
-    <string name="kachi_cast_autostart_title">Auto-cast full cluster</string>
-    <string name="kachi_cast_autostart_sub">On engine start, one app takes the whole cluster. Mutually exclusive with split auto-cast.</string>
-    <string name="kachi_cast_autostart_split_title">Auto-cast split view</string>
-    <string name="kachi_cast_autostart_split_sub">On engine start, two apps take one half each. Mutually exclusive with full auto-cast.</string>
-    <string name="kachi_cast_app_full">Full-cluster app: %1$s</string>
-    <string name="kachi_cast_app_left">Left-hand app: %1$s</string>
-    <string name="kachi_cast_app_right">Right-hand app: %1$s</string>
-    <string name="kachi_cast_app_none">not set</string>
-    <string name="kachi_cast_pick_app">Choose an app</string>
-    <string name="kachi_cast_no_apps">No app on this device can be cast to the cluster yet.</string>
-    <string name="kachi_sub_cast_now">Cast now</string>
-    <string name="kachi_cast_state_off">Off</string>
-    <string name="kachi_cast_state_opening">Opening cluster…</string>
-    <string name="kachi_cast_state_idle">Ready · tap the bubble to cast</string>
-    <string name="kachi_cast_state_full">Casting: %1$s</string>
-    <string name="kachi_cast_state_split">Split: %1$s | %2$s</string>
-    <string name="kachi_cast_state_stopping">Returning app…</string>
-    <string name="kachi_cast_state_closing">Closing cluster…</string>
-    <string name="kachi_cast_state_error">Error: %1$s</string>
-    <string name="kachi_cast_now_full">Cast full cluster…</string>
-    <string name="kachi_cast_now_left">Cast to the left half…</string>
-    <string name="kachi_cast_now_right">Cast to the right half…</string>
-    <string name="kachi_cast_now_stop">Stop casting</string>
-    <string name="kachi_sub_cast_rescue">Rescue</string>
-    <string name="kachi_cast_restore">Hand the cluster back to the gauges</string>
-    <string name="kachi_cast_deep">Deep-clean the cluster (unstick DashCast)</string>
-    <string name="kachi_cast_deep_confirm">This stops casting, force-stops apps fighting over the cluster and resets the cluster display settings. It cannot be undone.</string>
-    <string name="kachi_cast_deep_ok">Deep-clean</string>
-    <string name="kachi_cast_deep_done">Cleaned: stopped casting + force-stopped %1$s + reset cluster. Please UNINSTALL DashCast and power-cycle.</string>
-    <string name="kachi_cast_deep_none">(no conflicting app was running)</string>
 
     <!-- ── IA v2 nhóm 7 — Phím vô-lăng (SettingsKeysSection) ── -->
     <string name="kachi_sec_keys">Physical buttons → apps · car controls</string>
@@ -650,27 +499,10 @@
     <string name="kachi_disclaimer_ok">I understand</string>
 
     <!-- R2(d) — op-39 cluster status line (moved off NavClusterOp39Status, now deleted). -->
-    <string name="kachi_nav_op39_idle">Centre + ETA: waiting for navigation</string>
-    <string name="kachi_nav_op39_asserted">Centre + ETA: showing on the cluster</string>
-    <string name="kachi_nav_op39_gated">Centre + ETA: Cast on — navigation yields the cluster</string>
-    <string name="kachi_nav_op39_unreachable">Centre + ETA: command not delivered (check the 5555 link)</string>
 
     <!-- R2(b) — caption under the cluster preview in the Cast group. -->
-    <string name="kachi_cast_preview_split">%1$s · %2$s (%3$d:%4$d)</string>
 
     <!-- R2(a) — frame and DPI of the slot being cast (moved off CastGeometryEditor, now deleted). -->
-    <string name="kachi_sub_cast_geometry">Frame and DPI (while casting)</string>
-    <string name="kachi_cast_geom_slot">Slot being edited</string>
-    <string name="kachi_cast_geom_left">Left</string>
-    <string name="kachi_cast_geom_right">Right</string>
-    <string name="kachi_cast_geom_edge_left">Left edge</string>
-    <string name="kachi_cast_geom_edge_top">Top edge</string>
-    <string name="kachi_cast_geom_edge_right">Right edge</string>
-    <string name="kachi_cast_geom_edge_bottom">Bottom edge</string>
-    <string name="kachi_cast_geom_dpi">Cluster DPI</string>
-    <string name="kachi_cast_geom_dpi_note">DPI applies to the WHOLE cluster, not to one slot (a wm density limit on Android 10).</string>
-    <string name="kachi_cast_geom_reset">Reset frame</string>
-    <string name="kachi_cast_geom_profile_differs">This profile: DPI %1$d, frame %2$d×%3$d, top-left %4$d,%5$d — applies from the next cast.</string>
 
     <!-- U7 · R6 — see values/strings_kachi.xml for why the badge changed from "bright amber on
          almost every tile" to "dim dot + one line per group". -->
@@ -973,5 +805,4 @@
     <string name="kachi_vn_named_reason">Name «%1$s»: %2$s</string>
     <!-- 2.93 · CAMERA-ON-DEMAND + CAMERA-PER-CAM-CONFIG (spec docs/specs/kachi-293-cam.html) -->
     <!-- 2.97 · R3 — đổi hồ sơ tắt dẫn đường lên cụm -->
-    <string name="kachi_profile_nav_off">Profile «%1$s» has navigation on the cluster/HUD turned OFF. Turn it on in Settings › Navigation + HUD.</string>
 </resources>

@@ -21,130 +21,23 @@ import org.junit.jupiter.api.Test
 class ClusterNavBridgeCastKeysWiringContractTest {
 
     private val BRIDGE = "src/main/java/com/byd/clusternav/launcher/ClusterNavBridge.kt"
-    private val CAST = "src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeCast.kt"
     private val KEYS = "src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeKeys.kt"
 
     /** MÃ đã bỏ chú thích — mọi phép "phải/không được chứa chuỗi X" đều chạy trên bản này. */
     private fun bridge() = SourceRoots.codeOf(BRIDGE)
     /** Quyền hệ thống + nhóm *Hệ thống* của cầu tách sang tệp mở rộng (L6-debt 2026-09-27). */
     private fun system() = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/ClusterNavBridgeSystem.kt")
-    private fun cast() = SourceRoots.codeOf(CAST)
     private fun keys() = SourceRoots.codeOf(KEYS)
 
     private fun body(src: String, signature: String) = SourceRoots.body(src, signature)
 
-    // ─────────────────────────────────────────────────────────────────────────────────────────────
-    // 1. Cast  (mục 3 của bản gộp trước D2c)
-    // ─────────────────────────────────────────────────────────────────────────────────────────────
+    // 1. Cast — Android box B2 · W2c: `ClusterNavBridgeCast.kt` (+ Style/Geometry) gỡ cùng chiếu cụm; các bài của nó gỡ theo.
 
-    /**
-     * Công tắc Cast lặp `CastEnableSwitch.kt:62–80`: BẬT mở chiếu + nút nổi; TẮT dừng + đóng chiếu +
-     * dừng service và **KHÔNG mở lại**. Thiếu `closeProjection` ⇒ tắt Cast mà cụm vẫn treo màn chiếu.
-     */
     @Test
-    fun `setCastEnabled mo va dong chieu dung thu tu`() {
-        val b = body(cast(), "fun ClusterNavBridge.setCastEnabled(on: Boolean)")
-        listOf(
-            "coordinator.prefs.setCastEnabled(on)",
-            "coordinator.openProjection()",
-            "FloatingBubbleService",
-            "SimpleCastIntent.Stop()",
-            "coordinator.closeProjection()",
-            "stopService(",
-        ).forEach { token ->
-            assertTrue(token in b, "setCastEnabled thiếu `$token` (CastEnableSwitch.kt:62–80)")
+    fun `tep cau chieu cum da xoa`() {
+        listOf("ClusterNavBridgeCast.kt", "ClusterNavBridgeCastStyle.kt", "ClusterNavBridgeGeometry.kt").forEach {
+            assertTrue(!SourceRoots.exists("src/main/java/com/byd/clusternav/launcher/$it"), "$it còn")
         }
-        assertEquals(
-            listOf("openProjection", "closeProjection"),
-            Regex("""(openProjection|closeProjection)""").findAll(b).map { it.value }.toList(),
-            "thứ tự phải là mở (nhánh BẬT) rồi đóng (nhánh TẮT) — đảo lại là tắt xong tự mở lại",
-        )
-    }
-
-    /** Tỉ lệ chia phải đi đường LIVE (persist + resize tại chỗ), không ghi prefs suông. */
-    @Test
-    fun `setSplitPct di duong applySplitRatioLive`() {
-        val b = body(cast(), "fun ClusterNavBridge.setSplitPct(pct: Int)")
-        assertTrue("coordinator.applySplitRatioLive(" in b, "phải dùng applySplitRatioLive (persist + resize tại chỗ)")
-        assertTrue("CastProfile.normalizePercent(pct)" in b, "phần trăm lạ phải rơi về 50 qua normalizePercent")
-    }
-
-    /** Hai chế độ tự-chiếu loại trừ nhau — hai driver cùng chạy đã từng gây đua SLOT_OCCUPIED (R1/T1). */
-    @Test
-    fun `tu chieu full va chia doi loai tru lan nhau`() {
-        assertTrue(
-            "coordinator.prefs.setAutoStartSplitEnabled(false)" in
-                body(cast(), "fun ClusterNavBridge.setAutostartFull(on: Boolean)"),
-            "bật tự-chiếu FULL phải tắt tự-chiếu CHIA ĐÔI",
-        )
-        assertTrue(
-            "coordinator.prefs.setAutoStartEnabled(false)" in
-                body(cast(), "fun ClusterNavBridge.setAutostartSplit(on: Boolean)"),
-            "bật tự-chiếu CHIA ĐÔI phải tắt tự-chiếu FULL",
-        )
-    }
-
-    /** Ba hành động chiếu phải dispatch đúng intent + đúng phía. */
-    @Test
-    fun `hanh dong chieu dispatch dung intent`() {
-        assertTrue(
-            "SimpleCastIntent.CastFull(pkg, AppMover.classifyApp(pkg))" in
-                body(cast(), "fun ClusterNavBridge.castFull(pkg: String)"),
-            "chiếu full phải kèm AppMover.classifyApp (chọn hồ sơ hiển thị đúng loại app)",
-        )
-        assertTrue(
-            "SimpleCastIntent.CastSlot(pkg, ClusterSlotSide.LEFT)" in
-                body(cast(), "fun ClusterNavBridge.castLeft(pkg: String)"),
-            "castLeft phải nhắm ClusterSlotSide.LEFT",
-        )
-        assertTrue(
-            "SimpleCastIntent.CastSlot(pkg, ClusterSlotSide.RIGHT)" in
-                body(cast(), "fun ClusterNavBridge.castRight(pkg: String)"),
-            "castRight phải nhắm ClusterSlotSide.RIGHT",
-        )
-    }
-
-    /**
-     * Hai đường cứu hộ KHÁC NHAU ở đúng một điểm và không được lẫn:
-     *  - [restoreCluster] (thường) — Stop + đóng chiếu rồi **MỞ LẠI** sau 2 s;
-     *  - [deepRescue] — đứng hẳn xuống, force-stop bên tranh chấp, reset VD, **KHÔNG mở lại**.
-     *
-     * Nếu deepRescue lỡ mở lại chiếu thì nó thôi là cứu hộ: ClusterNav lại giành cụm với DashCast, tức
-     * đúng cái kẹt mà nó sinh ra để gỡ.
-     */
-    @Test
-    fun `hai duong cuu ho khac nhau o cho mo lai chieu`() {
-        val restore = body(cast(), "fun ClusterNavBridge.restoreCluster()")
-        // Review 2.89 Pass 3 · cluster-r2-6 — ĐỔI GHIM có lý do: lượt mở lại đi qua `reopenRetryingThemeGap` (bộ xem "khoảng 15 s ⇒
-        // thử lại MỘT lần"), vẫn là `openProjection()` của coordinator sau 2 s.
-        assertTrue("reopenRetryingThemeGap()" in restore, "cứu hộ thường PHẢI mở lại chiếu sau 2 s")
-        assertTrue("c.openProjection()" in body(cast(), "private fun ClusterNavBridge.reopenRetryingThemeGap()"))
-
-        val deep = body(cast(), "fun ClusterNavBridge.deepRescue(")
-        assertTrue("openProjection" !in deep, "dọn sạch cụm TUYỆT ĐỐI không mở lại chiếu — mở lại là giành cụm tiếp")
-        assertTrue(
-            "CAST_CONFLICT_PACKAGES" in deep,
-            "danh sách app tranh chấp phải DÙNG CHUNG hằng gốc, không chép tay (hai bản sẽ trôi khỏi nhau)",
-        )
-        listOf("am force-stop", "wm size reset", "wm density reset", "wm overscan reset").forEach {
-            assertTrue(it in deep, "dọn sạch cụm thiếu bước `$it` (CastDeepRescueAction.kt:73–83)")
-        }
-    }
-
-    /**
-     * Lệnh reset VD phải nhắm ĐÚNG display đo được (`-d $vd`) và chỉ chạy khi `vd >= 0` — CLAUDE.md §4:
-     * không bao giờ quét mù, `vd < 1`/không rõ thì không làm gì.
-     */
-    @Test
-    fun `reset VD chi chay khi do duoc display id`() {
-        val deep = body(cast(), "fun ClusterNavBridge.deepRescue(")
-        // 2026-09-15 R2 (cast rơi slot-VD display 1): đo qua ClusterDisplayResolver.resolve(out, selfPackage) — parser
-        // + owner-guard (cụm không bao giờ là VD của chính launcher); parser thô DisplayParse.clusterDisplayId né guard.
-        assertTrue("ClusterDisplayResolver.resolve(" in deep, "phải ĐO display id qua resolver có owner-guard, không đoán")
-        assertTrue("BuildConfig.APPLICATION_ID" in deep, "truyền gói của mình để guard loại slot-VD do launcher sở hữu")
-        assertTrue("DisplayParse.clusterDisplayId(" !in deep, "parser thô né owner-guard — cấm ở deepRescue")
-        assertTrue("if (vd >= 1)" in deep, "không đo được (-1) hoặc display 0 (màn giữa) thì KHÔNG chạy lệnh reset nào")
-        assertTrue("-d \$vd" in deep, "mọi lệnh wm phải nhắm tường minh display vừa đo")
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────────────────

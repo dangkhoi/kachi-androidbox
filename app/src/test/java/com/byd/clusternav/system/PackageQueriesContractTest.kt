@@ -92,7 +92,9 @@ class PackageQueriesContractTest {
         val callers = kotlinSources().filter { (_, code) -> code.contains("PackageQueries.queryActivities(") }.map { it.first }
         // AUTOMATION #2 (1.85): +1 — `ScheduledNavApplier` hỏi "app dẫn đường này có trên xe không" bằng CÙNG
         // phép đo mà `VoiceWiring.appsByLabel` dùng (activity LAUNCHER), nên hai đường không trả lời khác nhau.
-        assertEquals(8, callers.size, "mọi chỗ gọi phải đi qua helper; thấy: $callers")
+        // Android box B2 · W2c: −3 — `CastAppCatalog` · `ClusterNavBridgeCast` · `BubbleActionDispatcher` (danh sách app chiếu
+        // được / tự chiếu / menu nút nổi) gỡ cùng chiếu cụm.
+        assertEquals(5, callers.size, "mọi chỗ gọi phải đi qua helper; thấy: $callers")
     }
 
     /**

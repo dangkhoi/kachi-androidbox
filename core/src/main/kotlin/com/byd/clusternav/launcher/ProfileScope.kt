@@ -210,11 +210,6 @@ object ProfileScope {
                 "CHIẾC XE này và sống qua lần BYD giết Kachi; theo hồ sơ thì đổi hồ sơ là mất dấu. Cũng khai ở " +
                 "[SettingsCatalog.NOT_SETTINGS]",
         )
-        // ⚠ 2026-09-30 — `cast_enabled` ĐÃ RỜI danh sách này, chuyển sang theo HỒ SƠ. Owner: *"Phần cụm lưu hết thành
-        // profile nhé"* — THAY chốt S4-OQ2 của Pass 1 review (2026-09-14; không phải quyết định của owner). Lý do kỹ
-        // thuật của chốt cũ VẪN ĐÚNG ([ĐO] mọi cổng đọc đều LIVE qua `SimpleCastPrefs.castEnabled()` ⇒ ghi thẳng khoá
-        // sống lúc đổi hồ sơ là cụm HAI CHỦ) và nay là ràng buộc thiết kế: lượt đổi hồ sơ không bao giờ ghi khoá sống,
-        // giá trị hồ sơ đợi ở `cast_enabled_pending` (theo XE) tới lần khởi động tiến trình kế — `CastEnableDeferral`.
         put(
             "voice_speak_replies",
             "V1 pha NÓI · R4 — công tắc 'Đọc phản hồi bằng giọng'. Theo XE vì thứ quyết định nó có nghĩa hay " +
@@ -337,29 +332,22 @@ object ProfileScope {
                 "tắt việc cập nhật của cả xe. Cùng họ `sherpa_model_id`/`doze_whitelist_applied` — trạng thái/" +
                 "quyết định mức máy",
         )
-        // ⚠ 2026-09-30 — `cast_bubble_visible` ĐÃ RỜI danh sách này (V-CLUSTER, cùng quyết định với `cast_enabled`).
-        // Lý do cũ chỉ là *"cùng phạm vi với cast_enabled"*; [ĐO code] khoá này chỉ ẩn/hiện cửa sổ nổi trên màn chính
-        // (vòng `syncBubbleWindow` 2 s), không dựng lại dịch vụ, không chạm projection ⇒ áp NGAY khi đổi hồ sơ là an toàn.
         put("enable_freeform_support", "cờ boot của HỆ THỐNG (`Settings.Global`) — thuộc máy")
         put("force_resizable_activities", "cờ boot của HỆ THỐNG (`Settings.Global`), gieo CẶP với khoá trên")
         put("enabled_accessibility_services", "danh sách trợ năng DÙNG CHUNG với mọi app khác (`Settings.Secure`)")
         put("accessibility_enabled", "cờ trợ năng toàn hệ thống (`Settings.Secure`) — máy tự đổi sau lưng")
-        // V-CLUSTER — khoá cụm/chiếu/camera theo XE (23 khoá hiệu chỉnh camera, dấu mốc, đời cũ): bảng + lý do ở
-        // [ProfileScopeCluster.DEVICE_KEYS] (tách vì trần 500 dòng), không chép lại ở đây.
-        putAll(ProfileScopeCluster.DEVICE_KEYS)
+        // Android box B2 · W2c — khoá camera / chiếu cụm / VietMap BYD đã gỡ mã: tên + lý do ở hai bảng retired (W4 dọn).
+        putAll(RetiredCameraKeys.DEVICE)
+        putAll(RetiredClusterKeys.DEVICE_KEYS)
+        put(
+            ProfileScopeMigration.FILLED_LEDGER_KEY,
+            "2.92 PROFILE-NEW-KEYS — sổ 'khoá theo hồ sơ nào đã rót xuống mọi hồ sơ': dấu của lượt di trú, theo xe",
+        )
         putAll(TripGate.DEVICE_KEYS)   // F2/F3 — sổ chuyến lên xe + mốc khởi động (theo XE); lý do ở chỗ chủ
     }
 
-    /**
-     * Tiền tố khoá **dựng động** theo xe → lý do. Nay chỉ còn hai họ đời V2 của `CastAppCatalog` (`scale-*:<gói>`,
-     * `dpi:<gói>`), bảng ở [ProfileScopeCluster.DEVICE_KEY_PREFIXES].
-     *
-     * ⚠ 2026-09-30 (V-CLUSTER) — bốn tiền tố `config_size_/overscan_/density_/bounds_` ĐÃ RỜI bảng này sang theo HỒ SƠ
-     * ([ProfileScopeCluster.CAST_GEOMETRY]). Lý do cũ (*"`wm density` đã ĐO cho màn cụm của chính xe này"*) sai: DPI và
-     * khung do người lái chọn bằng chip và thanh −/+, còn `config_size_` là hằng `1920x720` hoặc suy từ khung người lái
-     * chọn. Cả bốn là MỘT bản ghi nên cùng đi (spec §11.2 K4).
-     */
-    val DEVICE_KEY_PREFIXES: Map<String, String> = ProfileScopeCluster.DEVICE_KEY_PREFIXES
+    /** Tiền tố khoá **dựng động** theo xe → lý do. Android box B2 · W2c: chỉ còn họ khung/DPI chiếu cụm đã gỡ mã. */
+    val DEVICE_KEY_PREFIXES: Map<String, String> = RetiredClusterKeys.DEVICE_KEY_PREFIXES
 
     /**
      * Khoá **tạm / đời cũ** → lý do. Không theo hồ sơ **và** không theo xe: chúng không phải một lựa chọn để nhớ.
@@ -411,8 +399,8 @@ object ProfileScope {
                 .filterKeys { key ->
                     key !in DEVICE_KEYS && key !in TRANSIENT_KEYS && key !in LAUNCHER_OWNED_CLUSTERNAV_KEYS
                 } + CLUSTERNAV_PROFILE_STATE_KEYS +
-                // V-CLUSTER — khoá theo hồ sơ KHÔNG có mục Cài đặt (6 khoá camera + vị trí nút nổi chiếu).
-                ProfileScopeCluster.PROFILE_EXTRA_KEYS
+                // Khoá camera BYD theo hồ sơ KHÔNG có mục Cài đặt (mã gỡ ở W2b, khoá còn trong ảnh chụp tới W4).
+                RetiredCameraKeys.PROFILE.keys.associateWith { "clusternav_prefs" }
             )
             .entries
             .groupBy({ it.value }, { it.key })
@@ -493,7 +481,5 @@ object ProfileScope {
                 "${WorkspaceState.SLOT_CAP} (SLOT_CAP)",
         )
         putAll(SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES)
-        // V-CLUSTER — họ `cast_geometry` (DPI/khung từng app khi chiếu) theo HỒ SƠ.
-        putAll(ProfileScopeCluster.FAMILY_PREFIXES)
     }
 }

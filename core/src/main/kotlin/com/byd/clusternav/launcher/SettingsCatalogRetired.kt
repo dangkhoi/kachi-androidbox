@@ -17,9 +17,8 @@ package com.byd.clusternav.launcher
 internal object SettingsCatalogRetired {
 
     private const val NAV_HUD = "dẫn đường lên cụm/HUD BYD — Android box B2 · W1 gỡ mục Cài đặt; khoá còn theo hồ sơ tới W4"
-    private const val BADGE = "biển báo tốc độ trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt; khoá còn theo hồ sơ tới W4"
-    private const val VM_BUBBLE = "bong bóng VietMap trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt; khoá còn theo hồ sơ tới W4"
-    private const val CAST = "chiếu màn lên cụm BYD (nhóm Cài đặt gỡ ở Android box B2 · W1); khoá `simple_cast_prefs` còn theo hồ sơ tới W4"
+    private const val BADGE = "biển báo tốc độ trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt, W2c gỡ mã; khoá còn theo hồ sơ tới W4"
+    private const val VM_BUBBLE = "bong bóng VietMap trên cụm BYD — Android box B2 · W1 gỡ mục Cài đặt, W2c gỡ mã; khoá còn theo hồ sơ tới W4"
     private const val CAR = "tiện nghi xe qua HAL BYD (nhóm Cài đặt gỡ ở Android box B2 · W1); khoá giữ phạm vi cũ (hồ sơ / xe) tới W4"
     private const val STRIP = "chip thanh trạng thái = chip dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt; W3 gỡ khối chip"
     private const val UNITS = "đơn vị chỉ dùng cho dữ liệu xe BYD — Android box B2 · W1 gỡ mục Cài đặt; W3 gỡ cùng dữ liệu xe"
@@ -32,11 +31,6 @@ internal object SettingsCatalogRetired {
         ).forEach { put(it, BADGE) }
         listOf("vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x", "vm_bubble_y").forEach { put(it, VM_BUBBLE) }
         listOf(
-            "cast_enabled", "split_ratio_left_pct", "cast_bubble_visible", "cast_style",
-            "autostart_enabled", "autostart_package", "autostart_split_enabled",
-            "autostart_left_package", "autostart_right_package",
-        ).forEach { put(it, CAST) }
-        listOf(
             "recirc_on_start_enabled", "seat_comfort_enabled", "seat_comfort_mode",
             "seat_level_0", "seat_level_1", "seat_level_2", "seat_level_3", "pm25_filter_enabled",
             "rain_defrost_enabled", "rain_defrost_front", "rain_defrost_rear",
@@ -45,6 +39,12 @@ internal object SettingsCatalogRetired {
         put("top_strip_labels", STRIP)
         put("unit_prefs", UNITS)
     }
+
+    /** W2c — khoá trong [KEYS] mà mã đọc/ghi đã gỡ (PrefsBadge · VmOverlayPosition). */
+    val CODE_REMOVED: Set<String> = setOf(
+        "badge_enabled", "show_upcoming_badge", "show_alert_chip", "badge_size_dp", "badge_center_x", "badge_center_y",
+        "vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x", "vm_bubble_y",
+    )
 
     /** Khoá phía LAUNCHER trong [KEYS] (tệp `kachi_workspace`, tiền tố hồ sơ) — phần còn lại phải nằm ở `CLUSTERNAV_KEYS`. */
     val LAUNCHER_KEYS: Set<String> = setOf("top_strip", "top_strip_labels", "unit_prefs")

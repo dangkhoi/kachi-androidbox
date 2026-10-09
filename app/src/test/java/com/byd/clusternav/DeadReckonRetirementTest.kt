@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 
 class DeadReckonRetirementTest {
     @Test
-    fun `active product has exactly two tracks and no DR or mock provider wiring`() {
+    fun `active product has no DR or mock provider wiring and no BYD cluster tracks`() {
         val manifest = app("src/main/AndroidManifest.xml").toFile().readText()
         // Màn chính của app nay là Kachi (màn ClusterNav cũ gỡ 2026-09-13 — S3 · R1).
         val home = app("src/main/java/com/byd/clusternav/launcher/KachiHomeActivity.kt").toFile().readText()
@@ -22,11 +22,11 @@ class DeadReckonRetirementTest {
             assertFalse(text.contains("ACCESS_MOCK_LOCATION"))
         }
         assertFalse(prefs.contains("gpsAuto"))
-        // Hai nhánh sản phẩm phải còn nguyên TÊN trên bề mặt người dùng. Trước 2026-09-13 bài này đọc nhãn
-        // trong `activity_main.xml`; nhãn nay ở tài nguyên của Kachi (`strings_kachi.xml`, cả hai ngôn ngữ).
+        // Android box B2 · W2c/W2d — hai nhánh BYD (Dẫn đường + HUD lên cụm · Chiếu màn lên cụm) gỡ: không còn nhãn nào của
+        // chúng trên bề mặt người dùng (trước đây bài này ĐÒI hai nhãn còn).
         val labels = app("src/main/res/values-en/strings_kachi.xml").toFile().readText()
-        assertTrue(labels.contains("Navigation + HUD"))
-        assertTrue(labels.contains("Cluster cast"))
+        assertFalse(labels.contains("Navigation + HUD"))
+        assertFalse(labels.contains("Cluster cast"))
     }
 
     @Test

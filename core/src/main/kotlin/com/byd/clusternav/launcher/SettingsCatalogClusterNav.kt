@@ -37,13 +37,12 @@ internal object SettingsCatalogClusterNav {
     /**
      * Tệp SharedPreferences mà **phía ClusterNav** đang ghi → nơi khai tên tệp đó.
      *
-     * Bốn tệp, mỗi tệp một lý do lịch sử khác nhau — cố ý KHÔNG gộp lại: gộp nghĩa là viết lại đường đọc của runtime
-     * đang chạy trên xe (`NavNotificationListener`, `FloatingBubbleService`, `attachBaseContext`), tức đổi hành vi
-     * để cho gọn bảng. IA v2 gộp **giao diện**, không gộp chỗ lưu.
+     * Ba tệp, mỗi tệp một lý do lịch sử khác nhau — cố ý KHÔNG gộp lại: gộp nghĩa là viết lại đường đọc của runtime
+     * đang chạy (`NavAccessibilityService`, `attachBaseContext`), tức đổi hành vi để cho gọn bảng. Android box B2 · W2c:
+     * `simple_cast_prefs` (chiếu cụm) rời bảng cùng mã của nó.
      */
     val PREFS_FILES: Map<String, String> = mapOf(
-        "clusternav_prefs" to "tệp CHÍNH của ClusterNav (`Prefs.FILE`); `VmOverlayPosition` mở CÙNG tệp này",
-        "simple_cast_prefs" to "prefs của Cluster Cast bản rút gọn (`SimpleCastRuntime`), runtime là FloatingBubbleService",
+        "clusternav_prefs" to "tệp CHÍNH của ClusterNav (`Prefs.FILE`)",
         "clusternav_theme" to "chỉ chứa `theme_choice`; `ThemeMode` cố ý để riêng vì nó phải đọc được ở attachBaseContext",
         "clusternav_lang" to "chỉ chứa `lang`; chỗ lưu ngôn ngữ DÙNG CHUNG cho cả APK (`Lang`)",
     )
@@ -96,18 +95,7 @@ internal object SettingsCatalogClusterNav {
             // cập nhật* của nhóm Hệ thống nay có một công tắc **và** một nút) — xem [COMPANION_KEYS].
             "auto_update_enabled",
         ).forEach { put(it, "clusternav_prefs") }
-        // ── simple_cast_prefs (SimpleCastRuntime.kt) ──
-        listOf(
-            "cast_enabled", "split_ratio_left_pct",
-            // UX-OVERHAUL WP6 · R6.1 — công tắc HIỆN nút nổi. Cùng tệp `simple_cast_prefs` với `cast_enabled` ngay
-            // cạnh, và cùng một bộ đọc (`SimpleCastPrefs` → `FloatingBubbleService`), nên "cấu hình chiếu cụm nằm
-            // ở đâu" vẫn có đúng MỘT câu trả lời.
-            "cast_bubble_visible",
-            // B1b · CLUSTER-RECT-OPTION — kiểu chiếu cụm (Bo tròn / Chữ nhật), cùng bộ đọc `SimpleCastPrefs.castStyle`.
-            "cast_style",
-            "autostart_enabled", "autostart_package",
-            "autostart_split_enabled", "autostart_left_package", "autostart_right_package",
-        ).forEach { put(it, "simple_cast_prefs") }
+        // Android box B2 · W2c — khoá `simple_cast_prefs` (chiếu cụm) rời bảng: mã gỡ, tệp rời ảnh chụp ([RetiredClusterKeys]).
         // ── hai tệp một-khoá ──
         put("theme_choice", "clusternav_theme")
         put("lang", "clusternav_lang")

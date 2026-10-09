@@ -22,8 +22,7 @@ class SettingsCatalogControlContractTest {
     private val sections by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSections.kt") }
     private val home by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsHome.kt") }
     private val bars by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsBars.kt") }
-    private val nav by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsNav.kt") }
-    private val cast by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsCast.kt") }
+    // Android box B2 · W2c — `SettingsSectionsNav.kt` + `SettingsSectionsCast.kt` gỡ (không bài nào còn đọc hai biến này).
     private val keys by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsKeys.kt") }
     private val car by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsCar.kt") }
     private val places by lazy { code("src/main/java/com/byd/clusternav/launcher/SettingsSectionsPlaces.kt") }

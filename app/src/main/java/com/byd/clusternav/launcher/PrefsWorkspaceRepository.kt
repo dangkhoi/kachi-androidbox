@@ -51,10 +51,7 @@ class PrefsWorkspaceRepository(context: Context) : WorkspaceRepository {
         // ảnh chụp cũ (chưa có hai khoá lịch) làm các hồ sơ lệch nhau. Rót giá trị đang sống xuống mọi hồ sơ
         // trước thì lượt áp đầu tiên đã có đủ dữ liệu để áp đúng.
         prefs.migrateNavScheduleOnce()
-        // V-CLUSTER (owner 2026-09-30): cùng lẽ — cụm/chiếu/camera/nút nổi vừa đổi phạm vi XE → HỒ SƠ; rót giá trị đang
-        // sống xuống mọi hồ sơ TRƯỚC lượt áp đầu tiên (spec §11.4.5). Sau lịch dẫn đường: hai lượt độc lập, thứ tự cố định.
-        prefs.migrateClusterProfileOnce()
-        // 2.92 PROFILE-NEW-KEYS: khoá vào phạm vi hồ sơ ở bản SAU hai lượt trên (sổ đã-rót) — cùng lẽ, cùng thời điểm.
+        // 2.92 PROFILE-NEW-KEYS: khoá vào phạm vi hồ sơ ở bản SAU lượt trên (sổ đã-rót) — cùng lẽ, cùng thời điểm.
         prefs.fillNewProfileKeysOnce()
     }
 
@@ -216,13 +213,12 @@ class PrefsWorkspaceRepository(context: Context) : WorkspaceRepository {
      * `attachBaseContext` của màn ClusterNav — thiếu bước này thì hồ sơ dùng English mà màn kia vẫn tiếng Việt.
      */
     override fun switchProfile(name: String): HomeUiState {
-        val navBefore = com.byd.clusternav.Prefs.enabled(app)   // 2.97 · R3: công tắc "Dẫn đường lên cụm" TRƯỚC lượt áp
         prefs.snapshotClusterNav(prefs.activeProfile())
         prefs.setActiveProfile(name)
         prefs.applyClusterNav(name)
         prefs.broadcastLang()
         bridge.reapplyAll()
-        ProfileNavNotice.record(name, navBefore, com.byd.clusternav.Prefs.enabled(app))
+        // Android box B2 · W2d — câu nhắc "hồ sơ này tắt dẫn đường lên cụm" (2.97 · R3, `ProfileNavNotice`) gỡ cùng dẫn đường cụm.
         return load()
     }
 

@@ -29,7 +29,8 @@ import org.junit.jupiter.api.Test
  *    `FreeformLaunch.freeformFlagCmds` constant was removed (moved into the policy).
  *  • **CAST side (freeform SEED)**: `CastShell.ensureFreeformSeed`/`unseedFreeform` were CONSOLIDATED — they now
  *    delegate to FreeformSeedPolicy, so `CastShell.kt` is no longer a freeform-flag writer.
- *  • **CAST side (DEFERRED, documented)**: the proven cluster-GEOMETRY writers (`wm size`/`wm density`) and the
+ *  • Android box B2 · W2c: the whole CAST side below was deleted with cluster cast — the policy is now the ONLY writer.
+ *  • **CAST side (DEFERRED, documented — historical)**: the proven cluster-GEOMETRY writers (`wm size`/`wm density`) and the
  *    live `SimpleCastCoordinator` marker-less seed (`CastGeometryController.ensureFreeformFlags`) are NOT
  *    consolidated this session — they touch proven cast logic that CANNOT be E2E-verified with the emulator dadb
  *    loopback down, and consolidating the live seed would CHANGE its behaviour (add marker discipline). They stay
@@ -84,8 +85,7 @@ class PersistentWindowStateWriterGuardTest {
         assertEquals(
             setOf(
                 "FreeformSeedPolicy.kt",      // ✅ SANCTIONED — :core system, sizeCmd() (the launcher/consolidation API).
-                "CastGeometryController.kt",  // ⏳ DEFERRED — :core cast, resizeFull() wm-size fallback. TODO(on-car).
-                "DisplayConfigurator.kt",     // ⏳ DEFERRED — :core cast, apply() per-app-type wm size. TODO(on-car).
+                // CastGeometryController.kt + DisplayConfigurator.kt XOÁ (Android box B2 · W2c — chiếu cụm gỡ).
                 // CastShell.kt XOÁ (quality-review 2026-09-15 Pha 3 — orchestrator cast chết đã gỡ).
             ),
             writers,
@@ -100,9 +100,7 @@ class PersistentWindowStateWriterGuardTest {
         assertEquals(
             setOf(
                 "FreeformSeedPolicy.kt",               // ✅ SANCTIONED — :core system, densityCmd() (the API).
-                "CastGeometryController.kt",           // ⏳ DEFERRED — :core cast, applyPinned() density (V-CLUSTER thay applySavedProfile). TODO(on-car).
-                "DisplayConfigurator.kt",              // ⏳ DEFERRED — :core cast, apply() density. TODO(on-car).
-                "CastDensityControl.kt",               // ⏳ DEFERRED — :core cast, set()/setForSplit() density. TODO(on-car).
+                // CastGeometryController.kt + DisplayConfigurator.kt + CastDensityControl.kt XOÁ (Android box B2 · W2c).
                 // CastShell.kt + ClusterCast.kt XOÁ (quality-review 2026-09-15 Pha 3 — orchestrator cast chết đã gỡ).
                 // CarExecClusterProjectionCatalog.kt XOÁ (Android box B2 · W2a — catalog đo tay T10).
             ),

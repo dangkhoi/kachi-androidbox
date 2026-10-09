@@ -159,8 +159,7 @@ class TestBridgeSafetyContractTest {
     /**
      * Không nhánh nào chạm màn cụm hay tầng chiếu cụm.
      *
-     * `ClusterDiag` là ngoại lệ DUY NHẤT và nó **chỉ đọc** (`dumpsys`/`wm ... -d` để chụp chẩn đoán, đúng thứ màn
-     * *Chẩn đoán* đang làm). Mọi thứ khác trong `modules.clustercast` đều là đường GHI lên cụm.
+ * Android box B2 · W2c: `modules.clustercast` gỡ hẳn (kể cả `ClusterDiag`, ngoại lệ chỉ-đọc cũ của lệnh `diag`).
      */
     @Test
     fun `khong nhanh nao cham man cum hay tang chieu cum`() {
@@ -175,22 +174,13 @@ class TestBridgeSafetyContractTest {
         }
     }
 
-    /**
-     * 2.93 wave 2B · DIAG-SCREENS-UNREACHABLE — `modules.clustercast` trong cầu chỉ được nhắc ở HAI chỗ có tên: `ClusterDiag`
-     * (chỉ đọc, lệnh `diag`) và `DiagActivity` (lệnh `diag_screen` chỉ MỞ màn — mọi nút trong màn vẫn cần người trong xe
-     * chạm; cầu không bấm gì thay). Tên màn qua danh sách TRẮNG ở `:core` trước khi tới tầng mở (không chuỗi tự do nào).
-     */
+    /** Android box B2 · W2c — cầu không còn nhắc `modules.clustercast` ở đâu (lệnh `diag` + tệp `TestBridgeScreens` gỡ). */
     @Test
-    fun `cau chi cham modules clustercast o hai cho co ten`() {
-        val allowed = mapOf("KachiTestBridge.kt" to setOf("ClusterDiag"), "TestBridgeScreens.kt" to setOf("DiagActivity"))
-        val imp = Regex("""import com\.byd\.clusternav\.modules\.clustercast\.(\w+)""")
+    fun `cau khong con cham modules clustercast`() {
         sources().forEach { f ->
-            val got = imp.findAll(SourceRoots.text("$dir/${f.fileName}")).map { it.groupValues[1] }.toSet()
-            assertEquals(allowed[f.fileName.toString()] ?: emptySet<String>(), got, "${f.fileName}: chỉ ClusterDiag (đọc) · DiagActivity (mở màn)")
+            assertTrue(!SourceRoots.text("$dir/${f.fileName}").contains("com.byd.clusternav.modules.clustercast"), "${f.fileName}")
         }
-        val screens = code("TestBridgeScreens.kt")
-        assertTrue(screens.contains("TestBridgeScreenCommands.targetOf(cmd.arg)"), "tên màn qua danh sách trắng `:core`")
-        assertTrue(!screens.contains("cmd.text") && !screens.contains("cmd.pkg"), "không nhận chuỗi tự do nào làm đích")
+        assertTrue(!SourceRoots.exists("$dir/TestBridgeScreens.kt"), "tệp ánh xạ màn chẩn đoán BYD đã xoá")
     }
 
     /** Cầu không tự chạy lệnh shell: mọi việc phải đi qua đường mà một cú chạm đi (CLAUDE.md §4). */

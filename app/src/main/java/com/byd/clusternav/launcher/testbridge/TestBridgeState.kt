@@ -108,7 +108,6 @@ internal object TestBridgeState {
                 "voice_model" to TestBridgeJson.Raw(voiceModel(ctx)),
                 "voice_names" to TestBridgeTeach.stateJson(hooks),   // 2.91 VOICE-APP-NAMES — chỉ SỐ
                 "tts" to TestBridgeJson.Raw(tts(ctx)),
-                "cast_enabled" to castEnabled(ctx),
                 "test_mode_minutes_left" to TestBridgeStore.remainingMinutes(ctx),
             ),
         )
@@ -276,22 +275,6 @@ internal object TestBridgeState {
             "unknown" to TestBridgeJson.Raw(TestBridgeJson.arr(rep.unknown.map { it.id })),
         )
     }
-
-    /**
-     * Công tắc CHÍNH của phiên chiếu cụm.
-     *
-     * Đọc thẳng tệp prefs của Cluster Cast (chỉ ĐỌC) thay vì dựng một `SimpleCastRuntime`: dựng runtime là khởi
-     * động cả một nhánh dịch vụ chỉ để hỏi một `boolean`. Tên tệp + tên khoá lấy từ danh mục ở `:core`, không
-     * viết cứng ở đây — xem [prefsSnapshot].
-     */
-    private fun castEnabled(ctx: Context): Boolean {
-        val file = SettingsCatalog.CLUSTERNAV_KEYS[CAST_ENABLED_KEY] ?: return false
-        return runCatching {
-            ctx.getSharedPreferences(file, Context.MODE_PRIVATE).getBoolean(CAST_ENABLED_KEY, false)
-        }.getOrDefault(false)
-    }
-
-    private const val CAST_ENABLED_KEY = "cast_enabled"
 
     /**
      * Toàn bộ khoá/giá trị của MỘT tệp prefs (lệnh `prefs`) — **chỉ đọc**, và **lọc tên nhạy cảm**.

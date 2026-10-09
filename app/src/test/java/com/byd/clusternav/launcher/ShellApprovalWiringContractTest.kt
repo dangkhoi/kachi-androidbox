@@ -136,7 +136,8 @@ class ShellApprovalWiringContractTest {
         val assistant = SourceRoots.codeOf("src/main/java/com/byd/clusternav/modules/voicekey/AssistantLauncher.kt")
         assertTrue(assistant.contains("LocalShellRetry.AWAIT_ADB_APPROVAL"), "đường phím mic (F2) giữ nguyên")
         assertFalse(assistant.contains("FirstOpenApproval"), "chính sách lần-mở-đầu KHÔNG được lan sang đường khác")
-        val autostart = SourceRoots.codeOf("src/main/java/com/byd/clusternav/VietMapAutostart.kt")
+        // Android box B2 · W2c — `VietMapAutostart.kt` (một đường nền) gỡ; đường nền còn lại tiêu biểu: `NavConnect`.
+        val autostart = SourceRoots.codeOf("src/main/java/com/byd/clusternav/NavConnect.kt")
         assertTrue(autostart.contains("LocalShellRetry.BACKGROUND_READ_CAP"), "đường nền (F6) giữ nguyên")
         assertFalse(autostart.contains("FirstOpenApproval"))
     }

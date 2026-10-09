@@ -29,9 +29,6 @@ Tải & cài	Download & install	下载并安装
 đang tải… {0}%	downloading… {0}%	正在下载…{0}%
 tải thất bại	download failed	下载失败
 đang cài…	installing…	正在安装…
-Đang mở VietMap…	Starting VietMap…	正在启动VietMap…
-Kéo để đặt bong bóng	Drag to place the bubble	拖动以放置气泡
-Bong bóng	Bubble	气泡
 Phím-thoại đang bật	Voice key active	语音键已启用
 Tự động hoá đang chạy	Automation running	自动化正在运行
 Lái	Driver	主驾
@@ -60,26 +57,6 @@ tệp {0} không khớp bản ghim ({1} byte, sha {2}…)	{0} does not match pin
 chưa có lượt nói nào được ghi — bật công tắc rồi nói một câu	no utterances recorded yet — turn the switch on and say something	尚未记录任何语句——请打开开关后说一句话
 không thấy tệp {0}	no {0} found	未找到{0}
 mô hình chưa sẵn sàng	model not ready	模型尚未就绪
-Kéo để đặt biển báo	Drag to place the badge	拖动以放置限速标志
-Đang trả app về…	Returning app…	正在移回应用…
-Đang chuẩn bị cụm…	Preparing cluster…	正在准备仪表…
-Chiếu {0}…	Casting {0}…	正在投屏{0}…
-Không cast màn hình chính	Won't cast the launcher/home screen	不会投屏启动器/主屏幕
-Nhấn để mở điều khiển	Tap to open controls	点按打开控制面板
-⬇ Kiểm tra cập nhật	⬇ Check update	⬇ 检查更新
-Thử badge 50	TEST BADGE 50	测试标志50
-Đã buộc badge 50 trên cụm (display 1)	Forced badge 50 on cluster (display 1)	已在仪表上强制显示标志50（display 1）
-Ẩn badge	HIDE badge	隐藏标志
-Đã ẩn badge	Badge hidden	标志已隐藏
-Chỉnh vị trí / cỡ badge	Badge position / size	标志位置/大小
-↖ Trên-trái	↖ Top-left	↖ 左上
-↗ Trên-phải	↗ Top-right	↗ 右上
-↙ Dưới-trái	↙ Bottom-left	↙ 左下
-↘ Dưới-phải	↘ Bottom-right	↘ 右下
-Cỡ −10	Size −10	大小 −10
-Cỡ +10	Size +10	大小 +10
-Tâm badge: X={0} Y={1} (px cụm) · cỡ {2}dp	Badge centre: X={0} Y={1} (cluster px) · size {2}dp	标志中心：X={0} Y={1}（仪表px）· 大小{2}dp
-Đang xử lý thao tác trước…	Previous operation in progress…	上一个操作仍在进行…
 Đang thử nối vào xe để mở trợ lý — chờ vài giây…	Still reaching the head unit to open the assistant — hang on…	正在连接车机以打开助手——请稍候…
 Đã gửi lệnh mở trợ lý nhưng xe không trả lời kịp — thử lại nếu chưa thấy trợ lý.	Sent the assistant key but the head unit did not answer in time — retry if nothing opened.	已发送助手按键，但车机未及时响应——如未打开请重试。
 Bấm "Cho phép/Allow" (tích "luôn cho phép") trên hộp thoại gỡ lỗi USB — app đang chờ…	Tap "Allow" (tick "always allow") on the USB-debugging dialog — waiting…	在USB调试对话框中点按“允许”（勾选“一律允许”）——等待中…
@@ -88,7 +65,6 @@ Cổng gỡ lỗi 5555 chưa bật trên xe — trợ lý giọng nói không ch
 Không nối được vào xe để mở trợ lý. Thử lại sau.	Could not reach the head unit to open the assistant. Try again later.	无法连接车机以打开助手。请稍后重试。
 Chưa được cấp quyền gỡ lỗi USB. Mở màn chính Kachi để cấp (nhớ tích "luôn cho phép") rồi thử lại.	USB debugging not authorised yet. Open the Kachi home screen to grant it (tick "always allow") then try again.	尚未授权USB调试。请打开Kachi主屏幕进行授权（勾选“一律允许”）后重试。
 Công thức trợ lý mới chạy được một phần — bật lại công tắc để chạy đủ.	The assistant recipe was only partly applied — toggle it again to finish.	助手配置仅部分生效——请重新切换开关以完成。
-Đang tự cấp quyền bind…	Granting bind permission…	正在自动授予绑定权限…
 xe không nhận lệnh nào	the car took no command	车辆未接受任何指令
 chưa làm được — 	not done — 	未完成——
 gói rỗng	empty pack	空组合
@@ -763,12 +739,6 @@ hệ thống báo thiếu bộ nhớ (lowMemory=true)	the system reports low mem
 chưa biết cỡ mô hình ⇒ nạp như cũ	model size unknown ⇒ loads as before	模型大小未知 ⇒ 照常加载
 còn {0} MB, cần {1} MB (mô hình {2} MB + thở {3} MB)	{0} MB free, {1} MB needed (model {2} MB + headroom {3} MB)	剩余{0} MB，需要{1} MB（模型{2} MB + 余量{3} MB）
 # CLUSTER-THEME-SAFE B1a (2.89) — màn Chẩn đoán › Cổng theme (chỉ đọc).
-Cổng theme (chỉ đọc)	Theme gate (read-only)	仪表主题闸门（只读）
-Đang đọc cổng theme…	Reading theme gate…	正在读取仪表主题闸门…
-Cổng theme: đã đọc (không gửi lệnh nào)	Theme gate: read (no command sent)	仪表主题闸门：已读取（未发送任何命令）
-ANR gần nhất của Kachi	Kachi's latest ANR	Kachi 最近一次 ANR
-Đang đọc ANR gần nhất…	Reading latest ANR…	正在读取最近一次 ANR…
-ANR: đã đọc (không gửi lệnh ghi nào)	ANR: read (no write command sent)	ANR：已读取（未发送任何写入命令）
 # B3 DOCK-SCALE (2.89) — mục Cài đặt › Hiển thị "Cỡ thanh nút xe" (khoá dock_scale).
 Cỡ thanh nút xe	Car bar size	车控栏大小
 # 2.91 · F1 — mục Cài đặt › Dẫn đường "Tự mở VietMap cho bong bóng" (khoá vm_bubble_enabled, nghĩa cũ: tự mở VietMap).

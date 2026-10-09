@@ -126,9 +126,9 @@ class KachiAutostartServiceWiringTest {
     }
 
     @Test
-    fun `runBoot consults the cast-coordination plan`() {
-        assertTrue(autostart.contains("LauncherBootPlan.plan("), "consults the pure cast-coordination decision")
-        assertTrue(autostart.contains("isCastable("), "castOwns = !AppLocationRegistry.isCastable(pkg) — do not fight cast")
+    fun `runBoot no longer logs a cast-coordination plan (Android box W2c)`() {
+        assertFalse(autostart.contains("LauncherBootPlan.plan("), "không còn chiếu cụm ⇒ không còn kế hoạch launcher-vs-cast")
+        assertFalse(autostart.contains("isCastable("), "khái niệm 'đã trên cụm' gỡ cùng chiếu cụm")
     }
 
     @Test
@@ -179,8 +179,9 @@ class KachiAutostartServiceWiringTest {
     @Test
     fun `slot seed path skips cast-owned apps`() {
         val seed = windows.substring(windows.indexOf("fun seedLocations()"))
-        assertTrue(seed.contains("LauncherBootPlan.plan("), "seedLocations uses the pure cast-coordination decision")
-        assertTrue(seed.contains("isCastable("), "seedLocations skips apps cast already owns on the cluster")
+        assertTrue(seed.contains("LauncherBootPlan.plan("), "seedLocations uses the pure boot-plan decision")
+        // Android box B2 · W2c — không còn chiếu cụm ⇒ không app nào "cụm đang giữ".
+        assertTrue(seed.contains("LauncherBootPlan.NO_CAST"), "seedLocations: no cast owner any more")
     }
 
     // ── Pref: default-ON launcher auto-start kill-switch ─────────────────────────────────────────

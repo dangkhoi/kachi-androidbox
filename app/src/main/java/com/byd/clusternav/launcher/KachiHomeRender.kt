@@ -41,8 +41,6 @@ internal fun KachiHomeActivity.render(state: HomeUiState) {
     // #10 (2026-09-23) GIỮ STATE: theme đổi ⇒ restyle tại chỗ (không recreate=không giết ô app); chỉ LANG mới recreate.
     val themeChanged = ThemeHost.sync(state)
     if (LangHost.changed(prev, state) && prev != null) { recreate(); return }
-    // 2.97 · R3 — đổi hồ sơ vừa TẮT dẫn đường lên cụm ⇒ nhắc MỘT lần (sau `recreate` vẫn còn: cờ lấy ra ở lượt render kế).
-    ProfileNavNotice.take()?.let { android.widget.Toast.makeText(this, getString(com.byd.clusternav.R.string.kachi_profile_nav_off, it), android.widget.Toast.LENGTH_LONG).show() }
     if (themeChanged && prev != null) applyThemeInPlace()
     // T4: thu hồi id ở ĐÚNG chỗ diff này ⇒ mọi đường đổi đều qua đây. CẢ state, vì "còn dùng" tính cả sổ cảnh.
     prev?.let { appWidgets.reclaim(it, state) }

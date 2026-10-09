@@ -17,10 +17,11 @@ import org.junit.jupiter.api.Test
  */
 class ProfileTransferTest {
 
-    private val cn = ProfileScopeCluster.CLUSTERNAV_FILE
+    private val cn = "clusternav_prefs"
     private val cnSuffix = ProfileScope.snapshotSuffix(cn)
-    private val castSuffix = ProfileScope.snapshotSuffix(ProfileScopeCluster.SIMPLE_CAST_FILE)
-    private val marker = ProfileScopeCluster.CAST_GEOMETRY.marker
+    /** Android box B2 · W2c — hậu tố ảnh chiếu cụm của tệp Kachi BYD (đã rời phạm vi hồ sơ). */
+    private val castSuffix = ProfileScope.snapshotSuffix(RetiredClusterKeys.SIMPLE_CAST_FILE)
+    private val catalogSuffix = ProfileScope.snapshotSuffix(RetiredClusterKeys.CAST_CATALOG_FILE)
 
     private class Car {
         val stored = LinkedHashMap<String, Any?>()
@@ -37,10 +38,7 @@ class ProfileTransferTest {
             snapshotCalls += profile
             ProfileScope.CLUSTERNAV_KEYS.forEach { (file, keys) ->
                 val all = live.getValue(file)
-                val shot = ClusterSnapshotPlan.snapshot(
-                    keys.associateWith { all[it] }, all, ProfileScopeCluster.familiesOf(file), ProfileScopeCluster.DEFERRED,
-                )
-                stored[key(profile, ProfileScope.snapshotSuffix(file))] = PrefSnapshot.encode(shot.values)
+                stored[key(profile, ProfileScope.snapshotSuffix(file))] = PrefSnapshot.encode(keys.associateWith { all[it] })
             }
         }
 
@@ -48,13 +46,10 @@ class ProfileTransferTest {
         fun apply(profile: String) {
             ProfileScope.CLUSTERNAV_KEYS.forEach { (file, keys) ->
                 val raw = stored[key(profile, ProfileScope.snapshotSuffix(file))] as? String ?: return@forEach
-                val families = ProfileScopeCluster.familiesOf(file)
-                val values = PrefSnapshot.decode(raw).filterKeys { ClusterSnapshotPlan.inScope(it, keys, families) }
+                val values = PrefSnapshot.decode(raw).filterKeys { PrefSnapshotPlan.inScope(it, keys) }
                 if (values.isEmpty()) return@forEach
                 val target = live.getValue(file)
-                val plan = ClusterSnapshotPlan.apply(
-                    target, values, keys, families, ProfileScopeCluster.DECLARED_TYPES, ProfileScopeCluster.DEFERRED,
-                )
+                val plan = PrefSnapshotPlan.apply(target, values, keys, ProfileScopeTypes.CLUSTERNAV)
                 plan.writes.forEach { (k, v) -> if (v == null) target.remove(k) else target[k] = v }
             }
         }
@@ -83,9 +78,8 @@ class ProfileTransferTest {
                     if (file != null) null else v
                 } else {
                     PrefSnapshot.encode(
-                        ClusterSnapshotPlan.sanitize(
-                            PrefSnapshot.decode(v), ProfileScope.CLUSTERNAV_KEYS.getValue(file),
-                            ProfileScopeCluster.familiesOf(file), ProfileScopeCluster.DECLARED_TYPES,
+                        PrefSnapshotPlan.sanitize(
+                            PrefSnapshot.decode(v), ProfileScope.CLUSTERNAV_KEYS.getValue(file), ProfileScopeTypes.CLUSTERNAV,
                         ).values,
                     )
                 }
@@ -104,7 +98,6 @@ class ProfileTransferTest {
                 "badge_size_dp" to 48, "voicekey_bindings" to "[{\"k\":1,\"t\":\"x\"}]",
             ),
         )
-        live.getValue(ProfileScopeCluster.SIMPLE_CAST_FILE)["config_density_vn.vietmap.live"] = "320"
         stored[key("A", "saved_places")] = "PLACES-A"
         stored[key("A", "preset")] = "p2"
         stored[key("B", "saved_places")] = "PLACES-B"
@@ -210,9 +203,7 @@ class ProfileTransferTest {
         assertEquals(true, shot["enabled"])
         assertEquals(48, shot["badge_size_dp"])
         assertFalse(out.contains("RULES-A") || out.contains("FIRED-A") || out.contains("PLACES-A"), "rò dữ liệu riêng tư")
-        val cast = shotIn(out, castSuffix)
-        assertEquals("320", cast["config_density_vn.vietmap.live"])
-        assertEquals(true, cast[marker], "mốc họ phải đi cùng")
+        assertFalse(b.containsKey(castSuffix), "Android box B2 · W2c: không còn ảnh chiếu cụm trong tệp xuất")
     }
 
     @Test
@@ -223,14 +214,35 @@ class ProfileTransferTest {
         assertEquals(mapOf("nav_automation_fired" to null, "nav_automation_rules" to null), shot)
     }
 
-    /** Lượt 2 [P3] — mốc họ khớp NGUYÊN chuỗi: một khoá lạ mang tiền tố `@family:` không đi theo vào bản chia sẻ. */
+    /**
+     * Android box B2 · W2c — tệp `.kachi` xuất từ Kachi BYD mang ảnh chiếu cụm (`__cn__simple_cast_prefs` — công tắc, khung
+     * `config_*`, mốc họ `@family:cast_geometry`) + nút nổi (`__cn__cast-v2-app-catalog`): lượt nhập bỏ IM LẶNG (không vào
+     * `dropped`, không ném, không ghi khoá nào), phần còn lại của hồ sơ nhập như cũ. Cùng ca với bản chia sẻ.
+     */
     @Test
-    fun `ban chia se chi giu moc ho that`() {
+    fun `tep Kachi BYD co anh chieu cum nhap duoc va bo anh cum im lang`() {
         val cast = PrefSnapshot.encode(
-            mapOf(marker to true, "@family:la" to "RIENG-TU", "config_density_vn.vietmap.live" to "320"),
+            mapOf("@family:cast_geometry" to true, "cast_enabled" to true, "config_density_vn.vietmap.live" to "320"),
         )
-        val shot = PrefSnapshot.decode(ProfileTransfer.forShare(mapOf(castSuffix to cast))[castSuffix] as String)
-        assertEquals(mapOf(marker to true, "config_density_vn.vietmap.live" to "320"), shot)
+        val cnShot = PrefSnapshot.encode(mapOf("voicekey_bindings" to "[]", "enabled" to true, "camera_zoom" to 120))
+        listOf(ProfileTransfer.Kind.FULL, ProfileTransfer.Kind.SHARE).forEach { kind ->
+            val data = ProfileTransfer.encodeHeader("BYD", kind) + "\n" + PrefSnapshot.encode(
+                mapOf("preset" to "p2", castSuffix to cast, catalogSuffix to PrefSnapshot.encode(mapOf("bubbleX" to 5)), cnSuffix to cnShot),
+            )
+            val plan = ProfileTransfer.planImport(data, null, emptyList())!!
+            assertEquals(emptyList<String>(), plan.dropped, "$kind: khoá cụm đã gỡ không phải lỗi kiểu — bỏ im lặng")
+            assertFalse(castSuffix in plan.writes || catalogSuffix in plan.writes, "$kind: không ghi ảnh chiếu cụm")
+            assertEquals("p2", plan.writes["preset"], "$kind: phần launcher nhập như cũ")
+            val shot = PrefSnapshot.decode(plan.writes[cnSuffix] as String)
+            assertEquals("[]", shot["voicekey_bindings"], "$kind: ảnh clusternav_prefs nhập như cũ")
+        }
+        // Lớp làm sạch ảnh bên trong cũng bỏ IM LẶNG khoá ngoài phạm vi (không vào `dropped`).
+        val clean = PrefSnapshotPlan.sanitize(
+            mapOf("voicekey_bindings" to "[]", "cast_enabled" to true, "@family:cast_geometry" to true),
+            ProfileScope.CLUSTERNAV_KEYS.getValue(cn), ProfileScopeTypes.CLUSTERNAV,
+        )
+        assertEquals(mapOf<String, Any?>("voicekey_bindings" to "[]"), clean.values)
+        assertEquals(emptyList<String>(), clean.dropped)
     }
 
     // ── IO-R4 · nhập bản chia sẻ ───────────────────────────────────────────────────────────────

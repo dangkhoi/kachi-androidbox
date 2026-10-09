@@ -9,36 +9,26 @@ import com.byd.clusternav.modules.navaccess.AccessibilityHealGates
 import com.byd.clusternav.modules.navaccess.AccessibilityRebind
 import dadb.AdbKeyPair
 import com.byd.clusternav.modules.navaccess.NavAccessibilitySource
-import com.byd.clusternav.navigation.NlsHealPolicy
-import android.content.ComponentName
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import com.byd.clusternav.system.DisplayParse
 import com.byd.clusternav.system.StackParse
-import com.byd.clusternav.modules.clustercast.simplified.ClusterDisplayResolver
-import android.service.notification.NotificationListenerService
 import android.util.Log
 
 /**
- * BIND lại nav listener qua dadb (ADB local client, localhost:5555, uid=shell) — `cmd notification disallow/allow_listener`
- * y như DashCast. Lần đầu có popup "Allow USB debugging" trên xe → bấm Allow 1 lần (key lưu ở filesDir).
+ * Cấp quyền + gắn lại dịch vụ Hỗ trợ (phím vật lý) qua dadb (ADB local client, localhost:5555, uid=shell). Lần đầu có
+ * popup "Allow USB debugging" → bấm Allow 1 lần (key lưu ở filesDir).
  *
- * ĐÍNH CHÍNH FIX286 (03/10, [ĐO nguồn]): câu cũ "firmware BYD BỎ QUA requestRebind" quy nhầm cho BYD — đó là ngữ nghĩa
- * AOSP: `requestRebind` chỉ gỡ "snooze" (r47 NMS `:3127-3139` → `ManagedServices.java:707-711`), không gắn lại một bộ
- * nghe đã CẤP mà chưa GẮN. Đường gắn lại thật (disallow → 1,5 s → allow) nay nằm ở [NlsHeal] / [NlsHealShell].
- *
- * - [reconnect]  : nút *Kết nối lại* — ép disallow→allow ngay, phiên HỎI, báo kết quả THẬT.
- * - [ensureConnected] : công tắc BẬT — chờ bind tự nhiên ≤4,5 s, CHƯA bound mới disallow→allow (không ngắt nav đang chạy).
+ * Android box B2 · W2d (2026-10-09): đường gắn lại bộ nghe thông báo cho HUD/cụm BYD (`reconnect` · `ensureConnected` ·
+ * `selfGrant`, `NlsHeal`) gỡ cùng dẫn đường cụm. Quyền bộ nghe thông báo (cho widget nhạc) do `PermissionPreflight` tự cấp.
  */
 object NavConnect {
     private const val TAG = "NavConnect"
     // This app's own installed package = BuildConfig.APPLICATION_ID (com.byd.clusternav2). Class FQNs keep the
     // internal namespace com.byd.clusternav.* (unchanged) → component = "<appId>/com.byd.clusternav.<Class>".
     // Fully isolated from the legacy com.byd.clusternav app.
-    /** `internal` (FIX286): [NlsHeal] dùng CHUNG chuỗi này — một nguồn, không chép. */
-    internal val COMP = "${BuildConfig.APPLICATION_ID}/com.byd.clusternav.NavNotificationListener"
     /** `internal` (2.83) cho đúng một người đọc nữa: bộ đo kẹt của [A11yLifecycleHeal] — cùng một chuỗi, không chép. */
     internal val ACC_COMP = "${BuildConfig.APPLICATION_ID}/com.byd.clusternav.modules.navaccess.NavAccessibilityService"
     private val grantingAcc = java.util.concurrent.atomic.AtomicBoolean(false)    // single-flight cho grantAccessibility (dadb read-modify-write)
@@ -92,59 +82,8 @@ object NavConnect {
     }.getOrNull()
 
     /**
-     * Nút *Kết nối lại*: disallow→allow NGAY qua phiên HỎI (FIX286 S2 — 2.85 đi phiên NỀN nên bị cổng READY-AT-HOME
-     * chặn khi kênh chưa lên mà vẫn log "xong"). [onResult] trên luồng chính, kết quả THẬT (đọc lại dump).
-     */
-    fun reconnect(ctx: Context, onResult: (NlsHealPolicy.Outcome) -> Unit = {}) = NlsHeal.userReconnect(ctx, onResult)
-
-    /**
-     * CẤP QUYỀN notification-listener NGAY trong app qua dadb uid-shell (`cmd notification allow_listener`).
-     * Đường CHUẨN trên BYD IVI khoá: màn Settings "Truy cập thông báo" KHÔNG mở được (startActivity bị chặn →
-     * toast hệ thống "IVI không hỗ trợ hoạt động này"), NHƯNG quyền này là quyền adb
-     * (settings secure enabled_notification_listeners) mà uid shell (2000) qua loopback ĐƯỢC PHÉP đặt — y như
-     * DashCast. Lần đầu có popup "Allow USB debugging" trên xe → bấm Allow 1 lần (key lưu ở filesDir).
-     *
-     * KHÁC [reconnect]: dùng cho lần THIẾU quyền (nút "Cấp quyền" / bật công tắc). Chỉ `allow_listener`
-     * (KHÔNG `disallow` trước — lần đầu chưa có trong danh sách) rồi requestRebind + chờ bind để phản hồi UI.
-     *
-     * @param onResult gọi trên MAIN thread: true nếu listener đã bound sau khi grant, false nếu grant/nối lỗi.
-     */
-    fun selfGrant(ctx: Context, onResult: ((Boolean) -> Unit)? = null) {
-        val app = ctx.applicationContext
-        val main = Handler(Looper.getMainLooper())
-        Thread {
-            val ok = doSelfGrant(app)
-            onResult?.let { cb -> main.post { cb(ok) } }
-        }.start()
-    }
-
-    /** Lõi blocking của [selfGrant]. Chạy trên thread nền của caller. Trả true nếu listener đã bound. */
-    private fun doSelfGrant(app: Context): Boolean {
-        if (!NlsHeal.busy.compareAndSet(false, true)) { Log.i(TAG, "grant/reconnect đang chạy — bỏ lần trùng"); return NavNotificationListener.connected }
-        try {
-            return runCatching {
-                val keyPair = AdbKeys.ensure(app)
-                // FIX286 S2: chỉ hai chỗ gọi, cả hai là người dùng vừa bấm (công tắc / Kết nối lại) ⇒ phiên HỎI — phiên NỀN
-                // bị cổng READY-AT-HOME chặn khi kênh chưa lên (2.85) đúng lúc người dùng đang chờ kết quả.
-                val allowed = LocalDeviceShell.session(keyPair, LocalShellRetry.USER_READ_CAP) { sh ->
-                    sh("cmd notification allow_listener $COMP").ok
-                }
-                if (allowed != true) {
-                    Log.e(TAG, "selfGrant: dadb allow_listener không chạy được (allowed=$allowed)")
-                    return@runCatching NavNotificationListener.connected
-                }
-                NotificationListenerService.requestRebind(ComponentName(app, NavNotificationListener::class.java))
-                var waited = 0
-                while (waited < 4500 && !NavNotificationListener.connected) { Thread.sleep(300); waited += 300 }
-                Log.i(TAG, "selfGrant xong sau ${waited}ms: bound=${NavNotificationListener.connected}")
-                NavNotificationListener.connected
-            }.getOrElse { Log.e(TAG, "selfGrant qua dadb LỖI (popup Allow chưa bấm?)", it); false }
-        } finally { NlsHeal.busy.set(false) }
-    }
-
-    /**
      * CẤP QUYỀN Hỗ trợ (accessibility) cho [NavAccessibilityService] qua dadb uid-shell — cần cho T3 (nút vật
-     * lý → trợ lý) VÀ cho booster đọc màn GMaps. Cùng lý do như [selfGrant]: màn Settings > Hỗ trợ trên IVI
+     * lý → trợ lý). Màn Settings > Hỗ trợ trên IVI
      * khoá có thể không mở/không bật được, nhưng `settings put secure enabled_accessibility_services` từ uid
      * shell thì được. ĐỌC-SỬA-GHI để KHÔNG đá văng service hỗ trợ khác đang bật (append, không overwrite).
      *
@@ -337,7 +276,7 @@ object NavConnect {
         // thành mảng đen ([ĐO xe 2026-09-28]). Đọc chủ sở hữu thật từ `dumpsys display` (cùng lệnh dò đã proven
         // của cast) thay vì đoán "display ≥ 1 là cụm" — [ĐO xe 2026-09-15] display 1 chính là `kachi-slot-0`.
         // Không đọc được ⇒ `null` ⇒ cổng ĐÓNG.
-        val displayDump = sh(ClusterDisplayResolver.DETECT_CMD).output
+        val displayDump = sh(DisplayParse.DETECT_CMD).output
         val ownVds = if (displayDump.isBlank()) null else DisplayParse.ownedVirtualDisplayIds(displayDump, app.packageName)
         val noGuest = StackParse.noGuestAppVisible(StackParse.parse(sh("am stack list").output), app.packageName, ownVds)
         val step = AccessibilityHealGates.healStep(
@@ -454,10 +393,4 @@ object NavConnect {
         }
         return reboundOk
     }
-
-    /**
-     * Công tắc *Dẫn đường lên cụm đồng hồ* BẬT (FIX286 S2): xin rebind, chờ callback tự nhiên ≤4,5 s; CHƯA bound mới
-     * disallow→allow qua phiên HỎI. Không đụng gì nếu đã bound. [onResult] trên luồng chính, kết quả THẬT.
-     */
-    fun ensureConnected(ctx: Context, onResult: (NlsHealPolicy.Outcome) -> Unit = {}) = NlsHeal.userEnsure(ctx, onResult)
 }

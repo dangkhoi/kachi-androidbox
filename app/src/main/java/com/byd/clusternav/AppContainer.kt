@@ -18,7 +18,6 @@ import com.byd.clusternav.launcher.KachiLog
 import com.byd.clusternav.launcher.PrefsWorkspaceRepository
 import com.byd.clusternav.launcher.WorkspaceRepository
 import com.byd.clusternav.launcher.WriteReleaseScheduler
-import com.byd.clusternav.modules.clustercast.simplified.SimpleCastRuntime
 import com.byd.clusternav.system.ShellTransport
 import com.byd.clusternav.system.WindowCommandDispatcher
 import com.byd.clusternav.system.inputd.InputDaemonClient
@@ -178,9 +177,6 @@ class AppContainer internal constructor(
 
     /** Khoá của [readFresh] — lý do ở KDoc ấy. */
     private val freshLock = Any()
-
-    /** Cast folded BY REFERENCE — process-singleton object hiện có; KHÔNG sở hữu/không dựng coordinator ở đây. */
-    val castRuntime: SimpleCastRuntime get() = SimpleCastRuntime
 
     /** Factory chuẩn AndroidX cấp [HomeViewModel] nối [workspaceRepository] + cờ [embedded] runtime. */
     fun homeViewModelFactory(embedded: Boolean): ViewModelProvider.Factory =

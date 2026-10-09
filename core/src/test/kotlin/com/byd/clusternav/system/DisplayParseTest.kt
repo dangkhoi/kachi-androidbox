@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import com.byd.clusternav.modules.clustercast.CastDisplayFixtures2026_09_15
 
 /**
  * Test [DisplayParse] — parser thuần cho `dumpsys display` / `dumpsys window displays` / `dumpsys window windows`.

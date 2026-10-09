@@ -176,11 +176,12 @@ class A11yBindStuckWiringContractTest {
 
     @Test
     fun `nhat ky PHAI doc duoc trong app, khong bat owner go adb`() {
-        val diag = SourceRoots.codeOf("src/main/java/com/byd/clusternav/modules/clustercast/DiagActivity.kt")
+        // Android box B2 · W2c — màn Chẩn đoán cụm (DiagActivity) gỡ cùng chiếu cụm; đường đọc còn lại là lệnh cầu `a11ylog`
+        // (cổng Chế độ kiểm thử) + dòng `A11yJournal` trong `kachi-logs/usage-*.log`.
+        val diag = SourceRoots.codeOf("src/main/java/com/byd/clusternav/launcher/testbridge/TestBridgeA11yLog.kt")
         assertTrue(
             diag.contains("A11yBindJournalStore.read("),
-            "R7 + CLAUDE.md §11: nhật ký chỉ-ghi-không-đọc-được thì owner vẫn phải gõ adb ⇒ mất đúng mục đích. " +
-                "Màn Chẩn đoán (Cài đặt › Chiếu cụm › Chẩn đoán) phải in nó ra để anh em chụp màn hình gửi về",
+            "R7 + CLAUDE.md §11: nhật ký chỉ-ghi-không-đọc-được thì không ai đọc được ⇒ mất đúng mục đích",
         )
         assertTrue(diag.contains("Prefs.a11yEscalatedAt("), "và cho biết lần nổ máy này đã tự chữa chưa")
     }

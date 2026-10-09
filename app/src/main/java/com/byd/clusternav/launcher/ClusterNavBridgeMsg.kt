@@ -1,6 +1,5 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.navigation.NavReadChannel
 import com.byd.clusternav.voicekey.KeySourceKind
 
 /**
@@ -28,49 +27,8 @@ import com.byd.clusternav.voicekey.KeySourceKind
  * người dùng thấy hai câu khác nhau cho cùng một việc.
  */
 enum class BridgeMsg {
-    // ── Dẫn đường ───────────────────────────────────────────────────────────────────────────────
-
-    /** VI "Đang cấp quyền đọc thông báo…" · EN "Granting notification access…" — `MainActivity.kt:107`. */
-    GRANTING_NOTIFICATION,
-
-    /**
-     * VI "Đã cấp quyền — đã kết nối nguồn dẫn đường." · EN "Access granted — navigation connected."
-     * — `MainActivity.kt:268`.
-     */
-    NOTIFICATION_GRANTED,
-
-    /**
-     * VI "Không mở được cài đặt. Vào Cài đặt → Ứng dụng → Truy cập đặc biệt → Truy cập thông báo →
-     * bật ClusterNav." · EN "Couldn't open settings. Go to Settings → Apps → Special access →
-     * Notification access → enable ClusterNav." — `MainActivity.kt:695–698`.
-     */
-    NOTIFICATION_FALLBACK,
-
-    /** VI "Đang kết nối lại nguồn dẫn đường…" · EN "Reconnecting navigation source…" — `MainActivity.kt:258`. */
-    RECONNECTING,
-
-    // ── Chiếu cụm ───────────────────────────────────────────────────────────────────────────────
-
-    /** VI "Đã bật Cluster Cast" · EN "Cluster Cast on" — `CastEnableSwitch.kt:68`. */
-    CAST_ON,
-
-    /**
-     * VI "Đã tắt Cluster Cast · cụm về đồng hồ" · EN "Cluster Cast off · cluster back to gauges"
-     * — `CastEnableSwitch.kt:76–78`.
-     */
-    CAST_OFF,
-
-    /** VI "Đang trả app về…" · EN "Returning app…" — `MainActivityCastController.kt:190`. */
-    CAST_RETURNING,
-
-    /**
-     * VI "Đã trả cụm về đồng hồ · đang mở lại…" · EN "Cluster reset · reopening…"
-     * — `MainActivityCastController.kt:87`.
-     */
-    CLUSTER_RESET_REOPENING,
-
-    /** VI "Đang dọn sạch cụm…" · EN "Deep-cleaning cluster…" — `CastDeepRescueAction.kt:71`. */
-    DEEP_RESCUE_RUNNING,
+    // Android box B2 · W2c/W2d — mã thông điệp của dẫn đường cụm (cấp quyền thông báo · kết nối lại) và chiếu cụm (bật/tắt ·
+    // trả app · cứu hộ cụm) gỡ cùng mã của chúng.
 
     // ── Phím vô-lăng ────────────────────────────────────────────────────────────────────────────
 
@@ -170,20 +128,6 @@ enum class BridgeMsg {
  *    Fix now" (đỏ).
  */
 enum class VoiceKeyStatus { OFF, ACTIVE, DISCONNECTED }
-
-/**
- * Nguồn dẫn đường đang chạy — dữ liệu THÔ của dòng "Đang dẫn: …" (`MainActivity.kt:429–439`).
- *
- * [brand] là **tên thương hiệu** (`NavSourceLabels.sourceLabel`, vd "Google Maps") — danh từ riêng,
- * không dịch. [channel] là enum `:core`; [stale] = quá `SourceArbiter.STALE_MS`. Câu hoàn chỉnh do
- * tầng Settings ghép từ tài nguyên.
- */
-data class NavSourceView(
-    val packageName: String,
-    val brand: String,
-    val channel: NavReadChannel,
-    val stale: Boolean,
-)
 
 /**
  * Một mục trong danh sách NÚT (preset + nút tự học).
