@@ -235,7 +235,7 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
             onProfileTap = { profileChip.picker { panels.openSettings(SettingsGroup.PROFILES) } },
             onOpenAppList = { drawerController.openAppList() },   // U3: mở app toàn màn (không gắn ô)
             onVoice = { voice.start() },                         // V1 pha NGHE — cùng lambda với ô *Nói với xe*
-            voicePillEnabled = { Prefs.voiceMicPill(this) && VoiceModelStore.isReady(this) },
+            voicePillEnabled = { Prefs.voiceMicPill(this) && VoiceModelStore.isReady(this) && DeviceMic.voiceAvailable(this) },   // B3: không micro ⇒ không nút mic
             // WP4 — thứ tự vật trên thanh; lượt ĐỔI đi qua `topStrip.setLayout` ở render.
             header = { viewModel.uiState.value.header },
         )
@@ -381,6 +381,7 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
         goImmersive(); topStrip.updateClock(); wallpaper.reload(); handler.post(tick)
         runCatching { bridge.autoUpdateOnceIfEnabled() }   // V8 (owner 2026-09-25) tự cập nhật 1 lần/tiến trình (cổng trong cầu)
         topStrip.refreshVoicePill()   // V1 pha NGHE: mô hình có thể vừa được tải/gỡ ở một màn khác
+        panels.refreshPermissionsPage()   // B3: vừa về từ màn quyền của hệ thống ⇒ trang quyền đọc lại
         // "Hey Kachi": bộ nghe FGS chết theo tiến trình (app bị kill/cài lại) và KHÔNG có gì dựng lại ngoài boot
         // thật / gạt công tắc. [ĐO xe 2026-09-21] sau reinstall service = 0 ⇒ "thử một loạt không lên". Mở màn
         // chính ⇒ đồng bộ lại FGS nếu công tắc đang bật (sync no-op khi đã chạy / khi tắt).
@@ -393,6 +394,12 @@ class KachiHomeActivity : Activity(), LifecycleOwner, ViewModelStoreOwner {
 
     /** Dựng dải header nổi sau khi cây view đã có kích thước thật (mở màn xong). */
     private val overlayHeadsKick = Runnable { if (!destroyed) windows.updateOverlayHeads() }
+
+    /** B3 — hộp xin quyền runtime (micro/định vị) đóng ⇒ trang quyền đọc lại; micro vừa cấp ⇒ nút mic soi lại. */
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == SystemSettingsOpener.REQ_RUNTIME) { panels.refreshPermissionsPage(); topStrip.refreshVoicePill() }
+    }
 
     /** Toàn màn "dính" — cờ cửa sổ nằm ở [goImmersiveWindow] (trần 500 dòng; xem KDoc ở đó). */
     private fun goImmersive() = goImmersiveWindow()

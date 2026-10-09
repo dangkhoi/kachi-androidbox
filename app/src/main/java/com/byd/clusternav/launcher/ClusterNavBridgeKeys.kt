@@ -270,8 +270,8 @@ fun ClusterNavBridge.targetOptions(): List<TargetOption> = listOf(
     // V1 pha NGHE — đích THỨ TƯ: phiên nghe của chính Kachi. Đặt **cuối** khối sentinel có chủ ý: thứ tự khai
     // là thứ `SettingsSectionsKeys.sentinelLabel` tra nhãn theo (xem KDoc hàm đó), nên chèn vào giữa sẽ đổi
     // nhãn của ba dòng đang chạy. Thêm vào cuối thì ba dòng cũ giữ nguyên chỉ số — và giữ nguyên nhãn.
-    TargetOption(Prefs.VK_TARGET_KACHI_VOICE),
-) + InstalledApps.launchable(app).map { TargetOption(it.pkg, it.name) }
+).let { if (DeviceMic.voiceAvailable(app)) it + TargetOption(Prefs.VK_TARGET_KACHI_VOICE) else it } +   // B3: không micro ⇒ không mời gán
+    InstalledApps.launchable(app).map { TargetOption(it.pkg, it.name) }
 
 /**
  * Tên gợi ý cho nút vừa học, trước khi người dùng sửa — lặp lại `MainActivity.kt:812`

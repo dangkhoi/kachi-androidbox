@@ -89,6 +89,16 @@
     <string name="kachi_perm_environment">Hạn chế của môi trường, không phải lỗi của app</string>
     <string name="kachi_perm_core">%1$s — ảnh hưởng tính năng chính</string>
     <string name="kachi_perm_loses">Thiếu thì: %1$s</string>
+    <string name="kachi_perm_open_settings">Mở cài đặt hệ thống</string>
+    <string name="kachi_perm_allow">Cho phép</string>
+    <string name="kachi_perm_manual_hint">Chưa có kênh điều khiển để Kachi tự xin — bật ở màn cài đặt của máy</string>
+    <string name="kachi_perm_open_failed">Máy không mở được màn này — hãy tự vào Cài đặt của máy</string>
+    <string name="kachi_perm_dev_options_off">Tuỳ chọn nhà phát triển đang tắt — ở màn Giới thiệu, chạm 7 lần vào Số bản dựng, rồi quay lại bấm lần nữa</string>
+    <string name="kachi_access_open_full">Mở toàn màn hình</string>
+    <string name="kachi_access_open_full_failed">Không mở được app này</string>
+    <string name="kachi_home_result_picker">Đã mở màn chọn màn hình chính của máy — chọn Kachi.</string>
+    <string name="kachi_home_result_picker_failed">Máy không mở được màn chọn màn hình chính — vào Cài đặt › Ứng dụng › Ứng dụng mặc định.</string>
+    <string name="kachi_voice_no_mic_hw">Máy không có micro — giọng nói và \"Hey Kachi\" không dùng được.</string>
 
     <!-- ── F4 — dải nhắc khi hệ thống đang hỏi "Cho phép gỡ lỗi USB?" (ShellChannelGate) ── -->
     <string name="kachi_shell_approval_msg">Hệ thống đang hỏi \"Cho phép gỡ lỗi USB?\" — tích \"Luôn cho phép\" rồi bấm OK để Kachi đưa app vào ô được.</string>
@@ -99,7 +109,7 @@
     <string name="kachi_access_lost_title">Máy không còn nhận quyền của Kachi</string>
     <string name="kachi_access_lost_body">Có thể do lâu không dùng (quá hạn của hệ thống), đã thu hồi, hoặc lần trước chỉ chọn \"Cho phép\" một lần. Bấm Hỏi lại và nhớ tích \"Luôn cho phép\".</string>
     <string name="kachi_access_env_title">Kênh điều khiển cửa sổ chưa mở</string>
-    <string name="kachi_access_env_body">Cổng gỡ lỗi của máy chưa sẵn sàng. Bấm Thử lại sau ít giây.</string>
+    <string name="kachi_access_env_body">Máy chưa mở cổng gỡ lỗi (adb) nên app chưa vào được ô. Mở app toàn màn hình, hoặc bật gỡ lỗi rồi bấm Thử lại.</string>
     <string name="kachi_access_ask_again">Hỏi lại</string>
     <string name="kachi_access_later">Để sau</string>
     <string name="kachi_slot_connecting">Đang kết nối…</string>

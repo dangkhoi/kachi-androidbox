@@ -257,6 +257,15 @@ class HomePanels(
     fun invalidateSettings() = settingsPanel?.invalidateAll()
 
     /**
+     * Android box B3 — người dùng vừa quay về từ màn hệ thống / hộp xin quyền: trang *Hệ thống & quyền* đang mở thì
+     * dựng lại (đọc quyền MỚI). Trang khác không đụng — không mất chỗ cuộn vô cớ.
+     */
+    fun refreshPermissionsPage() {
+        val p = settingsPanel ?: return
+        if (p.currentGroup() == SettingsGroup.SYSTEM) p.invalidateAll()
+    }
+
+    /**
      * 2.93 · SETTINGS-RETHEME-INPLACE — bảng màu đổi khi màn Cài đặt đang mở ⇒ tô lại bảng TẠI CHỖ ([SettingsPanel.restyle]).
      * Gọi từ `applyThemeInPlace` (cùng nhịp tô lại nền · thanh trên · thanh nút · ô). Đẩy sang khung kế (`post`): lượt đổi
      * màu thường bắt đầu từ một cú chạm TRONG chính bảng (chip Sáng/Tối, ô màu, thả thanh độ đục) — không tháo/dựng lại cây

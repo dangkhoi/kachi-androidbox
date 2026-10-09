@@ -58,7 +58,11 @@ object PermissionPreflight {
      *   không bao giờ từ phỏng đoán — xem KDoc [LauncherRequirements.check].
      */
     fun check(ctx: Context, shellUsable: Boolean?, awaitingApproval: Boolean = false): PermissionReport =
-        LauncherRequirements.check(awaitingShellApproval = awaitingApproval) { req ->
+        // Android box B3: máy không có micro ⇒ quyền micro không áp dụng (không "thiếu", không mời cấp).
+        LauncherRequirements.check(
+            awaitingShellApproval = awaitingApproval,
+            notApplicable = NoShellFallback.notApplicable(DeviceMic.feature(ctx)),
+        ) { req ->
             when (req.id) {
                 LauncherRequirements.NOTIFICATION_LISTENER.id -> notificationListenerGranted(ctx)
                 LauncherRequirements.ACCESSIBILITY.id -> accessibilityGranted(ctx)

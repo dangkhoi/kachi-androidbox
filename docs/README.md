@@ -10,7 +10,8 @@
 
 | Doc | Mục đích | Trạng thái | Cập nhật |
 |---|---|---|---|
-| [`specs/androidbox-plan.html`](specs/androidbox-plan.html) | Kế hoạch Android box B1–B5 (B1 tách sạch xong) | Current | 2026-10-09 |
+| [`specs/androidbox-plan.html`](specs/androidbox-plan.html) | Kế hoạch Android box B1–B5 (B1 · B2 · B3 có mã) | Current | 2026-10-09 |
+| [`diagnostics/androidbox-b3-no-shell-emulator-2026-10-09.md`](diagnostics/androidbox-b3-no-shell-emulator-2026-10-09.md) | QA máy ảo B3: không có kênh shell ⇒ tự cấp quyền bằng tay, ô mở toàn màn | Current | 2026-10-09 |
 | [`_handoff/HANDOFF-androidbox-2026-10-09.md`](_handoff/HANDOFF-androidbox-2026-10-09.md) | Handoff tách repo (đọc đầu phiên) | Session | 2026-10-09 |
 | [`../CLAUDE.md`](../CLAUDE.md) | Luật dự án viết lại cho Android box | Current | 2026-10-09 |
 **Legend — trạng thái:** `Current` = hiện hành/authoritative · `Session` = handoff phiên (tạm) · `Historical` = lineage/context, giữ tại chỗ, KHÔNG authoritative · `Pending` = sẽ tạo (stage khác).

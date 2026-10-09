@@ -226,7 +226,8 @@ class VoiceKeyBindingListTest {
     fun `onKeyEvent tra DANH SACH va mo dich lay tu quyet dinh`() {
         val body = serviceSrc.substringAfter("override fun onKeyEvent(").substringBefore("override fun onAccessibilityEvent(")
         assertTrue(body.contains("Prefs.voiceKeyBindings(app)"), "phải tra danh sách gán")
-        assertTrue(body.contains("bindings = Prefs.voiceKeyBindings(app)"), "danh sách phải đi thẳng vào VoiceKeyConfig")
+        // Review Pass 2 [P2] (Android box): đi vào VoiceKeyConfig qua bộ lọc dòng đích đã gỡ — vẫn là CẢ danh sách gán.
+        assertTrue(body.contains("bindings = AssistantLauncher.liveBindings(Prefs.voiceKeyBindings(app))"), "danh sách phải đi vào VoiceKeyConfig")
         assertTrue(body.contains("decision.targetSpec"), "đích phải lấy từ quyết định, không tra prefs lần hai")
         assertTrue(body.contains("AssistantLauncher.launch(app, spec)"), "vẫn phải mở app qua AssistantLauncher")
         assertFalse(body.contains("Prefs.voiceKeyCode("), "còn khớp một-cặp ⇒ chỉ một nút trong danh sách chạy")

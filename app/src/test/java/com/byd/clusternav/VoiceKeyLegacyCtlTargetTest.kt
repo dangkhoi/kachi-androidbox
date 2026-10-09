@@ -30,16 +30,32 @@ class VoiceKeyLegacyCtlTargetTest {
         assertEquals(rows, VoiceKeyBindingStore.decode(VoiceKeyBindingStore.encode(rows)))
     }
 
+    /**
+     * Review Pass 2 [P2] — trước bản vá bộ khớp vẫn NUỐT phím 24 (tăng âm lượng) cho dòng `ctl:fan:up` rồi `launch` không
+     * làm gì ⇒ phím âm lượng chết im lặng. Nay dòng đích đã gỡ bị bỏ khỏi danh sách khớp ⇒ phím về hệ thống.
+     */
     @Test
-    fun `bam phim gan ctl cu thi bo qua, phim gan app van mo app`() {
-        val cfg = VoiceKeyConfig(enabled = true, bindings = VoiceKeyBindingStore.decode(stored))
+    fun `bam phim gan ctl cu thi phim ve he thong, phim gan app van mo app`() {
+        val live = AssistantLauncher.liveBindings(VoiceKeyBindingStore.decode(stored))
+        assertEquals(listOf(328), live.map { it.keyCode }, "chỉ còn dòng gán app")
+        val cfg = VoiceKeyConfig(enabled = true, bindings = live)
         val m = VoiceKeyMatcher()
-        val ctl = m.onKey(cfg, VoiceKeyAction.DOWN, 24, 10).also { m.onKey(cfg, VoiceKeyAction.UP, 24, 10) }
-        assertEquals("ctl:fan:up", ctl.targetSpec)
-        assertTrue(AssistantLauncher.isRetiredTarget(ctl.targetSpec!!), "đích nút xe cũ ⇒ launch trả false, không mở gì")
+        val vol = m.onKey(cfg, VoiceKeyAction.DOWN, 24, 10).also { m.onKey(cfg, VoiceKeyAction.UP, 24, 10) }
+        assertFalse(vol.consume, "phím 24 KHÔNG bị nuốt")
+        assertEquals(null, vol.targetSpec)
+        val app = m.onKey(cfg, VoiceKeyAction.DOWN, 328, 20)
+        assertTrue(app.consume, "phím gán app vẫn nuốt")
+        assertTrue(AssistantLauncher.isRetiredTarget("ctl:fan:up"))
         assertTrue(AssistantLauncher.isRetiredTarget("cam:left"), "đích camera cũ (W2b) cùng đường")
         assertFalse(AssistantLauncher.isRetiredTarget("ai.zalo.kiki.car"), "tên gói không bao giờ bị coi là đích cũ")
         assertFalse(AssistantLauncher.isRetiredTarget("__KACHI_VOICE__"))
+    }
+
+    /** Dịch vụ phím khớp trên danh sách đã lọc — không phải danh sách thô. */
+    @Test
+    fun `dich vu phim khop tren danh sach da loc`() {
+        val src = SourceRoots.codeOf("src/main/java/com/byd/clusternav/modules/navaccess/NavAccessibilityService.kt")
+        assertTrue(src.contains("bindings = AssistantLauncher.liveBindings(Prefs.voiceKeyBindings(app))"))
     }
 
     /** `launch` hỏi [AssistantLauncher.isRetiredTarget] ở DÒNG ĐẦU — trước mọi lời gọi chạm `ctx`. */

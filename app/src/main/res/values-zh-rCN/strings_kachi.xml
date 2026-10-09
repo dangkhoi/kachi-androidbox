@@ -50,6 +50,16 @@
     <string name="kachi_perm_environment">运行环境的限制，并非应用故障</string>
     <string name="kachi_perm_core">%1$s——影响核心功能</string>
     <string name="kachi_perm_loses">缺少时：%1$s</string>
+    <string name="kachi_perm_open_settings">打开系统设置</string>
+    <string name="kachi_perm_allow">允许</string>
+    <string name="kachi_perm_manual_hint">没有控制通道，Kachi 无法自行授予 — 请在设备设置中开启</string>
+    <string name="kachi_perm_open_failed">设备无法打开此页面 — 请自行进入设备设置</string>
+    <string name="kachi_perm_dev_options_off">开发者选项已关闭 — 在“关于”页面连续点按“版本号”7 次，然后返回再点一次</string>
+    <string name="kachi_access_open_full">全屏打开</string>
+    <string name="kachi_access_open_full_failed">无法打开此应用</string>
+    <string name="kachi_home_result_picker">已打开设备的主屏幕应用选择 — 请选择 Kachi。</string>
+    <string name="kachi_home_result_picker_failed">设备无法打开主屏幕应用选择 — 请进入设置 › 应用 › 默认应用。</string>
+    <string name="kachi_voice_no_mic_hw">本机没有麦克风 — 语音和“Hey Kachi”不可用。</string>
     <string name="kachi_shell_approval_msg">系统正在询问“允许 USB 调试吗？”——请勾选“一律允许”，然后点按“允许”，Kachi才能把应用放进格位。</string>
     <string name="kachi_shell_approval_retry">重试</string>
     <string name="kachi_access_title">Kachi需要窗口控制权限</string>
@@ -57,7 +67,7 @@
     <string name="kachi_access_lost_title">本机不再接受 Kachi 的权限</string>
     <string name="kachi_access_lost_body">可能是长时间未用而过期、已被撤销，或上次只允许了一次。请点按“重新询问”，并勾选“一律允许”。</string>
     <string name="kachi_access_env_title">窗口控制通道不可用</string>
-    <string name="kachi_access_env_body">本机的调试端口尚未就绪。请几秒后点按“重试”。</string>
+    <string name="kachi_access_env_body">本机未开启调试端口（adb），应用无法放入格子。可全屏打开应用，或开启调试后点按“重试”。</string>
     <string name="kachi_access_ask_again">重新询问</string>
     <string name="kachi_access_later">稍后</string>
     <string name="kachi_slot_connecting">正在连接…</string>

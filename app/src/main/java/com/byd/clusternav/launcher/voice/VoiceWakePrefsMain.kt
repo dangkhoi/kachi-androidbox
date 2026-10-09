@@ -3,6 +3,7 @@ package com.byd.clusternav.launcher.voice
 import android.content.Context
 import android.util.Log
 import com.byd.clusternav.Prefs
+import com.byd.clusternav.launcher.DeviceMic
 import com.byd.clusternav.launcher.WorkspacePrefs
 import com.byd.clusternav.voiceConfirmIds
 import java.util.concurrent.atomic.AtomicBoolean
@@ -24,15 +25,16 @@ import java.util.concurrent.atomic.AtomicBoolean
 object VoiceWakePrefsMain {
 
     /** Phím vô-lăng nào đang mở phiên Kachi nghe (và công tắc "Nhận nút vật lý" đang bật) — [VoiceWakeMode.keyHold]. */
-    fun keyHold(ctx: Context): Boolean =
+    fun keyHold(ctx: Context): Boolean = DeviceMic.voiceAvailable(ctx) &&   // B3: không micro ⇒ không giữ mô hình
         VoiceWakeMode.keyHold(Prefs.voiceKeyEnabled(ctx), Prefs.voiceKeyBindings(ctx), Prefs.VK_TARGET_KACHI_VOICE)
 
     /** Chế độ hiện hành: wake HIỆU LỰC (công tắc ∧ cầu chì chưa nổ) ∨ phím gán Kachi nghe. */
-    fun mode(ctx: Context): VoiceWakeMode = VoiceWakeMode.of(Prefs.wakeEnabled(ctx), keyHold(ctx))
+    fun mode(ctx: Context): VoiceWakeMode =
+        VoiceWakeMode.of(Prefs.wakeEnabled(ctx) && DeviceMic.voiceAvailable(ctx), keyHold(ctx))   // B3: không micro ⇒ OFF
 
     /** Năm giá trị `:wake` đọc tươi. Công tắc lấy BẢN THÔ: cầu chì là tệp marker, `:wake` tự đọc (không cache). */
     fun collect(ctx: Context): VoiceWakePrefs = VoiceWakePrefs(
-        wakeSwitch = Prefs.wakeSwitchOn(ctx),
+        wakeSwitch = Prefs.wakeSwitchOn(ctx) && DeviceMic.voiceAvailable(ctx),   // B3: `:wake` không bao giờ mở mic không có
         keyHold = keyHold(ctx),
         confirmIds = Prefs.voiceConfirmIds(ctx),
         navDefault = Prefs.voiceNavDefaultApp(ctx),

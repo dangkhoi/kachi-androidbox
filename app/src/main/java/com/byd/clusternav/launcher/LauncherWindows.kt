@@ -174,7 +174,7 @@ class LauncherWindows(
     fun placeApp(pkg: String, index: Int, fresh: Boolean = false) {
         if (embedding()) return   // có bộ chiếu (VdAppHost/ActivityView) ⇒ WorkspaceView nhúng app, không gì phải làm ở đây
         Log.i(FLOAT_TAG, "ô $index ($pkg, mới=$fresh): chưa có bộ chiếu → không mở cửa sổ nổi (READY-AT-HOME R1.3)")
-        ShellAccessUi.slotTap { embedding() }
+        ShellAccessUi.slotTap({ embedding() }, pkg)   // B3: thẻ có nút mở toàn màn app này
     }
 
     /**

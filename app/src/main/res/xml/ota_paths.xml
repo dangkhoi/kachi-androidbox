@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android box B3 — FileProvider cho trình cài app của hệ thống (OTA khi không có kênh shell). CHỈ thư mục tải OTA
+     `filesDir/update/` (UpdateChecker.UPDATE_DIR) được chia sẻ — không gì khác trong filesDir. -->
+<paths>
+    <files-path name="update" path="update/" />
+</paths>

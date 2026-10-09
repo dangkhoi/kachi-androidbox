@@ -22,6 +22,9 @@
          `android.hardware.microphone` khai `required=false`: đầu xe nào không có mic thì app vẫn cài được,
          chỉ mất đúng tính năng này. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Android box B3: OTA khi KHÔNG có kênh shell ⇒ trình cài app của hệ thống (người dùng bấm Cài; hệ thống tự
+         hỏi "cho phép cài từ nguồn này"). Có kênh thì vẫn `pm install -r` qua dadb như cũ (UpdateFlow / NoShellFallback.otaRoute). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <!-- AUTOMATION #2 (1.85, spec kachi-automation R3) — CỔNG "có định vị chưa" cho luật dẫn-đường-theo-lịch.
@@ -302,5 +305,16 @@
                 android:resource="@xml/nav_accessibility_config" />
         </service>
 
+        <!-- Android box B3 — chia sẻ APK OTA đã tải (CHỈ filesDir/update/, res/xml/ota_paths.xml) cho trình cài hệ thống.
+             Không exported; quyền đọc URI cấp theo từng ý-định (grantUriPermissions). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.ota"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/ota_paths" />
+        </provider>
     </application>
 </manifest>

@@ -87,6 +87,18 @@ object UpdateFlow {
                 return@Thread
             }
             ui(Lang.t("đang cài…", "installing…"), false)
+            // Android box B3: kênh shell đã ĐO là không dùng được ⇒ trình cài của hệ thống (luật thuần
+            // `NoShellFallback.otaRoute`); kênh còn đang dò / dùng được ⇒ dadb như cũ.
+            val route = com.byd.clusternav.launcher.NoShellFallback.otaRoute(
+                com.byd.clusternav.launcher.ShellAccessUi.usableNow(), ShellReadiness.phase(),
+            )
+            if (route == com.byd.clusternav.launcher.OtaRoute.SYSTEM_INSTALLER) {
+                // Review Pass 2 [P2]: đọc APK (gói + người ký) trên luồng NỀN này, không trên luồng chính.
+                OtaSystemInstall.verify(app, f)?.let { ui(it, true); return@Thread }
+                val a = ref.get() ?: return@Thread
+                a.runOnUiThread { if (!a.isFinishing && !a.isDestroyed) setStatus(OtaSystemInstall.launch(a, f), false) }
+                return@Thread
+            }
             val msg = UpdateChecker.install(app, f)
             ui(msg, false)
         }, "update-download").start()

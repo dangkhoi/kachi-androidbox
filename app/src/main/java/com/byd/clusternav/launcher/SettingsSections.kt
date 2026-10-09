@@ -229,7 +229,11 @@ class SettingsSections(
             body.addView(rows.note(context.getString(R.string.kachi_perm_all_ok)))
         } else {
             body.addView(rows.note(context.getString(R.string.kachi_perm_some_missing)))
-            rep.missing.forEach { body.addView(rows.permissionRow(it, rep)) }
+            // Android box B3: kênh shell không dùng được ⇒ Kachi không tự cấp được ⇒ mỗi mục một nút mở màn hệ thống.
+            val usable = ShellAccessUi.usableNow()
+            rep.missing.forEach { req ->
+                body.addView(rows.permissionRow(req, rep, NoShellFallback.manualFix(req, usable)) { fix -> openManualFix(fix) })
+            }
         }
 
         // ── Màn hình chính (S5) ──
@@ -298,6 +302,20 @@ class SettingsSections(
         testBridge(body)
     }
 
+    /** B3 — mở màn hệ thống cho một mục thiếu; máy không có màn đó ⇒ nói thật (toast), không im lặng. */
+    private fun openManualFix(fix: ManualFix) {
+        val activity = context as? android.app.Activity
+        // Tuỳ chọn nhà phát triển đang TẮT ⇒ màn đó không mở được (hệ thống đóng ngay) ⇒ chỉ cách bật + mở "Giới thiệu máy".
+        if (activity != null && fix == ManualFix.DEVELOPER_SETTINGS && SystemSettingsOpener.devOptionsOn(activity) == false) {
+            android.widget.Toast.makeText(context, R.string.kachi_perm_dev_options_off, android.widget.Toast.LENGTH_LONG).show()
+            SystemSettingsOpener.openDeviceInfo(activity)
+            return
+        }
+        if (activity == null || !SystemSettingsOpener.open(activity, fix)) {
+            android.widget.Toast.makeText(context, R.string.kachi_perm_open_failed, android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+
     /**
      * S5 — **MÀN HÌNH CHÍNH**: dòng trạng thái + nút *Đặt Kachi làm màn hình chính* + công tắc *giữ khi nổ máy*.
      *
@@ -336,6 +354,18 @@ class SettingsSections(
         val setBtn = rows.button(context.getString(R.string.kachi_home_set)) {} as TextView
         setBtn.visibility = if (isHome) View.GONE else View.VISIBLE
         setBtn.setOnClickListener {
+            // Android box B3: không có kênh shell ⇒ màn chọn màn hình chính của HỆ THỐNG (alias HOME bật trước);
+            // adbd đang hỏi ⇒ đường cũ (thẻ xin quyền); có kênh ⇒ set-home-activity như cũ.
+            val route = NoShellFallback.homeRoute(ShellAccessUi.usableNow(), com.byd.clusternav.ShellReadiness.phase())
+            val activity = context as? android.app.Activity
+            if (route == HomeRoute.SYSTEM_PICKER && activity != null) {
+                val opened = SystemSettingsOpener.openHomePicker(activity)
+                result.visibility = View.VISIBLE
+                result.text = context.getString(
+                    if (opened) R.string.kachi_home_result_picker else R.string.kachi_home_result_picker_failed,
+                )
+                return@setOnClickListener
+            }
             setBtn.isEnabled = false
             setBtn.text = context.getString(R.string.kachi_home_setting)
             deps.bridge.setDefaultHome { outcome ->

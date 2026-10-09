@@ -31,6 +31,12 @@ class SettingsVoiceSection(
     private val deps: SettingsDeps,
 ) {
     fun build(body: LinearLayout) {
+        // Android box B3: máy không có micro (`FEATURE_MICROPHONE` = false) ⇒ không bày Hey Kachi / tải mô hình / thử
+        // giọng — một câu nói thật thay cho cả nhóm công tắc không bao giờ chạy được.
+        if (!DeviceMic.voiceAvailable(context)) {
+            body.addView(rows.note(context.getString(R.string.kachi_voice_no_mic_hw)))
+            return
+        }
         // kachi-i18n-zh-th-ms R4 — câu đầu nhóm: giọng nói chỉ hiểu tiếng Việt, ở MỌI ngôn ngữ giao diện (một gói ASR
         // zipformer-vi). Đứng TRƯỚC mọi công tắc: người chọn 简体中文/ไทย/Melayu phải biết điều này trước khi bật mic.
         body.addView(rows.note(context.getString(R.string.kachi_voice_lang_only)))

@@ -196,7 +196,8 @@ class ShellApprovalWiringContractTest {
         assertTrue(variant.contains("Luôn cho phép"), "phải nhắc tích ô 'luôn cho phép' (không tích = chỉ sống 1 kết nối)")
         assertTrue(variant.contains("userActionEn"), "câu việc-cần-làm phải có bản tiếng Anh")
         assertTrue(
-            req.contains("fun check(awaitingShellApproval: Boolean = false"),
+            // B3: `check` nhận thêm `notApplicable` (xuống dòng từng tham số) — tham số này vẫn là ĐẦU TIÊN, vẫn mặc định false.
+            Regex("""fun check\(\s*awaitingShellApproval: Boolean = false,""").containsMatchIn(req),
             "mặc định false = nguyên hành vi cũ; bật cờ phải là quyết định tường minh của chỗ gọi",
         )
     }

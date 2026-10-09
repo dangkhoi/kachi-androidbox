@@ -43,7 +43,11 @@ class VoiceKeyHoldFix286WiringContractTest {
     @Test
     fun `VK1 - nut mic man, nap san va bat tat FGS deu hoi VoiceWakePrefsMain mode, khong con rieng wakeEnabled`() {
         val m = SourceRoots.body(main, "fun mode(ctx: Context): VoiceWakeMode")
-        assertTrue(m.contains("VoiceWakeMode.of(Prefs.wakeEnabled(ctx), keyHold(ctx))"), "chế độ = wake HIỆU LỰC ∨ phím gán Kachi nghe")
+        // Android box B3: wake chỉ hiệu lực khi máy CÓ micro (keyHold cũng gác micro — xem NoShellMicWiringContractTest).
+        assertTrue(
+            m.contains("VoiceWakeMode.of(Prefs.wakeEnabled(ctx) && DeviceMic.voiceAvailable(ctx), keyHold(ctx))"),
+            "chế độ = wake HIỆU LỰC (có micro) ∨ phím gán Kachi nghe",
+        )
         assertTrue(SourceRoots.body(main, "fun keyHold(ctx: Context): Boolean").contains("Prefs.VK_TARGET_KACHI_VOICE"))
         assertTrue(entry.contains("VoiceEntryRoute.decide(modelInWake(), wakeAlive())"), "nút mic màn đi theo modelInWake")
         assertTrue(entry.contains("VoiceWakePrefsMain.mode(ctx).modelInWake"))

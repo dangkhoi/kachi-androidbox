@@ -230,7 +230,8 @@ class ReadyAtHomeWiringContractTest {
         listOf("openInSlot", "moveToSlot", "force-stop", "markOpened", "submit", "launcher").forEach {
             assertFalse(fn.contains(it), "placeApp không được còn '$it' (R1.3: không quyền thì không mở nổi)")
         }
-        order(fn, "if (embedding()) return", "ShellAccessUi.slotTap { embedding() }")
+        // Android box B3: lượt chạm mang gói của ô ⇒ thẻ có nút "Mở toàn màn hình" (vẫn không mở cửa sổ nổi).
+        order(fn, "if (embedding()) return", "ShellAccessUi.slotTap({ embedding() }, pkg)")
     }
 
     /**

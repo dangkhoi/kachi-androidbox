@@ -308,3 +308,8 @@ Kiểu sáng/tối, màu, độ trong suốt, cỡ thanh nút, ngôn ngữ	Theme
 Sổ địa chỉ, app mặc định, lịch tự dẫn	Address book, default app, scheduled navigation	สมุดที่อยู่ แอปเริ่มต้น การนำทางตามเวลา
 Gán nút vật lý cho app hoặc trợ lý	Bind physical buttons to apps or the assistant	กำหนดปุ่มกายภาพให้แอปหรือผู้ช่วย
 camera	the camera	กล้อง
+APK tải về không phải của Kachi ({0}) — không cài	the downloaded APK is not Kachi ({0}) — not installed	APK ที่ดาวน์โหลดไม่ใช่ Kachi ({0}) — ไม่ติดตั้ง
+không có kênh shell — đã mở trình cài của máy, bấm Cài (lần đầu cho phép cài từ Kachi)	no shell channel — opened the device installer, tap Install (first time: allow installs from Kachi)	ไม่มีช่อง shell — เปิดตัวติดตั้งของเครื่องแล้ว แตะ “ติดตั้ง” (ครั้งแรกให้อนุญาตการติดตั้งจาก Kachi)
+máy không có trình cài app — không cài được bản mới	the device has no package installer — cannot install	เครื่องไม่มีตัวติดตั้งแอป — ติดตั้งเวอร์ชันใหม่ไม่ได้
+không mở được trình cài của máy ({0})	could not open the device installer ({0})	เปิดตัวติดตั้งของเครื่องไม่ได้ ({0})
+APK tải về ký bằng khoá khác — không cài	the downloaded APK has a different signature — not installed	APK ที่ดาวน์โหลดใช้ลายเซ็นต่างกัน — ไม่ติดตั้ง

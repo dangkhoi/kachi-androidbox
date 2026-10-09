@@ -70,6 +70,8 @@ internal object ShellAccessUi {
     private val tapCheck = Runnable { checkPendingTap() }
     @Volatile private var embeddedNow: () -> Boolean = { false }
     private var lastToastAt = Long.MIN_VALUE / 2
+    /** Android box B3 — gói của ô vừa chạm (thẻ có nút mở toàn màn); `null` = thẻ mở từ chỗ khác. */
+    private var tapPkg: String? = null
 
     /** Gắn màn chính đang sống (`wireReadyAtHome`). */
     fun attach(activity: Activity, root: FrameLayout, gate: ShellChannelGate) {
@@ -84,6 +86,7 @@ internal object ShellAccessUi {
         main.removeCallbacks(tapCheck)
         main.removeCallbacks(focusCheck)
         tapWaitSince = -1L
+        tapPkg = null
         // Review lượt 1 [P3]: lambda này đóng trên `LauncherWindows` của màn vừa huỷ (giữ Activity chết tới lần chạm sau).
         embeddedNow = { false }
         host = null
@@ -118,6 +121,7 @@ internal object ShellAccessUi {
         val interactive = host?.alive()?.let { (it.getSystemService(Context.POWER_SERVICE) as? PowerManager)?.isInteractive } == true
         if (!ShellReadinessPolicy.autoShowCard(s.phase, fresh, focused, interactive, autoShown)) return
         autoShown = true
+        tapPkg = null   // thẻ tự hiện không gắn với ô nào
         showCard()
     }
 
@@ -125,8 +129,9 @@ internal object ShellAccessUi {
      * R1.3/R2.4 — chạm ô CHƯA có bộ chiếu (thay cho mở cửa sổ nổi). State ô đã được lưu trước đó (`assignApp`), nên
      * kênh lên là `applyEmbedSeam` tự nhúng; ở đây chỉ quyết: chờ (ô "Đang kết nối…") hay hiện thẻ ngay.
      */
-    fun slotTap(embedded: () -> Boolean) {
+    fun slotTap(embedded: () -> Boolean, pkg: String? = null) {
         embeddedNow = embedded
+        tapPkg = pkg   // B3 — thẻ mời "Mở toàn màn hình" app của ô vừa chạm
         when (ShellReadinessPolicy.slotTap(ShellReadiness.phase(), 0)) {
             SlotTapStep.PROMPT -> prompt(null)
             SlotTapStep.WAIT -> {
@@ -155,7 +160,7 @@ internal object ShellAccessUi {
      */
     fun allowOrPrompt(ctx: Context): Boolean {
         if (usableNow()) return true
-        main.post { prompt(ctx.applicationContext) }
+        main.post { tapPkg = null; prompt(ctx.applicationContext) }
         return false
     }
 
@@ -192,7 +197,10 @@ internal object ShellAccessUi {
         val root = h.root.get() ?: return
         val variant = ShellReadinessPolicy.cardVariant(ShellReadiness.state(), ShellReadiness.hadRecord())
         hideCard()
-        val v = accessCard(activity, variant, onLater = { hideCard() }, onRetry = { hideCard(); h.gate.get()?.retryNow() })
+        // B3: kênh đã ĐO là không dùng được + thẻ mở từ cú chạm ô ⇒ thêm "Mở toàn màn hình" (đường U3 sẵn có).
+        val pkg = tapPkg?.takeIf { NoShellFallback.offerFullscreen(ShellReadiness.phase()) }
+        val openFull: (() -> Unit)? = pkg?.let { p -> { hideCard(); openFullscreen(activity, p) } }
+        val v = accessCard(activity, variant, onLater = { hideCard() }, onRetry = { hideCard(); h.gate.get()?.retryNow() }, onOpenFull = openFull)
         card = WeakReference(v)
         root.addView(
             v,
@@ -203,6 +211,12 @@ internal object ShellAccessUi {
             ),
         )
         KachiReadyLog.line("card show variant=$variant")
+    }
+
+    /** U3 — `AppOpener.openByIntent` (API chuẩn, không cần kênh); máy từ chối ⇒ nói thật. */
+    private fun openFullscreen(activity: Activity, pkg: String) {
+        if (AppOpener(activity).openByIntent(pkg)) return
+        runCatching { Toast.makeText(activity, R.string.kachi_access_open_full_failed, Toast.LENGTH_SHORT).show() }
     }
 
     private fun hideCard() {
@@ -256,7 +270,13 @@ internal object ShellAccessUi {
  * Thẻ xin quyền — dựng thuần mã (khuôn `approvalBanner`). Ba biến thể lời (§4.9); nút phải nối [onRetry] (= F4 dò
  * ngay, VẪN qua cổng tiêu điểm) và [onLater] (thu về dải nhắc đáy sẵn có của F4).
  */
-private fun accessCard(ctx: Context, variant: AccessCardVariant, onLater: () -> Unit, onRetry: () -> Unit): View =
+private fun accessCard(
+    ctx: Context,
+    variant: AccessCardVariant,
+    onLater: () -> Unit,
+    onRetry: () -> Unit,
+    onOpenFull: (() -> Unit)? = null,
+): View =
     LinearLayout(ctx).apply {
         orientation = LinearLayout.VERTICAL
         background = KachiTheme.surface(ctx, Sp.RADIUS_XL)
@@ -279,6 +299,11 @@ private fun accessCard(ctx: Context, variant: AccessCardVariant, onLater: () -> 
         })
         val row = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.END }
         row.addView(cardButton(ctx, R.string.kachi_access_later, bold = false, onClick = onLater))
+        if (onOpenFull != null) row.addView(
+            cardButton(ctx, R.string.kachi_access_open_full, bold = false, onClick = onOpenFull),
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .also { it.marginStart = KachiTheme.dpi(ctx, Sp.M) },
+        )
         row.addView(
             cardButton(ctx, retry, bold = true, onClick = onRetry),
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)

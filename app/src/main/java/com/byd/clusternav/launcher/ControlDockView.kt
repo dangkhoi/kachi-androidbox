@@ -119,6 +119,8 @@ class ControlDockView(context: Context) : LinearLayout(context) {
                 // F1 (spec shortcuts-autostart R1.2): khối LỐI TẮT không phải một nút mà một hàng icon dài theo số app
                 // ⇒ cỡ do chính khối đặt theo [shortcutStripLength] (không qua [sized]); bề dày = bề dày một ô.
                 CapabilityKind.LAUNCHER -> if (id == LauncherActions.SHORTCUTS) addView(shortcutStrip())
+                // Android box B3: máy không có micro ⇒ ô "Nói với Kachi" không dựng (mã vẫn lưu trong cấu hình).
+                else if (id == LauncherActions.VOICE && !DeviceMic.voiceAvailable(ui)) Unit
                 else CapabilityCatalog.pick(id)?.let { pick ->
                     addView(place(launcherTileOf(ui, TileSize.DOCK, pick) { onLauncherAction(id) }))
                 }

@@ -49,7 +49,8 @@ class KachiApplication : Application() {
         // V3 · R4 — nạp sẵn mô hình NGHE trên luồng nền ưu tiên thấp, sau 3 s. Ở đây chứ không ở màn chính:
         // tiến trình launcher sống suốt chuyến còn màn chính thì dựng lại nhiều lần, nên đặt ở activity là
         // nạp lại một thứ đã nằm sẵn trong RAM. Hàm tự rút lui khi chưa tải mô hình — xem KDoc [VoiceEngine.preload].
-        VoiceEngine.preload(this)
+        // Android box B3: máy không có micro ⇒ không nạp mô hình nghe (không ai dùng được).
+        if (com.byd.clusternav.launcher.DeviceMic.voiceAvailable(this)) VoiceEngine.preload(this)
         // B1.1 (1.70) — hâm sẵn Silero VAD (0,64 MB ONNX) để bỏ phần nạp ONNX khỏi đường "bấm → mic mở"
         // ([ĐO xe 2026-09-17] 1,5 s lần đầu). Giữ MỘT instance sống, mỗi lượt chỉ reset — xem KDoc VoiceVad.
         VoiceVad.preload(this)

@@ -18,6 +18,10 @@ package com.byd.clusternav.launcher
  * ## ⚠ Sự thật định hình thiết kế
  * **Màn cài đặt hệ thống trên xe BỊ KHOÁ** (mở ra chỉ nhận *"Hệ thống IVI không hỗ trợ hoạt động này"*). Vì vậy
  * KHÔNG mục nào được khai cách sửa là "mở màn cài đặt" — có test khoá điều đó.
+ *
+ * ⚠ Android box B3 (2026-10-09): trên box thường điều ngược lại — kênh shell có thể KHÔNG có, còn màn Cài đặt hệ
+ * thống mở được. Đường tay đó KHÔNG nằm trong [LauncherRequirement.userAction] (câu đó vẫn đúng khi có kênh) mà ở
+ * [NoShellFallback.manualFix], chỉ bày khi kênh không dùng được.
  */
 
 /** Ai sửa được một điều kiện. Quyết định trải nghiệm: người dùng chỉ nên bị hỏi khi thật sự phải hỏi. */
@@ -340,9 +344,17 @@ object LauncherRequirements {
      *   nguyên hành vi cũ; **cấm** bật cờ này theo phỏng đoán — CLAUDE.md §2: chưa phân loại được thì nói "chưa
      *   biết", không nói một lý do nghe hợp lý.
      */
-    fun check(awaitingShellApproval: Boolean = false, read: (LauncherRequirement) -> Boolean?): PermissionReport =
+    fun check(
+        awaitingShellApproval: Boolean = false,
+        /**
+         * Android box B3 — mã điều kiện KHÔNG áp dụng cho máy này (vd máy không có micro ⇒ quyền micro vô nghĩa,
+         * [NoShellFallback.notApplicable]). Bị BỎ khỏi báo cáo — không "thiếu", không "chưa đọc được".
+         */
+        notApplicable: Set<String> = emptySet(),
+        read: (LauncherRequirement) -> Boolean?,
+    ): PermissionReport =
         PermissionReport(
-            ALL.map { req ->
+            ALL.filter { it.id !in notApplicable }.map { req ->
                 val v = runCatching { read(req) }.getOrNull()
                 RequirementResult(
                     if (awaitingShellApproval && req.id == SHELL_CHANNEL.id && v == false)

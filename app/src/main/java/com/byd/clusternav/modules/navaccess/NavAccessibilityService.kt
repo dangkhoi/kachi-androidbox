@@ -88,7 +88,8 @@ class NavAccessibilityService : AccessibilityService() {
 
         // F3 (owner 2026-08-24): tra DANH SÁCH gán, không so với một mã nữa. Danh sách rỗng ⇒ mọi phím
         // pass-through (matcher trả IGNORE) ⇒ không nuốt nhầm phím nào của xe.
-        val cfg = VoiceKeyConfig(enabled = true, bindings = Prefs.voiceKeyBindings(app))
+        // Review Pass 2 [P2]: dòng gán đích đã gỡ (nút xe `ctl:` / camera `cam:` của Kachi BYD) KHÔNG được nuốt phím.
+        val cfg = VoiceKeyConfig(enabled = true, bindings = AssistantLauncher.liveBindings(Prefs.voiceKeyBindings(app)))
         val decision = voiceKeyMatcher.onKey(cfg, action, event.keyCode, event.downTime)
         // Đích lấy TỪ quyết định (bất biến: fire ⟺ targetSpec != null) — KHÔNG tra lại prefs, tra hai lần
         // có thể ra hai kết quả nếu owner vừa sửa danh sách giữa DOWN và lúc phóng intent.

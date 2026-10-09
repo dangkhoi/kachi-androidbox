@@ -17,6 +17,7 @@ import com.byd.clusternav.carexec.LocalDeviceShell
 import com.byd.clusternav.carexec.LocalShellFailure
 import com.byd.clusternav.carexec.LocalShellResult
 import com.byd.clusternav.carexec.LocalShellRetry
+import com.byd.clusternav.voicekey.VoiceKeyBinding
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -74,7 +75,6 @@ object AssistantLauncher {
         Prefs.voiceKeyBindings(ctx).any { isGeminiVoiceSpec(it.targetSpec) }
     }.getOrDefault(false)
 
-    /** @param spec package name của app, hoặc [TARGET_ASSIST]/[TARGET_RECOGNIZER]/[TARGET_GEMINI_KEY]. */
     /** Tiền tố đích camera 2.93 (`cam:`) — chỉ để NHẬN RA dòng gán cũ và bỏ qua (Android box B2 · W2b). */
     private const val LEGACY_CAMERA_PREFIX = "cam:"
 
@@ -89,6 +89,16 @@ object AssistantLauncher {
     internal fun isRetiredTarget(spec: String): Boolean =
         spec.startsWith(LEGACY_CTL_PREFIX) || spec.startsWith(LEGACY_CAMERA_PREFIX)
 
+    /**
+     * Review Pass 2 [P2] — danh sách gán mà bộ khớp phím được NUỐT phím theo: bỏ dòng có đích đã gỡ ([isRetiredTarget]).
+     * Không bỏ thì dòng `ctl:fan:up` trên phím 24 (tăng âm lượng) — tệp hồ sơ Kachi BYD nhập vào, hay cài đè — làm phím đó
+     * CHẾT im lặng: bộ khớp nuốt phím, [launch] không làm gì. Bỏ ⇒ phím về hệ thống như chưa gán. Dòng vẫn nằm trong
+     * prefs (Cài đặt › Phím vô-lăng còn thấy để xoá) — chỉ không được nuốt phím.
+     */
+    internal fun liveBindings(all: List<VoiceKeyBinding>): List<VoiceKeyBinding> =
+        if (all.none { isRetiredTarget(it.targetSpec) }) all else all.filterNot { isRetiredTarget(it.targetSpec) }
+
+    /** @param spec package name của app, hoặc [TARGET_ASSIST]/[TARGET_RECOGNIZER]/[TARGET_GEMINI_KEY]. */
     fun launch(ctx: Context, spec: String): Boolean {
         // Dòng gán cũ (nút xe / camera BYD đã gỡ) ⇒ không làm gì, không chạm `ctx`.
         if (isRetiredTarget(spec)) return false
@@ -136,6 +146,8 @@ object AssistantLauncher {
      */
     private fun launchKachiVoice(ctx: Context): Boolean {
         val app = ctx.applicationContext
+        // Android box B3: máy không có micro ⇒ phím gán "Kachi nghe" không mở phiên (không FGS micro vô ích).
+        if (!com.byd.clusternav.launcher.DeviceMic.voiceAvailable(app)) { Log.i(TAG, "Kachi nghe: máy không có micro — bỏ qua"); return false }
         // Owner 2026-09-25: mở phiên nghe HEADLESS (overlay nổi trên app đang xem), KHÔNG kéo KachiHomeActivity lên
         // đè app fullscreen. VoiceWakeService.listenNow dựng overlay TYPE_APPLICATION_OVERLAY từ service context —
         // cùng đường "Hey Kachi" đã dùng (fireWake). Chạy được cả khi wake TẮT.

@@ -198,8 +198,18 @@ class SettingsRows(internal val context: Context) {
 
     // ── P8 · một hàng cho mỗi quyền còn thiếu ─────────────────────────────────────────────────────────
     /** Nói rõ **thiếu cái gì** và **mất gì**. KHÔNG chỉ tới màn cài đặt hệ thống ([ĐO] khoá trên xe). */
-    fun permissionRow(req: LauncherRequirement, rep: PermissionReport): View {
+    /**
+     * Android box B3 — [fix] khác `null` (kênh shell KHÔNG dùng được, [NoShellFallback.manualFix]) ⇒ câu gợi ý nói
+     * thật (*Kachi không tự xin được*) thay cho "đang tự xin lại" + một nút mở đúng màn hệ thống ([onFix]).
+     */
+    fun permissionRow(
+        req: LauncherRequirement,
+        rep: PermissionReport,
+        fix: ManualFix? = null,
+        onFix: (ManualFix) -> Unit = {},
+    ): View {
         val hint = when {
+            fix != null -> context.getString(R.string.kachi_perm_manual_hint)
             req in rep.selfFixable -> context.getString(R.string.kachi_perm_self_fixing)
             req.displayUserAction != null -> req.displayUserAction
             req in rep.environment -> context.getString(R.string.kachi_perm_environment)
@@ -223,6 +233,12 @@ class SettingsRows(internal val context: Context) {
             if (hint != null) addView(TextView(context).apply {
                 text = hint; setTextColor(c(KachiTheme.MUT2)); KachiType.apply(this, KachiType.CAPTION)
             })
+            if (fix != null) {
+                val label = if (fix == ManualFix.RUNTIME_RECORD_AUDIO || fix == ManualFix.RUNTIME_LOCATION) {
+                    R.string.kachi_perm_allow
+                } else R.string.kachi_perm_open_settings
+                addView(button(context.getString(label)) { onFix(fix) })
+            }
         }
     }
 
