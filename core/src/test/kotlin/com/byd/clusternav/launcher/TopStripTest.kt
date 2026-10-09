@@ -15,6 +15,9 @@ import org.junit.jupiter.api.Test
  */
 class TopStripTest {
 
+    /** Bộ năm chip UX5b — fixture vẽ chip (mặc định Android box nay RỖNG, W0 2026-10-09). */
+    private val UX5B = TopStripConfig(TopStripConfig.UX5B_DEFAULT_IDS)
+
     private val full = CarStatus(
         climate = CarStatus.Climate(pm25Level = 2, outsideTempC = 24),
         energy = CarStatus.Energy(soc = 82, evRangeKm = 418),
@@ -26,9 +29,18 @@ class TopStripTest {
      * vị trí ĐẦU, và nói thêm rằng hai chip mới đứng SAU (đường mới xuống cuối, CLAUDE.md §6).
      */
     @Test
+    fun `Android box - mac dinh KHONG co chip xe nao`() {
+        // W0 (2026-10-09): mọi chip dựng sẵn là chip XE ⇒ máy Android box mới cài không có chip; thanh trên vẫn dựng.
+        assertEquals(emptyList<String>(), TopStripConfig.DEFAULT_IDS)
+        assertEquals(emptyList<ChipView>(), TopStripChips.render(TopStripConfig.DEFAULT, full))
+        assertEquals(TopStripConfig.DEFAULT, TopStripConfig.decode(TopStripConfig.encode(TopStripConfig.DEFAULT)))
+    }
+
+    /** Năm chip UX5b (đích của lượt di trú hồ sơ cũ — KDoc [TopStripConfig.UX5B_DEFAULT_IDS]) vẫn ra đúng chữ. */
+    @Test
     fun `mac dinh ra DUNG ba chip cua ban viet cung cu, roi hai chip ghe`() {
-        val chips = TopStripChips.render(TopStripConfig.DEFAULT, full)
-        assertEquals(5, chips.size, "mặc định: 3 chip cũ + 2 chip ghế (UX5b, owner 2026-09-27)")
+        val chips = TopStripChips.render(UX5B, full)
+        assertEquals(5, chips.size, "bộ UX5b: 3 chip cũ + 2 chip ghế (UX5b, owner 2026-09-27)")
         assertEquals("PM2.5 · Tốt", chips[0].text)
         assertEquals("24°C ngoài", chips[1].text)
         assertEquals("82% · 418 km", chips[2].text)
@@ -44,7 +56,7 @@ class TopStripTest {
 
     @Test
     fun `off-car moi field null thi chip noi chua doc duoc chu khong bia so`() {
-        val chips = TopStripChips.render(TopStripConfig.DEFAULT, CarStatus())
+        val chips = TopStripChips.render(UX5B, CarStatus())
         assertEquals("PM2.5 · —", chips[0].text)
         assertEquals("—°C ngoài", chips[1].text)
         assertEquals("—% · — km", chips[2].text)
@@ -54,7 +66,7 @@ class TopStripTest {
     fun `chip di qua lop don vi giong moi be mat khac`() {
         // [ĐO] lỗi thật ở gói 2: người dùng chọn °F mà chip vẫn ghi °C, vì bề mặt này tự dựng chuỗi từ CarStatus.
         val f = UnitPrefs.DEFAULT.with(Quantity.TEMPERATURE, "°F").with(Quantity.DISTANCE, "mile")
-        val chips = TopStripChips.render(TopStripConfig.DEFAULT, full, f)
+        val chips = TopStripChips.render(UX5B, full, f)
         assertTrue(chips[1].text.endsWith("°F ngoài"), "phải theo đơn vị đã chọn, thấy: ${chips[1].text}")
         assertTrue(chips[2].text.contains(" mile"), "tầm chạy phải theo đơn vị đã chọn, thấy: ${chips[2].text}")
         assertFalse(chips[1].text.contains("°C"), "không được còn đơn vị gốc")
@@ -135,7 +147,7 @@ class TopStripTest {
         val cfg = TopStripConfig(listOf(TopStripConfig.ENERGY, "tyre_p_fl"))
         assertEquals(cfg, TopStripConfig.decode(TopStripConfig.encode(cfg)), "lưu rồi đọc phải ra y hệt")
         assertEquals(TopStripConfig.DEFAULT, TopStripConfig.decode(null), "chưa có gì ⇒ mặc định")
-        assertEquals(TopStripConfig.DEFAULT, TopStripConfig.decode("   "), "rỗng ⇒ mặc định, không để thanh trên trắng")
+        assertEquals(TopStripConfig.DEFAULT, TopStripConfig.decode("   "), "rỗng ⇒ mặc định (Android box W0: mặc định rỗng)")
         assertEquals(TopStripConfig.DEFAULT, TopStripConfig.decode("ma_da_bi_xoa,ma_rac"), "toàn mã lạ ⇒ mặc định")
         // Một mã lạ lẫn giữa mã tốt: bỏ MỤC đó, KHÔNG bỏ cả dòng (mất luôn cấu hình người dùng vì một mã rữa là quá tay).
         assertEquals(
@@ -306,8 +318,8 @@ class TopStripTest {
      */
     @Test
     fun `tat nhan thi chip chi con icon va gia tri`() {
-        val on = TopStripChips.render(TopStripConfig.DEFAULT, full)
-        val off = TopStripChips.render(TopStripConfig.DEFAULT.copy(showLabels = false), full)
+        val on = TopStripChips.render(UX5B, full)
+        val off = TopStripChips.render(UX5B.copy(showLabels = false), full)
         // UX5b — hai chip ghế cũng phải tuân luật: bật nhãn ⇒ `"Ghế lái · —"`, tắt nhãn ⇒ còn đúng phần GIÁ TRỊ.
         assertEquals(
             listOf("PM2.5 · Tốt", "24°C ngoài", "82% · 418 km", "Ghế lái · —", "Ghế phụ · —"),
@@ -336,8 +348,8 @@ class TopStripTest {
      */
     @Test
     fun `tat nhan KHONG lam cut cau cho trinh doc man hinh`() {
-        val on = TopStripChips.render(TopStripConfig.DEFAULT, full)
-        val off = TopStripChips.render(TopStripConfig.DEFAULT.copy(showLabels = false), full)
+        val on = TopStripChips.render(UX5B, full)
+        val off = TopStripChips.render(UX5B.copy(showLabels = false), full)
         assertEquals(on.map { it.desc }, off.map { it.desc })
     }
 

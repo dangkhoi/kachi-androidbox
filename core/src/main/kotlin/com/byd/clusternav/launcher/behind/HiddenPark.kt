@@ -5,7 +5,7 @@ import com.byd.clusternav.launcher.ShellAppLauncher
 import com.byd.clusternav.launcher.StackReads
 import com.byd.clusternav.launcher.behind.BehindHomeSequence.Outcome
 import com.byd.clusternav.launcher.behind.BehindHomeSequence.Result
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ A2 · 2.89 — Ô 7 cho app KHÔNG ở ô: mở X lên màn ảo ẨN của Kachi rồi ĐỂ YÊN ở đó (thuần, chặn, `:core`) ════════════

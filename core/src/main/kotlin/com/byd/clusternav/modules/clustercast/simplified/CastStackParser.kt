@@ -1,6 +1,6 @@
 package com.byd.clusternav.modules.clustercast.simplified
 
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackParse
 
 /**
  * Parser for `am stack list` output on BYD DiLink3 (Android 10).

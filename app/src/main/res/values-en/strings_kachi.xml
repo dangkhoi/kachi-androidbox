@@ -875,7 +875,6 @@
     <string name="kachi_trip_remove">Remove</string>
     <string name="kachi_trip_slot_hint">To have an app open and visible at every ignition, put it in a slot of this profile.</string>
     <string name="kachi_trip_no_slot_warn">This profile\'s layout has no app slot — background apps are opened on a hidden screen, then moved behind the home screen.</string>
-    <string name="kachi_trip_normal_unsupported">The camera screen is unknown on this car — apps won\'t be opened in front.</string>
     <string name="kachi_trip_last_ran">Last ignition: %1$s</string>
     <string name="kachi_trip_res_ran">ran at %1$s</string>
     <string name="kachi_trip_res_nothing">nothing to open (%1$s)</string>

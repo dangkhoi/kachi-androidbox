@@ -1,6 +1,6 @@
 package com.byd.clusternav.modules.clustercast.simplified
 
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ CLUSTER-THEME-SAFE (2.89, P0) — QUYẾT ĐỊNH gửi hay không một opcode đổi theme cụm (thuần, không chạy lệnh) ══════════

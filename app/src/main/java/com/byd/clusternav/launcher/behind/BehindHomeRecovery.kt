@@ -6,8 +6,9 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import com.byd.clusternav.AdbKeys
 import com.byd.clusternav.carexec.LocalDeviceShell
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackParse
 import com.byd.clusternav.modules.navaccess.AccessibilityRebind
+import com.byd.clusternav.system.CameraPresence
 
 /**
  * ═══ BEHIND-HOME — đường TRẢ LẠI khi Kachi đã chết (CLAUDE.md §5) ═══════════════════════════════════════════════════
@@ -65,7 +66,7 @@ object BehindHomeRecovery {
         val entries = StackParse.parse(LocalDeviceShell.run(keys, BehindHomePlan.LIST_CMD) ?: return false)
         if (entries.isEmpty()) return false
         val surfaced = BehindMarks.surfaced(entries, marks)
-        if (surfaced) LocalDeviceShell.run(keys, AccessibilityRebind.GO_HOME_UNLESS_CAMERA)
+        if (surfaced) LocalDeviceShell.run(keys, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE))
         val kept = BehindMarks.prune(entries, marks)
         if (kept != marks) store.write(kept)
         Log.i(BehindHomeRunner.TAG, "recovery dấu=${marks.size} nổi-lên=$surfaced giữ=${kept.size}")

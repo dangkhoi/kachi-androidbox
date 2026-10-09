@@ -1,10 +1,11 @@
-package com.byd.clusternav.modules.clustercast
+package com.byd.clusternav.system
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import com.byd.clusternav.modules.clustercast.CastDisplayFixtures2026_09_15
 
 /**
  * Test [DisplayParse] — parser thuần cho `dumpsys display` / `dumpsys window displays` / `dumpsys window windows`.

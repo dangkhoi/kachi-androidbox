@@ -3,7 +3,7 @@ package com.byd.clusternav.launcher.trip
 import com.byd.clusternav.launcher.behind.BehindHomePlan
 import com.byd.clusternav.launcher.behind.BehindHomeSequence
 import com.byd.clusternav.launcher.behind.SlotReturn
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ A2 · TRIP-MUSIC-IN-SLOT (2.89) — app nhạc Ở ĐÂU thì giao lệnh phát Ở ĐÓ (thuần, `:core`) ════════════════════════════

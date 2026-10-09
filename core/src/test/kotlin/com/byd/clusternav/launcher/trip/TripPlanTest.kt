@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher.trip
 
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackParse
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -70,7 +70,6 @@ class TripPlanTest {
         installed = setOf("com.waze", "vn.vietmap.live", "com.google.android.deskclock", "com.android.settings", "com.byd.launcher", "x.normal"),
         system = setOf("com.android.settings"),
         inSlots = setOf("vn.vietmap.live"),
-        cameraKnown = true,
     )
 
     @Test
@@ -91,7 +90,7 @@ class TripPlanTest {
     }
 
     @Test
-    fun `loai tru do trong tien trinh - chinh minh, chua cai, dang o o, app he thong, camera chua biet`() {
+    fun `loai tru do trong tien trinh - chinh minh, chua cai, dang o o, app he thong`() {
         val cfg = TripConfig(
             apps = listOf(
                 TripApp("com.byd.launcher", true), TripApp("gone.app", true), TripApp("vn.vietmap.live", true),
@@ -104,9 +103,10 @@ class TripPlanTest {
                 TripPlan.Step.Skip("gone.app", TripPlan.Why.NOT_INSTALLED),
                 TripPlan.Step.Skip("vn.vietmap.live", TripPlan.Why.IN_SLOT),
                 TripPlan.Step.Skip("com.android.settings", TripPlan.Why.SYSTEM_APP),
-                TripPlan.Step.Skip("x.normal", TripPlan.Why.CAMERA_UNKNOWN),
+                // Android box W0: không còn loại "camera chưa biết" — máy không camera ⇒ Mở bình thường vẫn chạy.
+                TripPlan.Step.Normal("x.normal"),
             ),
-            TripPlan.steps(cfg, facts.copy(cameraKnown = false)),
+            TripPlan.steps(cfg, facts),
         )
         // App hệ thống được MỞ BÌNH THƯỜNG (không move-task nào chạm nó — R0.6 chỉ cấm đẩy ra sau).
         assertEquals(
@@ -242,6 +242,29 @@ class TripPlanTest {
         val std = runSh(cmd, fixture("am-stack-list-emulator-2026-10-02-e2e-standard-home"), dir.resolve("e"))
         assertEquals(2, std.size, "$std")
         assertTrue(std[1].endsWith("-n $yt"), std[1])
+    }
+
+    /**
+     * Android box W0 (2026-10-09): máy KHÔNG có màn camera (`CameraPresence.SIGNATURE` = null) ⇒ K10 TRẦN — không `case`
+     * camera, không chặn (trước đây `null` = "đời xe chưa biết" ⇒ bước bị loại, 0 lệnh). Cổng "màn nhà Kachi ở trước" GIỮ.
+     */
+    @Test
+    fun `K10 khong camera - lenh tran, van mo khi HOME hien, khong bi chan`(@TempDir dir: Path) {
+        val yt = "com.google.android.youtube/com.google.android.youtube.app.honeycomb.Shell\$HomeActivity"
+        val cmd = TripPlan.normalCmd(com.byd.clusternav.system.CameraPresence.SIGNATURE, homes, yt)
+        assertFalse(cmd.contains("com.byd.avc"), "không camera ⇒ không bọc case camera: $cmd")
+        assertFalse(cmd.contains('\''), cmd)
+        val homeTop = StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-stuck-home-top"))
+        assertEquals(TripPlan.Normal.OPENED, TripPlan.normalOutcome("Starting: Intent { cmp=x/y }", homeTop, null, homes))
+        // Không dấu camera ⇒ không bao giờ ra CAMERA (không thử lại 60 s vì một màn "camera" không tồn tại).
+        assertEquals(
+            TripPlan.Normal.OTHER_FRONT,
+            TripPlan.normalOutcome("", StackParse.parse(fixture("am-stack-list-oncar-2026-09-29-camera-top-derived")), null, homes),
+        )
+        if (!File("/bin/sh").canExecute()) return
+        val opened = runSh(cmd, fixture("am-stack-list-oncar-2026-09-29-stuck-home-top"), dir.resolve("a"))
+        assertEquals(2, opened.size, "$opened")
+        assertTrue(opened[1].endsWith("-n $yt"), opened[1])
     }
 
     @Test

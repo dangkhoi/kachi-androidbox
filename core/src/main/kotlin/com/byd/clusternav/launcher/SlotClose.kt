@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ L6 · (c) *TẮT* app trong ô — CHỌN stack cần gỡ (thuần, không chạy lệnh) ══════════════════════════════════════════

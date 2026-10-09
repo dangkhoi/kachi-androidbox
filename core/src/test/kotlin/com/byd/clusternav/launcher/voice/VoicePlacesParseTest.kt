@@ -3,7 +3,7 @@ package com.byd.clusternav.launcher.voice
 import com.byd.clusternav.launcher.Lang
 import com.byd.clusternav.launcher.SavedPlace
 import com.byd.clusternav.launcher.Strings
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse

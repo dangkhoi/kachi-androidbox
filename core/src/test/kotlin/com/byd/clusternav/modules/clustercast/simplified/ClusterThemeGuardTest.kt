@@ -65,7 +65,7 @@ class ClusterThemeGuardTest {
 
         /** Một cửa sổ mỗi task, cùng display (dạng `Window #N Window{… u0 comp}:` + `mDisplayId=` thật). */
         private fun windowsOf(out: String): String =
-            com.byd.clusternav.modules.clustercast.StackParse.parse(out).withIndex().joinToString("\n") { (i, e) ->
+            com.byd.clusternav.system.StackParse.parse(out).withIndex().joinToString("\n") { (i, e) ->
                 "  Window #$i Window{a$i u0 ${e.comp}}:\n    mDisplayId=${e.displayId} stackId=${e.stackId} mSession=Session{0 0:u0a1}"
             }
     }

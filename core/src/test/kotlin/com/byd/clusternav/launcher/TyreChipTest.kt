@@ -100,7 +100,7 @@ class TyreChipTest {
     @Test
     fun `chip cu KHONG doi mot byte - runs rong mac dinh`() {
         val s = CarStatus(energy = CarStatus.Energy(soc = 82, evRangeKm = 418))
-        val chips = TopStripChips.render(TopStripConfig.DEFAULT, s)
+        val chips = TopStripChips.render(TopStripConfig(TopStripConfig.UX5B_DEFAULT_IDS), s)   // W0: mặc định nay rỗng
         assertTrue(chips.all { it.runs.isEmpty() }, "chỉ chip lốp mang đoạn màu")
         assertEquals("82% · 418 km", chips.single { it.icon == "ic-bolt" }.text)
     }
@@ -286,10 +286,20 @@ class TyreChipTest {
             COLOUR_NAMES.indexOf(constName).takeIf { it >= 0 }?.let { 700 + it } ?: (8000 + (constName.hashCode() and 0xFFFF))
     }
 
-    /** Màn mặc định THẬT: bố cục `WorkspaceState.DEFAULT` (có `w_board` ⇒ có lốp) + chip mặc định; thanh nút đọc ở
-     *  nhịp NHANH ([CarDataAdapter.readFast]) nên ngoài phép đo nhịp chậm này. */
+    /** Màn mặc định BYD ≤ 2.98: bố cục `w_board`/`w_energy`/`w_pm25` (có `w_board` ⇒ có lốp) + chip UX5b; thanh nút đọc ở
+     *  nhịp NHANH ([CarDataAdapter.readFast]) nên ngoài phép đo nhịp chậm này. Android box W0 (2026-10-09) đổi
+     *  `WorkspaceState.DEFAULT` sang widget không đọc xe ⇒ dựng lại bố cục cũ TƯỜNG MINH để ngân sách đọc HAL vẫn được đo. */
     private val defaultDemand: () -> Set<String>? = {
-        CarDataDemand.of(HomeUiState(workspace = WorkspaceState.DEFAULT, dock = DockConfig(enabled = emptyList())))
+        val bydDefault = WorkspaceState.of(
+            LayoutPreset.THREE,
+            SlotContent.Widget("w_board"), SlotContent.Widget("w_energy"), SlotContent.Widget("w_pm25"),
+        )
+        CarDataDemand.of(
+            HomeUiState(
+                workspace = bydDefault, dock = DockConfig(enabled = emptyList()),
+                topStrip = TopStripConfig(TopStripConfig.UX5B_DEFAULT_IDS),
+            ),
+        )
     }
 
     /** Lượt đọc / phút ở trạng thái ổn định: 1 phút làm nóng (cho cache nguội xong) rồi đo 10 phút. */
@@ -306,7 +316,7 @@ class TyreChipTest {
 
     @Test
     fun `R7 K1 man mac dinh duoi 150 luot moi phut o moi ca mau cum`() {
-        assertTrue(TyreIds.RAW_STATES.all { it in defaultDemand()!! }, "w_board mặc định kéo 13 mã thô vào nhu cầu")
+        assertTrue(TyreIds.RAW_STATES.all { it in defaultDemand()!! }, "w_board kéo 13 mã thô vào nhu cầu")
         val cases = mapOf(
             "int=1" to "cụm nói cả bốn trắng",
             "int=0" to "cụm chưa có màu (0 = INVALID, getter CÓ trả lời ⇒ KHÔNG nguội — soát Pass 2)",

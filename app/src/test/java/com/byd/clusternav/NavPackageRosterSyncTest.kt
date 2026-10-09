@@ -1,6 +1,6 @@
 package com.byd.clusternav
 
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 import com.byd.clusternav.navigation.NavChannel
 import com.byd.clusternav.navigation.NavSourceLabels
 import com.byd.clusternav.navigation.NavSourceMode

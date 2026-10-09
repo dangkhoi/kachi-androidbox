@@ -1,4 +1,4 @@
-package com.byd.clusternav.modules.clustercast
+package com.byd.clusternav.system
 
 /**
  * PARSE `dumpsys window displays` — nguồn sự thật THỨ HAI, độc lập với `am stack list`. PURE → test off-device.

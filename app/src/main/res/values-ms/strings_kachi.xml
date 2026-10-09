@@ -748,7 +748,6 @@
     <string name="kachi_trip_remove">Buang</string>
     <string name="kachi_trip_slot_hint">Untuk apl terbuka dan kelihatan setiap kali kereta dihidupkan, letakkannya dalam petak profil ini.</string>
     <string name="kachi_trip_no_slot_warn">Susun atur profil ini tiada petak apl — apl latar belakang dibuka pada skrin tersembunyi, kemudian dialihkan ke belakang skrin utama.</string>
-    <string name="kachi_trip_normal_unsupported">Skrin kamera belum diketahui pada kereta ini — apl tidak akan dibuka di hadapan.</string>
     <string name="kachi_trip_last_ran">Kali terakhir kereta dihidupkan: %1$s</string>
     <string name="kachi_trip_res_ran">dijalankan pada %1$s</string>
     <string name="kachi_trip_res_nothing">tiada apa untuk dibuka (%1$s)</string>

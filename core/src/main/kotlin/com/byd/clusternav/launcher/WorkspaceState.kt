@@ -240,12 +240,16 @@ data class WorkspaceState(
         /**
          * Bố cục mặc định khi chưa có gì lưu. Ở `:core` để **kiểm được off-car** — trước đây nó nằm ở phía Android
          * nên không test nào chạm tới, và đó chính là chỗ suýt sập khi nới trần.
+         *
+         * Android box W0 (2026-10-09, spec `androidbox-plan.html` §4.1): ba widget mặc định là widget KHÔNG đọc xe —
+         * đồng hồ · đang phát · lưới lối tắt app. Trước đó là `w_board`/`w_energy`/`w_pm25` (đọc HAL BYD ⇒ trên Android
+         * box chỉ ra "—"). Hồ sơ đã lưu ô không bị đụng — mặc định chỉ dùng khi hồ sơ chưa có khoá `slot_*` nào.
          */
         val DEFAULT: WorkspaceState = of(
             LayoutPreset.THREE,
-            SlotContent.Widget("w_board"),
-            SlotContent.Widget("w_energy"),
-            SlotContent.Widget("w_pm25"),
+            SlotContent.Widget("w_clock"),
+            SlotContent.Widget("w_media"),
+            SlotContent.Widget("w_apps"),
         )
     }
 }

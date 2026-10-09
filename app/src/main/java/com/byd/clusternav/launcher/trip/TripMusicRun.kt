@@ -6,7 +6,7 @@ import android.os.SystemClock
 import android.util.Log
 import com.byd.clusternav.launcher.MediaBridge
 import com.byd.clusternav.launcher.behind.BehindHomeSequence
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 import com.byd.clusternav.launcher.voice.VoiceAppIntents
 import com.byd.clusternav.launcher.voice.VoiceAppTarget
 import com.byd.clusternav.launcher.voice.VoiceAppTargets

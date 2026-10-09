@@ -1,5 +1,7 @@
 package com.byd.clusternav.navigation
 
+import com.byd.clusternav.launcher.voice.NavApps
+
 import com.byd.clusternav.navigation.TurnDistancePlausibility.Verdict
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse

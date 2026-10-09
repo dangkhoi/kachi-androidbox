@@ -2,7 +2,7 @@ package com.byd.clusternav.launcher.behind
 
 import com.byd.clusternav.launcher.behind.BehindHomePlan.Evict
 import com.byd.clusternav.launcher.behind.BehindHomePlan.Why
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackParse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull

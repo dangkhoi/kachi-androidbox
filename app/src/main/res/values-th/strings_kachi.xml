@@ -748,7 +748,6 @@
     <string name="kachi_trip_remove">นำออก</string>
     <string name="kachi_trip_slot_hint">หากต้องการให้แอปเปิดและแสดงทุกครั้งที่สตาร์ทรถ ให้วางแอปไว้ในช่องของโปรไฟล์นี้</string>
     <string name="kachi_trip_no_slot_warn">เลย์เอาต์ของโปรไฟล์นี้ไม่มีช่องแอป — แอปที่ทำงานเบื้องหลังจะถูกเปิดบนหน้าจอที่ซ่อนอยู่ แล้วย้ายไปหลังหน้าจอหลัก</string>
-    <string name="kachi_trip_normal_unsupported">ยังไม่รู้จักหน้าจอกล้องของรถคันนี้ — จะไม่เปิดแอปขึ้นด้านหน้า</string>
     <string name="kachi_trip_last_ran">การสตาร์ทรถครั้งล่าสุด: %1$s</string>
     <string name="kachi_trip_res_ran">ทำงานเมื่อ %1$s</string>
     <string name="kachi_trip_res_nothing">ไม่มีแอปให้เปิด (%1$s)</string>

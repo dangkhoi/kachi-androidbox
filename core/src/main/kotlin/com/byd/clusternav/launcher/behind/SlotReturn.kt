@@ -2,8 +2,8 @@ package com.byd.clusternav.launcher.behind
 
 import com.byd.clusternav.launcher.FreeformLaunch
 import com.byd.clusternav.launcher.camera.CameraGuard
-import com.byd.clusternav.modules.clustercast.StackEntry
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackEntry
+import com.byd.clusternav.system.StackParse
 
 /**
  * ═══ Ô ⇄ TOÀN MÀN mà KHÔNG giết app: K7 (ô → display 0) · K8 (display 0 ẩn → ô) — quyết định thuần (`:core`) ══════════

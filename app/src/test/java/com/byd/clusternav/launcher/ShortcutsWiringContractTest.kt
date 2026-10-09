@@ -105,8 +105,10 @@ class ShortcutsWiringContractTest {
         assertTrue(fn.contains("if (!started) { workspace().flashSlot(action.slot)"), "ô chưa sẵn ⇒ chỉ ra chỗ app đang ở")
         val slots = code("KachiHomeSlots.kt")
         val glue = SourceRoots.body(slots, "fun detachToFull(index: Int, done: (Boolean) -> Unit)")
-        assertTrue(glue.contains("ClusterProfile.resolveCached(app).cameraSignature") && glue.contains("DefaultHome.shownComponents(app)"),
-            "rào K7: dấu hiệu camera theo đời xe (ClusterProfile) + cả hai dạng màn nhà Kachi")
+        // Android box W0 (2026-10-09): K7 nhận `CameraPresence.SIGNATURE` (null = không camera ⇒ chỉ cổng màn nhà).
+        assertTrue(glue.contains("CameraPresence.SIGNATURE") && glue.contains("DefaultHome.shownComponents(app)"),
+            "rào K7: dấu camera của máy (không camera trên Android box) + cả hai dạng màn nhà Kachi")
+        assertFalse(glue.contains("ClusterProfile"), "Android box: K7 không đọc hồ sơ đời xe BYD")
     }
 
     /**

@@ -903,7 +903,6 @@
     <string name="kachi_trip_remove">Bỏ</string>
     <string name="kachi_trip_slot_hint">Muốn app luôn mở và hiện ra mỗi lần nổ máy thì đặt nó vào một ô của hồ sơ.</string>
     <string name="kachi_trip_no_slot_warn">Bố cục của hồ sơ này không có ô app — chạy nền sẽ mở app trong một màn ẩn rồi đưa ra sau màn nhà.</string>
-    <string name="kachi_trip_normal_unsupported">Đời xe này chưa biết màn camera — không tự mở app lên trước.</string>
     <string name="kachi_trip_last_ran">Lần nổ máy gần nhất: %1$s</string>
     <string name="kachi_trip_res_ran">đã chạy lúc %1$s</string>
     <string name="kachi_trip_res_nothing">không có gì để mở (%1$s)</string>

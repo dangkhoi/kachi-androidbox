@@ -1,7 +1,7 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.modules.clustercast.StackEntry
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackEntry
+import com.byd.clusternav.system.StackParse
 
 /**
  * ═══ Đọc `am stack list` + ĐỌC LẠI sau lệnh gỡ — một bản cho mọi lượt gỡ stack (thuần, chặn) ═══════════════════════

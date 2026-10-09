@@ -43,7 +43,7 @@ class NavFunnelWiringContractTest {
             "đường Google Maps phải giữ đúng call site cũ",
         )
         assertTrue(
-            listener.contains("val MAPS_PACKAGES = com.byd.clusternav.navigation.NavApps.NOTIFICATION"),
+            listener.contains("val MAPS_PACKAGES = com.byd.clusternav.launcher.voice.NavApps.NOTIFICATION"),
             "roster kênh notification không được đổi trong việc này",
         )
     }

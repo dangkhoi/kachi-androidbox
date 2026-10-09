@@ -3,7 +3,7 @@ package com.byd.clusternav.launcher.behind
 import com.byd.clusternav.launcher.behind.SlotReturn.Back
 import com.byd.clusternav.launcher.behind.SlotReturn.Where
 import com.byd.clusternav.launcher.camera.CameraGuard
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackParse
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path

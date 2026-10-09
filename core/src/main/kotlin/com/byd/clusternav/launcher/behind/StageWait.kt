@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher.behind
 
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * Kết quả chờ X lên đỉnh màn ảo dàn dựng ([StageWait.top]): [ms] đã chờ; [fell] = X tự lên display 0 TRƯỚC màn nhà trong lúc

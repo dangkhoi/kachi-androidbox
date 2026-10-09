@@ -272,7 +272,9 @@ class CapabilityGroupsTest {
         // ⚠ UX5b (owner 2026-09-27): mặc định là **5** chip — ba chip cũ + hai chip ghế GỘP (ghế lái · ghế phụ).
         // Con số ghim ở đây chỉ để *"mặc định không tự phình vì một chip dựng sẵn mới"*; nó đổi khi OWNER xin, và
         // lần này owner xin (xem KDoc `TopStripConfig.DEFAULT_IDS`).
-        assertEquals(5, TopStripConfig.DEFAULT.ids.size, "mặc định 3 chip cũ + 2 chip ghế (UX5b, owner 2026-09-27)")
+        // Android box W0 (2026-10-09): mặc định RỖNG (mọi chip dựng sẵn là chip xe); năm chip UX5b chỉ còn là đích di trú.
+        assertEquals(0, TopStripConfig.DEFAULT.ids.size, "Android box: thanh trên mặc định không chip")
+        assertEquals(5, TopStripConfig.UX5B_DEFAULT_IDS.size, "bộ UX5b: 3 chip cũ + 2 chip ghế (owner 2026-09-27)")
     }
 
     @Test

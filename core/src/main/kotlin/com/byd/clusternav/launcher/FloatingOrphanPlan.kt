@@ -1,7 +1,7 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.modules.clustercast.StackEntry
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackEntry
+import com.byd.clusternav.system.StackParse
 
 /**
  * ═══ PROFILE-SWITCH-SLOTS · R-B3 — CHỌN cửa sổ nổi do Kachi mở cần ĐÓNG (thuần, không chạy lệnh) ═══════════════

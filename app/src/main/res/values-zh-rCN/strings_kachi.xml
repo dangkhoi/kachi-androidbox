@@ -748,7 +748,6 @@
     <string name="kachi_trip_remove">移除</string>
     <string name="kachi_trip_slot_hint">若要每次上电都打开并显示某个应用，请把它放进此档案的一个格位。</string>
     <string name="kachi_trip_no_slot_warn">此档案的布局没有应用格位——后台应用会先在隐藏屏幕中打开，再移到主屏幕后方。</string>
-    <string name="kachi_trip_normal_unsupported">本车型的摄像头界面尚未识别——不会将应用打开到前台。</string>
     <string name="kachi_trip_last_ran">上次上电：%1$s</string>
     <string name="kachi_trip_res_ran">于%1$s运行</string>
     <string name="kachi_trip_res_nothing">没有要打开的应用（%1$s）</string>

@@ -46,7 +46,7 @@ enum class TripStepCode(val result: Result) {
     SYSTEM_APP(Result.NOOP),        // app hệ thống: không chạy nền (R0.6)
     NOT_INSTALLED(Result.NOOP),
     SELF(Result.NOOP),
-    CAMERA_UNKNOWN(Result.NOOP),    // đời xe chưa biết màn camera ⇒ không mở lên trước
+    CAMERA_UNKNOWN(Result.NOOP),    // ≤ 2.98 BYD: đời xe chưa biết màn camera — Android box không còn sinh mã này, giữ để đọc sổ cũ
     CAMERA(Result.NOOP),            // màn camera đang hiện suốt hạn 60 s
     OTHER_FRONT(Result.NOOP),       // app khác đang ở trước ⇒ không giành màn hình
     NOT_STAGED(Result.NOOP),        // không phân giải được / mở không lên
@@ -145,7 +145,6 @@ object TripOutcome {
         TripPlan.Why.NOT_INSTALLED -> TripStepCode.NOT_INSTALLED
         TripPlan.Why.SYSTEM_APP -> TripStepCode.SYSTEM_APP
         TripPlan.Why.IN_SLOT -> TripStepCode.IN_SLOT
-        TripPlan.Why.CAMERA_UNKNOWN -> TripStepCode.CAMERA_UNKNOWN
     }
 
     /** Cổng nhạc ⇒ mã bước (chỉ các cổng KHÔNG đi tiếp; `GO` không có mã). */

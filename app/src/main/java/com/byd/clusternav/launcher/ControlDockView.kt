@@ -50,7 +50,7 @@ class ControlDockView(
      * (`drawerController.openAppList()` · `panels.openSettings()`) — không mở đường thứ hai.
      */
     var onLauncherAction: (String) -> Unit = {}
-    private var config = ControlRegistry.defaultDock()
+    private var config = DockConfig()
     // Trạng thái xe + lựa chọn đơn vị: CHỈ dùng cho ô ĐỌC. Bơm từ Activity (một chiều, từ HomeUiState.carStatus).
     private var carStatus: CarStatus = CarStatus()
     private var unitPrefs: UnitPrefs = UnitPrefs.DEFAULT

@@ -210,8 +210,8 @@ object AccessibilityRebind {
         component: String = ACC_COMP,
         pauseSec: Int = 4,
         homeTail: HomeTail = HomeTail.IF_ORPHANED,
-        /** 2.93 CODE-FIX-AFTER-283 (6): dấu màn camera của ĐỜI XE (`ClusterProfile`); mặc định = dấu 2.83; hỏng ⇒ `""`. */
-        cameraSig: String = CAMERA_SCREEN_SIGNATURE,
+        /** 2.93: dấu camera ĐỜI XE; mặc định = dấu 2.83; hỏng ⇒ `""`. Android box W0: `null` = không camera ⇒ Home trần. */
+        cameraSig: String? = CAMERA_SCREEN_SIGNATURE,
     ): String {
         val owner = component.substringBefore('/').trim()
         if (pkg.isBlank() || owner.isBlank() || pkg.trim() != owner) return ""
@@ -347,8 +347,10 @@ object AccessibilityRebind {
      */
     val GO_HOME_UNLESS_CAMERA: String = goHomeUnlessCamera(CAMERA_SCREEN_SIGNATURE)
 
-    /** [GO_HOME_UNLESS_CAMERA] với dấu camera [sig] của một đời xe (2.93); [sig] không an toàn ⇒ [CameraGuard] ném. */
-    fun goHomeUnlessCamera(sig: String): String = CameraGuard.unlessCamera(sig, null, HomeActivityCmd.GO_HOME)
+    /** [GO_HOME_UNLESS_CAMERA] với dấu camera [sig] (2.93); không an toàn ⇒ [CameraGuard] ném. Android box W0: `null` =
+     *  máy KHÔNG có màn camera (`CameraPresence.SIGNATURE`) ⇒ Home TRẦN, không đọc `am stack list` — ngược bản BYD, có chủ ý. */
+    fun goHomeUnlessCamera(sig: String?): String =
+        if (sig == null) HomeActivityCmd.GO_HOME else CameraGuard.unlessCamera(sig, null, HomeActivityCmd.GO_HOME)
 
     /** Người dùng tự bấm ⇒ [HomeTail.ALWAYS]; mọi đường TỰ ĐỘNG (lớp 1/2) ⇒ [HomeTail.IF_ORPHANED]. */
     fun homeTailFor(userAsked: Boolean): HomeTail = if (userAsked) HomeTail.ALWAYS else HomeTail.IF_ORPHANED
@@ -437,7 +439,7 @@ object AccessibilityRebind {
     val RETURN_HOME_IF_ORPHANED: String = returnHomeIfOrphaned(CAMERA_SCREEN_SIGNATURE)
 
     /** [RETURN_HOME_IF_ORPHANED] với dấu camera [sig] của một đời xe (2.93) — cùng phép đo, cùng rào. */
-    fun returnHomeIfOrphaned(sig: String): String =
+    fun returnHomeIfOrphaned(sig: String?): String =
         "t=\$(am stack list | grep -A1 \"displayId=0 \" | head -n 2) ; " +
             "case \"\$t\" in *\"$ORPHAN_SIGNATURE\"*) ${goHomeUnlessCamera(sig)} ;; esac"
 

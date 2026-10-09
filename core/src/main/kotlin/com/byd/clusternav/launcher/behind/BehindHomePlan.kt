@@ -2,7 +2,7 @@ package com.byd.clusternav.launcher.behind
 
 import com.byd.clusternav.launcher.FreeformLaunch
 import com.byd.clusternav.launcher.ShellAppLauncher
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ BEHIND-HOME — đưa app ra PHÍA SAU màn nhà, không che, không giết (quyết định thuần, `:core`) ═════════════════

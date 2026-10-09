@@ -56,4 +56,27 @@ class A11yCameraSignatureTest {
             assertEquals("", AccessibilityRebind.forceStopRebindCommand("", pkg, comp, cameraSig = bad), "dấu hỏng '$bad' ⇒ không leo")
         }
     }
+
+    /**
+     * Android box W0 (2026-10-09): `null` = máy KHÔNG có màn camera (`CameraPresence.SIGNATURE`) ⇒ mọi lần Home của đuôi
+     * lượt chữa là Home TRẦN — không đọc `am stack list`, không `case` camera, không bị chặn. Trước W0 `NavConnect` thay
+     * `null` bằng dấu 2.83 `com.byd.avc/` (rào một màn không tồn tại trên Android box).
+     */
+    @Test
+    fun `khong camera - Home tran, khong rao, khong bi chan`() {
+        val none = com.byd.clusternav.system.CameraPresence.SIGNATURE
+        assertEquals(null, none, "Android box: không có màn camera")
+        assertEquals(HomeActivityCmd.GO_HOME, AccessibilityRebind.goHomeUnlessCamera(none))
+        assertFalse(AccessibilityRebind.returnHomeIfOrphaned(none).contains(AccessibilityRebind.CAMERA_SCREEN_SIGNATURE))
+        assertTrue(AccessibilityRebind.returnHomeIfOrphaned(none).contains(") ${HomeActivityCmd.GO_HOME} ;; esac"))
+        AccessibilityRebind.HomeTail.values().forEach { tail ->
+            val cmd = AccessibilityRebind.forceStopRebindCommand("", pkg, comp, homeTail = tail, cameraSig = none)
+            assertTrue(cmd.isNotEmpty(), "$tail: không camera KHÔNG được làm hỏng lệnh chữa")
+            assertFalse(cmd.contains(AccessibilityRebind.CAMERA_SCREEN_SIGNATURE), "$tail: không còn rào camera BYD")
+            assertTrue(cmd.contains(HomeActivityCmd.GO_HOME), "$tail: vẫn về màn nhà")
+            assertTrue(cmd.startsWith("nohup sh -c '") && cmd.count { it == '\'' } == 2, "$tail: không thoát khỏi dấu nháy")
+        }
+        val always = AccessibilityRebind.forceStopRebindCommand("", pkg, comp, homeTail = AccessibilityRebind.HomeTail.ALWAYS, cameraSig = none)
+        assertTrue(always.contains("sleep 2 ; ${HomeActivityCmd.GO_HOME} ; sleep 3"), "bấm tay ⇒ Home vô điều kiện: $always")
+    }
 }

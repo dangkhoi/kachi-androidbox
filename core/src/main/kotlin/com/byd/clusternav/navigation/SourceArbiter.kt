@@ -1,5 +1,7 @@
 package com.byd.clusternav.navigation
 
+import com.byd.clusternav.launcher.voice.NavApps
+
 import com.byd.clusternav.navigation.NavSourceMode
 
 import java.util.concurrent.ConcurrentHashMap

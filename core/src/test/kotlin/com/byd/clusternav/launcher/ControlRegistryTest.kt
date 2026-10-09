@@ -7,16 +7,21 @@ import org.junit.jupiter.api.Test
 
 class ControlRegistryTest {
 
-    @Test fun `default dock = viền dưới + bộ nút mặc định`() {
-        val d = ControlRegistry.defaultDock()
+    @Test fun `default dock = vien duoi + chi hanh dong launcher, khong nut xe`() {
+        // Android box W0 (2026-10-09): máy không có xe ⇒ thanh mặc định chỉ gồm hành động của launcher.
+        val d = DockConfig()
         assertEquals(DockEdge.BOTTOM, d.edge)
-        assertEquals(ControlRegistry.defaultEnabledIds(), d.enabled)
-        assertTrue("temp" in d.enabled && "fan" in d.enabled && "pm25" in d.enabled)
-        assertFalse("ac_auto" in d.enabled) // có trong kho nhưng mặc định tắt (⚠ 1.90: mốc cũ `cast` đã xoá)
+        assertEquals(
+            listOf(LauncherActions.APPS, LauncherActions.SETTINGS, LauncherActions.VOICE, LauncherActions.SHORTCUTS),
+            d.enabled,
+        )
+        assertTrue(d.enabled.none { ControlRegistry.byId(it) != null }, "mặc định không được có nút xe: ${d.enabled}")
+        assertTrue(d.enabled.all { CapabilityCatalog.kindOf(it) != null }, "mọi mã mặc định phải tra được trong catalog")
+        assertEquals(d.enabled, DockSelection.sanitize(d.enabled), "mặc định phải qua được lượt lọc lúc nạp")
     }
 
     @Test fun `setEnabled them va xoa - id khong hop le thi bo qua`() {
-        val d = ControlRegistry.defaultDock()
+        val d = DockConfig()
         val added = d.setEnabled("ac_auto", true)
         assertTrue("ac_auto" in added.enabled)
         val removed = added.setEnabled("ac_auto", false)
@@ -30,7 +35,7 @@ class ControlRegistryTest {
         // suất lốp / phần trăm pin không bao giờ vào được thanh.
         // [ĐO] senior review 2026-09-10: hoàn nguyên đúng một dòng đó ⇒ CẢ 2431 bài vẫn XANH ⇒ dòng quan trọng
         // nhất của gói này KHÔNG có bài nào canh. Bài này là bài canh nó.
-        val d = ControlRegistry.defaultDock()
+        val d = DockConfig()
         listOf("tyre_p_fl", "soc").forEach { readId ->
             assertEquals(CapabilityKind.READ, CapabilityCatalog.kindOf(readId), "tiền đề: '$readId' là thông tin ĐỌC")
             val on = d.setEnabled(readId, true)
@@ -44,10 +49,10 @@ class ControlRegistryTest {
     }
 
     @Test fun `withEdge + isVertical`() {
-        assertTrue(ControlRegistry.defaultDock().withEdge(DockEdge.LEFT).isVertical())
-        assertTrue(ControlRegistry.defaultDock().withEdge(DockEdge.RIGHT).isVertical())
-        assertFalse(ControlRegistry.defaultDock().withEdge(DockEdge.TOP).isVertical())
-        assertFalse(ControlRegistry.defaultDock().withEdge(DockEdge.BOTTOM).isVertical())
+        assertTrue(DockConfig().withEdge(DockEdge.LEFT).isVertical())
+        assertTrue(DockConfig().withEdge(DockEdge.RIGHT).isVertical())
+        assertFalse(DockConfig().withEdge(DockEdge.TOP).isVertical())
+        assertFalse(DockConfig().withEdge(DockEdge.BOTTOM).isVertical())
     }
 
     @Test fun `step clamp theo min max`() {

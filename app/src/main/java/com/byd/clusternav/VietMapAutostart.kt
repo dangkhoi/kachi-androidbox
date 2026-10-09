@@ -13,7 +13,7 @@ import com.byd.clusternav.launcher.WorkspacePrefs
 import com.byd.clusternav.launcher.trip.TripGate
 import com.byd.clusternav.launcher.trip.TripStart
 import com.byd.clusternav.launcher.tripConfig
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 import com.byd.clusternav.navigation.VietMapBubbleWait
 import com.byd.clusternav.system.AppPrereqPlan
 import com.byd.clusternav.system.Truth

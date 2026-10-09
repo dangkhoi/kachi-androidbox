@@ -389,7 +389,9 @@ class TopStripWiringContractTest {
         val roomDp = 889
         // Nhãn THẬT dài nhất đã đo cho mỗi chip mặc định (px ở 1,5 px/dp → dp), làm tròn LÊN.
         val widestDefaultChipDp = 94
-        val n = TopStripConfig.DEFAULT_IDS.size
+        // W0 (2026-10-09): mặc định nay RỖNG (Android box), nhưng lượt di trú vẫn có thể nâng hồ sơ cũ lên năm chip
+        // UX5b ⇒ đo ca xấu nhất năm chip, không đo danh sách rỗng (n = 0 thì bài không còn canh gì).
+        val n = maxOf(TopStripConfig.DEFAULT_IDS.size, 5)
         val need = n * (widestDefaultChipDp + KachiBars.CHIP_GAP)
         assertTrue(
             need <= roomDp,

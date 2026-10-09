@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher.voice
 
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 
 /**
  * Cách **giao một chuỗi chữ mở** (tên bài / điểm đến) cho một app — mô tả bằng DỮ LIỆU, không phải bằng mã.

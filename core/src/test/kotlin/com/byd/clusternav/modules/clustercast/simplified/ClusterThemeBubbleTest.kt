@@ -18,7 +18,7 @@ class ClusterThemeBubbleTest {
     private val self = "com.byd.launcher"
     private val black = "$self/com.byd.clusternav.modules.clustercast.ClusterBlackActivity"
 
-    private val home = com.byd.clusternav.modules.clustercast.StackParse.parse(
+    private val home = com.byd.clusternav.system.StackParse.parse(
         "Stack id=0 bounds=[0,0][1920,1080] displayId=0 userId=0\n" +
             "  taskId=4: com.android.launcher3/com.android.launcher3.Launcher visible=true",
     )
@@ -37,7 +37,7 @@ class ClusterThemeBubbleTest {
         |    mDisplayId=0 stackId=4 mSession=Session{3ca6afa 2650:1000} mClient=android.os.BinderProxy@38756a4
     """.trimMargin()
 
-    private fun decide(windows: String, tasks: List<com.byd.clusternav.modules.clustercast.StackEntry> = home) =
+    private fun decide(windows: String, tasks: List<com.byd.clusternav.system.StackEntry> = home) =
         ClusterThemePlan.decide(31, setOf(4), 4, null, tasks, ClusterThemePlan.parseWindows(windows), self, themeOnVacantVd = true)
 
     @Test
@@ -58,7 +58,7 @@ class ClusterThemeBubbleTest {
 
     @Test
     fun `VietMap co TASK tren cum - FOREIGN (khong phai chi bong noi)`() {
-        val tasks = home + com.byd.clusternav.modules.clustercast.StackParse.parse(
+        val tasks = home + com.byd.clusternav.system.StackParse.parse(
             "Stack id=7 bounds=[0,0][1920,720] displayId=4 userId=0\n  taskId=70: vn.vietmap.live/vn.vietmap.live.MainActivity visible=true",
         )
         val d = decide(vietmapBubbleOn4, tasks) as ClusterThemePlan.Decision.Skip

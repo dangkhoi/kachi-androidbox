@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackParse
 
 /**
  * ═══ FIX286 · R-SC2 — APP CỦA Ô CÒN SỐNG KHÔNG, ĐO LÚC CHẠM LỐI TẮT (thuần, `:core`) ══════════════════════════════

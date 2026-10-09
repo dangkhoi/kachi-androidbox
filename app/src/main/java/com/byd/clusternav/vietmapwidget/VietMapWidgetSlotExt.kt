@@ -1,6 +1,6 @@
 package com.byd.clusternav.vietmapwidget
 
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 
 import android.content.ComponentName
 

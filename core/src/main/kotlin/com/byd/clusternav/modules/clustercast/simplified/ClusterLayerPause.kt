@@ -1,6 +1,6 @@
 package com.byd.clusternav.modules.clustercast.simplified
 
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ 2.90 · R9 — "DỌN CỤM / TRẢ CỤM" cho lượt đổi theme (thuần, không chạy lệnh) ═════════════════════════════════════════

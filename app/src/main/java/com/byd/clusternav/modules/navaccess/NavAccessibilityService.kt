@@ -3,7 +3,7 @@ package com.byd.clusternav.modules.navaccess
 import com.byd.clusternav.navigation.ScreenTextItem
 import com.byd.clusternav.navigation.NavScreenReading
 import com.byd.clusternav.navigation.NavScreenScan
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 import com.byd.clusternav.navigation.TurnDistanceInterpolator
 import android.accessibilityservice.AccessibilityService
 import android.graphics.Rect

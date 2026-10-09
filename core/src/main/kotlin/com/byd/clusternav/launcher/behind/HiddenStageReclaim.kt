@@ -1,7 +1,7 @@
 package com.byd.clusternav.launcher.behind
 
 import com.byd.clusternav.launcher.StackReads
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ L4 · D2(a) — THU HỒI màn ảo dàn dựng ẨN bị GIỮ ở các lượt trước (thuần, chặn, `:core`) ═══════════════════════════

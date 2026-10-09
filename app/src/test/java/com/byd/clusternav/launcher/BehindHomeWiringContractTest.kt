@@ -98,7 +98,7 @@ class BehindHomeWiringContractTest {
         order(ready, "ranThisProcess.compareAndSet(false, true)) return", ".read().isEmpty()) return", "BehindHomeRunner.execute(", "run(app)")
         assertTrue(ready.contains("if (!measured) ranThisProcess.set(false)"), "không đọc được ⇒ lượt sau của cùng tiến trình đo lại")
         val fn = SourceRoots.body(recovery, "private fun run(app: Context): Boolean {")
-        order(fn, "if (marks.isEmpty()) return", "LocalDeviceShell.run(", "BehindMarks.surfaced(", "AccessibilityRebind.GO_HOME_UNLESS_CAMERA")
+        order(fn, "if (marks.isEmpty()) return", "LocalDeviceShell.run(", "BehindMarks.surfaced(", "AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE)")
     }
 
     /**

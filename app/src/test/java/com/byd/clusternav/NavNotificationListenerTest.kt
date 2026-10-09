@@ -58,7 +58,7 @@ class NavNotificationListenerTest {
     @Test
     fun `onNotificationPosted gates in order - ALL roster, bridge safety net, THEN notification roster`() {
         val body = functionBody(listenerSrc, "override fun onNotificationPosted(sbn: StatusBarNotification?)")
-        val iAll = body.indexOf("!in com.byd.clusternav.navigation.NavApps.ALL")
+        val iAll = body.indexOf("!in com.byd.clusternav.launcher.voice.NavApps.ALL")
         val iBridge = body.indexOf("ensureBridgeStarted()")
         val iChannel = body.indexOf("!in MAPS_PACKAGES")
         val iHandle = body.indexOf("handle(sbn)")

@@ -1,7 +1,7 @@
 package com.byd.clusternav.modules.clustercast.simplified
 
 import com.byd.clusternav.modules.clustercast.CastDisplayFixtures2026_09_15
-import com.byd.clusternav.modules.clustercast.DisplayParse
+import com.byd.clusternav.system.DisplayParse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull

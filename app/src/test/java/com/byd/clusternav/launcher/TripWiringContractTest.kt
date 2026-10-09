@@ -112,7 +112,9 @@ class TripWiringContractTest {
         // Review 2.89 Pass 1 · behaviour-5 — ĐỔI GHIM có lý do: cổng mang cờ `needsAnchor` tới bên thi hành (KDoc `BehindHomeRunner.chain`).
         assertEquals("slots().behindChain(what, body, done, needsAnchor)", SourceRoots.body(glue, "override fun behindChain(").trim().removePrefix("=").trim())
         val normal = SourceRoots.body(start, "private fun normal(host: TripHub.Host, pkg: String): Pair<TripStepCode, String> {")
-        order(normal, "cameraSignature ?: return", "BehindHomePlan.safeComponent(", "TripPlan.normalCmd(sig, homeComps, comp)",
+        // Android box W0 (2026-10-09): không màn camera ⇒ không còn nhánh `CAMERA_UNKNOWN` thoát sớm (0 lệnh).
+        assertFalse(normal.contains("CAMERA_UNKNOWN"), "không camera ⇒ Mở bình thường KHÔNG bị chặn")
+        order(normal, "val sig = CameraPresence.SIGNATURE", "BehindHomePlan.safeComponent(", "TripPlan.normalCmd(sig, homeComps, comp)",
             "BehindHomePlan.LIST_CMD", "TripPlan.normalOutcome(")
         listOf(start, music).forEach { src ->
             assertFalse(src.contains("\"am start") || src.contains("am force-stop") || src.contains("move-task"), "không dựng lệnh cửa sổ tay ở bên thi hành chuyến")
@@ -189,7 +191,7 @@ class TripWiringContractTest {
     fun `A2 - cong o 7, cho o, doc thang deu qua dung cho, khong lenh doi cua so tay`() {
         val park = SourceRoots.body(start, "override fun park(pkg: String): BehindHomeSequence.Outcome = await(pkg) { done ->")
         // Review 2.89 Pass 1 · behaviour-2/5 — ĐỔI GHIM có lý do: `live()` thay `host`; ô 7 không dựng giữ chỗ ⇒ `needsAnchor = false`.
-        order(park, "live().behindChain(\"park X=\$pkg\"", "BehindMarksStore(kit.app)", "HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.GO_HOME_UNLESS_CAMERA",
+        order(park, "live().behindChain(\"park X=\$pkg\"", "BehindMarksStore(kit.app)", "HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE)",
             "marks.add(id, p)", ".park(pkg, kit.park)", "needsAnchor = false")
         order(SourceRoots.body(start, "override fun where(pkg: String): TripMusicPlace.Where? {"), "val h = live()", "h.view()",
             "TripMusicPlace.where(pkg, v.slots, v.stages)")

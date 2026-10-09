@@ -1,6 +1,6 @@
 package com.byd.clusternav
 
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 import com.byd.clusternav.testsupport.KotlinSource
 import java.nio.file.Files
 import java.nio.file.Path

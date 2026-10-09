@@ -230,7 +230,15 @@ data class TopStripConfig(
          * **hai lần**. Vậy năm chip vừa, và không cần dựa vào phép cắt `…`. (Phép đo bằng MẮT vẫn phải làm — ghi
          * ở doc UX5b §7 mục kiểm.)
          */
-        val DEFAULT_IDS: List<String> = listOf(PM25, TEMP, ENERGY, SEAT, SEAT_R)
+        val DEFAULT_IDS: List<String> = listOf()
+
+        /**
+         * Android box W0 (2026-10-09, spec `androidbox-plan.html` §4.1): mọi chip dựng sẵn là chip XE (HAL) ⇒ trên
+         * Android box thanh trên mặc định KHÔNG có chip ([DEFAULT_IDS] rỗng). Danh sách năm chip UX5b (owner 2026-09-27,
+         * KDoc trên) giữ ở đây CHỈ làm đích của luật 2 trong [migrate] — hồ sơ cũ đang giữ đúng ba chip mặc định cũ vẫn
+         * được nâng y như ≤ 2.98 (không xoá chip người dùng đang thấy); W3 gỡ cả khối chip xe.
+         */
+        internal val UX5B_DEFAULT_IDS: List<String> = listOf(PM25, TEMP, ENERGY, SEAT, SEAT_R)
 
         /** Mặc định **CŨ** (trước UX5b) — chỉ dùng cho phép di trú [migrate]; xem KDoc ở đó. */
         private val LEGACY_DEFAULT_IDS: List<String> = listOf(PM25, TEMP, ENERGY)
@@ -427,7 +435,7 @@ data class TopStripConfig(
                 return out
             }
             val seatIds = SEAT_PAIRS.keys + SEAT_PAIRS.values.flatMap { listOf(it.first, it.second) }
-            if (ids.none { it in seatIds } && ids == LEGACY_DEFAULT_IDS) return DEFAULT_IDS
+            if (ids.none { it in seatIds } && ids == LEGACY_DEFAULT_IDS) return UX5B_DEFAULT_IDS
             return ids
         }
 

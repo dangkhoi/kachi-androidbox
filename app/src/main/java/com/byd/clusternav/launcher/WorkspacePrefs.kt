@@ -227,7 +227,7 @@ class WorkspacePrefs(context: Context) {
             // (một nguồn, test ở :core) — cấu hình cũ lưu lock/door/window/mac_door_light (gỡ 1.94/1.95) thì
             // `ControlDockView.rebuild` bỏ qua IM LẶNG nên "10 đang bật" mà chỉ 6 nút hiện. Lọc ở cửa NẠP.
             ?.let { DockSelection.sanitize(it) }
-            ?: ControlRegistry.defaultEnabledIds()
+            ?: DockConfig.DEFAULT_ENABLED
         val visible = sp.booleanOrNull(key("dock_visible")) ?: true   // S1b — vắng = hiện (giữ hành vi cũ)
         return DockConfig(edge, enabled, visible, dockScalePct())   // B3 — `WorkspacePrefsDockScale.kt`
     }

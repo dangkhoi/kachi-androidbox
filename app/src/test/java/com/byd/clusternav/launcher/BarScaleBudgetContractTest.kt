@@ -112,7 +112,9 @@ class BarScaleBudgetContractTest {
 
     @Test
     fun `e - thanh co khong dai hon 100, dai don dieu theo phan tram`() {
-        val ids = ControlRegistry.defaultEnabledIds()
+        // W0 (2026-10-09): thanh MẶC ĐỊNH nay chỉ có hành động launcher (không STEP) ⇒ dựng mẫu từ các nút xe từng là
+        // mặc định — bài này đo HÌNH HỌC của ô STEP khi co giãn, không đo danh sách mặc định.
+        val ids = ControlRegistry.ALL.filter { it.enabledByDefault }.map { it.id }
         assertTrue(ids.any { ControlRegistry.byId(it)?.kind == ControlKind.STEP }, "tiền đề: thanh mặc định có ô STEP")
         bases.forEach { base ->
             listOf(false, true).forEach { v ->

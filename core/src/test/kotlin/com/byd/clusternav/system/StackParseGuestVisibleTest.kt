@@ -1,4 +1,4 @@
-package com.byd.clusternav.modules.clustercast
+package com.byd.clusternav.system
 
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

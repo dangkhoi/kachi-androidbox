@@ -134,7 +134,7 @@ class CarDataDemandTest {
 
     @Test
     fun `man mac dinh khong can nhip nhanh`() {
-        val d = CarDataDemand.of(state(chips = TopStripConfig.DEFAULT_IDS))
+        val d = CarDataDemand.of(state(chips = TopStripConfig.UX5B_DEFAULT_IDS))   // W0: mặc định rỗng ⇒ đo bộ UX5b
         assertNotNull(d)
         assertFalse(
             CarDataDemand.needsFast(d),

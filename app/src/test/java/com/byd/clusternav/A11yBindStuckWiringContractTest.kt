@@ -121,12 +121,15 @@ class A11yBindStuckWiringContractTest {
             fn.contains(
                 "AccessibilityRebind.forceStopRebindCommand(\n" +
                     "            cur, app.packageName, ACC_COMP, homeTail = AccessibilityRebind.homeTailFor(userAsked),\n" +
-                    "            cameraSig = camSig ?: AccessibilityRebind.CAMERA_SCREEN_SIGNATURE,\n" +
+                    "            cameraSig = com.byd.clusternav.system.CameraPresence.SIGNATURE,\n" +
                     "        )",
             ),
             "phải dựng lệnh qua hàm có chốt cứng gói (lệch gói ⇒ chuỗi rỗng), không tự ghép chuỗi tại chỗ",
         )
-        assertTrue(fn.contains("ClusterProfile.resolveCached(app).cameraSignature"), "dấu camera lấy từ hồ sơ ĐỜI XE (§7)")
+        // Android box W0 (2026-10-09): dấu camera = `CameraPresence.SIGNATURE` (null = không camera ⇒ Home trần); không còn
+        // đọc `ClusterProfile` và KHÔNG còn lùi về dấu BYD `com.byd.avc/` khi null (rào một màn không tồn tại).
+        assertFalse(fn.contains("ClusterProfile.resolveCached(app).cameraSignature"), "Android box: không đọc dấu camera đời xe BYD")
+        assertFalse(fn.contains("?: AccessibilityRebind.CAMERA_SCREEN_SIGNATURE"), "null KHÔNG được lùi về dấu camera BYD")
         assertFalse(
             Regex("\"am force-stop [^$]").containsMatchIn(fn),
             "KHÔNG được có literal `am force-stop <gói cố định>` trong đường này — gói phải lấy từ chính app",

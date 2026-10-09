@@ -19,6 +19,20 @@ class WorkspaceStateTest {
         s.slots.forEach { assertSame(SlotContent.Empty, it) }
     }
 
+    @Test fun `Android box - bo cuc mac dinh chi widget KHONG doc xe`() {
+        // W0 (2026-10-09): `w_board`/`w_energy`/`w_pm25` đọc HAL BYD ⇒ trên Android box chỉ ra "—". Mặc định nay là
+        // đồng hồ · đang phát · lưới lối tắt — widget LOCAL có thật trong bộ đăng ký.
+        val d = WorkspaceState.DEFAULT
+        assertEquals(LayoutPreset.THREE, d.preset)
+        val ids = d.slots.take(LayoutPreset.THREE.slotCount).map { (it as SlotContent.Widget).ids.single() }
+        assertEquals(listOf("w_clock", "w_media", "w_apps"), ids)
+        ids.forEach { id ->
+            assertEquals(WidgetKind.LOCAL, WidgetRegistry.byId(id)?.kind, "$id phải là widget có thật, không đọc xe")
+        }
+        d.slots.drop(LayoutPreset.THREE.slotCount).forEach { assertSame(SlotContent.Empty, it) }
+        assertEquals(d, d.sanitized(), "mặc định phải qua được lượt dọn ô lạ lúc nạp")
+    }
+
     @Test fun `withSlot gan app va widget`() {
         val s = WorkspaceState()
             .withSlot(0, SlotContent.App("com.google.android.apps.maps"))

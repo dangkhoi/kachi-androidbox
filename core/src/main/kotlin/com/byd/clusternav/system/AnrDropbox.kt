@@ -1,4 +1,4 @@
-package com.byd.clusternav.modules.clustercast
+package com.byd.clusternav.system
 
 /**
  * 2.96 · R14 — lọc báo cáo ANR gần nhất của CHÍNH Kachi từ `dumpsys dropbox --print data_app_anr` (JVM thuần, test off-device).

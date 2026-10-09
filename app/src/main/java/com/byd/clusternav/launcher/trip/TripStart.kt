@@ -17,9 +17,8 @@ import com.byd.clusternav.launcher.behind.BehindHomeSequence
 import com.byd.clusternav.launcher.behind.BehindMarksStore
 import com.byd.clusternav.launcher.behind.HiddenPark
 import com.byd.clusternav.launcher.tripConfig
-import com.byd.clusternav.modules.clustercast.ClusterProfile
-import com.byd.clusternav.modules.clustercast.StackEntry
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackEntry
+import com.byd.clusternav.system.StackParse
 import com.byd.clusternav.modules.navaccess.AccessibilityRebind
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
@@ -28,6 +27,7 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import com.byd.clusternav.system.CameraPresence
 
 /**
  * ═══ F2/F3 — CHUYẾN LÊN XE: lối vào DUY NHẤT (dòng CUỐI `EarlyShellChannel.readyChain`) ═══════════════════════════════
@@ -180,7 +180,6 @@ internal class TripRun(private val app: Context, private val sleep: (Long) -> Un
         val facts = TripPlan.Facts(
             selfPkg = app.packageName, installed = installed,
             system = cfg.apps.map { it.pkg }.filterTo(HashSet()) { isSystem(it) }, inSlots = view.appSlots.toSet(),
-            cameraKnown = ClusterProfile.resolveCached(app).cameraSignature != null,
         )
         val plan = TripPlan.steps(cfg, facts)
         var later: Pair<Int, TripMusicRun.Later>? = null   // 2.97 · R2c: phát tiếp YouTube hoãn tới cuối chuyến (chỉ số bước + phần hoãn)
@@ -327,7 +326,7 @@ internal class TripRun(private val app: Context, private val sleep: (Long) -> Un
         override fun park(pkg: String): BehindHomeSequence.Outcome = await(pkg) { done ->
             live().behindChain("park X=$pkg", { kit ->
                 val marks = BehindMarksStore(kit.app)
-                HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.GO_HOME_UNLESS_CAMERA, homeComps, ::isSystem, { id, p -> marks.add(id, p) }, sleep)
+                HiddenPark(kit.sh, kit.app.packageName, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE), homeComps, ::isSystem, { id, p -> marks.add(id, p) }, sleep)
                     .park(pkg, kit.park)
             }, done, needsAnchor = false)
             true
@@ -380,7 +379,7 @@ internal class TripRun(private val app: Context, private val sleep: (Long) -> Un
     /** K4-VIEW vào ô của app ([TripMusicView]) — kết quả đổi sang dạng chung của bên thi hành (chỉ để log + bộ đếm). */
     private fun viewInSlot(kit: BehindHomeRunner.Kit, pkg: String, vd: Int, url: String, fullscreenExtra: String?): BehindHomeSequence.Outcome {
         val marks = BehindMarksStore(kit.app)
-        val o = TripMusicView(kit.sh, AccessibilityRebind.GO_HOME_UNLESS_CAMERA, homeComps, { id, p -> marks.add(id, p) }, sleep).inSlot(pkg, vd, url, fullscreenExtra)
+        val o = TripMusicView(kit.sh, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE), homeComps, { id, p -> marks.add(id, p) }, sleep).inSlot(pkg, vd, url, fullscreenExtra)
         val r = when (o.result) {
             TripMusicView.Result.STAYED, TripMusicView.Result.RETURNED -> BehindHomeSequence.Result.MOVED   // app ở ô: không phải lùi
             TripMusicView.Result.BEHIND -> BehindHomeSequence.Result.X_FRONT_HOME_RESTORED
@@ -394,7 +393,9 @@ internal class TripRun(private val app: Context, private val sleep: (Long) -> Un
      * ⇒ không giành màn). Camera / đọc hỏng ⇒ thử lại mỗi [TripPlan.CAMERA_RETRY_MS] trong [TripPlan.NORMAL_DEADLINE_MS].
      */
     private fun normal(host: TripHub.Host, pkg: String): Pair<TripStepCode, String> {
-        val sig = ClusterProfile.resolveCached(app).cameraSignature ?: return TripStepCode.CAMERA_UNKNOWN to "CAMERA_UNKNOWN"
+        // Android box W0 (2026-10-09): không màn camera ⇒ K10 chỉ còn cổng "màn nhà Kachi ở trước" (không `case` camera);
+        // trước đây đời xe chưa biết dấu camera ⇒ bước bị bỏ, 0 lệnh.
+        val sig = CameraPresence.SIGNATURE
         val comp = app.packageManager.getLaunchIntentForPackage(pkg)?.component?.flattenToString()
             ?.takeIf { BehindHomePlan.safeComponent(it) } ?: return TripStepCode.NOT_STAGED to "NO_COMPONENT"
         val until = now + TripPlan.NORMAL_DEADLINE_MS

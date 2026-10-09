@@ -38,15 +38,15 @@ class NavNotificationListener : NotificationListenerService() {
         // "Đã đến nơi" — phát hiện KẾT-THÚC-NAV dùng chung ở NavArrivalGuard.isArrivalText (R7/#2).
         /**
          * Roster **KÊNH NOTIFICATION** — nguồn sự thật duy nhất ở
-         * [com.byd.clusternav.navigation.NavApps.NOTIFICATION] (đọc KDoc ở đó để biết ai trong/ngoài và VÌ SAO).
+         * [com.byd.clusternav.launcher.voice.NavApps.NOTIFICATION] (đọc KDoc ở đó để biết ai trong/ngoài và VÌ SAO).
          *
-         * ⚠ ĐÂY KHÔNG PHẢI [com.byd.clusternav.navigation.NavApps.ALL] nữa (đổi 08-23). Trước đó nó trỏ ALL, nên
+         * ⚠ ĐÂY KHÔNG PHẢI [com.byd.clusternav.launcher.voice.NavApps.ALL] nữa (đổi 08-23). Trước đó nó trỏ ALL, nên
          * VietMap đi qua `handle()` ⇒ `SourceArbiter.shouldFeed(pkg, …, DATA)` đóng mốc `lastDataByPkg[vietmap]`
          * ⇒ `isDataFresh(vietmap)` = true trong 6 s ⇒ **kênh IMAGE của chính VietMap bị chặn** ⇒ mũi tên
          * screen-capture không bao giờ lên được cụm (backlog B3.42). Gói ra khỏi roster này **không mất kênh
          * nào khác**: a11y (`NavApps.ALL` + XML) và widget/screen-capture giữ nguyên.
          */
-        val MAPS_PACKAGES = com.byd.clusternav.navigation.NavApps.NOTIFICATION
+        val MAPS_PACKAGES = com.byd.clusternav.launcher.voice.NavApps.NOTIFICATION
     }
 
     // Speed-sign owner: giới hạn tốc độ từ widget VietMap → badge cụm + HAL. (Comment cũ "Noop" đã lỗi thời) —
@@ -141,7 +141,7 @@ class NavNotificationListener : NotificationListenerService() {
         runCatching {
             activeNotifications?.forEach { sbn ->
                 // Cùng thứ tự như `onNotificationPosted`: đo trước (cả 5 gói), rồi mới tới cổng kênh.
-                if (sbn.packageName !in com.byd.clusternav.navigation.NavApps.ALL) return@forEach
+                if (sbn.packageName !in com.byd.clusternav.launcher.voice.NavApps.ALL) return@forEach
                 recordRawNotif(sbn)
                 if (sbn.packageName in MAPS_PACKAGES) handle(sbn)
             }
@@ -167,7 +167,7 @@ class NavNotificationListener : NotificationListenerService() {
         // TUYỆT ĐỐI KHÔNG chạm SourceArbiter ⇒ chạy nó cho một notification VietMap là vô hại, mà bỏ đi thì
         // một máy chỉ dùng VietMap mất đường hồi phục sau khi process bị giết mà onListenerConnected không
         // re-fire (đúng ca hàm này sinh ra để chữa).
-        if (sbn.packageName !in com.byd.clusternav.navigation.NavApps.ALL) return
+        if (sbn.packageName !in com.byd.clusternav.launcher.voice.NavApps.ALL) return
         if (!Prefs.enabled(applicationContext)) return        // công tắc tổng TẮT -> không đẩy cụm
         // Safety net: ensure the connected flag is set even if onListenerConnected was not re-fired after process restart
         ensureBridgeStarted()
@@ -240,7 +240,7 @@ class NavNotificationListener : NotificationListenerService() {
     }
 
     /**
-     * CHẨN ĐOÁN THÔ (T2b) — ghi MỌI notification của [com.byd.clusternav.navigation.NavApps.ALL] vào CSV kéo
+     * CHẨN ĐOÁN THÔ (T2b) — ghi MỌI notification của [com.byd.clusternav.launcher.voice.NavApps.ALL] vào CSV kéo
      * được, kể cả loại mà `NavNotifLog` (đã parse) buộc phải giấu: "Waze is running", VietMap "Ứng dụng đang
      * chạy", status WazeMod, và loại chỉ có nội dung ở `subText`/`bigText` (title+text rỗng).
      *

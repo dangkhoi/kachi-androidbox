@@ -165,7 +165,8 @@ class TopStripSeatChipTest {
         listOf(TopStripConfig.SEAT, TopStripConfig.SEAT_R).forEach { id ->
             assertTrue(id in TopStripConfig.BUILT_IN, "$id phải đặt được (isChippable)")
             assertTrue(TopStripConfig.isChippable(id))
-            assertTrue(id in TopStripConfig.DEFAULT_IDS, "$id vào mặc định — owner xin 2026-09-27")
+            // Android box W0 (2026-10-09): mặc định RỖNG; bộ năm chip UX5b nay là đích của lượt di trú hồ sơ cũ.
+            assertTrue(id in TopStripConfig.UX5B_DEFAULT_IDS, "$id vào bộ UX5b — owner xin 2026-09-27")
             assertTrue(
                 TopStripConfig.choices().any { it.id == id },
                 "$id phải hiện trong màn chọn, nếu không thì có mà không ai GỠ được",
@@ -174,7 +175,7 @@ class TopStripSeatChipTest {
         assertEquals(
             listOf(TopStripConfig.PM25, TopStripConfig.TEMP, TopStripConfig.ENERGY,
                 TopStripConfig.SEAT, TopStripConfig.SEAT_R),
-            TopStripConfig.DEFAULT_IDS,
+            TopStripConfig.UX5B_DEFAULT_IDS,
             "ba chip cũ giữ ĐÚNG thứ tự cũ và đứng trước; chip mới nối vào CUỐI",
         )
         // ⚠⚠ NÓI THẲNG MỘT ĐIỂM YẾU: **hôm nay hai danh sách trùng nội dung** (cả năm chip dựng sẵn đều là mặc

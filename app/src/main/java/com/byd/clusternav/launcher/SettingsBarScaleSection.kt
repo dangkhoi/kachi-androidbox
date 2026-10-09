@@ -105,7 +105,7 @@ internal class SettingsBarScaleSection(
             /** Ba mã đầu của thanh (bỏ khối lối tắt: nó nghe danh sách app, không cần cho mẫu); rỗng ⇒ mặc định. */
             fun sample(enabled: List<String>): List<String> =
                 enabled.filter { it != LauncherActions.SHORTCUTS }.take(SAMPLE)
-                    .ifEmpty { ControlRegistry.defaultEnabledIds().take(SAMPLE) }
+                    .ifEmpty { DockConfig.DEFAULT_ENABLED.filter { it != LauncherActions.SHORTCUTS }.take(SAMPLE) }
         }
     }
 

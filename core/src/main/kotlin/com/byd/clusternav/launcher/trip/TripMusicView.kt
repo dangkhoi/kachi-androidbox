@@ -2,8 +2,8 @@ package com.byd.clusternav.launcher.trip
 
 import com.byd.clusternav.launcher.behind.BehindHomePlan
 import com.byd.clusternav.launcher.behind.SlotReturn
-import com.byd.clusternav.modules.clustercast.StackEntry
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackEntry
+import com.byd.clusternav.system.StackParse
 
 /**
  * ═══ L4 · D3(ii) — giao LINK cho app nhạc ĐANG Ở MỘT Ô bằng K4-VIEW, giữ màn nhà không bị che (thuần, chặn, `:core`) ════

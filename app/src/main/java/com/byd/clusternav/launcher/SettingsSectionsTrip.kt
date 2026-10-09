@@ -13,7 +13,6 @@ import com.byd.clusternav.launcher.trip.TripGate
 import com.byd.clusternav.launcher.trip.TripMusicMode
 import com.byd.clusternav.launcher.trip.TripStart
 import com.byd.clusternav.launcher.voice.VoiceAppTargets
-import com.byd.clusternav.modules.clustercast.ClusterProfile
 
 /**
  * Hai cổng mà trang Cài đặt chuyến lên xe cần — chủ là `KachiHomeTrip` (màn chính). Cùng khuôn [ShortcutSettingsPort].
@@ -68,7 +67,8 @@ class SettingsTripAppsSection(
     private fun paint() {
         list.removeAllViews()
         val st = deps.state()
-        val cameraKnown = ClusterProfile.resolveCached(context).cameraSignature != null
+        // Android box W0 (2026-10-09): không màn camera ⇒ *Mở bình thường* luôn dùng được (không còn mờ chip + dòng
+        // "đời xe chưa hỗ trợ" khi `cameraSignature` = null như bản BYD).
         cfg.apps.forEach { a ->
             val options = listOf(
                 BG to context.getString(R.string.kachi_trip_mode_bg),
@@ -85,7 +85,6 @@ class SettingsTripAppsSection(
                     ),
                 )
             }
-            if (!cameraKnown) (row as? ViewGroup)?.getChildAt(1 + options.indexOfFirst { it.first == NORMAL })?.alpha = DIM
             // L4 · D5 — app hệ thống: chạy nền bị từ chối (R0.6, giữ nguyên) ⇒ chip *Chạy nền* MỜ + KHÔNG đổi kiểu được, chạm
             // chỉ nói lý do; một dòng lý do ngay dưới hàng. Đo bằng `FLAG_SYSTEM` (CÙNG phép của chuyến), không bảng tên gói.
             if (InstalledApps.isSystem(context, a.pkg)) {
@@ -100,7 +99,6 @@ class SettingsTripAppsSection(
             }
             list.addView(row)
         }
-        if (!cameraKnown && cfg.apps.isNotEmpty()) list.addView(rows.note(context.getString(R.string.kachi_trip_normal_unsupported)))
         val count = EffectiveLayout.slotCount(st.preset, st.customLayout)
         if (cfg.apps.any { it.background } && st.workspace.slots.take(count).none { it is SlotContent.App }) {
             list.addView(rows.note(context.getString(R.string.kachi_trip_no_slot_warn)))

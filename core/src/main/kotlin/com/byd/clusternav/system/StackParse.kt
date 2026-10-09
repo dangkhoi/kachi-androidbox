@@ -1,4 +1,4 @@
-package com.byd.clusternav.modules.clustercast
+package com.byd.clusternav.system
 
 /**
  * PARSE `am stack list` → danh sách [StackEntry]. PURE (không đụng Android) → unit-test off-device được.

@@ -141,7 +141,7 @@ class FakeShell : SimpleCastShell {
         val sb = StringBuilder()
         sb.appendLine("  Window #0 Window{739f3cf u0 InputMethod}:")
         sb.appendLine("    mDisplayId=0 stackId=0 mSession=Session{b250230 3982:u0a10062} mClient=android.os.BinderProxy@bbadc2e")
-        com.byd.clusternav.modules.clustercast.StackParse.parse(fakeStackListOutput()).forEachIndexed { i, e ->
+        com.byd.clusternav.system.StackParse.parse(fakeStackListOutput()).forEachIndexed { i, e ->
             sb.appendLine("  Window #${i + 1} Window{${(0xa000 + i).toString(16)} u0 ${e.comp}}:")
             sb.appendLine("    mDisplayId=${e.displayId} stackId=${e.stackId} mSession=Session{0 0:u0a10138} mClient=android.os.BinderProxy@0")
         }

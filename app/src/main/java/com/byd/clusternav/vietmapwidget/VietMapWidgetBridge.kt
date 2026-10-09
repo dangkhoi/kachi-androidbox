@@ -2,7 +2,7 @@ package com.byd.clusternav.vietmapwidget
 
 import com.byd.clusternav.Prefs
 import com.byd.clusternav.system.PackageQueries
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo

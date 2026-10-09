@@ -3,7 +3,7 @@ package com.byd.clusternav.launcher.behind
 import com.byd.clusternav.launcher.FreeformLaunch
 import com.byd.clusternav.launcher.ShellAppLauncher
 import com.byd.clusternav.launcher.StackReads
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ BEHIND-HOME — CHUỖI thi hành (thuần, chặn, `:core`) ═══════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 package com.byd.clusternav.modules.clustercast.simplified
 
-import com.byd.clusternav.modules.clustercast.DisplayParse
+import com.byd.clusternav.system.DisplayParse
 
 /**
  * Chọn id logical-display của CỤM một cách GENERIC — dò `fission`/`xdja` từ `dumpsys display`, KHÔNG hardcode

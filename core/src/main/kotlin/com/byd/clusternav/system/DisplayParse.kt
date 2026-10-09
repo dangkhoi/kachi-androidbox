@@ -1,4 +1,4 @@
-package com.byd.clusternav.modules.clustercast
+package com.byd.clusternav.system
 
 /**
  * PARSE `dumpsys display` — PURE (không đụng Android) → unit-test off-device được.

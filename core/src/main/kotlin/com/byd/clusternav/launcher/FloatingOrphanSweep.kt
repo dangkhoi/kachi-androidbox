@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ PROFILE-SWITCH-SLOTS · R-B3/R-B6 — MỘT LƯỢT DỌN cửa sổ nổi do Kachi mở (thuần JVM, nhận kênh shell) ══════════

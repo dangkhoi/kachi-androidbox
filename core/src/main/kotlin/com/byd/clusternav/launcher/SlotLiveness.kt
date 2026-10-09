@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher
 
-import com.byd.clusternav.modules.clustercast.StackParse
+import com.byd.clusternav.system.StackParse
 
 /**
  * ═══ LUẬT "APP TRONG Ô CÒN SỐNG KHÔNG" (thuần JVM :core) ══════════════════════════════════════════════════════

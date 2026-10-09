@@ -8,7 +8,7 @@ import com.byd.clusternav.launcher.voice.VoiceIntent
 import com.byd.clusternav.launcher.voice.VoiceMediaOp
 import com.byd.clusternav.launcher.voice.VoicePlaces
 import com.byd.clusternav.launcher.voice.VoiceReply
-import com.byd.clusternav.navigation.NavApps
+import com.byd.clusternav.launcher.voice.NavApps
 
 /**
  * ═══ V1.1 · TỪ VỰNG MỞ → **APP ĐÍCH** (dẫn đường · nhạc) ═════════════════════════════════════════════════════

@@ -1,4 +1,4 @@
-package com.byd.clusternav.navigation
+package com.byd.clusternav.launcher.voice
 
 /**
  * **Một nguồn sự thật** cho danh sách app dẫn đường mà ClusterNav đọc.

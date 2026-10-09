@@ -37,15 +37,10 @@ class ControlRegistryExtendedTest {
         assertEquals(original, ControlRegistry.ALL.take(13).map { it.id })
     }
 
-    @Test fun `defaultEnabledIds bat bien - 8 nut mac dinh dung thu tu`() {
-        assertEquals(
-            listOf("trunk", "readl", "pm25", "seatc", "temp", "fan", "win_lf"),
-            ControlRegistry.defaultEnabledIds(),
-        )
-        // Nut moi KHONG duoc tu bat (giu dock mac dinh gon). ⚠ 1.90: hai mốc cũ `cast` + `powertrain_mode` đã xoá
-        // (owner 2026-09-21) ⇒ dùng hai nút mở-rộng còn sống: `ac_auto` (gió tự động) và `wireless_charge`.
-        assertTrue("ac_auto" !in ControlRegistry.defaultEnabledIds())
-        assertTrue("wireless_charge" !in ControlRegistry.defaultEnabledIds())
+    @Test fun `thanh mac dinh khong con lay tu co enabledByDefault cua nut xe`() {
+        // Android box W0 (2026-10-09): `ControlRegistry.defaultEnabledIds()` đã gỡ — thanh mặc định là hành động
+        // launcher ([DockConfig.DEFAULT_ENABLED]); cờ `enabledByDefault` của nút xe không còn quyết định gì (W3 xoá).
+        assertTrue(DockConfig.DEFAULT_ENABLED.none { ControlRegistry.byId(it) != null })
     }
 
     @Test fun `moi control bindingKey khong rong`() {

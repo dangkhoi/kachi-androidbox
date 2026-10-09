@@ -3,7 +3,7 @@ package com.byd.clusternav.launcher.trip
 import com.byd.clusternav.launcher.ShellAppLauncher
 import com.byd.clusternav.launcher.behind.BehindHomePlan
 import com.byd.clusternav.launcher.camera.CameraGuard
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * Một app tự mở khi nổ máy (F2, owner 01/10: *"Tự khởi động chọn app trong list app đang có trong xe, cho chọn là khởi
@@ -69,7 +69,7 @@ object TripAppCodec {
  *
  * Loại trừ ở bước LẬP KẾ HOẠCH chỉ là thứ đo được trong tiến trình (không shell): chính Kachi · chưa cài · app hệ thống
  * (`FLAG_SYSTEM`, R0.6 — tiền lệ CarPlay move-task làm sập surfaceflinger) · app đang nằm trong một ô của bố cục đang
- * hiện (đã mở rồi) · *Mở bình thường* trên đời xe chưa biết màn camera (R2.5). Phần cần shell (app đang chạy / đang chiếu
+ * hiện (đã mở rồi). Phần cần shell (app đang chạy / đang chiếu
  * cụm / không có ô sống) do chuỗi chạy ngầm tự đo ngay trước lệnh (`BehindHomeSequence.startBehind`: có task ⇒
  * `ALREADY_RUNNING`, không ô sống ⇒ `NO_STAGE`) — không đoán trước ở đây.
  */
@@ -83,7 +83,12 @@ object TripPlan {
     const val NORMAL_DEADLINE_MS = 60_000L
     const val CAMERA_RETRY_MS = 3_000L
 
-    enum class Why { SELF, NOT_INSTALLED, SYSTEM_APP, IN_SLOT, CAMERA_UNKNOWN }
+    /**
+     * Android box W0 (2026-10-09): `CAMERA_UNKNOWN` đã GỠ — nó chỉ phục vụ việc CHẶN *Mở bình thường* khi đời xe chưa
+     * biết dấu màn camera; Android box không có camera ⇒ không chặn ([normalCmd] nhận dấu `null` = lệnh trần).
+     * `TripStepCode.CAMERA_UNKNOWN` giữ lại chỉ để sổ chuyến cũ (`kachi_trip_last`) còn đọc được.
+     */
+    enum class Why { SELF, NOT_INSTALLED, SYSTEM_APP, IN_SLOT }
 
     sealed interface Step {
         data class Background(val pkg: String) : Step
@@ -98,7 +103,6 @@ object TripPlan {
         val installed: Set<String>,
         val system: Set<String>,
         val inSlots: Set<String>,
-        val cameraKnown: Boolean,
     )
 
     fun steps(cfg: TripConfig, f: Facts): List<Step> {
@@ -113,7 +117,6 @@ object TripPlan {
         a.pkg !in f.installed -> Why.NOT_INSTALLED
         a.pkg in f.inSlots -> Why.IN_SLOT
         a.background && a.pkg in f.system -> Why.SYSTEM_APP
-        !a.background && !f.cameraKnown -> Why.CAMERA_UNKNOWN
         else -> null
     }
 
@@ -201,9 +204,12 @@ object TripPlan {
     /**
      * K10 — một chuỗi: đọc display 0 → camera ⇒ không; HOME của Kachi (một trong [homeComps], xem [homeTopVisible]) đang
      * hiện ⇒ mở; khác (app khác ở trước) ⇒ không.
+     *
+     * Android box W0: [cameraSig] = `null` = máy không có màn camera (`CameraPresence.SIGNATURE`) ⇒ không `case` camera,
+     * chỉ còn cổng "HOME của Kachi đang hiện" ([CameraGuard.onHomeUnlessCamera]) — trước đây `null` ⇒ không mở (bước bị loại).
      */
-    fun normalCmd(cameraSig: String, homeComps: List<String>, comp: String): String =
-        CameraGuard.unlessCameraOnHome(cameraSig, homeComps, launchCmd(comp))
+    fun normalCmd(cameraSig: String?, homeComps: List<String>, comp: String): String =
+        CameraGuard.onHomeUnlessCamera(cameraSig, homeComps, launchCmd(comp))
 
     enum class Normal { OPENED, CAMERA, OTHER_FRONT, UNREAD }
 
@@ -213,10 +219,12 @@ object TripPlan {
      * đỉnh ⇒ [Normal.OTHER_FRONT] (app khác vừa lên — không giành màn hình, bỏ); đọc hỏng / HOME vẫn ở đỉnh ⇒
      * [Normal.UNREAD] (thử lại).
      */
-    fun normalOutcome(out: String, after: List<StackEntry>, cameraSig: String, homeComps: Collection<String>): Normal {
+    fun normalOutcome(out: String, after: List<StackEntry>, cameraSig: String?, homeComps: Collection<String>): Normal {
         if (out.contains("Starting: Intent") && !out.contains("Error")) return Normal.OPENED
         if (after.isEmpty()) return Normal.UNREAD
-        if (after.any { it.displayId == BehindHomePlan.MAIN_DISPLAY && it.visible && it.comp.startsWith(cameraSig) }) return Normal.CAMERA
+        if (cameraSig != null &&
+            after.any { it.displayId == BehindHomePlan.MAIN_DISPLAY && it.visible && it.comp.startsWith(cameraSig) }
+        ) return Normal.CAMERA
         return if (homeTopVisible(after, homeComps)) Normal.UNREAD else Normal.OTHER_FRONT
     }
 }

@@ -58,8 +58,8 @@ enum class CaptureTarget {
     ;
 
     companion object {
-        /** §7 — dùng roster [com.byd.clusternav.navigation.NavApps], KHÔNG chép lại tên gói ở đây. */
-        private val VIETMAP_PKGS = com.byd.clusternav.navigation.NavApps.VIETMAP
+        /** §7 — dùng roster [com.byd.clusternav.launcher.voice.NavApps], KHÔNG chép lại tên gói ở đây. */
+        private val VIETMAP_PKGS = com.byd.clusternav.launcher.voice.NavApps.VIETMAP
 
         /**
          * TẤT CẢ target cần thử cho [pkg] trong MỘT nhịp (B3.8). VietMap khi dẫn hiện CẢ HAI: banner mũi tên

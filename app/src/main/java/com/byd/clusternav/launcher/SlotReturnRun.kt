@@ -17,6 +17,7 @@ import com.byd.clusternav.launcher.behind.SlotReturnSequence
 import com.byd.clusternav.modules.navaccess.AccessibilityRebind
 import java.io.IOException
 import com.byd.clusternav.launcher.KachiSpace as Sp
+import com.byd.clusternav.system.CameraPresence
 
 /**
  * ═══ F1 dòng 9 + R1.8 — bên THI HÀNH của Ô ⇄ TOÀN MÀN (K7 / K8) cho [VdAppHost] ═══════════════════════════════════════
@@ -35,7 +36,7 @@ internal object SlotReturnRun {
 
     private const val TAG = "KachiDetach"
 
-    private fun seq(sh: (String) -> String) = SlotReturnSequence(sh, AccessibilityRebind.GO_HOME_UNLESS_CAMERA)
+    private fun seq(sh: (String) -> String) = SlotReturnSequence(sh, AccessibilityRebind.goHomeUnlessCamera(CameraPresence.SIGNATURE))
 
     /**
      * K7 qua rào cho app [pkg] của ô [vd]; [done] (luồng chính) nhận kết quả: `taskId` = đã ra toàn màn; `null` + `back` =

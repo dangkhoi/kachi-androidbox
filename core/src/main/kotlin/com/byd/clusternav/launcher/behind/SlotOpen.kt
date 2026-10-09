@@ -1,6 +1,6 @@
 package com.byd.clusternav.launcher.behind
 
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ A4 · SLOT-PLACE-KEEPS-MUSIC (2.89) — mở app vào ô khi app ĐÃ có task: đưa task sang, KHÔNG `am force-stop` ═══════════

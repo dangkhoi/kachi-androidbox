@@ -1,5 +1,7 @@
 package com.byd.clusternav.navigation
 
+import com.byd.clusternav.launcher.voice.NavApps
+
 import com.byd.clusternav.navigation.screencapture.CameraMatch
 import com.byd.clusternav.navigation.screencapture.ScreenCaptureSignal
 import org.junit.jupiter.api.AfterEach

@@ -1,5 +1,7 @@
 package com.byd.clusternav.navigation
 
+import com.byd.clusternav.launcher.voice.NavApps
+
 /**
  * KÊNH ĐỌC dữ liệu dẫn đường của một nguồn (B3.57). Phân loại THUẦN theo roster [NavApps], KHÔNG hardcode tên
  * gói để rẽ nhánh hành vi (§7) — chỉ để NÓI ĐÚNG với người dùng nguồn đang dẫn được đọc bằng cách nào.

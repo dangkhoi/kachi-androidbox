@@ -2,7 +2,7 @@ package com.byd.clusternav.launcher.behind
 
 import com.byd.clusternav.launcher.ShellAppLauncher
 import com.byd.clusternav.launcher.trip.TripGate
-import com.byd.clusternav.modules.clustercast.StackEntry
+import com.byd.clusternav.system.StackEntry
 
 /**
  * ═══ BEHIND-HOME — DẤU BỀN "task này do Kachi đẩy ra sau màn nhà" (thuần, `:core`) ═════════════════════════════════

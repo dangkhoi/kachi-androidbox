@@ -59,9 +59,11 @@ class TopStripMigrationTest {
 
     @Test
     fun `dung mac dinh CU thi nang len mac dinh MOI`() {
-        assertEquals(TopStripConfig.DEFAULT_IDS, TopStripConfig.migrate(legacyDefault))
+        // Android box W0 (2026-10-09): mặc định MỚI (rỗng) KHÔNG phải đích — hồ sơ cũ giữ đúng ba chip cũ vẫn được nâng
+        // lên năm chip UX5b như ≤ 2.98 (không xoá chip người dùng đang thấy).
+        assertEquals(TopStripConfig.UX5B_DEFAULT_IDS, TopStripConfig.migrate(legacyDefault))
         // …và đó là đường mà người *chưa từng sửa gì* đi qua khi nạp prefs cũ.
-        assertEquals(TopStripConfig.DEFAULT_IDS, TopStripConfig.decode(legacyDefault.joinToString(",")).ids)
+        assertEquals(TopStripConfig.UX5B_DEFAULT_IDS, TopStripConfig.decode(legacyDefault.joinToString(",")).ids)
     }
 
     @Test
@@ -104,7 +106,7 @@ class TopStripMigrationTest {
         listOf(
             listOf(TopStripConfig.PM25, "seat_heat_state", "seat_vent_state", "soc"),
             legacyDefault,
-            TopStripConfig.DEFAULT_IDS,
+            TopStripConfig.UX5B_DEFAULT_IDS,
             listOf("soc", "seat_vent_state", TopStripConfig.SEAT),
             emptyList(),
         ).forEach { input ->
@@ -159,7 +161,7 @@ class TopStripMigrationTest {
         val bare = listOf(TopStripConfig.PM25, TopStripConfig.TEMP, TopStripConfig.ENERGY)
         val saved = bare.joinToString(",")
         // BẬT (lượt đầu, hồ sơ chưa đóng mốc) ⇒ nâng lên mặc định MỚI: đúng điều owner xin ở UX5b.
-        assertEquals(TopStripConfig.DEFAULT_IDS, TopStripConfig.decode(saved).ids, "lượt đầu phải nâng mặc định")
+        assertEquals(TopStripConfig.UX5B_DEFAULT_IDS, TopStripConfig.decode(saved).ids, "lượt đầu phải nâng lên bộ UX5b")
         // TẮT (mốc đã đóng) ⇒ tôn trọng đúng thứ người dùng để lại, KHÔNG mọc lại chip ghế.
         assertEquals(
             bare, TopStripConfig.decode(saved, applyMigration = false).ids,

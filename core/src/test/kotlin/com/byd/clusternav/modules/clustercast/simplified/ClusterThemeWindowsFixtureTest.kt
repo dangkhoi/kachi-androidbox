@@ -99,7 +99,7 @@ class ClusterThemeWindowsFixtureTest {
     fun `dump xe 14-09 - man ao cum 8 khong co lop nao, cong muc B se GUI`() {
         val w = ClusterThemePlan.parseWindows(dump2026_09_14)!!
         assertTrue(w.none { it.displayId == 8 })
-        val home = com.byd.clusternav.modules.clustercast.StackParse.parse(
+        val home = com.byd.clusternav.system.StackParse.parse(
             "Stack id=0 bounds=[0,0][1920,1080] displayId=0 userId=0\n  taskId=4: com.android.launcher3/com.android.launcher3.Launcher visible=true",
         )
         assertEquals(
