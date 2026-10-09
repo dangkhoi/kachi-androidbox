@@ -13,7 +13,7 @@ import com.byd.clusternav.launcher.Lang
  *
  * ## Ba mức, theo đúng thứ code BIẾT (không hứa hơn)
  *  • (≤ 2.98 BYD: lượt đọc lại xe KHỚP ⇒ *"Đã …"*; bộ phận mô-tơ ⇒ *"Đang …"* — gỡ cùng nút xe ở Android box B2 · W3.)
- *  • chưa xác nhận + bộ phận chạy bằng mô-tơ ([CtlSafetyPolicy.MOVES_SLOWLY]: kính · cốp · cửa sổ trời · rèm) ⇒
+ *  • chưa xác nhận + bộ phận chạy bằng mô-tơ (`CtlSafetyPolicy.MOVES_SLOWLY`: kính · cốp · cửa sổ trời · rèm) ⇒
  *    *"Đang đóng kính lái"* — xe đã nhận lệnh, bộ phận đang chạy; nói *"Đã đóng"* là hứa một thứ chưa xảy ra.
  *  • chưa xác nhận, bộ phận đổi mức tức thì ⇒ *"Đã …"* như 2.95 (đuôi *"chưa kiểm trên xe"* vẫn do
  *    [VoiceReply.done] gắn theo mức bằng chứng).

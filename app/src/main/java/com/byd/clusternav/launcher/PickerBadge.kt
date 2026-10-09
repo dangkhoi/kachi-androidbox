@@ -33,8 +33,8 @@ import com.byd.clusternav.launcher.KachiSpace as Sp
  * Giữ nguyên **nguồn sự thật** ([EvidenceTier.needsBadge]) — lượt này chỉ đổi cách NÓI, không đổi cách TÍNH.
  *
  * ## Vì sao là một tệp riêng, không phải hàm trong [AppDrawer]
- * Có **hai** bề mặt bày đúng những ô ấy ([AppDrawer] cho ô giữa màn · [TopStripPicker] cho chip thanh trên).
- * Bản cũ chỉ [AppDrawer] có chấm, [TopStripPicker] thì không — tức cùng một mã, hai màn nói hai điều khác nhau về
+ * Có **hai** bề mặt bày đúng những ô ấy ([AppDrawer] cho ô giữa màn · `TopStripPicker` cho chip thanh trên).
+ * Bản cũ chỉ [AppDrawer] có chấm, `TopStripPicker` thì không — tức cùng một mã, hai màn nói hai điều khác nhau về
  * độ tin cậy của nó. Đây đúng bẫy "hai bản sao của một quyết định" mà [CapabilityPicker] đã phải gom
  * (`unitPrefs` từng có 4 bản sao). Một nơi quyết định hình dạng của dấu; hai màn gọi vào.
  */

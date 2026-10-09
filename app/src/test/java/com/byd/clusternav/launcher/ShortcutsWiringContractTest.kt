@@ -372,7 +372,7 @@ class ShortcutsWiringContractTest {
             "kachi_sc_note", "kachi_sc_pick_n", "kachi_sc_mode_slot", "kachi_sc_mode_full", "kachi_sc_mode_bg",
             "kachi_sc_slot_outside", "kachi_sc_order_title", "kachi_sc_order_hint", "kachi_sc_empty",
             "kachi_sc_reason_absent", "kachi_sc_in_slot", "kachi_sc_running", "kachi_sc_no_stage",
-            "kachi_sc_refuse_system", "kachi_sc_refuse_self", "kachi_sc_refuse_cast", "kachi_sc_not_installed",
+            "kachi_sc_refuse_system", "kachi_sc_refuse_self", "kachi_sc_not_installed",
             "kachi_sc_bg_failed", "kachi_sc_full_card", "kachi_sc_full_failed",
         )
         val marks = "àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ"

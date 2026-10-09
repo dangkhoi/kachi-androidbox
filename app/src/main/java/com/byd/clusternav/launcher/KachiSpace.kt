@@ -202,7 +202,7 @@ object KachiSpace {
      * Canvas có chuẩn đọc riêng, thấp hơn phần còn lại của cùng một màn.
      *
      * ⚠ Bảng đã đo ở trên (*sơ đồ hai bên xe*, nhóm ADAS) **đã xoá 2026-09-16** cùng toàn bộ ADAS/an toàn (owner).
-     * Phép đo giữ nguyên làm bằng chứng cho con số — sàn này nay áp cho [DoorBoardView] và `TyreBoardView`.
+     * Phép đo giữ nguyên làm bằng chứng cho con số — sàn này nay áp cho `DoorBoardView` và `TyreBoardView`.
      *
      * Nên: cỡ = `max(tỉ lệ, sàn)`, và **số HÀNG** mới là thứ co theo chỗ. Đảo lại — bóp chữ để nhồi đủ hàng — là
      * chính cái bệnh đang chữa.

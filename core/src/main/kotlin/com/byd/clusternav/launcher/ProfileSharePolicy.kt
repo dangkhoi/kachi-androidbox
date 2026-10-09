@@ -35,25 +35,17 @@ object ProfileSharePolicy {
             "tên app tự dạy: chữ chép từ GIỌNG của một người + biệt danh tự đặt (có thể là tên người) — vô ích với giọng khác",
     )
 
-    private const val R_LAYOUT = "bố cục/ô/thanh nút/chip — chỉ tên gói app, mã widget, thứ tự; không vị trí"
-    private const val R_LOOK = "giao diện/màu/đơn vị/ngôn ngữ/tự mở — lựa chọn hiển thị, không vị trí"
+    private const val R_LAYOUT = "bố cục/ô/thanh nút — chỉ tên gói app, mã widget, thứ tự; không vị trí"
+    private const val R_LOOK = "giao diện/màu/ngôn ngữ/tự mở — lựa chọn hiển thị, không vị trí"
     private const val R_WALLPAPER =
         "chỉ cờ bật · nhịp đổi ảnh · cách vừa · độ tối (WallpaperPrefs.encode) — ẢNH không nằm trong tệp"
-    private const val R_CLUSTER =
-        "hiển thị lên cụm; toạ độ ở đây là PIXEL MÀN HÌNH (badge/bong bóng), không phải toạ độ địa lý"
-    // FIX286 · R-KC — đích nay còn là mã nút xe `ctl:<mã nút registry>:<việc>` (KeyCtlTargets): chỉ mã nút + mã việc,
-    // không vị trí ⇒ bản chia sẻ mang theo (owner 03/10). `KeyCtlTargetTest` canh dạng chuỗi.
-    private const val R_KEYS =
-        "phím vô-lăng: mã phím (+ nguồn knob/wheel, 2.88) + đích là gói app/mã việc (Prefs.VK_TARGET_*) / mã nút xe ctl:<nút>:<việc> — không vị trí"
-    private const val R_COMFORT = "tiện nghi xe theo người lái (ghế, lọc bụi, lấy gió — RetiredComfortKeys.PROFILE) — không vị trí"
-    private const val R_CAMERA = "sở thích hiển thị camera (RetiredCameraKeys.PROFILE) — không vị trí"
+    private const val R_KEYS = "phím vô-lăng: mã phím + đích là gói app/mã việc (Prefs.VK_TARGET_*) — không vị trí"
     private const val R_APPS = "gói app mặc định / dịch vụ nền lúc nổ máy — không vị trí"
 
     /** Khoá theo hồ sơ ĐÃ SOÁT, không mang vị trí/riêng tư → lý do. Bản chia sẻ mang nguyên. */
     val SHAREABLE: Map<String, String> = buildMap {
         listOf(
-            "preset", "dock_edge", "dock_enabled", "dock_visible", "top_strip", "grid_layout", "top_strip_labels",
-            "top_strip_migrated_ux5b", "header_order",
+            "preset", "dock_edge", "dock_enabled", "dock_visible", "grid_layout", "header_order",
             // F1 R1.1 — chuỗi `pkg|S2,pkg|F,…` (AppShortcutCodec): chỉ tên gói + kiểu mở, không vị trí.
             "app_shortcuts",
             // 2.87 · R-AH3 — một cờ hiện/ẩn nút ⇄ của khung: lựa chọn hiển thị, không vị trí.
@@ -61,22 +53,10 @@ object ProfileSharePolicy {
             // 2.89 · B3 — cỡ thanh nút theo % ("85"): lựa chọn hiển thị, không vị trí.
             "dock_scale",
         ).forEach { put(it, R_LAYOUT) }
-        listOf("theme_mode", "unit_prefs", "launcher_autostart", "lang", "color_choice", "theme_choice")
+        listOf("theme_mode", "launcher_autostart", "lang", "color_choice", "theme_choice")
             .forEach { put(it, R_LOOK) }
         put("wallpaper_prefs", R_WALLPAPER)
-        listOf(
-            "enabled", "nav_cluster_screen_mode", "marquee", "badge_enabled", "show_upcoming_badge", "show_alert_chip",
-            "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x", "vm_bubble_y",
-        ).forEach { put(it, R_CLUSTER) }
         listOf("voicekey_enabled", "voicekey_bindings", "voicekey_custom_buttons").forEach { put(it, R_KEYS) }
-        RetiredComfortKeys.PROFILE.keys.forEach { put(it, R_COMFORT) }
-        listOf(
-            "camera_signal_enabled", "camera_on_cluster", "camera_pos_left", "camera_pos_right", "camera_shape",
-            "camera_dewarp_amount", "camera_projection", "camera_zoom",
-        ).forEach { put(it, R_CAMERA) }
-        // 2.93 — cấu hình riêng từng camera: góc (TL/TR) · vị trí = phần nghìn của vùng trên MÀN (không toạ độ địa lý) · cỡ ·
-        // hình · kiểu — cùng họ camera_pos_left/camera_shape.
-        RetiredCameraKeys.PROFILE_KEYS.forEach { put(it, R_CAMERA) }
         listOf("voice_music_default_app", "headless_autostart").forEach { put(it, R_APPS) }
         // F2/F3 — `pkg|B,pkg|N` (tên gói + kiểu) và `ytmusic|<từ khoá/link mã hoá>`: lựa chọn app/nhạc, không vị trí.
         listOf("ignition_apps", "ignition_music").forEach { put(it, R_APPS) }

@@ -169,8 +169,8 @@ object AssistantLauncher {
             // Nói cho owner một lần mỗi vòng: im lặng ~31 s là đúng cái làm owner tưởng app hỏng (F2).
             if (voiceAssistBusyNoticed.compareAndSet(false, true)) {
                 toast(app, Lang.t(
-                    "Đang thử nối vào xe để mở trợ lý — chờ vài giây…",
-                    "Still reaching the head unit to open the assistant — hang on…",
+                    "Đang thử nối vào máy để mở trợ lý — chờ vài giây…",
+                    "Still reaching the device to open the assistant — hang on…",
                 ))
             }
             return true
@@ -208,8 +208,8 @@ object AssistantLauncher {
                             // "chưa cấp quyền" lúc này là nói sai; nói đúng cái đã biết thôi.
                             toast(app, if (result.commandDispatched) {
                                 Lang.t(
-                                    "Đã gửi lệnh mở trợ lý nhưng xe không trả lời kịp — thử lại nếu chưa thấy trợ lý.",
-                                    "Sent the assistant key but the head unit did not answer in time — retry if nothing opened.",
+                                    "Đã gửi lệnh mở trợ lý nhưng máy không trả lời kịp — thử lại nếu chưa thấy trợ lý.",
+                                    "Sent the assistant key but the device did not answer in time — retry if nothing opened.",
                                 )
                             } else {
                                 failureMessage(result.reason)
@@ -258,12 +258,12 @@ object AssistantLauncher {
             "USB debugging not authorised yet. Tap \"Allow\" (tick \"always allow\") then try again.",
         )
         LocalShellFailure.PORT_CLOSED -> Lang.t(
-            "Cổng gỡ lỗi 5555 chưa bật trên xe — trợ lý giọng nói không chạy được.",
-            "Debug port 5555 is off on the head unit — the voice assistant cannot run.",
+            "Cổng gỡ lỗi 5555 chưa bật trên máy — trợ lý giọng nói không chạy được.",
+            "Debug port 5555 is off on the device — the voice assistant cannot run.",
         )
         LocalShellFailure.IO_ERROR, LocalShellFailure.UNKNOWN -> Lang.t(
-            "Không nối được vào xe để mở trợ lý. Thử lại sau.",
-            "Could not reach the head unit to open the assistant. Try again later.",
+            "Không nối được vào máy để mở trợ lý. Thử lại sau.",
+            "Could not reach the device to open the assistant. Try again later.",
         )
         // READY-AT-HOME §4.6 — cổng chặn đường NỀN (vd BootSetup) khi kênh chưa được duyệt: cùng việc cần làm với
         // AWAITING_APPROVAL, nhưng hộp thoại chưa bung (không có kết nối nào được mở) ⇒ chỉ đúng chỗ bấm.

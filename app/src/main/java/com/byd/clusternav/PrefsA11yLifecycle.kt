@@ -6,7 +6,7 @@ import android.content.Context
  * ═══ Hai MARKER của tự chữa phím vô-lăng theo vòng đời xe (2.83, lớp 1 tắt máy · lớp 2 mở xe) ═══
  * (+ mốc "đã chấm điểm" [a11yScoredFor] ở cuối tệp — một lượt chấm `sau-chua-*` mỗi lượt leo.)
  *
- * Tách khỏi `Prefs.kt` (488 dòng, trần 500 — CLAUDE.md §4.1) theo đúng khuôn [PrefsBadge]/`PrefsInputd`: hàm mở rộng
+ * Tách khỏi `Prefs.kt` (488 dòng, trần 500 — CLAUDE.md §4.1) theo đúng khuôn `PrefsBadge`/`PrefsInputd`: hàm mở rộng
  * của [Prefs], **cùng tệp `clusternav_prefs`** qua [Prefs.sp]. Không phải cài đặt người dùng: không có UI, không theo
  * hồ sơ (cùng loại với `a11y_forcestop_elapsed` / `a11y_deep_sleep_ms` ở `Prefs.kt` — trạng thái nội bộ theo XE).
  *

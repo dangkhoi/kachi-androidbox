@@ -78,7 +78,7 @@ object LauncherActions {
     val ALL: List<LauncherActionDef> = listOf(
         LauncherActionDef(APPS, "Ứng dụng", "ic-apps", labelEn = "Apps"),
         LauncherActionDef(SETTINGS, "Cài đặt", "ic-settings", labelEn = "Settings"),
-        LauncherActionDef(VOICE, "Nói với xe", "ic-mic", labelEn = "Talk to car"),
+        LauncherActionDef(VOICE, "Nói với Kachi", "ic-mic", labelEn = "Talk to Kachi"),
     )
 
     /**

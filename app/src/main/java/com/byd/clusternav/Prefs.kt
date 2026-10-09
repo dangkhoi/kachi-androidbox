@@ -10,100 +10,21 @@ import com.byd.clusternav.voicekey.VoiceKeyBindings
 import com.byd.clusternav.voicekey.VoiceKeyCustomButton
 import com.byd.clusternav.voicekey.VoiceKeyCustomButtons
 
-/** Lưu lựa chọn người dùng (bật/tắt đẩy cụm + chế độ chọn nguồn). Đọc trực tiếp trong listener. */
+/** Lựa chọn người dùng phía ClusterNav (tệp `clusternav_prefs`): phím vật lý · giọng nói · khởi động nền · kính thật. */
 object Prefs {
-    // Android box B2 · W2d — bốn hằng chế độ nguồn dẫn đường (`NavSourceMode` ở `:core`) gỡ cùng dẫn đường cụm; khoá
-    // `source_mode` + mọi khoá dẫn đường cụm/HUD còn ở đây tới đợt dọn prefs W4 (danh mục ClusterNav còn khai chúng).
+    // Android box B2 · W4 — khoá dẫn đường cụm/HUD (`enabled` · `source_mode` · `marquee` · `nav_cluster_screen_mode` ·
+    // `lane` · `interpolate` · `hud` · `acc_booster`), `bubble_auto` · `anim_opt` · `nav_verbose_log` · `mod_*`, biển báo tốc
+    // độ và tiện nghi xe gỡ cùng mã; lượt dọn một lần xoá chúng khỏi máy (`:core BydDeadPrefs`).
 
     private const val FILE = "clusternav_prefs"
-    private const val K_ENABLED = "enabled"
-    private const val K_SOURCE = "source_mode"
-    private const val K_MARQUEE = "marquee"
 
-    /** `internal` (không `private`) từ 2.76: `PrefsBadge.kt` dùng lại đúng hàm này — một hàm, một literal tên tệp. */
+    /** `internal` (không `private`): các tệp hàm mở rộng `Prefs*.kt` dùng lại đúng hàm này — một hàm, một literal tên tệp. */
     internal fun sp(ctx: Context) =
         ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
-    // ★ 1.13 (Option B, owner 2026-08-13): MẶC ĐỊNH TẮT. Mở app KHÔNG đụng adb/dadb lúc khởi động (tránh đua
-    // nhiều client dadb + tránh popup "Allow USB debugging" khi user chưa cần nav). Chỉ khi user gạt công tắc
-    // BẬT mới tự cấp quyền notification (NavConnect.selfGrant) + kết nối. Quyền đã cấp PERSIST qua reboot nên
-    // các lần bật sau không phải chạy adb lại (listener tự bind; RebindReceiver lo phần khởi động lại).
-    fun enabled(ctx: Context): Boolean = sp(ctx).getBoolean(K_ENABLED, false)
-    fun setEnabled(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean(K_ENABLED, v).apply()
-
-    fun sourceMode(ctx: Context): Int = sp(ctx).getInt(K_SOURCE, 0)
-    fun setSourceMode(ctx: Context, v: Int) = sp(ctx).edit().putInt(K_SOURCE, v).apply()
-
-    // Android box B2 · W2d — `speedLimitSource` (nguồn biển tốc độ, luôn VietMap) gỡ cùng biển tốc độ + `contracts.SpeedLimit*`.
-
-    // Nav-on-cluster: op 39 "simple navigation" (Giữa + ETA) là chế độ DUY NHẤT (owner chốt 2026-08-12).
-    // Bỏ hẳn biến thể "nhỏ/ở trên" (không dò được opcode trên xe) + nút chọn mode + nút test trên UI.
-
-    // ★ 1.14 (owner on-car): MẶC ĐỊNH BẬT lại marquee — tên đường >~8 ký tự bị firmware cụm hard-cut, nên cho
-    // chạy cuộn PHẢI→TRÁI. Bước cuộn nay TÍNH THEO THỜI GIAN (ClusterBroadcaster.MARQUEE_STEP_MS, reset mỗi
-    // đường mới) → đều, chậm, MƯỢT (bản cũ tăng scrollTick không đều theo emission → dựt). Có toggle UI (cb_marquee).
-    fun marquee(ctx: Context): Boolean = sp(ctx).getBoolean(K_MARQUEE, true)    // true = chạy marquee mượt
-    fun setMarquee(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean(K_MARQUEE, v).apply()
-
-    // Nav-on-cluster DISPLAY MODE — ghi SET_NAVI_SCREEN_STATUS_SET (0x4C10E015 · BYDAutoSettingDevice), đúng
-    // menu OEM "Đơn giản / Màn hình nhỏ / Toàn màn hình / OFF" (mở khoá 2026-08-13 qua BydHal). op39 ch1000 KHÔNG
-    // đổi được cái này (no-op trên xe). NavigationHudOwner đọc pref này mỗi frame → selector áp dụng LIVE.
-    // ⚠️ value↔menu CHƯA map chắc trên xe: navopen=3 (rc=0, ứng viên "Toàn màn hình"); "Đơn giản" đoán=1 — dò trên xe.
-    // Default = FULL(3) = value đã-proven rc=0 (ít nhất hiện nav ở GIỮA thay vì dải nhỏ ở đỉnh).
-    const val NAV_SCREEN_OFF = 0
-    const val NAV_SCREEN_SIMPLE = 1       // "Đơn giản" (đoán=1, CHƯA proven trên trim này); back-compat only — UI không ghi (TASK 4)
-    const val NAV_SCREEN_SMALL = 2        // back-compat only; no longer user-selectable (TASK 4)
-    const val NAV_SCREEN_FULL = 3         // PROVEN rc=0 (= BydHal.NAV_SCREEN_MODE_ON, navopen/AmapService=3 → nav ở GIỮA) — the ON value 'Bật (Giữa+ETA)' for the ON/OFF selector (TASK 4)
-    private const val K_NAV_SCREEN_MODE = "nav_cluster_screen_mode"
-    // TASK 4 (R3 · closeout-1.28): the selector is reduced to ON/OFF — on-car only OFF ever changed anything
-    // (the 3 layout modes hit the no-root wall). The ON value is FULL(3) = the PROVEN rc=0 value (navopen /
-    // AmapService use 3; it renders nav in the CENTRE "Giữa+ETA", not the small top strip). SIMPLE(1)/SMALL(2)
-    // are unproven guesses on this trim, so the UI never writes them. Read-migration: any non-OFF stored value
-    // (incl. legacy SIMPLE/SMALL) collapses to FULL so old installs land on 'Bật' with the proven value; OFF is
-    // preserved. The SIMPLE/SMALL constants stay for back-compat — they are simply no longer written by the UI.
-    fun navClusterScreenMode(ctx: Context): Int =
-        when (sp(ctx).getInt(K_NAV_SCREEN_MODE, NAV_SCREEN_FULL)) {
-            NAV_SCREEN_OFF -> NAV_SCREEN_OFF
-            else -> NAV_SCREEN_FULL   // any non-OFF (incl. legacy SIMPLE/SMALL) → proven ON value 'Bật'
-        }
-    fun setNavClusterScreenMode(ctx: Context, v: Int) = sp(ctx).edit().putInt(K_NAV_SCREEN_MODE, v).apply()
-
-    // Cluster-lane output is independently switchable while the shared Navigation session/HUD remain active.
-    fun lane(ctx: Context): Boolean = sp(ctx).getBoolean("lane", true)
-    fun setLane(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean("lane", v).apply()
-
-    // ★ 2026-08-12 (owner "1B"): MẶC ĐỊNH BẬT lại "tự bù theo tốc độ". Noti GMaps thưa → gửi RAW làm cự ly đứng im
-    // rồi nhảy khi tới ngã rẽ/điểm đến ("trễ"). Bật nội suy: TurnDistanceInterpolator trừ dần cự ly theo TỐC ĐỘ XE
-    // thật (SpeedProvider) mỗi nhịp tim 400ms; bộ đọc màn Maps (accBooster → refine()) kéo mốc về số thật. Interpolator
-    // đã bảo thủ (FACTOR 0.95, slew-limit 2 chiều, dừng→giữ số, maneuver→snap) nên không tái diễn "số nhảy tán loạn"
-    // của bản 2026-07-13. Giữ toggle để TẮT nếu overlay cụm tự animate rồi đánh nhau (cần verify trên xe).
-    fun interpolate(ctx: Context): Boolean = sp(ctx).getBoolean("interpolate", true)
-    fun setInterpolate(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean("interpolate", v).apply()
-
-    // ★ HUD kính lái: T7 chỉ feeds request/output lifecycle vào HudMirrorController UNKNOWN/no-op.
-    // Mặc định TẮT; không có direct HAL content write hoặc physical-OFF ownership in production.
-    fun hud(ctx: Context): Boolean = sp(ctx).getBoolean("hud", false)
-    fun setHud(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean("hud", v).apply()
-
-    // Booster đọc UI GMaps trên màn (accessibility) -> tinh chỉnh cự ly tới rẽ chính xác hơn noti.
-    // Chỉ chạy khi GMaps đang HIỆN trên màn; bị app khác (YouTube) che -> tự câm, nội suy gánh tiếp.
-    fun accBooster(ctx: Context): Boolean = sp(ctx).getBoolean("acc_booster", true)
-    fun setAccBooster(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean("acc_booster", v).apply()
-
-    // Tự hiện NÚT NỔI (bong bóng chiếu) khi mở app / khởi động máy. Mặc định BẬT (user: "luôn hiện bubble").
-    // Cần quyền overlay 1 lần; chưa cấp thì service tự báo. User tắt → lưu false.
-    fun bubbleAuto(ctx: Context): Boolean = sp(ctx).getBoolean("bubble_auto", true)
-    fun setBubbleAuto(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean("bubble_auto", v).apply()
-
-    // "Mượt UI head-unit": set 3 animation scale = 0.5 GLOBAL qua dadb lúc mở app (tweak hội BYD hay xài). Mặc định BẬT.
-    // KHÔNG phải tăng tốc CPU — chỉ rút ngắn animation cho snappy. Tắt → app set lại 1.0.
-    fun animOpt(ctx: Context): Boolean = sp(ctx).getBoolean("anim_opt", true)
-    fun setAnimOpt(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean("anim_opt", v).apply()
-
-    // ★ 1.21 Item 1 (owner): "Tự khởi động nền" — nổ máy → app tự làm việc (nav lên cụm · voice-key · auto-cast)
-    // mà KHÔNG bung màn hình nào trên màn chính (bonus: né size-compat của dudu). MẶC ĐỊNH BẬT. Khi TẮT → giữ
-    // hành vi 1.14 I5 (tự mở Home lúc nổ máy). RebindReceiver đọc cờ này lúc boot/OTA: BẬT → BootSetupService
-    // (chạy nền, dời accessibility grant + re-assert làn cụm), TẮT → launchHome. KHÔNG đụng auto-cast (castBootWork).
+    // ★ 1.21 Item 1 (owner): "Tự khởi động nền" — khởi động máy → app tự làm việc nền (cấp lại trợ năng cho phím ·
+    // giữ phím sống · lịch tự dẫn) mà KHÔNG bung màn hình nào. MẶC ĐỊNH BẬT. RebindReceiver đọc cờ này lúc boot/OTA:
+    // BẬT → BootSetupService (chạy nền).
     fun headlessAutostart(ctx: Context): Boolean = sp(ctx).getBoolean("headless_autostart", true)
     fun setHeadlessAutostart(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean("headless_autostart", v).apply()
 
@@ -364,38 +285,10 @@ object Prefs {
     private fun writeCustomButtons(ctx: Context, items: List<VoiceKeyCustomButton>) =
         sp(ctx).edit().putString(K_VK_CUSTOM, VoiceKeyCustomButtonStore.encode(items)).apply()
 
-    // ─── Nhật ký chi tiết (verbose) + miễn trừ lần đầu (closeout 1.28) ──────────────────────────
-    // Verbose-log gate for the app's OWN diagnostics (GMaps notification CSV [NavNotifLog]/[NavNotifRawLog],
-    // ManeuverSignature notes, per-frame logs) + the [DiagStorageCap] periodic sweep. Controlled SOLELY by the
-    // build flag now: the runtime UI switch + hidden long-press were removed 2026-08-28 (the VietMap/Waze
-    // capture they collected is gone — see NavAccessibilityService/NavLog), so nothing writes this pref anymore.
-    // MẶC ĐỊNH TẮT. NavLog mirrors it into a @Volatile field so hot paths never touch SharedPreferences.
-    private const val K_NAV_VERBOSE_LOG = "nav_verbose_log"
-    // Default = BuildConfig.DIAG_LOG. In a NORMAL release/debug build DIAG_LOG is FALSE → this returns false
-    // → A8/D3 preserved (normal use collects NO logs/PNGs, privacy default unchanged). Only a DIAG build
-    // (`-PdiagLog=true`) makes DIAG_LOG true → verbose pre-ON for a teammate's drive-test. The pref key is kept
-    // as the backing store but is now read-only (no setter): with the toggle gone it always resolves to the
-    // DIAG_LOG default. Read by [NavLog.init]; that gate is load-bearing for the remaining GMaps diagnostics.
-    fun navVerboseLog(ctx: Context): Boolean = sp(ctx).getBoolean(K_NAV_VERBOSE_LOG, BuildConfig.DIAG_LOG)
-
-    // Miễn trừ lần đầu (no-warranty / không liên kết BYD / tự chịu rủi ro) — hiện MỘT lần rồi ghim cờ.
+    // Miễn trừ lần đầu (no-warranty / không liên kết hãng nào / tự chịu rủi ro) — hiện MỘT lần rồi ghim cờ.
     private const val K_DISCLAIMER_SHOWN = "disclaimer_shown"
     fun disclaimerShown(ctx: Context): Boolean = sp(ctx).getBoolean(K_DISCLAIMER_SHOWN, false)
     fun setDisclaimerShown(ctx: Context, v: Boolean) = sp(ctx).edit().putBoolean(K_DISCLAIMER_SHOWN, v).apply()
-
-    // ─── Biển báo tốc độ trên cụm + bong bóng VietMap → `PrefsBadge.kt` (tách THUẦN theo trần 500 dòng, L6-debt
-    // 2026-09-27): hàm mở rộng của [Prefs] cùng tệp `clusternav_prefs` qua [sp] (cùng khuôn `PrefsAutomation`/`PrefsInputd`).
-    // Bốn hằng công khai dưới đây ở lại vì chúng là API của chính `Prefs`.
-    // Default CENTRE = top-right-ish on the default 1920×720 cluster (1920−140, 80): visible, out of the way of
-    // the centre nav/ETA. The overlay re-clamps with the real display size + density, so it is always on-screen.
-    const val BADGE_DEFAULT_CENTER_X = 1780
-    const val BADGE_DEFAULT_CENTER_Y = 80
-    // Default cluster dims used ONLY for the one-time legacy migration (real dims come from display 1 at render).
-    const val BADGE_MIGRATE_CLUSTER_W = 1920
-    const val BADGE_MIGRATE_CLUSTER_H = 720
-
-    // ─── Android box B2 · W2e — ghế mát/sưởi · lọc bụi PM2.5 · lấy gió trong khi nổ máy (HAL BYD) gỡ cùng mã; tên khoá
-    // còn xếp phạm vi hồ sơ ở `:core RetiredComfortKeys` tới đợt dọn W4.
 
     // ─── Công tắc ẨN: ép đường lùi của CHẠM trong ô (1.69, spec kachi-open-app-correctly §4.6) ────
     // MẶC ĐỊNH TẮT. Bật ⇒ `InputDaemonClient` KHÔNG khởi daemon bơm chạm và mọi cú chạm trong ô đi đường lùi
@@ -405,13 +298,6 @@ object Prefs {
     // đặt bằng `run-as` trên bản vehicleTest, đọc lại bằng cầu kiểm thử (`state.inputd` / `prefs`).
     // Đọc MỘT lần mỗi tiến trình ở AppContainer ⇒ đổi xong phải khởi động lại app.
     // inputd (công tắc ẩn `inputd_disabled` + token TCP loopback) tách sang `PrefsInputd.kt` (trần 500 dòng).
-
-    // Toggle theo module (key namespaced "mod_" — không thể đụng các key lõi ở trên). Mặc định TẮT
-    // (experiment phải bật tay). Key mồ côi sau khi xoá module = dead data vô hại, không cần dọn.
-    fun moduleEnabled(ctx: Context, title: String): Boolean =
-        sp(ctx).getBoolean("mod_" + title.hashCode(), false)
-    fun setModuleEnabled(ctx: Context, title: String, v: Boolean) =
-        sp(ctx).edit().putBoolean("mod_" + title.hashCode(), v).apply()
 
     // ─── A11Y-BIND-STUCK (2026-09-28) — mốc lần leo nấc force-stop gần nhất ───
 

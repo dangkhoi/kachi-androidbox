@@ -124,7 +124,6 @@ class ShortcutPlanTest {
 
     @Test fun `13 chay ngam - app he thong, dang chieu cum, chinh Kachi thi tu choi`() {
         assertEquals(ShortcutAction.Refuse(Reason.SYSTEM_APP), go(bg) { it.copy(exclusion = Exclusion.SYSTEM_APP, hasLiveStage = true) })
-        assertEquals(ShortcutAction.Refuse(Reason.CAST), go(bg) { it.copy(exclusion = Exclusion.CAST, hasLiveStage = true) })
         assertEquals(ShortcutAction.Refuse(Reason.SELF), go(bg) { it.copy(exclusion = Exclusion.SELF, hasLiveStage = true) })
     }
 

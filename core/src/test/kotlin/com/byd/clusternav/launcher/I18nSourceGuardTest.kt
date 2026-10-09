@@ -29,7 +29,7 @@ class I18nSourceGuardTest {
         // [ĐO] kiểm kê 2026-10-03: 307 lời gọi t/pick (core 220 · app 87). Sàn thấp hơn để chuyển t→f không đỏ oan.
         // Android box B2 · W3 [ĐO 2026-10-09]: 193 lời gọi (mã xe gỡ) — sàn 280 → 170.
         assertTrue(calls.size >= 170, "quét được quá ít lời gọi (${calls.size}) — bộ quét hỏng hay cây nguồn dời chỗ?")
-        assertTrue(calls.any { it.site == "core:launcher/Lang.kt" && it.vi?.value == "Theo xe" }, "mốc Lang.kt mất")
+        assertTrue(calls.any { it.site == "core:launcher/Lang.kt" && it.vi?.value == "Theo máy" }, "mốc Lang.kt mất")
         assertTrue(calls.any { it.site.startsWith("app:") && it.fn == "Lang.t" }, "không thấy lời gọi Lang.t nào ở :app")
         assertTrue(calls.any { it.fn == "Strings.f" } && calls.any { it.fn == "Strings.fIn" }, "không thấy Strings.f/fIn")
         // Android box B2 · W3: hàm bọc s(…) của `KeyCtlTarget` gỡ cùng đích phím `ctl:`.

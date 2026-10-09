@@ -1,34 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bốn khoá hệ thống đọc thẳng từ manifest / cấu hình dịch vụ (nhãn app · nhãn bộ nghe thông báo · nhãn + mô tả dịch vụ Hỗ
+  trợ) — người dùng thấy chúng ở Cài đặt Android › Trợ năng / Truy cập thông báo. Chuỗi launcher (`kachi_*`) ở
+  `strings_kachi.xml`. Android box B2 · W4: 20 khoá chết của màn ClusterNav cũ gỡ; nhãn bỏ chữ "ClusterNav" + "cụm".
+-->
 <resources>
     <string name="app_name">Kachi</string>
-    <string name="nav_listener_label">ClusterNav — đọc dẫn đường</string>
-    <string name="idle">Chờ dẫn đường…</string>
-
-    <string name="tagline">Đưa chỉ dẫn Google Maps lên đồng hồ, giữ nguyên đồng hồ gốc.</string>
-    <string name="enabled_label">Bật</string>
-
-    <string name="sec_permission">Quyền</string>
-    <string name="perm_granted">Quyền notification: đã cấp</string>
-    <string name="perm_missing">Quyền notification: chưa cấp</string>
-    <string name="perm_open">Mở cài đặt Notification Access</string>
-
-    <string name="status_off">Đã tắt — gạt công tắc để bật</string>
-    <string name="status_need_perm">Cần quyền truy cập thông báo để đọc dẫn đường</string>
-    <string name="status_waiting">Đang chờ — mở Google Maps để dẫn đường</string>
-
-    <string name="sec_source">Nguồn</string>
-    <string name="src_auto">Tự động</string>
-    <string name="src_gmaps">Google Maps</string>
-
-    <string name="sec_controls">Điều khiển</string>
-    <string name="ctrl_clear">Tắt làn nav (xoá cụm)</string>
-    <string name="ctrl_reset">Reset cờ kẹt</string>
-
-    <string name="sec_advanced">Nâng cao / Test</string>
-    <string name="adv_sample">Bắn nav mẫu (Nguyễn Huệ)</string>
-    <string name="adv_longname">Test tên đường dài</string>
-    <string name="adv_demo">Demo card (chiếm màn — mất đồng hồ)</string>
-
-    <string name="acc_label">ClusterNav — booster đọc bản đồ</string>
-    <string name="acc_desc">Đọc cự ly tới ngã rẽ hiển thị trên Google Maps để bơm lên cụm chính xác hơn. Chỉ đọc khi Google Maps đang mở; không chạm, không thu thập dữ liệu cá nhân.</string>
+    <string name="nav_listener_label">Kachi — widget nhạc</string>
+    <string name="acc_label">Kachi — phím vật lý</string>
+    <string name="acc_desc">Nhận các phím vật lý bạn đã gán trong Kachi (nút vô-lăng, nút trên máy) để mở app hoặc gọi Kachi nghe. Không đọc nội dung màn hình, không thu thập dữ liệu cá nhân.</string>
 </resources>

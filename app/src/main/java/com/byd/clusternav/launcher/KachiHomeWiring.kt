@@ -348,7 +348,7 @@ internal fun Activity.goImmersiveWindow() {
  *
  *  1. **state của ViewModel → [render]** (một chiều, view-only);
  *  2. **trạng thái xe LIVE** → bơm vào VM → state đổi → cũng ra [render];
- *  3. soát vòng 2 [P3] — **bảng lệnh cuối đổi bởi `:wake`** ([ControlLastSent.relayed]) → [resyncTiles] vẽ lại ô nút NGAY (luồng
+ *  3. soát vòng 2 [P3] — **bảng lệnh cuối đổi bởi `:wake`** (`ControlLastSent.relayed`) → [resyncTiles] vẽ lại ô nút NGAY (luồng
  *     chính), không chờ trạng thái xe đổi. Chỉ khi số ĐỔI so với lượt đã vẽ (`seen`) — vào lại STARTED mà không có dòng mới
  *     thì không làm gì; có dòng tới lúc màn khuất thì vẽ một lần khi hiện lại.
  *

@@ -164,7 +164,6 @@ internal class KachiHomeShortcuts(
         ShortcutPlan.Reason.RUNNING -> activity.getString(R.string.kachi_sc_running, label(sc.pkg))
         ShortcutPlan.Reason.SYSTEM_APP -> activity.getString(R.string.kachi_sc_refuse_system)
         ShortcutPlan.Reason.SELF -> activity.getString(R.string.kachi_sc_refuse_self)
-        ShortcutPlan.Reason.CAST -> activity.getString(R.string.kachi_sc_refuse_cast, label(sc.pkg))
         ShortcutPlan.Reason.NO_STAGE -> activity.getString(R.string.kachi_sc_no_stage)
     }
 

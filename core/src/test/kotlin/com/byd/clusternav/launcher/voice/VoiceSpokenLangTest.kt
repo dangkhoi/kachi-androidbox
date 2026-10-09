@@ -70,7 +70,6 @@ class VoiceSpokenLangTest {
         add(VoiceReply.busy(i, l))
         add(VoiceReply.cancelled(i, 2, l))
         add(VoiceReply.confirmQuestion(i, l))
-        add(VoiceReply.partNotOnThisCar(i, l))
         add(VoiceReply.noNavApp(i, l))
         add(VoiceReply.navOpenedWithoutDestination(i, l))
         add(VoiceReply.noMediaSession(i, l))

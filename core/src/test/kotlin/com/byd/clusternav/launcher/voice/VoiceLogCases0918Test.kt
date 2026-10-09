@@ -81,14 +81,14 @@ class VoiceLogCases0918Test {
             val got = one(s)
             assertEquals(VoiceUnknownReason.FEATURE_GONE, (got as? VoiceIntent.Unknown)?.reason, "câu: «$s» ra $got")
             val say = VoiceReply.unknown(got as VoiceIntent.Unknown)
-            assertTrue(say.contains("đã bỏ"), "phải nói là đã bỏ, ra: $say")
+            assertTrue(say.contains("Kachi không có tính năng"), "phải nói là Kachi không có tính năng đó, ra: $say")
         }
     }
 
     @Test fun `D3 · tinh nang chua bao gio co nut thi noi la chua dieu khien duoc`() {
         val got = one("bật đèn khẩn cấp") as VoiceIntent.Unknown
         val say = VoiceReply.unknown(got)
-        assertTrue(say.contains("chưa điều khiển được"), "ra: $say")
+        assertTrue(say.contains("không điều khiển được"), "ra: $say")
         assertTrue(say.contains("đèn khẩn cấp"), "phải gọi đúng tên tính năng, ra: $say")
         Strings.current = Lang.EN
         assertTrue(VoiceReply.unknown(got).contains("hazard"), "câu tiếng Anh phải nêu tên, ra: ${VoiceReply.unknown(got)}")

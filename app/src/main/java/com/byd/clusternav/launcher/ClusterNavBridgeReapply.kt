@@ -34,8 +34,8 @@ import com.byd.clusternav.launcher.voice.VoiceWakeService
 internal fun ClusterNavBridge.reapplyAll() {
     // ⚠ Android box B2 · W1 (2026-10-09) — gỡ khỏi lượt áp lại mọi applier chỉ-BYD: dẫn đường lên cụm/HUD (`nav.master` ·
     // `nav.clusterMode`), biển báo tốc độ (`badge.*`), bong bóng VietMap (`bubble.*`), điều kiện nền cho VietMap/app chiếu
-    // (`app.prereqs`), ghế (`seat`), lọc bụi (`pm25`) và camera theo yêu cầu (`camera.demand`). Khoá còn đi theo hồ sơ
-    // (`SettingsCatalogRetired`), chỉ không còn gì đang chạy để áp — đổi hồ sơ không chạm HAL / cụm / app khác nữa.
+    // (`app.prereqs`), ghế (`seat`), lọc bụi (`pm25`) và camera theo yêu cầu (`camera.demand`). Khoá chết dọn một lần
+    // (Android box B2 · W4, `BydDeadPrefs`) — không còn gì đang chạy để áp — đổi hồ sơ không chạm HAL / cụm / app khác nữa.
 
     // ── Tự động hoá (luật dẫn đường theo lịch) ──────────────────────────────────────────────────
     // `nav_automation_rules` (theo hồ sơ từ 2026-09-28) quyết việc FGS tự động hoá có sống không. Đổi hồ sơ mà không đồng

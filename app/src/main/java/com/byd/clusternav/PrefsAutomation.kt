@@ -27,7 +27,7 @@ internal fun autoPrefs(ctx: Context) =
     ctx.applicationContext.getSharedPreferences("clusternav_prefs", Context.MODE_PRIVATE)
 
 // ── AUTOMATION #1 · Tự sấy kính khi mưa — Android box B2 · W2e (2026-10-09): gỡ cùng HAL BYD (cảm biến mưa + nút sấy).
-// Ba khoá `rain_defrost_*` không còn đường đọc/ghi; tên còn xếp phạm vi (theo XE) ở `:core RetiredComfortKeys` tới W4.
+// Ba khoá `rain_defrost_*` không còn đường đọc/ghi; W4 dọn khỏi máy (`:core BydDeadPrefs`).
 
 // ── V8 (owner 2026-09-25) — TỰ CẬP NHẬT khi mở app ───────────────────────────────────────────────
 // Owner: *"tách auto-update thành 1 toggle riêng ở Hệ thống, KHÔNG gắn với Nav+HUD"*. Trước V8 lượt dò bản mới

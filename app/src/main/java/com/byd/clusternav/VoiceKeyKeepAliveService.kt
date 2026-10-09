@@ -21,7 +21,7 @@ import android.util.Log
  * `REBIND_WATCHDOG` LẪN `bindServiceLocked` từ system_server** ("UID xxxx is not running ... ignored !!!").
  * Chuỗi chết: launcher chết (SIGSEGV/LMK dưới load) → a11y unbound → system_server bind lại bị `ssc_skip` →
  * watchdog 60s cũng bị DROP (không dựng lại tiến trình) → phím CHẾT tới khi REBOOT = đúng "reset mới hết".
- * Trước đây che khuất nhờ [FloatingBubbleService] (FGS của CAST) giữ tiến trình sống — nhưng nó CHỈ chạy khi
+ * Trước đây che khuất nhờ `FloatingBubbleService` (FGS của CAST) giữ tiến trình sống — nhưng nó CHỈ chạy khi
  * bật Chiếu cụm; owner dùng phím-thoại mà KHÔNG bật cast thì không có gì giữ tiến trình.
  *
  * Service này KHÔNG làm gì ngoài việc TỒN TẠI (IMPORTANCE_MIN, không mic, không nhịp, không dadb): chỉ cần tiến

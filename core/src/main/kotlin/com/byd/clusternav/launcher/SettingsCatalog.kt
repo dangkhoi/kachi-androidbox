@@ -64,21 +64,6 @@ object SettingsCatalog {
     /** Khoá của ClusterNav **cố ý không lên UI** → lý do. Cùng vai trò [NOT_SETTINGS], cho phía ClusterNav. */
     val CLUSTERNAV_HIDDEN_KEYS: Map<String, String> = SettingsCatalogClusterNav.HIDDEN_KEYS
 
-    /**
-     * Android box B2 · W1 — khoá ĐÃ RỜI giao diện (mục Cài đặt gỡ) mà dữ liệu còn đi theo hồ sơ → lý do. Xem
-     * [SettingsCatalogRetired]: [orphans] và phép "khoá ClusterNav có chủ" tha ĐÚNG danh sách này, không tha theo mẫu.
-     */
-    val RETIRED_UI_KEYS: Map<String, String> = SettingsCatalogRetired.KEYS
-
-    /**
-     * Android box B2 · W2c — tập con của [RETIRED_UI_KEYS] mà MÃ đọc/ghi cũng đã gỡ (biển báo tốc độ · bong bóng VietMap):
-     * tên còn trong [CLUSTERNAV_KEYS] (đi theo hồ sơ tới W4) nhưng KHÔNG còn nguyên văn trong tệp nguồn nào.
-     */
-    val RETIRED_CODE_REMOVED_KEYS: Set<String> = SettingsCatalogRetired.CODE_REMOVED
-
-    /** Android box B2 · W3 — hậu tố phía launcher mà mã đọc/ghi đã gỡ (chip · đơn vị · dấu di trú UX5b), còn khai kiểu tới W4. */
-    val RETIRED_LAUNCHER_CODE_REMOVED: Set<String> = SettingsCatalogRetired.LAUNCHER_CODE_REMOVED
-
     /** Tiền tố khoá dựng động phía ClusterNav → lý do (rỗng từ Android box B2 · W2e — `seat_level_` gỡ cùng mã ghế). */
     val CLUSTERNAV_DYNAMIC_KEY_PREFIXES: Map<String, String> = SettingsCatalogClusterNav.DYNAMIC_KEY_PREFIXES
 
@@ -107,31 +92,21 @@ object SettingsCatalog {
     val NOT_SETTINGS: Map<String, String> = buildMap {
         // F2/F3 — sổ chuyến lên xe + kết quả + mốc khởi động: trạng thái máy, lý do khai ở chỗ chủ ([TripGate.DEVICE_KEYS]).
         putAll(TripGate.DEVICE_KEYS)
-        // [SOÁT Opus 2026-09-27 · UX5b] Mốc *"phép di trú chip thanh trên đã chạy cho hồ sơ này"*
-        // (`WorkspacePrefs.K_STRIP_MIGRATED`). Cùng họ `migrated_scenes_v1`: một dấu vết của LƯỢT CHUYỂN ĐỔI, không
-        // phải một lựa chọn. Lên UI thì nó là một công tắc mà bật/tắt đều làm danh sách chip của người dùng bị xếp
-        // lại sau lưng họ — đúng thứ phép di trú sinh ra để chỉ làm ĐÚNG MỘT LẦN (KDoc `TopStripConfig.decode`).
-        put(
-            "top_strip_migrated_ux5b",
-            "dấu vết lượt chuyển đổi (di trú chip ghế UX5b đã chạy cho hồ sơ này), không phải cấu hình — cùng họ " +
-                "`migrated_scenes_v1`; lên UI là một công tắc xếp lại danh sách chip sau lưng người dùng",
-        )
         put(
             "migrated_nav_schedule_v1",
             "dấu vết lượt chuyển đổi (lịch tự dẫn đường đã chuyển từ theo-XE sang theo-HỒ-SƠ, 2026-09-28), không " +
-                "phải cấu hình — cùng họ `migrated_scenes_v1`/`top_strip_migrated_ux5b`. Lên UI thì tắt nó đi là " +
+                "phải cấu hình — cùng họ `migrated_scenes_v1`. Lên UI thì tắt nó đi là " +
                 "chạy lại phép rót, đè lên lịch người dùng vừa sửa",
         )
         put(
-            "migrated_cluster_profile_v1",
-            "dấu vết lượt chuyển đổi (V-CLUSTER 2026-09-30: cụm/chiếu/camera/nút nổi đã rót từ theo-XE xuống mọi " +
-                "HỒ SƠ), không phải cấu hình — cùng họ `migrated_nav_schedule_v1`. Lên UI thì tắt nó đi là rót lại, đè " +
-                "lên DPI/khung/camera người lái vừa chỉnh theo hồ sơ",
+            BydDeadPrefs.MARK,
+            "dấu vết lượt dọn MỘT LẦN khoá chết của Kachi BYD (Android box B2 · W4), không phải cấu hình — cùng họ " +
+                "`migrated_nav_schedule_v1`. Lên UI chỉ là một ô không có gì để chọn (chạy lại lượt dọn cũng vô hại)",
         )
         put(
             "profile_keys_filled_v1",
             "sổ đã-rót của lượt di trú khoá MỚI vào phạm vi hồ sơ (2.92 PROFILE-NEW-KEYS), không phải cấu hình — cùng họ " +
-                "`migrated_cluster_profile_v1`. Lên UI chỉ là một ô không có gì để chọn (lượt rót chỉ điền chỗ trống)",
+                "`migrated_nav_schedule_v1`. Lên UI chỉ là một ô không có gì để chọn (lượt rót chỉ điền chỗ trống)",
         )
         // 2026-09-15 (HOME-alias): marker "người dùng ĐÃ bấm Đặt-làm-màn-hình-chính thành công" — lối vào HOME là
         // activity-alias tắt sẵn (để BYD GUI-install không chặn), KachiAutostart đọc marker để bật alias + set-home
@@ -160,8 +135,7 @@ object SettingsCatalog {
             "freeform_state",
             "trạng thái máy, không phải cấu hình — dấu mốc của vòng gieo cờ cửa sổ tự do (một-nơi-ghi-duy-nhất, " +
                 "`FreeformSeedPolicy`). Nó ghi nhớ *đã gieo tới đâu* và *người dùng đã chủ động gỡ chưa* để launcher " +
-                "không âm thầm gieo lại; dùng CHUNG với đường chiếu-cụm nên nó là điểm phối hợp giữa hai nhánh, " +
-                "không phải một lựa chọn của người dùng. Bày nó ra như một dòng cài đặt thì người dùng sửa được một " +
+                "không âm thầm gieo lại; không phải một lựa chọn của người dùng. Bày nó ra như một dòng cài đặt thì người dùng sửa được một " +
                 "con số mà họ không có cách nào hiểu, và sửa sai thì mất đường app-vào-ô",
         )
         put(
@@ -243,7 +217,7 @@ object SettingsCatalog {
         "kachi_workspace" to
             "tệp cấu hình CHÍNH của launcher — mọi khoá trong nó phải thuộc đúng một nhóm của màn Cài đặt",
         "clusternav_state" to
-            "dấu mốc gieo cờ cửa sổ tự do, dùng CHUNG với đường chiếu-cụm (cố ý không đổi tên: nó là trạng thái " +
+            "dấu mốc gieo cờ cửa sổ tự do (cố ý không đổi tên: nó là trạng thái " +
                 "đã nằm trên đĩa của máy đang chạy). Chứa `freeform_state`, `kachi_floating_opened` (dấu cửa sổ nổi " +
                 "Kachi đã mở, PROFILE-SWITCH-SLOTS), `kachi_shell_approval` (dấu xe đã duyệt khoá adb, READY-AT-HOME) " +
                 "`kachi_behind_marks` (task Kachi đẩy ra sau màn nhà, BEHIND-HOME) và sổ chuyến lên xe " +
@@ -301,7 +275,7 @@ object SettingsCatalog {
      */
     fun orphans(keys: Set<String>): Set<String> =
         keys.filterTo(mutableSetOf()) { key ->
-            groupOf(key) == null && key !in NOT_SETTINGS && key !in RETIRED_UI_KEYS && !key.startsWith(SLOT_KEY_PREFIX)
+            groupOf(key) == null && key !in NOT_SETTINGS && !key.startsWith(SLOT_KEY_PREFIX)
         }
 
     /** Khoá bị **hai mục trở lên** cùng nhận ⇒ hai nơi sửa một giá trị (bẫy hai-bản-sao). Rỗng là đúng. */
@@ -383,7 +357,7 @@ object SettingsCatalog {
         // có phép này thì thêm một khoá vào bảng mà quên dựng mục là chuyện xảy ra im lặng — đúng bệnh mà cả danh
         // mục này sinh ra để chữa, chỉ là ở phía ClusterNav.
         val ownerless = CLUSTERNAV_KEYS.keys.filter { key ->
-            if (groupOf(key) != null || key in RETIRED_UI_KEYS) return@filter false
+            if (groupOf(key) != null) return@filter false
             val ownerId = CLUSTERNAV_COMPANION_KEYS[key]
             ownerId == null || ENTRIES.none { it.id == ownerId }
         }
@@ -405,17 +379,5 @@ object SettingsCatalog {
         require(CLUSTERNAV_PREFS_FILES.values.all { it.isNotBlank() }) {
             "mỗi tệp prefs của ClusterNav phải kèm lý do nó tồn tại riêng"
         }
-        // ── Android box B2 · W1 — khoá đã rời UI ([SettingsCatalogRetired]) ──────────────────────────
-        // Rời UI = KHÔNG mục nào sở hữu, không phải "không phải cấu hình", không phải khoá đi kèm của mục còn sống; và khoá
-        // phía ClusterNav phải còn trong CLUSTERNAV_KEYS (= còn trong phạm vi hồ sơ — đợt W1 không được làm mất dữ liệu).
-        val retiredOwned = RETIRED_UI_KEYS.keys.filter {
-            groupOf(it) != null || it in NOT_SETTINGS || it in CLUSTERNAV_COMPANION_KEYS || it in CLUSTERNAV_HIDDEN_KEYS
-        }
-        require(retiredOwned.isEmpty()) { "khoá 'đã rời UI' lại có chủ / bị khai ở bảng khác: $retiredOwned" }
-        val retiredLost = RETIRED_UI_KEYS.keys.filter {
-            it !in SettingsCatalogRetired.LAUNCHER_KEYS && it !in CLUSTERNAV_KEYS
-        }
-        require(retiredLost.isEmpty()) { "khoá 'đã rời UI' phía ClusterNav không còn trong CLUSTERNAV_KEYS (mất khỏi hồ sơ): $retiredLost" }
-        require(RETIRED_UI_KEYS.values.all { it.isNotBlank() }) { "mỗi khoá đã rời UI phải kèm LÝ DO" }
     }
 }

@@ -189,7 +189,7 @@ class SettingsDeps(
  *     nhất đạt được điều đó mà không phải tự nhớ toạ độ cuộn.
  *  2. Trang nào cũng đọc lại state + (với ba nhóm ClusterNav) đọc `Prefs`/HAL qua [ClusterNavBridge]. Dựng lại mỗi
  *     lần đổi nhóm là trả giá đó lại từ đầu cho một cú chạm rail.
- *  3. Bộ chọn chip ([TopStripPicker]) giữ **bảng tra `mã → view`** để tô lại ô ⇒ mỗi lượt dựng trang phải là một
+ *  3. Bộ chọn chip (`TopStripPicker`) giữ **bảng tra `mã → view`** để tô lại ô ⇒ mỗi lượt dựng trang phải là một
  *     thực thể MỚI (ràng buộc *"một lưới = một bảng tiles"*). Giữ trang cũ trong bộ nhớ thay vì dựng thêm một bộ
  *     chọn thứ hai chính là điều ràng buộc đó muốn.
  *

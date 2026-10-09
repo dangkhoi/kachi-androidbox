@@ -218,8 +218,8 @@ class I18nCatalogTest {
         assertEquals("Bahasa Melayu", LangMode.MS.label())
         assertEquals("Tiếng Việt", LangMode.VI.label())
         assertEquals("English", LangMode.EN.label())
-        assertEquals("Theo xe", LangMode.AUTO.label())
-        assertEquals("By car", I18nPairs.inLang(Lang.EN) { LangMode.AUTO.label() })
+        assertEquals("Theo máy", LangMode.AUTO.label())
+        assertEquals("Follow device", I18nPairs.inLang(Lang.EN) { LangMode.AUTO.label() })
         assertEquals(LangMode.entries.size, LangMode.entries.map { it.label() }.toSet().size, "hai mục cùng nhãn")
     }
 

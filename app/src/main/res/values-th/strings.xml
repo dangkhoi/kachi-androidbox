@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Kachi — bản dịch th của 5 khoá còn dùng trong values/strings.xml (tệp gốc niêm phong, không đụng). -->
+<!-- Kachi — bản dịch của 4 khoá hệ thống trong values/strings.xml. -->
 <resources>
     <string name="app_name">Kachi</string>
-    <string name="nav_listener_label">ClusterNav — ตัวอ่านการนำทาง</string>
-    <string name="idle">กำลังรอการนำทาง…</string>
-    <string name="acc_label">ClusterNav — ตัวช่วยอ่านแผนที่</string>
-    <string name="acc_desc">อ่านระยะทางถึงทางเลี้ยวถัดไปที่แสดงใน Google Maps เพื่อส่งให้หน้าปัดแม่นยำขึ้น อ่านเฉพาะขณะเปิด Google Maps ไม่มีการแตะหน้าจอ และไม่เก็บข้อมูลส่วนบุคคล</string>
+    <string name="nav_listener_label">Kachi — วิดเจ็ตเพลง</string>
+    <string name="acc_label">Kachi — ปุ่มกายภาพ</string>
+    <string name="acc_desc">รับปุ่มกายภาพที่คุณกำหนดใน Kachi (ปุ่มพวงมาลัยหรือปุ่มบนเครื่อง) เพื่อเปิดแอปหรือให้ Kachi เริ่มฟัง ไม่อ่านเนื้อหาบนหน้าจอและไม่เก็บข้อมูลส่วนบุคคล</string>
 </resources>

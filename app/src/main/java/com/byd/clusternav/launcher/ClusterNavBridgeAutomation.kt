@@ -82,7 +82,7 @@ private object AutoUpdateOnce {
 }
 
 // Android box B2 · W2b (2026-10-09): mọi cửa đọc/ghi camera (xi-nhan · dải · góc · nắn · kiểu hình · thu phóng) gỡ cùng
-// camera BYD. Khoá prefs cũ còn trên đĩa; phạm vi hồ sơ giữ tên ở `RetiredCameraKeys` tới đợt dọn W4.
+// camera BYD. Khoá prefs cũ dọn một lần ở W4 (`BydDeadPrefs`).
 
 /** AUTOMATION #2 — sổ luật dẫn-đường-theo-lịch, đã giải mã (rỗng = chưa có luật nào). */
 fun ClusterNavBridge.navRules(): List<ScheduledNavRule> =

@@ -13,7 +13,7 @@ import java.io.File
  * ═══ T-BRIDGE · LỆNH `wav` — MỘT TỆP WAV ĐI QUA ĐÚNG [VoiceWavProbe] ═══════════════════════════════════════════
  *
  * Tách khỏi [KachiTestBridge] vì trần 500 dòng (CLAUDE.md §4.1; bài canh `TestBridgeSafetyContractTest`) — cùng
- * hình dạng với [TestBridgeCtl]/[TestBridgeHal]/[TestBridgeSweep]: receiver lo cổng + vòng đời, tệp này lo một lệnh.
+ * hình dạng với `TestBridgeCtl`/`TestBridgeHal`/`TestBridgeSweep`: receiver lo cổng + vòng đời, tệp này lo một lệnh.
  * Thân hàm giữ NGUYÊN (chỉ dời chỗ) — không đổi hành vi.
  *
  * `--es path` được phục vụ bằng cách **chép** tệp vào đúng chỗ mà [VoiceWavProbe] dò (tên cố định

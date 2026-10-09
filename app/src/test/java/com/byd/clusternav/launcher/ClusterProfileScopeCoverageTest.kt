@@ -29,29 +29,29 @@ class ClusterProfileScopeCoverageTest {
 
     /** Android box B2 · W2c — mã chiếu cụm (hai tệp prefs của nó) gỡ hẳn khỏi `:app`. */
     @Test
-    fun `ma chieu cum da go, ten khoa van xep loai`() {
+    fun `ma chieu cum da go, tep cua no duoc don`() {
         listOf("modules/clustercast/simplified/SimpleCastRuntime.kt", "cast/platform/CastAppCatalog.kt").forEach {
             assertFalse(SourceRoots.exists("src/main/java/com/byd/clusternav/$it"), "$it còn")
         }
-        assertEquals(emptySet<String>(), ProfileScope.unclassified(RetiredClusterKeys.DEVICE_KEYS.keys))
-        assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf("scale-dpi:a.b"))
-        assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf("config_density_a.b"))
+        // Android box B2 · W4 — tên khoá chiếu cụm rời mọi bảng phạm vi (dọn khỏi máy một lần — `BydDeadPrefs`).
+        assertEquals(ProfileScope.Scope.UNKNOWN, ProfileScope.scopeOf("scale-dpi:a.b"))
+        assertEquals(ProfileScope.Scope.UNKNOWN, ProfileScope.scopeOf("config_density_a.b"))
+        assertTrue("simple_cast_prefs" in BydDeadPrefs.DEAD_FILES && "cast-v2-app-catalog" in BydDeadPrefs.DEAD_FILES)
     }
 
     /**
-     * Android box B2 · W2b (2026-10-09): mã camera BYD (đọc/ghi `camera_*`) gỡ khỏi `:app`. TÊN khoá vẫn được xếp phạm vi ở
-     * `:core` ([RetiredCameraKeys]) để tệp hồ sơ cũ không thành "khoá không phân loại" tới W4 — nhưng
-     * KHÔNG một dòng mã `:app` nào còn đọc/ghi chúng (mọc lại một chỗ đọc là mọc lại tính năng camera mà không ai nối).
+     * Android box B2 · W2b (2026-10-09): mã camera BYD (đọc/ghi `camera_*`) gỡ khỏi `:app`; W4 gỡ tên khoá khỏi mọi bảng phạm
+     * vi (lượt dọn một lần xoá họ `camera_` khỏi máy). KHÔNG một dòng mã `:app` nào còn đọc/ghi chúng.
      */
     @Test
-    fun `khong con ma app nao doc ghi khoa camera, ten khoa van xep loai`() {
+    fun `khong con ma app nao doc ghi khoa camera`() {
         val root = SourceRoots.moduleSourceRoots().first { it.endsWith(Paths.get("app", "src", "main", "java")) }
         val hits = Files.walk(root).use { s -> s.filter { it.toString().endsWith(".kt") }.toList() }.filter { p ->
             Regex(""""camera_[a-z_]+"""").containsMatchIn(SourceRoots.codeOf("src/main/java/" + root.relativize(p).joinToString("/")))
         }.map { it.fileName.toString() }
         assertEquals(emptyList<String>(), hits, "mã :app còn literal khoá camera")
-        val names = RetiredCameraKeys.PROFILE.keys + RetiredCameraKeys.DEVICE.keys
-        assertEquals(emptySet<String>(), ProfileScope.unclassified(names), "tên khoá camera cũ phải còn xếp loại tới W4")
+        assertTrue(ProfileScope.CLUSTERNAV_PROFILE_KEYS.none { it.startsWith("camera_") }, "khoá camera rời ảnh chụp")
+        assertTrue(BydDeadPrefs.isDeadClusterNavKey("camera_zoom"), "lượt dọn xoá họ camera_")
     }
 
     /** Khoá theo hồ sơ KHÔNG có mục Cài đặt phải có mặt NGUYÊN VĂN ở tệp khai nó (chặt ngang `ClusterNavKeysContractTest`). */
@@ -186,18 +186,6 @@ class ClusterProfileScopeCoverageTest {
     )
 
     /**
-     * Khoá đã gỡ mã ghi (tên còn khai kiểu ở [ProfileScopeTypes.CLUSTERNAV] để tệp hồ sơ cũ còn đọc đúng kiểu tới W4): camera
-     * (Android box B2 · W2b) + biển báo tốc độ / bong bóng VietMap (W2c) + tiện nghi xe (W2e). Bộ quét không thấy lời ghi nào ⇒ đúng tập này nằm
-     * ngoài `seen`, và chỉ nó.
-     */
-    private val retiredNoWriter: Set<String> by lazy {
-        ProfileScopeTypes.CLUSTERNAV.keys.filter { it.startsWith("camera_") || it.startsWith("badge_") || it.startsWith("vm_bubble_") }
-            .toSet() + setOf("show_upcoming_badge", "show_alert_chip") +
-            // Android box B2 · W2e — ghế · lọc bụi · lấy gió (mã ghi gỡ cùng tiện nghi xe, kiểu khai ở RetiredComfortKeys).
-            RetiredComfortKeys.TYPES.keys
-    }
-
-    /**
      * Khai SAI kiểu thì lượt đổi hồ sơ bỏ đúng giá trị HỢP LỆ của người lái ở mọi lượt — mất cấu hình im lặng, đắt
      * ngang lỗi bảng kiểu sinh ra để chữa (`ClassCastException` trong dịch vụ). Quét mọi lời `put*(<khoá>` của `:app`
      * (khoá literal, hằng `const val` cùng tệp, hoặc mẫu `"seat_level_$…"`) và đòi tập kiểu mã ghi == kiểu khai.
@@ -233,9 +221,9 @@ class ClusterProfileScopeCoverageTest {
             emptyMap<String, Set<PrefType>>(), seen.filter { (k, types) -> types != setOf(declared.getValue(k)) },
             "kiểu khai ≠ kiểu mã ghi ⇒ đổi hồ sơ bỏ giá trị hợp lệ",
         )
-        assertTrue(retiredNoWriter.size >= 30, "bộ khoá đã gỡ phải còn khai kiểu (đang thấy ${retiredNoWriter.size})")
-        assertTrue(retiredNoWriter.none { it in seen }, "khoá đã gỡ mà vẫn có lời ghi: ${retiredNoWriter.filter { it in seen }}")
-        assertEquals(indirect.keys + retiredNoWriter, declared.keys - seen.keys, "khoá quét hụt phải nằm ở `indirect`/đã gỡ (và chỉ chúng)")
+        // Android box B2 · W4 — bảng kiểu không còn khoá đã gỡ mã ghi (camera · biển báo · bong bóng · tiện nghi): mọi khoá khai
+        // kiểu phải có lời ghi thật hoặc nằm ở `indirect`.
+        assertEquals(indirect.keys, declared.keys - seen.keys, "khoá quét hụt phải nằm ở `indirect` (và chỉ chúng)")
         indirect.forEach { (key, ev) ->
             val (type, evidence) = ev
             assertEquals(type, declared.getValue(key), key)

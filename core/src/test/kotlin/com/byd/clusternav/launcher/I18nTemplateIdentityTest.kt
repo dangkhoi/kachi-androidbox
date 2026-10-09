@@ -94,7 +94,7 @@ class I18nTemplateIdentityTest {
             // Android box B2 · W3: câu xem trước / "đã gửi" của nút xe gỡ cùng `VoiceIntent.Control`.
             assertTrue(VoiceReply.preview(VoiceIntent.OpenApp(label, slot = 3)).contains(old(l, " vào ô 3", " in slot 3")))
             assertTrue(VoiceReply.slotOutOfRange(i, 4).contains(old(l, "bố cục hiện chỉ có 4 ô", "the current layout only has 4 slot(s)")))
-            assertTrue(VoiceReply.appNotInstalled(i, target.key).contains(old(l, "chưa cài $label trên xe", "$label is not installed")))
+            assertTrue(VoiceReply.appNotInstalled(i, target.key).contains(old(l, "chưa cài $label trên máy", "$label is not installed")))
             assertTrue(
                 VoiceReply.musicAppOpened(i, target).endsWith(
                     " — " + old(
@@ -151,11 +151,11 @@ class I18nTemplateIdentityTest {
             val exp = if (g.removed) {
                 old(
                     l,
-                    "Tính năng ${g.label} đã bỏ khỏi Kachi — dùng màn hình của xe",
-                    "${g.labelEn.replaceFirstChar { it.uppercase() }} was removed from Kachi — use the car's own screen",
+                    "Kachi không có tính năng ${g.label}",
+                    "${g.labelEn.replaceFirstChar { it.uppercase() }} is not part of Kachi",
                 )
             } else {
-                old(l, "Kachi chưa điều khiển được ${g.label} — dùng nút trên xe", "Kachi cannot control ${g.labelEn} yet — use the car's own control")
+                old(l, "Kachi không điều khiển được ${g.label}", "Kachi cannot control ${g.labelEn}")
             }
             assertEquals(exp, at(l) { VoiceFeatureGone.reply(g) })
         }

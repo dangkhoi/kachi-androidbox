@@ -110,7 +110,7 @@ class BootSetupService : Service() {
     private fun notification(): android.app.Notification {
         if (Build.VERSION.SDK_INT >= 26) {
             (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "ClusterNav khởi động", NotificationManager.IMPORTANCE_MIN),
+                NotificationChannel(CHANNEL_ID, "Kachi khởi động", NotificationManager.IMPORTANCE_MIN),
             )
         }
         @Suppress("DEPRECATION")

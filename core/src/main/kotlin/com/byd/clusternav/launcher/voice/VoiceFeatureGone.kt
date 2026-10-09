@@ -195,15 +195,15 @@ internal object VoiceFeatureGone {
         return if (g.removed) {
             Strings.fIn(
                 lang,
-                "Tính năng {0} đã bỏ khỏi Kachi — dùng màn hình của xe",
-                "{1} was removed from Kachi — use the car's own screen",
+                "Kachi không có tính năng {0}",
+                "{1} is not part of Kachi",
                 name, name.replaceFirstChar { it.uppercase() },
             )
         } else {
             Strings.fIn(
                 lang,
-                "Kachi chưa điều khiển được {0} — dùng nút trên xe",
-                "Kachi cannot control {0} yet — use the car's own control",
+                "Kachi không điều khiển được {0}",
+                "Kachi cannot control {0}",
                 name,
             )
         }

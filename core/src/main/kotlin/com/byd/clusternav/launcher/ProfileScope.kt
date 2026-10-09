@@ -49,22 +49,17 @@ object ProfileScope {
      */
     val LAUNCHER_LAYOUT_SUFFIXES: List<String> =
         listOf(
-            "preset", "dock_edge", "dock_enabled", "dock_visible", "top_strip", "grid_layout",
-            // V3 · R14 (owner 2026-09-16) — *"cho cái toggle hiện text label"*. Theo hồ sơ như `top_strip` ngay
-            // cạnh: nó là một lựa chọn về **bố cục thanh trên**, và S4 đã chốt bố cục đi theo hồ sơ.
-            "top_strip_labels",
-            // [SOÁT Opus 2026-09-27] Mốc *"di trú chip UX5b đã chạy"* (`WorkspacePrefs.K_STRIP_MIGRATED`). Theo HỒ SƠ
-            // như chính `top_strip`: mỗi hồ sơ có danh sách chip riêng nên mỗi hồ sơ phải được di trú riêng một lần.
-            // Thiếu dòng này thì xoá hồ sơ **không** dọn mốc ⇒ tên hồ sơ đặt lại sẽ bỏ qua lượt di trú của mình.
-            "top_strip_migrated_ux5b",
+            "preset", "dock_edge", "dock_enabled", "dock_visible", "grid_layout",
+            // Android box B2 · W4 — `top_strip` · `top_strip_labels` · `top_strip_migrated_ux5b` (chip dữ liệu xe trên thanh
+            // trên) rời bảng cùng mã; lượt dọn một lần xoá chúng khỏi máy ([BydDeadPrefs]).
             // UX-OVERHAUL · WP4 (2026-09-20) — THỨ TỰ các vật trên thanh trên ([HeaderLayout]). Cùng họ với
-            // `top_strip`/`dock_enabled` ngay cạnh: cả ba trả lời *"thanh này bày gì, ở đâu"*. Thứ tự các nút của
+            // `dock_enabled` ngay cạnh: cả hai trả lời *"thanh này bày gì, ở đâu"*. Thứ tự các nút của
             // thanh nút KHÔNG cần khoá mới — nó LÀ thứ tự của `dock_enabled` ([DockConfig.moveEnabled]).
             "header_order",
             // F1 (owner 01/10, spec shortcuts-autostart R1.1) — LỐI TẮT ỨNG DỤNG: app nào hiện trên khối thanh nút +
             // widget `w_apps`, mỗi app một kiểu mở. Cùng họ `dock_enabled`: *"thanh này bày gì"*, đi theo hồ sơ (S4).
             "app_shortcuts",
-            // 2.87 · R-AH3 (owner 03/10) — nút ⇄ của khung tự ẩn hay luôn hiện: một lựa chọn về KHUNG như `top_strip_labels`.
+            // 2.87 · R-AH3 (owner 03/10) — nút ⇄ của khung tự ẩn hay luôn hiện: một lựa chọn về KHUNG như `dock_visible`.
             // ⚠ KHÔNG đặt tên `slot_…`: `slot_` là HỌ khoá nội dung ô ([PROFILE_KEY_PREFIXES], [SettingsCatalog.SLOT_KEY_PREFIX]).
             "swap_button_autohide",
             // 2.89 · B3 DOCK-SCALE (owner 05/10) — cỡ thanh nút theo %: một lựa chọn về THANH như `dock_edge` (`BarScale`).
@@ -88,7 +83,8 @@ object ProfileScope {
      */
     val LAUNCHER_PERSONAL_SUFFIXES: List<String> =
         listOf(
-            "theme_mode", "unit_prefs", "wallpaper_prefs", "launcher_autostart", "lang", "saved_places",
+            // Android box B2 · W4 — `unit_prefs` (đơn vị của dữ liệu xe) rời bảng cùng mã.
+            "theme_mode", "wallpaper_prefs", "launcher_autostart", "lang", "saved_places",
             // VISUAL-REFRESH P1b · R8 (owner 2026-09-16 *"có cho người ta chọn màu không nhỉ?"*) — màu nhấn + tông
             // thẻ (+ chỗ để sẵn màu sơn P3) là *lựa chọn của một người* y như `theme_mode` ngay cạnh ⇒ theo hồ sơ
             // (AC8.4). Khoá MỚI hoàn toàn: không có bản chung-cả-máy để lùi về, đọc thẳng `key()` như `saved_places`.
@@ -103,7 +99,7 @@ object ProfileScope {
      * Khoá ClusterNav mà **phía launcher đã sở hữu** dưới một hậu tố riêng ⇒ KHÔNG đi qua ảnh chụp → lý do.
      *
      * Có mặt trong cả hai đường là đúng định nghĩa **bẫy hai-bản-sao** mà dự án đã trả giá bốn lần (`customLayout` ·
-     * `unitPrefs` ×4 · `wallpaper` · `themeMode`): hai chỗ cùng nhớ một lựa chọn thì sớm muộn chúng lệch nhau, và
+     * đơn vị ×4 · `wallpaper` · `themeMode`): hai chỗ cùng nhớ một lựa chọn thì sớm muộn chúng lệch nhau, và
      * lượt ghi sau cùng thắng một cách ngẫu nhiên.
      */
     val LAUNCHER_OWNED_CLUSTERNAV_KEYS: Map<String, String> = mapOf(
@@ -160,15 +156,6 @@ object ProfileScope {
                 "cấu hình) — xoá một hồ sơ mà mất lịch sử của cả xe là lỗi tệ hơn lỗi đang vá",
         )
         put(
-            "last_display_id",
-            "R4 — số hiệu màn cụm ĐO ĐƯỢC của chính chiếc xe này (`SimpleCastRuntime`), không phải lựa chọn",
-        )
-        put(
-            "doze_whitelist_applied",
-            "cờ một-lần đời cũ (miễn doze VietMap) — 2.89 B2 không còn đọc/ghi (quyết bằng sự thật `AppPrereqs`); " +
-                "còn trên máy, thuộc máy, không chép",
-        )
-        put(
             "ui_glass_real",
             "UX-OVERHAUL WP1 · R1.3 — 'Kính thật (làm mờ nền)'. Theo XE: glass-thật là RenderEffect blur, một tính " +
                 "chất của PHẦN CỨNG (GPU) + ROM (API ≥ 31) của chính chiếc xe này, không phải sở thích đi theo " +
@@ -176,20 +163,14 @@ object ProfileScope {
                 "voice_wake_enabled — quyết định mức máy, không mức người",
         )
         put(
-            "captest_results",
-            "nhật ký 'kiểm tra từng nút' (`CapTestStore`, tệp `kachi_captest`) — kết quả OK/Không OK khi soát trên " +
-                "xe NÀY. Theo XE, không theo người: chép hồ sơ sang xe khác không mang theo kết quả soát phần cứng. " +
-                "Cùng họ `last_display_id`/`sherpa_model_id` — trạng thái đo mức máy",
-        )
-        put(
             "sherpa_model_id",
             "mã mô hình ASR đã TẢI VỀ máy NÀY (`VoiceModelStore`, tệp `kachi_voice`) — theo XE, không theo người: " +
                 "tệp mô hình 78 MB nằm trên đĩa của chính xe này, chép hồ sơ sang xe khác thì mô hình có thể chưa tải " +
-                "ở đó. Cùng họ `last_display_id`/OTA — trạng thái mức máy. Cũng khai ở [SettingsCatalog.NOT_SETTINGS]",
+                "ở đó. Cùng họ OTA — trạng thái mức máy. Cũng khai ở [SettingsCatalog.NOT_SETTINGS]",
         )
         put(
             "freeform_state",
-            "dấu mốc gieo cờ cửa sổ tự do, dùng CHUNG với đường chiếu-cụm (lý do đầy đủ ở " +
+            "dấu mốc gieo cờ cửa sổ tự do (lý do đầy đủ ở " +
                 "[SettingsCatalog.NOT_SETTINGS])",
         )
         put(
@@ -316,11 +297,12 @@ object ProfileScope {
         put("force_resizable_activities", "cờ boot của HỆ THỐNG (`Settings.Global`), gieo CẶP với khoá trên")
         put("enabled_accessibility_services", "danh sách trợ năng DÙNG CHUNG với mọi app khác (`Settings.Secure`)")
         put("accessibility_enabled", "cờ trợ năng toàn hệ thống (`Settings.Secure`) — máy tự đổi sau lưng")
-        // Android box B2 · W2c — khoá camera / chiếu cụm / VietMap BYD đã gỡ mã: tên + lý do ở hai bảng retired (W4 dọn).
-        putAll(RetiredCameraKeys.DEVICE)
-        putAll(RetiredClusterKeys.DEVICE_KEYS)
-        // Android box B2 · W2e — ba khoá tự sấy kính khi mưa (theo XE từ 1.85/V7, lý do cũ: phần cứng của chiếc xe).
-        putAll(RetiredComfortKeys.DEVICE)
+        // Android box B2 · W4 — khoá camera / chiếu cụm / VietMap / tự sấy kính / kiểm-từng-nút BYD (mã gỡ ở W2–W3) rời bảng;
+        // lượt dọn một lần xoá chúng khỏi máy ([BydDeadPrefs]). Tệp `.kachi` cũ mang chúng: lượt nhập bỏ IM LẶNG.
+        put(
+            BydDeadPrefs.MARK,
+            "Android box B2 · W4 — dấu 'đã dọn khoá chết của Kachi BYD một lần' (tệp kachi_workspace). Theo XE: dọn tệp prefs của máy",
+        )
         put(
             ProfileScopeMigration.FILLED_LEDGER_KEY,
             "2.92 PROFILE-NEW-KEYS — sổ 'khoá theo hồ sơ nào đã rót xuống mọi hồ sơ': dấu của lượt di trú, theo xe",
@@ -328,8 +310,8 @@ object ProfileScope {
         putAll(TripGate.DEVICE_KEYS)   // F2/F3 — sổ chuyến lên xe + mốc khởi động (theo XE); lý do ở chỗ chủ
     }
 
-    /** Tiền tố khoá **dựng động** theo xe → lý do. Android box B2 · W2c: chỉ còn họ khung/DPI chiếu cụm đã gỡ mã. */
-    val DEVICE_KEY_PREFIXES: Map<String, String> = RetiredClusterKeys.DEVICE_KEY_PREFIXES
+    /** Tiền tố khoá **dựng động** theo xe → lý do. Android box B2 · W4: rỗng (họ khung/DPI chiếu cụm gỡ cùng mã). */
+    val DEVICE_KEY_PREFIXES: Map<String, String> = emptyMap()
 
     /**
      * Khoá **tạm / đời cũ** → lý do. Không theo hồ sơ **và** không theo xe: chúng không phải một lựa chọn để nhớ.
@@ -380,11 +362,7 @@ object ProfileScope {
             SettingsCatalog.CLUSTERNAV_KEYS
                 .filterKeys { key ->
                     key !in DEVICE_KEYS && key !in TRANSIENT_KEYS && key !in LAUNCHER_OWNED_CLUSTERNAV_KEYS
-                } + CLUSTERNAV_PROFILE_STATE_KEYS +
-                // Khoá camera BYD theo hồ sơ KHÔNG có mục Cài đặt (mã gỡ ở W2b, khoá còn trong ảnh chụp tới W4).
-                RetiredCameraKeys.PROFILE.keys.associateWith { "clusternav_prefs" } +
-                // Khoá tiện nghi xe BYD theo hồ sơ (mã gỡ ở W2e, khoá còn trong ảnh chụp tới W4).
-                RetiredComfortKeys.PROFILE.keys.associateWith { RetiredComfortKeys.FILE }
+                } + CLUSTERNAV_PROFILE_STATE_KEYS
             )
             .entries
             .groupBy({ it.value }, { it.key })
@@ -453,8 +431,7 @@ object ProfileScope {
     /**
      * Tiền tố khoá **dựng động** thuộc về hồ sơ → lý do. Sinh từ hai nguồn đã có, không chép tay:
      *  • `slot_` — nội dung từng ô ([SettingsCatalog.SLOT_KEY_PREFIX]);
-     *  • tiền tố dựng động phía ClusterNav ([SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES] — rỗng từ W2e: `seat_level_`
-     *    gỡ cùng mã ghế, bốn tên đầy đủ ở [RetiredComfortKeys]).
+     *  • tiền tố dựng động phía ClusterNav ([SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES] — rỗng từ W2e).
      *
      * ⚠ Khai SAU [scopeOf] không sao (hàm đọc nó lúc **chạy**), nhưng phải khai TRƯỚC bất kỳ `val` nào đọc nó —
      * thân `object` chạy theo thứ tự khai, bài học `TopStripConfig.BUILT_IN` ([ĐO] 27 bài đỏ).

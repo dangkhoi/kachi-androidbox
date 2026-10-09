@@ -7,42 +7,34 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * ═══ Android box B2 · W1 — khoá đã rời giao diện ([SettingsCatalogRetired]) KHÔNG làm mất dữ liệu hồ sơ ═════════════
+ * ═══ Android box B2 · W1/W4 — mục + khoá Cài đặt chỉ-BYD đã gỡ hẳn ═══════════════════════════════════════════════════
  *
- * W1 gỡ các mục Cài đặt chỉ-BYD nhưng (theo chỉ thị đợt) giữ nguyên `CLUSTERNAV_KEYS` / `ProfileScope` để một lượt đổi /
- * xuất / nhập hồ sơ không xoá giá trị người dùng đang có. Bài này khoá ba điều: (1) khoá đã rời UI thật sự KHÔNG còn mục
- * nào nhận (không có hàng "ma" trên rail); (2) mọi khoá ấy vẫn được xếp phạm vi như cũ (chưa rơi khỏi ảnh chụp); (3) phép kiểm
- * mồ côi vẫn bắt được khoá lạ — bảng tha ĐÚNG danh sách, không tha theo mẫu.
+ * W1 gỡ mục Cài đặt, W4 gỡ khoá khỏi danh mục ClusterNav + phạm vi hồ sơ (lượt dọn một lần: [BydDeadPrefs]). Bài này
+ * khoá: (1) khoá BYD không còn trong danh mục (không hàng "ma", không vào ảnh chụp); (2) mục BYD không mọc lại; (3) phép kiểm
+ * mồ côi vẫn bắt khoá lạ (không còn bảng "tha" nào).
  */
 class SettingsCatalogRetiredTest {
 
+    private val removed = setOf(
+        "enabled", "nav_cluster_screen_mode", "marquee", "badge_enabled", "show_upcoming_badge", "show_alert_chip",
+        "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x",
+        "vm_bubble_y", "interpolate", "acc_booster", "lane", "source_mode", "anim_opt", "hud",
+    )
+
     @Test
-    fun `khoa da roi UI khong con muc nao nhan`() {
-        SettingsCatalog.RETIRED_UI_KEYS.keys.forEach { key ->
-            assertNull(SettingsCatalog.groupOf(key), "'$key' đã rời UI mà vẫn có mục sở hữu")
-            assertTrue(key !in SettingsCatalog.NOT_SETTINGS, "'$key' không thể vừa 'rời UI' vừa 'không phải cấu hình'")
-        }
-        assertTrue(SettingsCatalog.RETIRED_UI_KEYS.values.all { it.isNotBlank() }, "mỗi khoá phải kèm lý do")
+    fun `khoa BYD da go khong con trong danh muc ClusterNav`() {
+        assertEquals(emptySet<String>(), removed intersect SettingsCatalog.CLUSTERNAV_KEYS.keys, "khoá BYD còn trong danh mục")
+        assertEquals(emptySet<String>(), removed intersect SettingsCatalog.CLUSTERNAV_HIDDEN_KEYS.keys, "khoá BYD còn ở bảng ẩn")
+        assertEquals(emptySet<String>(), removed intersect SettingsCatalog.CLUSTERNAV_COMPANION_KEYS.keys)
+        removed.forEach { assertNull(SettingsCatalog.groupOf(it), "'$it' vẫn có mục sở hữu") }
+        assertTrue(removed.all(BydDeadPrefs::isDeadClusterNavKey), "mọi khoá gỡ phải được lượt dọn một lần xoá khỏi máy")
     }
 
     @Test
-    fun `khoa da roi UI van duoc xep pham vi - khong mat du lieu`() {
-        // Phạm vi giữ NGUYÊN như trước W1: phần lớn theo HỒ SƠ (đi trong ảnh chụp), riêng bộ ba tự sấy kính theo XE
-        // (`DEVICE_KEYS`) — không khoá nào rơi về UNKNOWN (= lượt chụp/áp/xuất hồ sơ bỏ sót, tức mất dữ liệu).
-        val unknown = SettingsCatalog.RETIRED_UI_KEYS.keys.filter { ProfileScope.scopeOf(it) == ProfileScope.Scope.UNKNOWN }
-        assertEquals(emptyList<String>(), unknown, "khoá rời UI phải còn được xếp phạm vi (W4 mới dọn)")
-        // Android box B2 · W2c — khoá `simple_cast_prefs` rời bảng này cùng mã chiếu cụm: theo XE ([RetiredClusterKeys]).
-        assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf("cast_enabled"))
-        assertFalse("cast_enabled" in SettingsCatalog.RETIRED_UI_KEYS)
-        assertEquals(ProfileScope.Scope.PROFILE, ProfileScope.scopeOf("badge_size_dp"))
-        val clusterNav = SettingsCatalog.RETIRED_UI_KEYS.keys - SettingsCatalogRetired.LAUNCHER_KEYS
-        assertTrue(SettingsCatalog.CLUSTERNAV_KEYS.keys.containsAll(clusterNav), "khoá ClusterNav rời UI rơi khỏi CLUSTERNAV_KEYS")
-    }
-
-    @Test
-    fun `phep kiem mo coi van bat khoa la ben canh khoa da roi UI`() {
-        val lạ = setOf("khoa_moi_ai_do_them")
-        assertEquals(lạ, SettingsCatalog.orphans(lạ + SettingsCatalog.RETIRED_UI_KEYS.keys))
+    fun `phep kiem mo coi bat ca khoa BYD da go`() {
+        val lạ = setOf("khoa_moi_ai_do_them", "top_strip", "unit_prefs")
+        assertEquals(lạ, SettingsCatalog.orphans(lạ))
+        assertFalse("top_strip" in ProfileScope.LAUNCHER_SUFFIXES)
     }
 
     @Test

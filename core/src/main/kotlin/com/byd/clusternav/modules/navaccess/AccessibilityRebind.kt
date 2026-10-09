@@ -142,7 +142,7 @@ object AccessibilityRebind {
         //  • ROM in COMPONENT: `ComponentInfo{com.byd.launcher/…}` → match `pkg/` / full component (phân biệt clusternav2).
         //  • ROM DiLink [ĐO xe 2026-09-24]: Bound CHỈ in LABEL (`Service[label=ClusterNav — booster…, capabilities=9]`),
         //    KHÔNG in package ⇒ match `pkg/` TRƯỢT dù đang bound thật (regression fix deep-pass gây ra). Phải match
-        //    LABEL token `clusternav`. Để KHÔNG nhận nhầm app anh em `com.byd.clusternav2` (cùng label): chỉ nhận
+        //    LABEL token ([BOUND_LABEL_TOKENS]). Để KHÔNG nhận nhầm app anh em `com.byd.clusternav2` (cùng label): chỉ nhận
         //    label-token khi PACKAGE CỦA MÌNH có trong "Enabled services" (chỉ app enabled mới bound được). Nếu cả
         //    hai app cùng enabled+bound+label (cài song song, cả hai bật voice-key — ca hiếm) thì Bound thiếu package
         //    nên vẫn mơ hồ; ưu tiên ĐÚNG cho ca thực tế (một app) + không dối.
@@ -156,8 +156,16 @@ object AccessibilityRebind {
             val eh = dump.indexOf("Enabled services", ignoreCase = true)
             eh >= 0 && dump.substring(eh).contains("$pkg/", ignoreCase = true)
         }
-        return section.contains("clusternav", ignoreCase = true) && selfEnabled
+        return BOUND_LABEL_TOKENS.any { section.contains(it, ignoreCase = true) } && selfEnabled
     }
+
+    /**
+     * Token nhận diện nhãn dịch vụ trong khối `Bound` của ROM chỉ-in-nhãn. Android box B2 · W4 đổi `@string/acc_label`
+     * "ClusterNav — booster đọc bản đồ" → "Kachi — phím vật lý" (người dùng thấy chuỗi này ở Cài đặt › Trợ năng) ⇒ token
+     * `kachi` (đầu nhãn — ROM cắt đuôi nhãn dài bằng `…`); `clusternav` giữ cho bản dump của nhãn cũ. Ca hai app cùng nhãn
+     * cùng enabled + bound (Kachi BYD cài song song) vẫn mơ hồ như trước — xem chú thích trong [isClusterNavBound].
+     */
+    private val BOUND_LABEL_TOKENS = listOf("kachi", "clusternav")
 
     /**
      * NẤC CUỐI của thang chữa: lệnh TỰ `force-stop` gói CỦA CHÍNH MÌNH rồi lắp lại dịch vụ Hỗ trợ, chạy TÁCH

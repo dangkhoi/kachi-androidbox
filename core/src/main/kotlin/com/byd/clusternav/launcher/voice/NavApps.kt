@@ -95,8 +95,8 @@ object NavApps {
      *
      * ── VÌ SAO PHẢI THU HẸP (cơ chế, đo được, không phải sở thích) ────────────────────────────────────
      * `NavNotificationListener.handle()` gọi `SourceArbiter.shouldFeed(pkg, …)` với kênh mặc định
-     * [NavChannel.DATA] ⇒ nó **đóng mốc `lastDataByPkg[pkg]`** ⇒ trong 6 s sau đó `SourceArbiter.isDataFresh(pkg)`
-     * = true ⇒ mọi publish kênh [NavChannel.IMAGE] của CHÍNH gói đó bị `shouldFeed` trả false
+     * `NavChannel.DATA` ⇒ nó **đóng mốc `lastDataByPkg[pkg]`** ⇒ trong 6 s sau đó `SourceArbiter.isDataFresh(pkg)`
+     * = true ⇒ mọi publish kênh `NavChannel.IMAGE` của CHÍNH gói đó bị `shouldFeed` trả false
      * (`SourceArbiter.kt` — "ảnh là FALLBACK"). Với một app mà notification KHÔNG mang mũi tên, hệ quả là:
      * notification tự khoá mất kênh ảnh của chính nó, mũi tên biến mất, `hudIcon` rơi về hằng 11 = đi thẳng.
      * Đây đúng là cơ chế đã làm chết `CaptureArrowFallback` (backlog **B3.42**, đã revert 08-23).

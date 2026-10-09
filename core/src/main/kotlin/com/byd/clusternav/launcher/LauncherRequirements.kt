@@ -171,24 +171,24 @@ data class PermissionReport(val results: List<RequirementResult>) {
  */
 object LauncherRequirements {
 
-    /** Đọc thông báo — nguồn dữ liệu dẫn đường. Quyền kiểu ADB ⇒ tự cấp được. */
+    /** Đọc thông báo — nguồn phiên nhạc của widget nhạc (`MediaBridge`). Quyền kiểu ADB ⇒ tự cấp được. */
     val NOTIFICATION_LISTENER = LauncherRequirement(
         id = "notif_listener",
         label = "Đọc thông báo",
-        losesWhatIfMissing = "dẫn đường trên cụm mất nguồn dữ liệu",
+        losesWhatIfMissing = "widget nhạc không thấy bài đang phát",
         fixBy = FixBy.SELF,
         labelEn = "Notification access",
-        losesWhatIfMissingEn = "cluster navigation loses its data source",
+        losesWhatIfMissingEn = "the music widget cannot see what is playing",
     )
 
-    /** Trợ năng — bắt phím vô-lăng + đọc màn hình dẫn đường. Quyền kiểu ADB ⇒ tự cấp được. */
+    /** Trợ năng — bắt phím vật lý đã gán. Quyền kiểu ADB ⇒ tự cấp được. */
     val ACCESSIBILITY = LauncherRequirement(
         id = "accessibility",
         label = "Trợ năng",
-        losesWhatIfMissing = "gán phím vô-lăng và đọc màn hình dẫn đường không chạy",
+        losesWhatIfMissing = "gán phím vật lý không chạy",
         fixBy = FixBy.SELF,
         labelEn = "Accessibility",
-        losesWhatIfMissingEn = "steering-wheel key mapping and navigation screen reading stop working",
+        losesWhatIfMissingEn = "physical-key mapping stops working",
     )
 
     /** Vẽ trên màn khác — dải tiêu đề ô + ngăn kéo app nổi lên trên app đang chiếu trong ô. */
@@ -284,10 +284,10 @@ object LauncherRequirements {
     val MICROPHONE = LauncherRequirement(
         id = "microphone",
         label = "Micro",
-        losesWhatIfMissing = "không nói được với xe (ô \"Nói với xe\" và nút mic)",
+        losesWhatIfMissing = "không nói được với Kachi (ô \"Nói với Kachi\" và nút mic)",
         fixBy = FixBy.SELF,
         labelEn = "Microphone",
-        losesWhatIfMissingEn = "you cannot talk to the car (the \"Talk to car\" tile and the mic button)",
+        losesWhatIfMissingEn = "you cannot talk to Kachi (the \"Talk to Kachi\" tile and the mic button)",
     )
 
     /**

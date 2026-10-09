@@ -12,10 +12,7 @@ import org.junit.jupiter.api.Test
  * Không phải bài "hàm trả về đúng cái nó viết" — mà bài khoá đúng **chỗ dễ chép sai** khi T4 dựng section:
  *  • mã lưu chủ đề là `"system"` chứ KHÔNG phải `"auto"` (đoán sai ⇒ `Choice.fromCode` lùi im lặng về SYSTEM, tức
  *    đúng-vì-may, và sẽ sai ngày có mã mới);
- *  • loại trừ tự-chiếu **bất đối xứng** (bật thì tắt cái kia, tắt thì không đụng) — chép thành đối xứng là mất trạng
- *    thái "cả hai cùng tắt";
- *  • dải cỡ biển báo đọc biên từ [BadgeLayout] chứ không viết cứng 60/240;
- *  • chế độ cụm chỉ có HAI nấc thật, và phép quy đổi lúc đọc phải giống `Prefs.navClusterScreenMode`.
+ *  • phím vô-lăng: tắt thì không hỏi `bound` (Android box B2 · W4: phần tự-chiếu, cỡ biển báo, chế độ cụm gỡ cùng mã).
  */
 class ClusterNavSettingsModelTest {
 
@@ -53,25 +50,5 @@ class ClusterNavSettingsModelTest {
         // hệ thống và nó còn `true` một lúc sau khi người dùng tắt ⇒ hỏi `bound` trước sẽ báo "ĐANG HOẠT ĐỘNG" cho
         // một tính năng vừa bị tắt.
         assertEquals(VkStatus.OFF, ClusterNavSettingsModel.voiceKeyStatus(enabled = false, bound = true))
-    }
-
-    // ── Chế độ cụm ───────────────────────────────────────────────────────────────────────────────
-
-    @Test
-    fun `chi hai nac che do cum, dung gia tri da do duoc`() {
-        val opts = ClusterNavSettingsModel.clusterModeOptions()
-        assertEquals(listOf(0, 3), opts.map { it.value }, "OFF=0 và FULL=3 (giá trị PROVEN rc=0) — không bày 1/2")
-        assertTrue(opts.all { it.label.isNotBlank() && it.labelEn.isNotBlank() })
-    }
-
-    @Test
-    fun `quy doi gia tri da luu giong het Prefs navClusterScreenMode`() {
-        assertEquals(ClusterNavSettingsModel.NavClusterMode.OFF, ClusterNavSettingsModel.clusterModeOf(0))
-        assertEquals(ClusterNavSettingsModel.NavClusterMode.ON, ClusterNavSettingsModel.clusterModeOf(3))
-        // Giá trị đời cũ (SIMPLE=1 / SMALL=2) phải gộp về Bật — đúng phép quy đổi lúc ĐỌC của Prefs.kt:74–78. Bộ
-        // chọn hiện một nấc còn runtime dùng nấc khác là sai IM LẶNG, chỉ lộ ra khi nhìn cụm.
-        assertEquals(ClusterNavSettingsModel.NavClusterMode.ON, ClusterNavSettingsModel.clusterModeOf(1))
-        assertEquals(ClusterNavSettingsModel.NavClusterMode.ON, ClusterNavSettingsModel.clusterModeOf(2))
-        assertEquals(ClusterNavSettingsModel.NavClusterMode.ON, ClusterNavSettingsModel.clusterModeOf(99))
     }
 }

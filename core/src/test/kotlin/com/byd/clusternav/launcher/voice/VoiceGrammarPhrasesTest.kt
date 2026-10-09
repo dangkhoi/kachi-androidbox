@@ -100,7 +100,7 @@ class VoiceGrammarPhrasesTest {
         }
         // Android box B2 · W3: nút · datum · gói lệnh gỡ cùng lõi HAL BYDAuto ⇒ còn hành động launcher.
         LauncherActions.ALL.forEach { a ->
-            assertTrue(sayable(listOfNotNull(a.label, a.labelEn)), "hành động `${a.id}` không có cụm nào nói được")
+            assertTrue(sayable(listOfNotNull(a.label, a.labelEn) + VoiceGrammar.LAUNCHER_SPOKEN_ALIASES[a.id].orEmpty()), "hành động `${a.id}` không có cụm nào nói được")
         }
     }
 
@@ -318,7 +318,9 @@ class VoiceGrammarPhrasesTest {
         // [ĐO 2.93] 400 → 406 (+6 nhãn camera theo yêu cầu) · [ĐO 2026-10-09 · Android box W2b] 406 → **397** (−9: sáu nhãn ấy +
         // ba cụm nhiều từ của nút Camera 360 `cam`, gỡ cùng camera BYD). In bằng máy, không chép tay.
         // [ĐO 2026-10-09 · Android box W3] 397 → **16**: nút · datum · gói lệnh xe gỡ cùng lõi HAL BYDAuto.
-        const val EXPECTED_PHRASES_KEPT = 16
+        // [ĐO 2026-10-09 · Android box W4] 16 → **15**: nhãn "Nói với xe"/"Talk to car" → "Nói với Kachi"/"Talk to Kachi"
+        // (từ điển không có "kachi" ⇒ hai nhãn mới bị loại; cách nói cũ "nói với xe" giữ qua `LAUNCHER_SPOKEN_ALIASES`).
+        const val EXPECTED_PHRASES_KEPT = 15
         // [ĐO off-car 2026-09-18 · log xe 53 phiên] **359 → 361 (+2)** = hai cách nói NHIỀU TỪ mới cho nhiên liệu
         // (`fuel_pct ← "nhien lieu"` · `"muc nhien lieu"`). Cách nói thứ ba (`"xang"`) là MỘT từ nên không vào con
         // số này — nó chỉ nở thêm ở [EXPECTED_ENTRIES]. Thêm để «chỉ số xăng» / «xăng còn bao nhiêu» (cả hai ra
@@ -389,7 +391,8 @@ class VoiceGrammarPhrasesTest {
         // [ĐO 2.93] 194 → 196 (+2 *"Front/Left camera"*) · [ĐO 2026-10-09 · Android box W2b] 196 → **191** (−5: hai cụm ấy + ba
         // cụm bị loại của nút Camera 360 `cam`). Đọc từ **actual** (`set.phrasesDropped`).
         // [ĐO 2026-10-09 · Android box W3] 191 → **2** (cụm xe gỡ).
-        const val EXPECTED_PHRASES_DROPPED = 2
+        // [ĐO 2026-10-09 · Android box W4] 2 → **4**: "nói với kachi" / "talk to kachi" (từ điển không có "kachi").
+        const val EXPECTED_PHRASES_DROPPED = 4
 
         /**
          * [ĐO] tổng mục ngữ pháp = 330 cụm + từ đơn (mọi cách viết thanh điệu) + `[unk]`.
@@ -480,7 +483,8 @@ class VoiceGrammarPhrasesTest {
         // đơn của từ điển Vosk: `xong` · `xòng` · `xông` · `xống` · `xồng` · `xổng` (0 cụm mới). Đọc từ **actual**.
         // [ĐO 2026-10-09 · Android box W2b] 2040 → **2027** (−13: −9 cụm GIỮ camera + từ đơn chỉ nhãn camera/`cam` nở). Actual.
         // [ĐO 2026-10-09 · Android box W3] 2027 → **801** (cụm + từ rời của nút/datum xe gỡ).
-        const val EXPECTED_ENTRIES = 801
+        // [ĐO 2026-10-09 · Android box W4] 801 → **799** (−1 cụm "talk to car" · −1 từ đơn chỉ nhãn đó). Actual.
+        const val EXPECTED_ENTRIES = 799
         // [ĐO off-car 2026-09-18 · log xe 53 phiên] **2099 → 2109 (+10)** = 2 cụm nhiều từ của nhiên liệu
         // ([EXPECTED_PHRASES_KEPT] 359 → 361) **cộng** các từ ĐƠN lần đầu xuất hiện, nở theo họ thanh điệu:
         // `xăng` đứng một mình (cách nói mới của `fuel_pct`) và `nhiên` · `liệu`. Số đọc từ **actual** của chính

@@ -20,8 +20,8 @@ class ProfileTransferTest {
     private val cn = "clusternav_prefs"
     private val cnSuffix = ProfileScope.snapshotSuffix(cn)
     /** Android box B2 · W2c — hậu tố ảnh chiếu cụm của tệp Kachi BYD (đã rời phạm vi hồ sơ). */
-    private val castSuffix = ProfileScope.snapshotSuffix(RetiredClusterKeys.SIMPLE_CAST_FILE)
-    private val catalogSuffix = ProfileScope.snapshotSuffix(RetiredClusterKeys.CAST_CATALOG_FILE)
+    private val castSuffix = ProfileScope.snapshotSuffix("simple_cast_prefs")
+    private val catalogSuffix = ProfileScope.snapshotSuffix("cast-v2-app-catalog")
 
     private class Car {
         val stored = LinkedHashMap<String, Any?>()
@@ -94,8 +94,8 @@ class ProfileTransferTest {
     private fun car(): Car = Car().apply {
         live.getValue(cn).putAll(
             mapOf(
-                "nav_automation_rules" to "RULES-A", "nav_automation_fired" to "FIRED-A", "enabled" to true,
-                "badge_size_dp" to 48, "voicekey_bindings" to "[{\"k\":1,\"t\":\"x\"}]",
+                "nav_automation_rules" to "RULES-A", "nav_automation_fired" to "FIRED-A", "headless_autostart" to true,
+                "voice_music_default_app" to "ytmusic", "voicekey_bindings" to "[{\"k\":1,\"t\":\"x\"}]",
             ),
         )
         stored[key("A", "saved_places")] = "PLACES-A"
@@ -105,7 +105,7 @@ class ProfileTransferTest {
         // Ảnh của B dựng bằng chính phép chụp, trên một tệp sống của B.
         val keepA = live.getValue(cn).toMap()
         live.getValue(cn).clear()
-        live.getValue(cn).putAll(mapOf("nav_automation_rules" to "RULES-B", "enabled" to false))
+        live.getValue(cn).putAll(mapOf("nav_automation_rules" to "RULES-B", "headless_autostart" to false))
         snapshot("B")
         live.getValue(cn).clear()
         live.getValue(cn).putAll(keepA)
@@ -172,7 +172,7 @@ class ProfileTransferTest {
         assertEquals(before, c.stored, "ảnh đã lưu của B phải giữ nguyên từng byte")
         val shot = shotIn(out)
         assertEquals("RULES-B", shot["nav_automation_rules"], "phải mang lịch của CHÍNH B")
-        assertEquals(false, shot["enabled"])
+        assertEquals(false, shot["headless_autostart"])
         assertEquals("PLACES-B", body(out)["saved_places"])
         assertEquals("B", head(out)?.name)
     }
@@ -200,8 +200,8 @@ class ProfileTransferTest {
         listOf("nav_automation_rules", "nav_automation_fired").forEach {
             assertTrue(shot.containsKey(it) && shot[it] == null, "`$it` phải là null TƯỜNG MINH (không phải vắng)")
         }
-        assertEquals(true, shot["enabled"])
-        assertEquals(48, shot["badge_size_dp"])
+        assertEquals(true, shot["headless_autostart"])
+        assertEquals("ytmusic", shot["voice_music_default_app"])
         assertFalse(out.contains("RULES-A") || out.contains("FIRED-A") || out.contains("PLACES-A"), "rò dữ liệu riêng tư")
         assertFalse(b.containsKey(castSuffix), "Android box B2 · W2c: không còn ảnh chiếu cụm trong tệp xuất")
     }
@@ -225,6 +225,7 @@ class ProfileTransferTest {
             mapOf("@family:cast_geometry" to true, "cast_enabled" to true, "config_density_vn.vietmap.live" to "320"),
         )
         val cnShot = PrefSnapshot.encode(mapOf("voicekey_bindings" to "[]", "enabled" to true, "camera_zoom" to 120))
+        // W4: khoá chết trong ảnh clusternav_prefs cũng bị bỏ ngay ở lượt nhập (không nằm lại trong kachi_workspace).
         listOf(ProfileTransfer.Kind.FULL, ProfileTransfer.Kind.SHARE).forEach { kind ->
             val data = ProfileTransfer.encodeHeader("BYD", kind) + "\n" + PrefSnapshot.encode(
                 mapOf("preset" to "p2", castSuffix to cast, catalogSuffix to PrefSnapshot.encode(mapOf("bubbleX" to 5)), cnSuffix to cnShot),
@@ -235,6 +236,7 @@ class ProfileTransferTest {
             assertEquals("p2", plan.writes["preset"], "$kind: phần launcher nhập như cũ")
             val shot = PrefSnapshot.decode(plan.writes[cnSuffix] as String)
             assertEquals("[]", shot["voicekey_bindings"], "$kind: ảnh clusternav_prefs nhập như cũ")
+            assertFalse("enabled" in shot || "camera_zoom" in shot, "$kind: khoá BYD đã gỡ không nằm lại trong ảnh")
         }
         // Lớp làm sạch ảnh bên trong cũng bỏ IM LẶNG khoá ngoài phạm vi (không vào `dropped`).
         val clean = PrefSnapshotPlan.sanitize(
@@ -262,7 +264,7 @@ class ProfileTransferTest {
         c.switchTo("A 2")
         assertFalse(c.live.getValue(cn).containsKey("nav_automation_rules"), "hồ sơ chia sẻ không thừa hưởng lịch của A")
         assertFalse(c.live.getValue(cn).containsKey("nav_automation_fired"))
-        assertEquals(true, c.live.getValue(cn)["enabled"], "cấu hình cụm chia sẻ được vẫn đi theo")
+        assertEquals(true, c.live.getValue(cn)["headless_autostart"], "cấu hình chia sẻ được vẫn đi theo")
         assertEquals("RULES-A", PrefSnapshot.decode(c.stored[c.key("A", cnSuffix)] as String)["nav_automation_rules"])
 
         c.switchTo("A")
@@ -281,14 +283,14 @@ class ProfileTransferTest {
     /** Tệp ghi `share` nhưng bị sửa tay nhét địa chỉ/lịch vào ⇒ lượt nhập lọc lại theo cùng bảng. */
     @Test
     fun `tep chia se sua tay khong lach duoc bo loc`() {
-        val shot = PrefSnapshot.encode(mapOf("nav_automation_rules" to "SNEAKY", "enabled" to true))
+        val shot = PrefSnapshot.encode(mapOf("nav_automation_rules" to "SNEAKY", "headless_autostart" to true))
         val data = ProfileTransfer.encodeHeader("X", ProfileTransfer.Kind.SHARE) + "\n" +
             PrefSnapshot.encode(mapOf("saved_places" to "SNEAKY", "preset" to "p1", cnSuffix to shot))
         val plan = ProfileTransfer.planImport(data, null, emptyList())!!
         assertNull(plan.writes["saved_places"])
         val cleaned = PrefSnapshot.decode(plan.writes[cnSuffix] as String)
         assertTrue(cleaned.containsKey("nav_automation_rules") && cleaned["nav_automation_rules"] == null)
-        assertEquals(true, cleaned["enabled"])
+        assertEquals(true, cleaned["headless_autostart"])
         assertEquals("p1", plan.writes["preset"])
     }
 

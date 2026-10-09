@@ -11,7 +11,7 @@ import android.content.res.Configuration
  * [android.app.Activity.attachBaseContext] time, forces the resource configuration's night bit so the
  * whole Activity resolves the values-night/ (DARK) or values/ (LIGHT) resources.
  *
- * Default is [Choice.SYSTEM] = "Theo xe" (follow the system/car dark/light) — in which case [wrap]
+ * Default is [Choice.SYSTEM] = "Theo máy" (follow the system/car dark/light) — in which case [wrap]
  * returns the base Context UNCHANGED (pure pass-through, zero behavior change vs. before this file).
  *
  * Stage 1 (foundation) wires persistence + [wrap]; the selector UI is added in Stage 2.
@@ -23,7 +23,7 @@ object ThemeMode {
 
     /** User theme selection. [code] is the stable persisted token (never localize/rename it). */
     enum class Choice(val code: String) {
-        /** Follow the system/car uiMode ("Theo xe"). Default. */
+        /** Follow the system/car uiMode ("Theo máy"). Default. */
         SYSTEM("system"),
         /** Force LIGHT (day) resources regardless of system. */
         LIGHT("light"),

@@ -24,7 +24,7 @@ import java.util.Locale
  * tiếng Anh mà mọi ô dữ liệu xe vẫn tiếng Việt (thiếu `Strings.current`). Nên [wrap] làm **cả hai trong một hàm** —
  * hai lời gọi ở hai chỗ khác nhau là cách chắc chắn để một chỗ được sửa và chỗ kia không.
  *
- * ## ⚠ Vì sao ca "Theo xe" cũng PHẢI đặt locale (khác hẳn [com.byd.clusternav.ThemeMode.wrap])
+ * ## ⚠ Vì sao ca "Theo máy" cũng PHẢI đặt locale (khác hẳn [com.byd.clusternav.ThemeMode.wrap])
  * Bản chủ đề của ClusterNav trả `base` nguyên vẹn cho ca `SYSTEM` — đúng, vì `uiMode` của máy vốn đã là thứ ta muốn.
  * Với ngôn ngữ thì **không** đúng: `values-en/` chỉ khớp locale `en*`, còn mọi locale khác (`ja`, `th`, `zh`…) rơi về
  * `values/` = **tiếng Việt**. Trong khi [LangMode.resolve] cho "mọi thứ khác → EN". Nghĩa là trên một xe locale Nhật,

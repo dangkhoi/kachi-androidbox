@@ -46,8 +46,8 @@ enum class SettingsGroup(
         "Home screen", "Layout and wallpaper",
     ),
     BARS(
-        "bars", "Thanh trạng thái & thanh nút", "Chip trên đỉnh và thanh nút xe",
-        "Status bar & button bar", "Top chips and the car button bar",
+        "bars", "Thanh trạng thái & thanh nút", "Thanh trên và thanh nút",
+        "Status bar & button bar", "Top bar and the button bar",
     ),
     DISPLAY(
         // 2.93 · SETTINGS-DISPLAY-SUBTITLE — câu phụ kể ĐỦ năm mục của trang (màu · độ trong suốt nền · cỡ thanh nút
@@ -68,13 +68,13 @@ enum class SettingsGroup(
     ),
     KEYS(
         // Android box B2 · W1 — đích nút xe (`ctl:`) / camera (`cam:`) gỡ khỏi bộ chọn ⇒ còn app + trợ lý.
-        "keys", "Phím vô-lăng", "Gán nút vật lý cho app hoặc trợ lý",
-        "Steering-wheel keys", "Bind physical buttons to apps or the assistant",
+        "keys", "Phím vật lý", "Gán nút vật lý cho app hoặc trợ lý",
+        "Physical keys", "Bind physical buttons to apps or the assistant",
     ),
     // Android box B2 · W1 — nhóm CAR (tiện nghi xe: HAL BYD) gỡ hẳn.
     VOICE(
-        "voice", "Giọng nói", "Nói với xe, giọng đọc, Hey Kachi",
-        "Voice", "Talk to the car, reply voice, Hey Kachi",
+        "voice", "Giọng nói", "Nói với Kachi, giọng đọc, Hey Kachi",
+        "Voice", "Talk to Kachi, reply voice, Hey Kachi",
     ),
     SYSTEM(
         "system", "Hệ thống & quyền", "Quyền, khởi động, bảo trì, nâng cao",

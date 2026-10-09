@@ -7,7 +7,7 @@ import com.byd.clusternav.launcher.voice.VoiceUtteranceLog
  * ═══ T-BRIDGE · LỆNH `voice_dump` — NÉN `voice-log/` RA THẺ, TRẢ VỀ ĐƯỜNG DẪN ════════════════════════════════
  *
  * Tách khỏi [KachiTestBridge] vì trần 500 dòng (CLAUDE.md §4.1; bài canh `TestBridgeSafetyContractTest`) — cùng
- * hình dạng với [TestBridgeWav]/[TestBridgeCtl]/[TestBridgeHal]: receiver lo cổng + vòng đời, tệp này lo một lệnh.
+ * hình dạng với [TestBridgeWav]/`TestBridgeCtl`/`TestBridgeHal`: receiver lo cổng + vòng đời, tệp này lo một lệnh.
  *
  * ## Vì sao nó đi qua ĐÚNG hàm mà nút trong Cài đặt đi
  * [VoiceUtteranceLog.exportZip] là **một** thân hàm — trước có hai lối vào, nay lệnh này là lối DUY NHẤT (nút

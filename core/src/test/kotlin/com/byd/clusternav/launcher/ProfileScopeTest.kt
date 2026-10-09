@@ -54,8 +54,8 @@ class ProfileScopeTest {
     @Test
     fun `bo cuc o thanh nut chip va lua chon ca nhan deu THEO HO SO`() {
         listOf(
-            "preset", "grid_layout", "dock_edge", "dock_enabled", "dock_visible", "top_strip", "slot_0", "slot_5",
-            "theme_mode", "unit_prefs", "wallpaper_prefs", "launcher_autostart", "lang",
+            "preset", "grid_layout", "dock_edge", "dock_enabled", "dock_visible", "slot_0", "slot_5",
+            "theme_mode", "wallpaper_prefs", "launcher_autostart", "lang",
             // Sổ địa chỉ (docs/specs/kachi-voice-addresses.html R1): *"nhà"* của người này không phải *"nhà"* của
             // người kia — khoá theo XE ở đây nghĩa là đổi hồ sơ mà câu *"về nhà"* vẫn dẫn về nhà người trước.
             "saved_places",
@@ -65,34 +65,40 @@ class ProfileScopeTest {
     }
 
     @Test
-    fun `cau hinh ClusterNav THEO HO SO — ke ca tu chieu va ti le chia doi`() {
+    fun `cau hinh ClusterNav con dung THEO HO SO`() {
         listOf(
-            "enabled", "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_x",
-            "voicekey_enabled", "voicekey_bindings", "seat_comfort_mode", "seat_level_0", "seat_level_3",
-            "pm25_filter_enabled", "recirc_on_start_enabled", "headless_autostart", "theme_choice",
+            "voicekey_enabled", "voicekey_bindings", "voicekey_custom_buttons", "headless_autostart", "theme_choice",
+            "voice_music_default_app", "nav_automation_rules",
         ).forEach { assertEquals(ProfileScope.Scope.PROFILE, ProfileScope.scopeOf(it), "khoá $it") }
     }
 
     /**
-     * Android box B2 · W2c — chiếu cụm BYD gỡ mã: khoá `simple_cast_prefs` (công tắc, tự chiếu, tỉ lệ, kiểu) + nút nổi
-     * (`cast-v2-app-catalog`) xếp THEO XE (retired, [RetiredClusterKeys]) ⇒ không vào ảnh chụp, không theo hồ sơ, và hai tệp
-     * ấy không còn hậu tố ảnh chụp ⇒ tệp `.kachi` cũ mang chúng bị lượt nhập bỏ im lặng (`ProfileTransferTest`).
+     * Android box B2 · W4 — khoá của tính năng BYD đã gỡ (chiếu cụm · camera · biển báo · bong bóng · tiện nghi · sấy kính ·
+     * chip · đơn vị · kiểm-từng-nút) KHÔNG còn bảng phạm vi nào nhận: [ProfileScope.scopeOf] ra UNKNOWN (không theo hồ sơ,
+     * không theo xe), không vào ảnh chụp, không là hậu tố. Máy cũ được [BydDeadPrefs] dọn một lần; tệp `.kachi` cũ
+     * mang chúng bị lượt nhập bỏ im lặng (`ProfileTransferTest`). Bài này canh chiều "không mọc lại vào phạm vi".
      */
     @Test
-    fun `khoa chieu cum da go la retired THEO XE va hai tep chieu cum roi anh chup`() {
-        listOf(
-            "cast_enabled", "cast_bubble_visible", "split_ratio_left_pct", "cast_style", "autostart_enabled",
-            "autostart_package", "autostart_split_enabled", "autostart_left_package", "autostart_right_package",
-            "cast_enabled_pending", "bubbleX", "bubbleY",
-        ).forEach {
-            assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf(it), "khoá $it")
+    fun `khoa BYD da go khong con pham vi nao nhan`() {
+        val dead = listOf(
+            "enabled", "nav_cluster_screen_mode", "marquee", "badge_enabled", "badge_size_dp", "vm_bubble_x", "vm_bubble_hidden",
+            "camera_signal_enabled", "camera_pos_left", "camera_rot_rear", "seat_comfort_mode", "seat_level_0",
+            "pm25_filter_enabled", "recirc_on_start_enabled", "rain_defrost_front", "cast_enabled", "cast_enabled_pending",
+            "bubbleX", "last_display_id", "doze_whitelist_applied", "captest_results", "migrated_cluster_profile_v1",
+            "config_size_com.byd.androidauto", "config_bounds_a.b__L30", "top_strip", "top_strip_labels",
+            "top_strip_migrated_ux5b", "unit_prefs",
+        )
+        dead.forEach {
+            assertEquals(ProfileScope.Scope.UNKNOWN, ProfileScope.scopeOf(it), "khoá $it đã gỡ mã — không được còn phạm vi")
             assertFalse(it in ProfileScope.CLUSTERNAV_PROFILE_KEYS, "khoá $it không được vào ảnh chụp")
+            assertFalse(it in ProfileScope.LAUNCHER_SUFFIXES, "khoá $it không được là hậu tố hồ sơ")
         }
-        listOf(RetiredClusterKeys.SIMPLE_CAST_FILE, RetiredClusterKeys.CAST_CATALOG_FILE).forEach {
+        listOf("simple_cast_prefs", "cast-v2-app-catalog").forEach {
             assertFalse(it in ProfileScope.CLUSTERNAV_KEYS, "tệp $it rời ảnh chụp")
             assertFalse(ProfileScope.snapshotSuffix(it) in ProfileScope.LAUNCHER_SUFFIXES, "hậu tố ảnh $it không còn")
         }
-        assertEquals(emptySet<String>(), ProfileScope.unclassified(RetiredClusterKeys.DEVICE_KEYS.keys))
+        assertTrue(ProfileScope.DEVICE_KEY_PREFIXES.isEmpty(), "họ config_ chiếu cụm gỡ cùng mã")
+        assertTrue(SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES.isEmpty(), "không còn tiền tố dựng động phía ClusterNav")
     }
 
     /**
@@ -100,22 +106,11 @@ class ProfileScopeTest {
      * sơ?), hoặc **mất dữ liệu** (xoá một hồ sơ mà mất lịch sử mở app của cả xe).
      */
     @Test
-    fun `danh sach ho so, lich su mo app, so hieu VD cum va co he thong deu THEO XE`() {
+    fun `danh sach ho so, lich su mo app, dau don va co he thong deu THEO XE`() {
         listOf(
             "profiles", "active_profile", "boot_profile", "migrated_scenes_v1", "recent_apps",
-            "last_display_id", "doze_whitelist_applied", "freeform_state", "enable_freeform_support",
-            "migrated_cluster_profile_v1", "cast_enabled_pending",
+            "freeform_state", "enable_freeform_support", BydDeadPrefs.MARK,
         ).forEach { assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf(it), "khoá $it") }
-    }
-
-    /** Android box B2 · W2c — họ `config_*` (khung/DPI từng app khi chiếu) gỡ cùng chiếu cụm ⇒ theo XE, không chép. */
-    @Test
-    fun `ho config_ chieu cum da go la THEO XE`() {
-        listOf(
-            "config_size_com.byd.androidauto", "config_overscan_x.y", "config_density_vn.vietmap.live",
-            "config_bounds_a.b__L30",
-        ).forEach { assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf(it), "khoá $it") }
-        assertTrue(ProfileScope.PROFILE_KEY_PREFIXES.keys.none { it.startsWith("config_") }, "không còn tiền tố config_ theo HỒ SƠ")
     }
 
     /**
@@ -185,12 +180,7 @@ class ProfileScopeTest {
             ProfileScope.LAUNCHER_OWNED_CLUSTERNAV_KEYS.keys +
             // +1 (2026-09-28): khoá TRẠNG THÁI theo hồ sơ, cố ý không có trong danh mục Cài đặt vì không có hàng
             // trên UI. Vẫn phải cộng vào đây, nếu không nó rơi khỏi ảnh chụp và đổi hồ sơ là mất sổ đã-dẫn.
-            ProfileScope.CLUSTERNAV_PROFILE_STATE_KEYS.keys +
-            // Khoá camera BYD theo hồ sơ KHÔNG có mục Cài đặt (mã gỡ ở W2b, tên giữ tới W4). Vẫn là phép BẰNG: thêm một
-            // khoá ngoài các bảng này vào ảnh chụp thì đỏ.
-            RetiredCameraKeys.PROFILE.keys +
-            // W2e — khoá tiện nghi xe BYD theo hồ sơ (ghế · lọc bụi · lấy gió) rời danh mục, tên giữ tới W4.
-            RetiredComfortKeys.PROFILE.keys
+            ProfileScope.CLUSTERNAV_PROFILE_STATE_KEYS.keys
         assertEquals(expected, ProfileScope.CLUSTERNAV_PROFILE_KEYS)
         assertTrue("voicekey_learn" !in ProfileScope.CLUSTERNAV_PROFILE_KEYS)
     }
@@ -201,32 +191,6 @@ class ProfileScopeTest {
      * Tách chúng ra là mời hỏng theo cả hai chiều: luật theo hồ sơ mà dấu đã-dẫn theo xe ⇒ đổi hồ sơ là dẫn lại
      * lần hai trong cùng khung giờ; ngược lại thì sổ đã-dẫn đọc rỗng ở hồ sơ mới, cũng dẫn hai lần.
      */
-    /**
-     * Android box B2 · W2e — tiện nghi xe + tự sấy kính gỡ mã: khoá rời danh mục Cài đặt ([SettingsCatalog.CLUSTERNAV_KEYS])
-     * nhưng GIỮ phạm vi cũ ([RetiredComfortKeys]) ⇒ tệp hồ sơ cũ không thành "khoá không phân loại", đổi hồ sơ không đổi hành vi
-     * với dữ liệu đang nằm trên máy, tới W4 dọn.
-     */
-    @Test
-    fun `khoa tien nghi xe da go giu pham vi cu`() {
-        RetiredComfortKeys.PROFILE.keys.forEach {
-            assertEquals(ProfileScope.Scope.PROFILE, ProfileScope.scopeOf(it), "khoá $it")
-            assertTrue(it !in SettingsCatalog.CLUSTERNAV_KEYS, "$it phải rời danh mục (mã đã gỡ)")
-            assertTrue(it in ProfileScope.CLUSTERNAV_PROFILE_KEYS, "$it vẫn trong ảnh chụp tới W4")
-        }
-        RetiredComfortKeys.DEVICE.keys.forEach {
-            assertEquals(ProfileScope.Scope.DEVICE, ProfileScope.scopeOf(it), "khoá $it (tự sấy kính theo XE như 1.85)")
-            assertTrue(it !in SettingsCatalog.CLUSTERNAV_KEYS, "$it phải rời danh mục")
-        }
-        assertEquals(
-            setOf("seat_level_0", "seat_level_1", "seat_level_2", "seat_level_3"),
-            RetiredComfortKeys.PROFILE.keys.filter { it.startsWith("seat_level_") }.toSet(),
-            "bốn mức ghế khai tường minh (tiền tố động `seat_level_` đã gỡ)",
-        )
-        assertTrue(SettingsCatalog.CLUSTERNAV_DYNAMIC_KEY_PREFIXES.isEmpty(), "không còn tiền tố dựng động phía ClusterNav")
-        assertEquals(RetiredComfortKeys.PROFILE.keys, RetiredComfortKeys.TYPES.keys, "mọi khoá theo hồ sơ có kiểu khai sẵn")
-        RetiredComfortKeys.TYPES.forEach { (k, t) -> assertEquals(t, ProfileScopeTypes.CLUSTERNAV[k], k) }
-    }
-
     @Test
     fun `luat lich va so da-dan CUNG mot pham vi HO SO`() {
         listOf("nav_automation_rules", "nav_automation_fired").forEach {
@@ -270,8 +234,6 @@ class ProfileScopeTest {
         listOf(
             ProfileScope.DEVICE_KEYS, ProfileScope.DEVICE_KEY_PREFIXES, ProfileScope.TRANSIENT_KEYS,
             ProfileScope.PROFILE_KEY_PREFIXES, ProfileScope.LAUNCHER_OWNED_CLUSTERNAV_KEYS,
-            RetiredClusterKeys.DEVICE_KEYS, RetiredClusterKeys.DEVICE_KEY_PREFIXES, RetiredCameraKeys.PROFILE,
-            RetiredCameraKeys.DEVICE,
         ).forEach { table ->
             assertTrue(table.values.all { it.isNotBlank() }, "thiếu lý do: $table")
         }

@@ -25,10 +25,10 @@ package com.byd.clusternav.launcher
 object ShortcutPlan {
 
     /** Vì sao không làm / làm khác ý — tầng UI đổi ra chuỗi `kachi_sc_*`. */
-    enum class Reason { NOT_INSTALLED, SLOT_ABSENT, IN_OTHER_SLOT, RUNNING, SYSTEM_APP, CAST, SELF, NO_STAGE }
+    enum class Reason { NOT_INSTALLED, SLOT_ABSENT, IN_OTHER_SLOT, RUNNING, SYSTEM_APP, SELF, NO_STAGE }
 
     /** Loại trừ chung R0.6 — đo ở tầng `:app` (PackageManager · `am stack list` · tên gói của chính mình). */
-    enum class Exclusion { SYSTEM_APP, CAST, SELF }
+    enum class Exclusion { SYSTEM_APP, SELF }   // Android box B2 · W4: `CAST` (app đang chiếu cụm) gỡ — không còn chiếu cụm
 
     /**
      * Mọi thứ [decide] cần — đều là SỰ THẬT đã đo ở tầng `:app`, không cờ RAM nào quyết định đổi cửa sổ (CLAUDE.md §5).
@@ -120,7 +120,6 @@ object ShortcutPlan {
 
     private fun reasonOf(e: Exclusion): Reason = when (e) {
         Exclusion.SYSTEM_APP -> Reason.SYSTEM_APP
-        Exclusion.CAST -> Reason.CAST
         Exclusion.SELF -> Reason.SELF
     }
 }

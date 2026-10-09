@@ -186,18 +186,18 @@ class UpdateCheckerTest {
         val noCh = LocalInstallOutcome.NoShellChannel(LocalShellFailure.PORT_CLOSED)
         val wait = LocalInstallOutcome.NoShellChannel(LocalShellFailure.AWAITING_APPROVAL)
         assertEquals(
-            "không có kênh shell tới xe (PORT_CLOSED) — xem Cài đặt › Hệ thống & quyền. APK đã tải ở: $p",
+            "không có kênh shell tới máy (PORT_CLOSED) — xem Cài đặt › Hệ thống & quyền. APK đã tải ở: $p",
             UpdateChecker.installMessage(noCh, p),
         )
         assertEquals(
-            "không có kênh shell tới xe (AWAITING_APPROVAL) — bấm \"Cho phép/Allow\" (tích \"luôn cho phép\") trên hộp " +
+            "không có kênh shell tới máy (AWAITING_APPROVAL) — bấm \"Cho phép/Allow\" (tích \"luôn cho phép\") trên hộp " +
                 "thoại gỡ lỗi USB rồi cài lại. APK đã tải ở: $p",
             UpdateChecker.installMessage(wait, p),
         )
         assertEquals("pm install từ chối: pm không in gì. APK đã tải ở: $p", UpdateChecker.installMessage(LocalInstallOutcome.PmRejected(""), p))
         CoreStrings.current = CoreLang.EN
         assertEquals(
-            "no shell channel to the head unit (PORT_CLOSED) — see Settings › System & permissions. APK saved at: $p",
+            "no shell channel to the device (PORT_CLOSED) — see Settings › System & permissions. APK saved at: $p",
             UpdateChecker.installMessage(noCh, p),
         )
         assertEquals(

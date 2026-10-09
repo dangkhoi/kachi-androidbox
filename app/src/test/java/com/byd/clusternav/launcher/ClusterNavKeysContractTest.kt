@@ -97,11 +97,11 @@ class ClusterNavKeysContractTest {
                 "tên tệp prefs '$prefsFile' không có trong ${rels}",
             )
         }
-        // Sàn 30 (IA v2 §4.3) hạ 25 ở Android box B2 · W2e: 11 khoá tiện nghi xe + tự sấy kính rời bảng cùng mã
-        // ([RetiredComfortKeys]); sàn vẫn chặn ca "bộ quét/bảng rỗng".
+        // Sàn 30 (IA v2 §4.3) hạ 25 ở W2e, hạ 15 ở Android box B2 · W4: 13 khoá dẫn đường cụm · biển báo · bong bóng VietMap
+        // rời bảng cùng mã ([BydDeadPrefs]) — [ĐO] còn 16; sàn vẫn chặn ca "bộ quét/bảng rỗng".
         assertTrue(
-            SettingsCatalog.CLUSTERNAV_KEYS.size >= 25,
-            "bảng khoá chỉ có ${SettingsCatalog.CLUSTERNAV_KEYS.size} khoá — kiểm kê Android box ≥ 25",
+            SettingsCatalog.CLUSTERNAV_KEYS.size >= 15,
+            "bảng khoá chỉ có ${SettingsCatalog.CLUSTERNAV_KEYS.size} khoá — kiểm kê Android box ≥ 15",
         )
     }
 
@@ -109,10 +109,8 @@ class ClusterNavKeysContractTest {
 
     @Test
     fun `moi khoa ClusterNav ton tai nguyen van trong dung tep nguon`() {
-        // Android box B2 · W2c — khoá mà mã đã gỡ (biển báo · bong bóng VietMap) được tha ĐÚNG danh sách khai ở `:core`,
-        // và phải THẬT SỰ vắng khỏi mọi tệp nguồn (bài dưới) — không tha theo mẫu.
         val missing = SettingsCatalog.CLUSTERNAV_KEYS.filterNot { (key, prefsFile) ->
-            key in SettingsCatalog.RETIRED_CODE_REMOVED_KEYS || sourcesFor(prefsFile).any { (_, src) -> declares(src, key) }
+            sourcesFor(prefsFile).any { (_, src) -> declares(src, key) }
         }
         assertEquals(
             emptyMap<String, String>(), missing,
@@ -122,28 +120,25 @@ class ClusterNavKeysContractTest {
         )
     }
 
-    @Test
-    fun `khoa da go ma that su vang khoi ma va van trong danh muc`() {
-        val removed = SettingsCatalog.RETIRED_CODE_REMOVED_KEYS
-        assertTrue(removed.size >= 10, "bảng khoá đã gỡ mã rỗng/hụt: $removed")
-        assertTrue(removed.all { it in SettingsCatalog.CLUSTERNAV_KEYS && it in SettingsCatalog.RETIRED_UI_KEYS })
-        val all = SOURCES.values.flatten().joinToString("\n") { codeOf(it) }
-        assertEquals(emptyList<String>(), removed.filter { declares(all, it) }, "khoá 'đã gỡ mã' mà mã còn đọc/ghi")
-    }
-
     /**
-     * Android box B2 · W2e — khoá tiện nghi xe + tự sấy kính gỡ mã: rời [SettingsCatalog.CLUSTERNAV_KEYS] (không còn chủ
-     * nào trong mã để bài nguyên-văn canh) và phải THẬT SỰ vắng khỏi mọi tệp nguồn phía ClusterNav (mọc lại một chỗ đọc
-     * là mọc lại tính năng HAL mà không ai nối). Tên vẫn xếp phạm vi qua [RetiredComfortKeys] (bài ở `ProfileScopeTest`).
+     * Android box B2 · W2c/W2e/W4 — khoá của tính năng BYD đã gỡ (dẫn đường cụm/HUD · biển báo · bong bóng VietMap ·
+     * tiện nghi xe · tự sấy kính) rời [SettingsCatalog.CLUSTERNAV_KEYS] và phải THẬT SỰ vắng khỏi mọi tệp nguồn phía
+     * ClusterNav (mọc lại một chỗ đọc là mọc lại tính năng BYD mà không ai nối). Lượt dọn một lần xoá chúng khỏi máy.
      */
     @Test
-    fun `khoa tien nghi xe da go vang khoi ma va khoi danh muc`() {
-        val names = RetiredComfortKeys.PROFILE.keys + RetiredComfortKeys.DEVICE.keys
-        assertEquals(11, names.size, "bảng retired tiện nghi xe hụt: $names")
+    fun `khoa BYD da go vang khoi ma va khoi danh muc`() {
+        val names = listOf(
+            "enabled", "nav_cluster_screen_mode", "marquee", "source_mode", "lane", "interpolate", "hud", "acc_booster",
+            "anim_opt", "bubble_auto", "nav_verbose_log", "badge_enabled", "show_upcoming_badge", "show_alert_chip",
+            "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_enabled", "vm_bubble_hidden", "vm_bubble_x",
+            "vm_bubble_y", "seat_comfort_enabled", "seat_comfort_mode", "seat_level_0", "pm25_filter_enabled",
+            "recirc_on_start_enabled", "rain_defrost_enabled", "rain_defrost_front", "rain_defrost_rear",
+        )
         assertEquals(emptyList<String>(), names.filter { it in SettingsCatalog.CLUSTERNAV_KEYS }, "còn trong danh mục")
         val all = SOURCES.values.flatten().joinToString("\n") { codeOf(it) }
-        assertEquals(emptyList<String>(), names.filter { declares(all, it) }, "mã còn đọc/ghi khoá tiện nghi xe")
-        assertTrue("\"seat_level_\$" !in all, "mẫu dựng động mức ghế đã gỡ")
+        assertEquals(emptyList<String>(), names.filter { declares(all, it) }, "mã còn đọc/ghi khoá BYD đã gỡ")
+        assertTrue("\"seat_level_\$" !in all && "\"mod_\"" !in all, "mẫu dựng động mức ghế / module đã gỡ")
+        assertTrue(names.all(BydDeadPrefs::isDeadClusterNavKey), "lượt dọn một lần phải xoá mọi khoá ấy khỏi máy")
     }
 
     /**
@@ -184,7 +179,7 @@ class ClusterNavKeysContractTest {
     @Test
     fun `moi tep nguon deu dong gop it nhat mot khoa`() {
         mapOf(
-            "enabled" to "Prefs.kt (tệp chính của ClusterNav)",
+            "headless_autostart" to "Prefs.kt (tệp chính của ClusterNav)",
             "voice_mic_source" to "PrefsVoiceV3.kt (cùng tệp prefs, khác tệp nguồn)",
             "theme_choice" to "ThemeMode.kt (tệp prefs riêng, đọc được ở attachBaseContext)",
             "lang" to "Lang.kt (chỗ lưu ngôn ngữ dùng chung cả APK)",
@@ -203,9 +198,7 @@ class ClusterNavKeysContractTest {
     @Test
     fun `khoa co UI deu co chu hoac la khoa di kem`() {
         val ownerless = SettingsCatalog.CLUSTERNAV_KEYS.keys.filter { key ->
-            SettingsCatalog.groupOf(key) == null && key !in SettingsCatalog.CLUSTERNAV_COMPANION_KEYS &&
-                // Android box B2 · W1 — khoá đã rời UI (mục chỉ-BYD gỡ) mà còn theo hồ sơ: bảng tha ĐÚNG danh sách có lý do.
-                key !in SettingsCatalog.RETIRED_UI_KEYS
+            SettingsCatalog.groupOf(key) == null && key !in SettingsCatalog.CLUSTERNAV_COMPANION_KEYS
         }
         assertEquals(
             emptyList<String>(), ownerless,

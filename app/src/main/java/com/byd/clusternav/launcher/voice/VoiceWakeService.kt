@@ -344,7 +344,7 @@ class VoiceWakeService : Service() {
         handoffUntil = SystemClock.elapsedRealtime() + WAKE_HANDOFF_MS
         // (3) R7 — mở PHIÊN NGHE của chính `:wake` với overlay ĐỘC LẬP, KHÔNG kéo KachiHomeActivity lên đè app
         //     đang xem (owner 2026-09-23). Overlay `TYPE_APPLICATION_OVERLAY` nổi trên mọi thứ; điều khiển/nav/nhạc
-        //     chạy thẳng từ service. Đường Activity (nút mic/"Nói với xe") KHÔNG đổi.
+        //     chạy thẳng từ service. Đường Activity (nút mic/"Nói với Kachi") KHÔNG đổi.
         WakeSessionLog.pending(WakeSessionJournal.Entry.WAKE_WORD, VoiceWakeMode.WAKE)   // VK6 — phiếu cho nhật ký phiên
         runCatching { main.post { voiceSession.start() } }
             .onFailure { Log.w(TAG, "fireWake mở phiên nghe lỗi", it) }

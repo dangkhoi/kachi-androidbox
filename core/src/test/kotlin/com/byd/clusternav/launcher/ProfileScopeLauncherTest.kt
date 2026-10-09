@@ -82,17 +82,17 @@ class ProfileScopeLauncherTest {
     }
 
     @Test
-    fun `tep doc nhieu kieu sai - slot_0 Int, preset Boolean, top_strip Long - khong vao ho so moi`() {
+    fun `tep doc nhieu kieu sai - slot_0 Int, preset Boolean, dock_edge Long - khong vao ho so moi`() {
         val body = linkedMapOf<String, Any?>(
-            "slot_0" to 5, "preset" to true, "top_strip" to 7L, "grid_layout" to setOf("a", "b"),
+            "slot_0" to 5, "preset" to true, "dock_edge" to 7L, "grid_layout" to setOf("a", "b"),
             "header_order" to emptySet<String>(), "dock_visible" to 1.0f, "launcher_autostart" to "yes",
-            "top_strip_labels" to "true",
+            "swap_button_autohide" to "true",
             // đúng kiểu — phải đi qua nguyên vẹn
-            "slot_1" to "app:x", "theme_mode" to "DAY", "dock_enabled" to "nav,ac", "top_strip_migrated_ux5b" to true,
+            "slot_1" to "app:x", "theme_mode" to "DAY", "dock_enabled" to "nav,ac", "launcher_autostart_x" to true,
         )
         val plan = ProfileTransfer.planImport(header + "\n" + PrefSnapshot.encode(body), null, listOf("A"))!!
         val bad = setOf(
-            "slot_0", "preset", "top_strip", "grid_layout", "header_order", "dock_visible", "launcher_autostart", "top_strip_labels",
+            "slot_0", "preset", "dock_edge", "grid_layout", "header_order", "dock_visible", "launcher_autostart", "swap_button_autohide",
         )
         assertEquals(bad, plan.dropped.toSet(), "mọi hậu tố sai kiểu phải được BÁO (log), không lặng lẽ")
         bad.forEach {
@@ -102,7 +102,7 @@ class ProfileScopeLauncherTest {
         assertEquals("app:x", plan.writes["slot_1"])
         assertEquals("DAY", plan.writes["theme_mode"])
         assertEquals("nav,ac", plan.writes["dock_enabled"])
-        assertEquals(true, plan.writes["top_strip_migrated_ux5b"])
+        assertTrue("launcher_autostart_x" !in plan.writes, "hậu tố lạ bị bỏ im lặng")
         // Mọi giá trị còn lại trong kế hoạch đều đúng kiểu khai — đây là bất biến mà lượt `load()` dựa vào.
         plan.writes.forEach { (k, v) ->
             if (v != null) assertEquals(ProfileScopeLauncher.DECLARED_TYPES[k], PrefType.of(v), "kiểu của $k trong kế hoạch")

@@ -36,7 +36,7 @@ import com.byd.clusternav.launcher.KachiSpace as Sp
  * bên — cùng lập luận đã đưa [BarOrder.move] về `:core` (xem KDoc ở đó).
  *
  * Lớp này **KHÔNG ghi bền và KHÔNG giữ nguồn sự thật**: nó đọc [current] mỗi lượt dựng và báo ra qua [onMove].
- * Cùng ranh giới [TopStripPicker].
+ * Cùng ranh giới `TopStripPicker`.
  */
 class SettingsBarOrderRows<T>(
     private val context: Context,
@@ -79,7 +79,7 @@ class SettingsBarOrderRows<T>(
      *
      * Dựng lại **cả** danh sách thay vì đổi chỗ hai hàng: một cú dời đổi **số thứ tự của mọi hàng ở giữa** và đổi
      * cả trạng thái mờ/rõ của nút ở hai đầu. Tô tại chỗ thì ba thứ đó lệch nhau — đúng lỗi đã đo ở dòng *"chưa
-     * kiểm"* của [TopStripPicker] hồi U7.
+     * kiểm"* của `TopStripPicker` hồi U7.
      */
     private fun rebuild() {
         list.removeAllViews()
@@ -141,7 +141,7 @@ class SettingsBarOrderRows<T>(
 
         /**
          * Mũi tên là **KÝ HIỆU**, không phải chữ ⇒ không đi qua `getString` (`LauncherI18nContractTest` chỉ bắt
-         * literal có CHỮ CÁI — cùng ranh giới với dấu ▸/▾ của [TopStripPicker]). Tên đọc được cho trình đọc màn
+         * literal có CHỮ CÁI — cùng ranh giới với dấu ▸/▾ của `TopStripPicker`). Tên đọc được cho trình đọc màn
          * hình thì vẫn từ `R.string`.
          *
          * Dùng **lên/xuống** chứ không trái/phải: danh sách xếp DỌC, nên mũi tên phải chỉ theo chiều người dùng

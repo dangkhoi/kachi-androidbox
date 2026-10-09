@@ -195,7 +195,7 @@ class ProfileKeysWiringContractTest {
      */
     @Test
     fun `khoa theo XE KHONG duoc nam trong danh sach hau to`() {
-        listOf("profiles", "active_profile", "boot_profile", "migrated_scenes_v1", "recent_apps", "last_display_id")
+        listOf("profiles", "active_profile", "boot_profile", "migrated_scenes_v1", "recent_apps", "kachi_shell_approval")
             .forEach {
                 assertTrue(
                     it !in WorkspacePrefs.PROFILE_SUFFIXES,
@@ -207,7 +207,7 @@ class ProfileKeysWiringContractTest {
                 )
             }
         // Chiều ngược: bốn khoá S4 vừa đưa về hồ sơ phải THẬT SỰ tới nơi.
-        listOf("theme_mode", "unit_prefs", "wallpaper_prefs", "launcher_autostart", "lang", "saved_places", "color_choice").forEach {
+        listOf("theme_mode", "wallpaper_prefs", "launcher_autostart", "lang", "saved_places", "color_choice").forEach {
             assertTrue(
                 it in WorkspacePrefs.PROFILE_SUFFIXES,
                 "S4 · R3(a): `$it` nay THEO HỒ SƠ — thiếu nó thì hồ sơ chỉ cover được một nửa",

@@ -63,6 +63,15 @@ class AccessibilityBindingStuckTest {
         )
     }
 
+    /** Android box B2 · W4 — nhãn mới `Kachi — phím vật lý` (đã bị ROM cắt đuôi) vẫn được đọc là ĐÃ GẮN. */
+    @Test
+    fun `nhan moi Kachi van duoc doc la DA GAN`() {
+        val newLabel = dumpHealed.replace("ClusterNav — booster đọc bản đồ", "Kachi — phím v…")
+        assertTrue(AccessibilityRebind.isClusterNavBound(newLabel, comp))
+        val other = newLabel.replace("Kachi — phím v…", "Trợ lý giọng nói")
+        assertFalse(AccessibilityRebind.isClusterNavBound(other, comp), "nhãn của app khác không được nhận là của mình")
+    }
+
     @Test
     fun `dump da chua PHAI duoc doc la DA GAN`() {
         assertTrue(

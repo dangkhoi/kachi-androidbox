@@ -40,8 +40,8 @@ internal object VoiceReplyUnknown {
             VERB_EXAMPLES,
         )
         VoiceUnknownReason.NO_OBJECT -> Strings.t(
-            "Không tìm thấy thứ đó trong xe hay trong ứng dụng",
-            "No such thing on this car or in the app",
+            "Không tìm thấy thứ đó trong Kachi hay trong ứng dụng",
+            "No such thing in Kachi or in the apps",
             lang,
         )
         VoiceUnknownReason.MISMATCH -> Strings.t(

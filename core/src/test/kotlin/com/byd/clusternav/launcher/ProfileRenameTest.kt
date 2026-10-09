@@ -42,8 +42,8 @@ class ProfileRenameTest {
         assertTrue("preset" in p.suffixes)
         assertTrue(p.suffixes.any { it.startsWith(SettingsCatalog.SLOT_KEY_PREFIX) })
         assertTrue(p.suffixes.any { it.startsWith(ProfileScope.SNAPSHOT_INFIX) })
-        // V3 · R14 — công tắc nhãn chip là hậu tố theo hồ sơ MỚI ⇒ đổi tên phải kéo theo nó.
-        assertTrue("top_strip_labels" in p.suffixes, "khoá theo-hồ-sơ mới mà quên ở đây là một khoá mồ côi")
+        // Hậu tố theo hồ sơ thêm về sau (2.91 tên app tự dạy) ⇒ đổi tên phải kéo theo nó.
+        assertTrue("voice_app_names" in p.suffixes, "khoá theo-hồ-sơ mới mà quên ở đây là một khoá mồ côi")
     }
 
     @Test

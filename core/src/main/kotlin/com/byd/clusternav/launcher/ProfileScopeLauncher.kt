@@ -23,7 +23,7 @@ package com.byd.clusternav.launcher
  *     (`stringOrNull`/`booleanOrNull`), nên `load()` không sập kể cả trên máy đã nhập tệp độc trước bản này.
  *
  * Bài canh: `ProfileScopeLauncherTest` (`:core`) đòi bảng phủ ĐÚNG [ProfileScope.LAUNCHER_SUFFIXES] (hậu tố mới quên
- * khai kiểu ⇒ đỏ) và chạy thật các ca tệp độc (`slot_0` Int/Boolean, `preset` Boolean, `top_strip` Long…);
+ * khai kiểu ⇒ đỏ) và chạy thật các ca tệp độc (`slot_0` Int/Boolean, `preset` Boolean, `grid_layout` Long…);
  * `LauncherProfileTypesCoverageTest` (`:app`) quét MỌI lượt `put*`/đọc khoá theo hồ sơ trong `WorkspacePrefs*.kt` và đòi
  * kiểu của chúng == bảng này, mọi hậu tố có cả lượt ghi lẫn lượt đọc, và không còn lượt `sp.get*` trần nào trên khoá
  * mang tiền tố hồ sơ.
@@ -36,11 +36,11 @@ object ProfileScopeLauncher {
     /** Hậu tố → kiểu mà `WorkspacePrefs` ghi và đọc. Kiểu chỉ có hai: chuỗi mã hoá hoặc cờ. */
     val DECLARED_TYPES: Map<String, PrefType> = buildMap {
         // Bố cục — `WorkspacePrefs.save/saveDock/setTopStrip/setHeaderLayout/setGridLayout` + `writeRecord` của lượt chuyển cảnh.
-        listOf("preset", "dock_edge", "dock_enabled", "top_strip", "grid_layout", "header_order", "app_shortcuts", "dock_scale")
+        listOf("preset", "dock_edge", "dock_enabled", "grid_layout", "header_order", "app_shortcuts", "dock_scale")
             .forEach { put(it, PrefType.STRING) }
-        listOf("dock_visible", "top_strip_labels", "top_strip_migrated_ux5b", "swap_button_autohide").forEach { put(it, PrefType.BOOLEAN) }
-        // Cá nhân — chuỗi mã hoá của `:core` (`UnitPrefs`, `WallpaperPrefs`, `SavedPlaces`, `ColorChoice`, `LangMode`…).
-        listOf("theme_mode", "unit_prefs", "wallpaper_prefs", "lang", "saved_places", "color_choice", "ignition_apps", "ignition_music",
+        listOf("dock_visible", "swap_button_autohide").forEach { put(it, PrefType.BOOLEAN) }
+        // Cá nhân — chuỗi mã hoá của `:core` (`WallpaperPrefs`, `SavedPlaces`, `ColorChoice`, `LangMode`…).
+        listOf("theme_mode", "wallpaper_prefs", "lang", "saved_places", "color_choice", "ignition_apps", "ignition_music",
             "voice_app_names")   // 2.91 — TaughtNamesCodec (TSV v1)
             .forEach { put(it, PrefType.STRING) }
         put("launcher_autostart", PrefType.BOOLEAN)

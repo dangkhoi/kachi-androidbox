@@ -4,8 +4,8 @@ package com.byd.clusternav.launcher
  * Kiểu KHAI SẴN của khoá ClusterNav theo hồ sơ mà tầng này biết chắc (đọc từ chỗ `get*`/`put*` thật). Lượt áp/nhập bỏ
  * giá trị sai kiểu — kể cả khi tệp sống đang VẮNG khoá (ca mà phép so với kiểu sống không bắt được).
  *
- * Android box B2 · W2c: tách từ `ProfileScopeCluster.DECLARED_TYPES` (tệp đó gỡ cùng chiếu cụm); bỏ các khoá của
- * `simple_cast_prefs` / `cast-v2-app-catalog` (hai tệp đã rời ảnh chụp). Khoá camera lấy ở [RetiredCameraKeys.TYPES].
+ * Android box B2 · W2c: tách từ `ProfileScopeCluster.DECLARED_TYPES` (tệp đó gỡ cùng chiếu cụm). W4: chỉ còn khoá của
+ * phần giữ (phím · khởi động nền · app nhạc mặc định · lịch tự dẫn · chủ đề).
  *
  * Ca đắt nhất (senior review V-CLUSTER Pass 2): `voicekey_bindings` đọc bằng `getString` mỗi lần bấm phím vô-lăng — tệp
  * nhập đặt nó thành Boolean trên máy chưa từng gán phím (tệp sống VẮNG khoá) ⇒ dịch vụ phím nổ. Bài canh `:app`
@@ -14,14 +14,7 @@ package com.byd.clusternav.launcher
 object ProfileScopeTypes {
 
     val CLUSTERNAV: Map<String, PrefType> = buildMap {
-        putAll(RetiredCameraKeys.TYPES)
-        putAll(RetiredComfortKeys.TYPES)   // Android box B2 · W2e — ghế · lọc bụi · lấy gió (mã gỡ, khoá còn theo hồ sơ tới W4)
-        // `Prefs.enabled/marquee` getBoolean · `Prefs.navClusterScreenMode` getInt · khoá biển báo/bong bóng đời BYD
-        // (mã đọc đã gỡ, khoá còn theo hồ sơ tới W4 — `SettingsCatalogRetired`).
-        listOf("enabled", "marquee", "badge_enabled", "show_upcoming_badge", "show_alert_chip", "vm_bubble_enabled", "vm_bubble_hidden")
-            .forEach { put(it, PrefType.BOOLEAN) }
-        listOf("nav_cluster_screen_mode", "badge_size_dp", "badge_center_x", "badge_center_y", "vm_bubble_x", "vm_bubble_y")
-            .forEach { put(it, PrefType.INT) }
+        // Android box B2 · W4 — kiểu của khoá camera / tiện nghi / dẫn đường cụm / biển báo / bong bóng BYD gỡ cùng các khoá ấy.
         listOf("voicekey_enabled", "headless_autostart")
             .forEach { put(it, PrefType.BOOLEAN) }
         listOf(

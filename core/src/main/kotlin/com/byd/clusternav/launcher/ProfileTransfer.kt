@@ -163,7 +163,27 @@ object ProfileTransfer {
         // Chỉ hậu tố HỢP LỆ — chống chuỗi lạ nhét khoá ngoài phạm vi hồ sơ.
         val values = PrefSnapshot.decode(lines[1]).filterKeys { it in ProfileScope.LAUNCHER_SUFFIXES }
         val typed = ProfileScopeLauncher.check(values)
-        val kept = if (header.kind == Kind.SHARE) forShare(typed.values) else typed.values
+        val scoped = scopedShots(typed.values)
+        val kept = if (header.kind == Kind.SHARE) forShare(scoped) else scoped
         return ImportPlan(target, header.kind, ProfileScope.LAUNCHER_SUFFIXES.associateWith { kept[it] }, typed.dropped)
+    }
+
+    /**
+     * Android box B2 · W4 — ảnh chụp ClusterNav trong tệp chỉ giữ khoá TRONG phạm vi ([ProfileScope.CLUSTERNAV_KEYS]). Tệp
+     * `.kachi` của Kachi BYD mang khoá camera / cụm / biển báo / tiện nghi trong ảnh `__cn__clusternav_prefs`: lượt áp vốn đã
+     * bỏ chúng ([PrefSnapshotPlan.apply]), nhưng để nguyên thì chúng nằm mãi trong `kachi_workspace`. Bỏ IM LẶNG (không vào
+     * `dropped` — đó là dữ liệu của tính năng đã gỡ, không phải tệp hỏng); khoá trong phạm vi sai kiểu thì lượt áp lo như cũ.
+     * Ảnh không có gì để bỏ ⇒ giữ nguyên byte.
+     */
+    private fun scopedShots(values: Map<String, Any?>): Map<String, Any?> {
+        val out = LinkedHashMap(values)
+        ProfileScope.CLUSTERNAV_KEYS.forEach { (file, keys) ->
+            val suffix = ProfileScope.snapshotSuffix(file)
+            val raw = values[suffix] as? String ?: return@forEach
+            val shot = PrefSnapshot.decode(raw)
+            val inScope = shot.filterKeys { it in keys }
+            if (inScope.size != shot.size) out[suffix] = PrefSnapshot.encode(inScope)
+        }
+        return out
     }
 }

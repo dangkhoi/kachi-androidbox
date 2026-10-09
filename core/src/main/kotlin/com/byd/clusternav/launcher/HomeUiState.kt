@@ -60,7 +60,7 @@ data class HomeUiState(
      */
     val colorChoice: ColorChoice = ColorChoice.DEFAULT,
     /**
-     * U5 · T3 — NGÔN NGỮ launcher. Mặc định [LangMode.AUTO] ("Theo xe", §6 OQ1): xe của owner đặt tiếng Việt nên
+     * U5 · T3 — NGÔN NGỮ launcher. Mặc định [LangMode.AUTO] ("Theo máy", §6 OQ1): xe của owner đặt tiếng Việt nên
      * không ai thấy gì khác, còn người cài trên máy tiếng khác thì nhận đúng tiếng Anh mà không phải đi tìm nút.
      *
      * ## Vì sao nó ở TRONG state chứ không để bộ chọn tự đọc prefs

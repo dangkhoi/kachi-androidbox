@@ -86,11 +86,11 @@
     <string name="kachi_shell_approval_retry">Retry</string>
     <!-- READY-AT-HOME §4.9 — access card + channel status on slots without a projector -->
     <string name="kachi_access_title">Kachi needs window control permission</string>
-    <string name="kachi_access_never_body">To put apps in slots, cast to the cluster and fix the steering-wheel keys, allow debugging. When \"Allow USB debugging?\" appears, tick \"Always allow from this computer\", then OK.</string>
-    <string name="kachi_access_lost_title">The car no longer accepts Kachi\'s permission</string>
+    <string name="kachi_access_never_body">To put apps in slots and fix the physical keys, allow debugging. When “Allow USB debugging?” appears, tick “Always allow from this computer”, then OK.</string>
+    <string name="kachi_access_lost_title">This device no longer accepts Kachi\'s access</string>
     <string name="kachi_access_lost_body">It may have expired after a long break, been revoked, or was allowed only once last time. Tap Ask again and tick \"Always allow\".</string>
     <string name="kachi_access_env_title">Window control channel is not available</string>
-    <string name="kachi_access_env_body">The car\'s debugging port isn\'t ready. Tap Retry in a few seconds.</string>
+    <string name="kachi_access_env_body">The device\'s debugging port isn\'t ready yet. Tap Retry in a few seconds.</string>
     <string name="kachi_access_ask_again">Ask again</string>
     <string name="kachi_access_later">Later</string>
     <string name="kachi_slot_connecting">Connecting…</string>
@@ -110,19 +110,19 @@
     <string name="kachi_row_accent">Accent colour</string>
     <string name="kachi_row_tone">Card tone</string>
     <string name="kachi_row_bg_opacity">Background transparency</string>
-    <string name="kachi_bg_opacity_note">One level for the backgrounds of the status bar, the car button bar and widgets — all the way left looks as before, dragging right makes them more see-through, and all the way right (100%) makes them fully transparent. Text and icons always stay as they are; on a bright wallpaper, high transparency can make text hard to read — your choice. It applies when you let go; close Settings to see the result.</string>
+    <string name="kachi_bg_opacity_note">One level for the backgrounds of the status bar, the button bar and widgets — all the way left looks as before, dragging right makes them more see-through, and all the way right (100%) makes them fully transparent. Text and icons always stay as they are; on a bright wallpaper, high transparency can make text hard to read — your choice. It applies when you let go; close Settings to see the result.</string>
     <string name="kachi_bg_opacity_a11y">Background transparency: %1$s</string>
     <!-- 2.89 · B3 DOCK-SCALE -->
-    <string name="kachi_sec_bar_scale">Car button bar</string>
+    <string name="kachi_sec_bar_scale">Button bar</string>
     <string name="kachi_row_bar_scale">Size</string>
-    <string name="kachi_bar_scale_a11y">Car button bar size: %1$s</string>
-    <string name="kachi_bar_scale_note">Drag to shrink or enlarge the car button bar — 100% is as before. The tiles above are a true-size preview (view only). It applies when you let go: the tile area, widgets and shortcuts refit to the new space, and apps in tiles may redraw once. Buttons get smaller but their touch areas stay large enough to press while driving.</string>
+    <string name="kachi_bar_scale_a11y">Button bar size: %1$s</string>
+    <string name="kachi_bar_scale_note">Drag to shrink or enlarge the button bar — 100% is as before. The tiles above are a true-size preview (view only). It applies when you let go: the tile area, widgets and shortcuts refit to the new space, and apps in tiles may redraw once. Buttons get smaller but their touch areas stay large enough to press while driving.</string>
     <string name="kachi_copy_path">Copy folder path</string>
     <string name="kachi_path_copied">Folder path copied</string>
     <string name="kachi_color_note">Saved with the current profile. "From wallpaper" takes the dominant colour of the first photo in the wallpaper folder. Text always stays readable: on a very light accent the button text turns dark by itself. The new colour applies in place; apps in slots keep running.</string>
     <string name="kachi_sec_lang">Language</string>
     <string name="kachi_row_lang">On-screen text</string>
-    <string name="kachi_lang_note">\"By car\" = Vietnamese when the car is set to Vietnamese, otherwise English. Chinese, Thai and Malay are only used when you pick them. Voice commands understand Vietnamese only, whatever the on-screen language. Changing the language rebuilds the screen once.</string>
+    <string name="kachi_lang_note">“Follow device” = Vietnamese when the device is set to Vietnamese, otherwise English. Chinese, Thai and Malay are only used when you pick them. Voice commands understand Vietnamese only, whatever the on-screen language. Changing the language rebuilds the screen once.</string>
 
     <!-- ── SettingsSections — Hồ sơ tài xế ── -->
     <string name="kachi_profile_export_full">Export full (backup)</string>
@@ -140,7 +140,7 @@
     <!-- FIX286 · PI3 — dialog after import: tell what the file really carries for cluster casting (counted from the file). -->
     <string name="kachi_profile_import_use_now">Use this profile now</string>
     <string name="kachi_profile_import_later">Later</string>
-    <string name="kachi_profiles_note">Each profile keeps its OWN copy of nearly everything: layout, slot contents, button bar, chips, wallpaper, theme, units, language, navigation settings, instrument cluster, cluster casting and camera. Tap a profile to switch to it — the profile chip on the top bar switches too, but creating and deleting happen only here. A full export contains your saved addresses and navigation schedule — use Export for sharing when sending it to someone else.</string>
+    <string name="kachi_profiles_note">Each profile keeps its OWN copy of nearly everything: layout, slot contents, button bar, shortcuts, wallpaper, theme, language, saved addresses, navigation schedule and physical keys. Tap a profile to switch to it — the profile chip on the top bar switches too, but creating and deleting happen only here. A full export contains your saved addresses and navigation schedule — use Export for sharing when sending it to someone else.</string>
     <string name="kachi_profiles_add">Add profile (a copy of %1$s)</string>
     <string name="kachi_profile_sub_active">In use · %1$s</string>
     <string name="kachi_profile_sub_switch">%1$s · tap to switch to this profile</string>
@@ -148,7 +148,7 @@
     <string name="kachi_row_boot_profile">Start up with</string>
     <string name="kachi_profile_boot_last">Last used</string>
     <string name="kachi_boot_profile_note">"Last used" starts with whichever profile was active when you switched the engine off. Pin a specific profile and every engine start returns to it, even if you switched profile on the previous trip.</string>
-    <string name="kachi_home_profile_note">Every setting in Settings — except System and permissions (though Auto-start Kachi on engine start, Run background service on engine start, Open apps at ignition and Play music when you get in do follow the profile), most of Voice, Default navigation app, Real glass (blur the backdrop), Auto-defrost when it rains, the per-car camera tuning (rotation, mirroring, view), and About — is saved for profile «%1$s», including cluster casting, each app\'s frame and DPI, the floating button and the camera. Switch to another profile in Driver profiles and the layout, slot contents, chips, button bar, theme and units change at once; casting frame and DPI change from the next cast, and casting on/off from the next ignition.</string>
+    <string name="kachi_home_profile_note">Every setting in Settings — except System and permissions (though Auto-start Kachi on engine start, Run background service on engine start, Open apps at ignition and Play music when you get in do follow the profile), most of Voice, Default navigation app, Real glass (blur the backdrop) and About — is saved for profile «%1$s». Switch to another profile in Driver profiles and the layout, slot contents, button bar and theme change at once.</string>
     <string name="kachi_delete">Delete</string>
 
     <!-- ── SettingsSections — Quyền · Khởi động ── -->
@@ -177,7 +177,7 @@
     <string name="kachi_wake_sub">Say the wake phrase to open voice commands, no tap needed. Listens in the background while the screen is on. Off by default (uses battery/CPU). Experimental — it may not recognise you well yet; please report problems.</string>
     <string name="kachi_wake_notif_title">Hey Kachi</string>
     <string name="kachi_wake_notif_text">Listening for the wake phrase</string>
-    <string name="kachi_wake_hold_notif_title">Kachi ready for the steering-wheel key</string>
+    <string name="kachi_wake_hold_notif_title">Kachi is ready for the physical key</string>
     <string name="kachi_wake_hold_notif_text">Press the assigned key to talk — the mic opens only when you press</string>
     <string name="kachi_wake_auto_off">Hey Kachi turned off after too many false triggers. Re-enable in Settings.</string>
     <string name="kachi_home_result_no_shell">Needs the shell channel — see the \"Window control channel\" row above.</string>
@@ -189,10 +189,10 @@
     <string name="kachi_autostart_sub">On engine start Kachi rebuilds its slots. Setting it as the home screen lives in the \"Home screen\" section above. Switched off, you open it by hand.</string>
 
     <!-- ── SettingsSections — ClusterNav · Giới thiệu ── -->
-    <string name="kachi_about_tagline">Kachi — a home screen for BYD DiLink cars.</string>
+    <string name="kachi_about_tagline">Kachi — a home screen for in-car Android boxes.</string>
     <string name="kachi_about_version">Version %1$s (build %2$d)</string>
     <string name="kachi_about_package">Package name: %1$s</string>
-    <string name="kachi_about_licence">MIT licence. A personal experiment, NOT affiliated with BYD.</string>
+    <string name="kachi_about_licence">MIT licence. A personal experiment, not affiliated with any car maker or device manufacturer.</string>
 
     <!-- ── SettingsSectionsHome — Màn hình chính ── -->
     <string name="kachi_sec_layout">Screen layout</string>
@@ -208,26 +208,25 @@
     <string name="kachi_wall_title">Use photos as the wallpaper</string>
     <string name="kachi_wall_sub_nofolder">Put photos in the Kachi photo folder</string>
     <string name="kachi_wall_sub_folder">Put photos in: %1$s</string>
-    <string name="kachi_wall_steps">How to add WALLPAPER photos:\n1. Plug a USB stick into the car, or open the Files app.\n2. Copy photos into this folder: %1$s\n3. Turn on the switch above — the photos become the wallpaper and cycle on a timer.\n(Photos for the "Photo slideshow" widget go in a DIFFERENT folder — see the Photo slideshow section.)\nTap the button below to copy the folder path.</string>
+    <string name="kachi_wall_steps">How to add WALLPAPER photos:\n1. Plug a USB stick into the device, or open the Files app.\n2. Copy photos into this folder: %1$s\n3. Turn on the switch above — the photos become the wallpaper and cycle on a timer.\n(Photos for the "Photo slideshow" widget go in a DIFFERENT folder — see the Photo slideshow section.)\nTap the button below to copy the folder path.</string>
     <string name="kachi_photos_section">Photo slideshow widget</string>
-    <string name="kachi_photos_steps">Photos for the "Photo slideshow" widget (a DIFFERENT folder from the wallpaper):\n1. Plug a USB stick into the car, or open the Files app.\n2. Copy photos into this folder: %1$s\n3. Place the "Photo slideshow" widget in a slot — the photos cycle there.\nTap the button below to copy the folder path.</string>
+    <string name="kachi_photos_steps">Photos for the "Photo slideshow" widget (a DIFFERENT folder from the wallpaper):\n1. Plug a USB stick into the device, or open the Files app.\n2. Copy photos into this folder: %1$s\n3. Place the "Photo slideshow" widget in a slot — the photos cycle there.\nTap the button below to copy the folder path.</string>
     <string name="kachi_wall_period">Change photo every</string>
     <string name="kachi_wall_fit">Fit</string>
     <string name="kachi_wall_dim">Dim the photo</string>
-    <string name="kachi_sec_dock">Car button bar</string>
-    <string name="kachi_dock_visible_title">Show the car button bar</string>
+    <string name="kachi_sec_dock">Button bar</string>
+    <string name="kachi_dock_visible_title">Show the button bar</string>
     <string name="kachi_dock_visible_sub">Turn off to hide the bar; the frames fill the whole screen</string>
     <string name="kachi_dock_edge">Bar edge</string>
     <string name="kachi_dock_note">Tap a tile to add or remove a button from the bar.</string>
     <!-- UX-OVERHAUL · WP4 — item positions inside the two bars. -->
     <string name="kachi_header_order_title">Status-bar item order</string>
-    <string name="kachi_header_order_hint">Rearrange the clock, car chips and buttons on the status bar.</string>
-    <string name="kachi_dock_order_title">Car-bar item order</string>
+    <string name="kachi_header_order_hint">Rearrange the clock and the buttons on the top bar.</string>
+    <string name="kachi_dock_order_title">Button bar item order</string>
     <string name="kachi_dock_order_hint">Rearrange the buttons you picked above.</string>
     <string name="kachi_bar_order_index">%1$d/%2$d</string>
     <string name="kachi_bar_order_up">Move up one place</string>
     <string name="kachi_bar_order_down">Move down one place</string>
-    <string name="kachi_dock_warn">⚠ Safety / Drivetrain / Entertainment groups change car behaviour.</string>
 
     <!-- ── TopStripPicker — chọn chip thanh trạng thái ── -->
 
@@ -259,11 +258,11 @@
     <string name="kachi_appwidget_granting">Requesting widget permission…</string>
     <string name="kachi_appwidget_err_alloc">Could not allocate a widget tile — try again later.</string>
     <string name="kachi_appwidget_err_no_shell">The system channel is not connected yet, so widget permission could not be requested. Try again after reopening Kachi.</string>
-    <string name="kachi_appwidget_err_bind">This car will not allow widgets from other apps. Built-in cards and groups still work normally.</string>
+    <string name="kachi_appwidget_err_bind">This device doesn\'t allow widgets from other apps. Built-in cards still work normally.</string>
     <string name="kachi_appwidget_dead">The %1$s widget is gone — the app was uninstalled or disabled. Tap to pick another.</string>
 
     <!-- ── T6 · R-UI (m) · Drawer in PICK_DOCK mode — choose the tiles for the car button bar ── -->
-    <string name="kachi_drawer_title_dock">Pick the buttons for the car bar</string>
+    <string name="kachi_drawer_title_dock">Choose buttons for the button bar</string>
     <string name="kachi_drawer_hint_dock">Tap to add or remove a tile on the button bar · pick as many as you like · tap Apply to save</string>
     <string name="kachi_drawer_apply_n">Apply (%1$d)</string>
 
@@ -274,7 +273,7 @@
     <string name="kachi_bridge_accessibility_enabled">Enabled. Press the mapped button to open the app.</string>
     <string name="kachi_bridge_accessibility_not_bound">Accessibility granted but the service isn\'t bound yet — retry in a few seconds, or toggle it in system Settings > Accessibility.</string>
     <string name="kachi_bridge_accessibility_restarting">The key binding is stuck at the system level. Repairing now: the interface restarts once and the keys come back — an app open in a slot has to redraw (tap the slot to bring it back).</string>
-    <string name="kachi_bridge_accessibility_failed">Couldn\'t enable accessibility — tap Allow USB debugging on the car and retry, or enable it in Settings > Accessibility.</string>
+    <string name="kachi_bridge_accessibility_failed">Couldn\'t enable accessibility — tap Allow USB debugging on the device and retry, or enable it in Settings > Accessibility.</string>
     <string name="kachi_bridge_checking">Checking…</string>
     <string name="kachi_bridge_voice_key_ready">Voice key ready.</string>
     <string name="kachi_bridge_binding_removed">Binding removed</string>
@@ -356,22 +355,22 @@
     <!-- FIX286 · PI5 — durable mark of the start-up commit (the OFF→ON case was never measured on a car, OC-PI3). -->
 
     <!-- ── IA v2 nhóm 7 — Phím vô-lăng (SettingsKeysSection) ── -->
-    <string name="kachi_sec_keys">Physical buttons → apps · car controls</string>
+    <string name="kachi_sec_keys">Physical button → app · assistant</string>
     <string name="kachi_keys_enabled_title">Listen to physical buttons</string>
-    <string name="kachi_keys_enabled_sub">Turning this on re-grants the accessibility service through the car\'s own channel.</string>
+    <string name="kachi_keys_enabled_sub">Turning this on re-grants the accessibility service through the device\'s debugging channel.</string>
     <string name="kachi_keys_status_off">Voice key: off</string>
     <string name="kachi_keys_status_active">Voice key: ACTIVE ✓</string>
     <string name="kachi_keys_status_broken">Voice key: DISCONNECTED — tap Check / Fix now</string>
     <string name="kachi_keys_check">Check / Fix now</string>
     <string name="kachi_sub_keys_bindings">Button bindings</string>
-    <string name="kachi_keys_no_bindings">No buttons bound yet. Tap “Add binding…” to link a physical button to an app or a car control.</string>
+    <string name="kachi_keys_no_bindings">No buttons assigned yet. Tap “Add binding…” to link a physical button to an app or an assistant.</string>
     <string name="kachi_keys_add">Add binding…</string>
     <string name="kachi_keys_pick_button">Step 1 — choose a button</string>
     <string name="kachi_keys_pick_target">Step 3 — choose the app / assistant</string>
     <string name="kachi_keys_no_buttons">There is no button to bind yet.</string>
     <string name="kachi_keys_no_targets">No app on this device can be opened from a button yet.</string>
     <string name="kachi_sub_keys_custom">Self-learned buttons</string>
-    <string name="kachi_keys_no_custom">No buttons learned yet. Tap “Learn a new key…” then press the button on the steering wheel.</string>
+    <string name="kachi_keys_no_custom">No buttons learned yet. Tap “Learn a new key…” then press the button you want (on the steering wheel or the device).</string>
     <string name="kachi_keys_learn">Learn a new key…</string>
     <string name="kachi_keys_learn_name">Name the button you just pressed</string>
     <string name="kachi_key_custom_name">%1$s (code %2$d)</string>
@@ -404,17 +403,17 @@
 
     <!-- ── T-BRIDGE — the adb test bridge (docs/specs/kachi-test-bridge.html). ── -->
     <string name="kachi_test_bridge_title">ADB test mode</string>
-    <string name="kachi_test_bridge_sub_off">Lets a computer connected over adb send test commands to Kachi (say a phrase, switch profile, put an app in a slot, read the state). Only turn this on while you are in the car and testing. It switches itself off after 60 minutes and after the engine is switched off.</string>
+    <string name="kachi_test_bridge_sub_off">Lets a computer connected over adb send test commands to Kachi (say a phrase, switch profile, put an app in a slot, read the state). Only turn this on while you are next to the device and testing. It switches itself off after 60 minutes and after the device is switched off.</string>
     <string name="kachi_test_bridge_sub_on">On — %1$d minutes left. Every command that arrives is written to the log and to Kachi\'s test folder.</string>
 
     <!-- ── IA v2 nhóm 10 — miễn trừ trách nhiệm, chuyển từ hộp thoại một-lần của màn cũ (MainActivity:620–635) ── -->
-    <string name="kachi_about_disclaimer">Disclaimer: this is a personal experiment, NOT affiliated with BYD. It comes with no warranty of driving safety, compatibility or reliability. Install and use at your own risk.</string>
+    <string name="kachi_about_disclaimer">Disclaimer: Kachi is a personal experiment, not affiliated with any car maker or device manufacturer. It comes with no warranty of driving safety, compatibility or reliability. Install and use at your own risk.</string>
 
     <!-- ══ S3 · legacy ClusterNav screen removed (docs/specs/kachi-remove-legacy-screen.html) ═══════ -->
 
     <!-- R2(c) — first-launch disclaimer, wording of the old screen's dialog (MainActivity:620–635). -->
     <string name="kachi_disclaimer_title">Disclaimer</string>
-    <string name="kachi_disclaimer_body">Kachi is a personal experiment, NOT affiliated with BYD. It comes with no warranty of driving safety, compatibility, or reliability. Install and use at your own risk.</string>
+    <string name="kachi_disclaimer_body">Kachi is a personal experiment, not affiliated with any car maker or device manufacturer. It comes with no warranty of driving safety, compatibility, or reliability. Install and use at your own risk.</string>
     <string name="kachi_disclaimer_ok">I understand</string>
 
     <!-- R2(d) — op-39 cluster status line (moved off NavClusterOp39Status, now deleted). -->
@@ -427,11 +426,11 @@
          almost every tile" to "dim dot + one line per group". -->
 
     <!-- ══ V1 · text command trial (docs/specs/kachi-voice-command.html R6) ══════════════════════════ -->
-    <string name="kachi_voice_note">Type a sentence exactly as you would say it in Vietnamese, to see what the parser understands — e.g. “bật đèn đọc”, “đặt nhiệt độ 22”, “đóng hết kính”, “xem pin”, “mở Cài đặt”. To actually speak, use the “Talk to car” tile on the control bar or the mic button on the top bar.</string>
+    <string name="kachi_voice_note">Type a sentence exactly as you would say it in Vietnamese, to see what the parser understands — e.g. “mở YouTube”, “phát nhạc”, “đổi bố cục 4 ô”, “dẫn đường về nhà”, “mở Cài đặt”. To actually speak, use the “Talk to Kachi” tile on the button bar or the mic button on the top bar.</string>
 
     <!-- ══ 2.74 · R3 — list of SPOKEN COMMANDS at the end of the Voice group ════════════════════════════ -->
     <string name="kachi_voice_cmds_section">Spoken commands</string>
-    <string name="kachi_voice_cmds_sub">This list is generated from the grammar Kachi itself uses, so it always matches what the car understands. Tap a group to see the phrases.</string>
+    <string name="kachi_voice_cmds_sub">This list is generated from the grammar Kachi itself uses, so it always matches what Kachi understands. Tap a group to see the phrases.</string>
     <!-- kachi-i18n-zh-th-ms R4: speech recognition is Vietnamese only (one zipformer-vi ASR pack), in EVERY UI language. -->
     <string name="kachi_voice_lang_only">Voice commands work in Vietnamese only — say the Vietnamese phrases exactly as listed.</string>
     <plurals name="kachi_voice_cmds_count">
@@ -439,7 +438,7 @@
         <item quantity="other">%1$d phrases</item>
     </plurals>
     <string name="kachi_voice_cmds_asks">%1$s · asks before running</string>
-    <string name="kachi_voice_hint">Say something to the car…</string>
+    <string name="kachi_voice_hint">Say something to Kachi…</string>
     <string name="kachi_voice_run">Run command</string>
     <string name="kachi_voice_idle">Nothing run yet.</string>
     <string name="kachi_voice_empty">Nothing typed.</string>
@@ -458,9 +457,9 @@
     <string name="kachi_voice_engine_failed">The recogniser could not start</string>
     <string name="kachi_voice_nothing_heard">Didn\'t catch that</string>
     <string name="kachi_voice_open_settings">Open Settings</string>
-    <string name="kachi_voice_listen_not_here">A listening session starts from the home screen (the “Talk to car” tile or the mic button on the top bar), not from this trial box.</string>
+    <string name="kachi_voice_listen_not_here">A listening session starts from the home screen (the “Talk to Kachi” tile or the mic button on the top bar), not from this trial box.</string>
     <string name="kachi_voice_model_title">Speech recognition (on-device)</string>
-    <string name="kachi_voice_model_absent">Not installed. The Vietnamese model (%1$s) has to be downloaded once; after that speech is recognised on the car itself and never leaves it.</string>
+    <string name="kachi_voice_model_absent">Not installed. The Vietnamese model (%1$s) has to be downloaded once; after that speech is recognised on the device itself and never leaves it.</string>
     <string name="kachi_voice_model_ready">%1$s installed · %2$d words · %3$s on disk</string>
     <string name="kachi_voice_model_get">Download the Vietnamese model</string>
     <string name="kachi_voice_model_remove">Remove the model</string>
@@ -476,13 +475,13 @@
     <string name="kachi_voice_model_credits_title">About the recognition model</string>
     <string name="kachi_voice_model_credits_line">%1$s — %2$s · licence %3$s · %4$s</string>
     <string name="kachi_voice_tts_title">Offline voice (on-device)</string>
-    <string name="kachi_voice_tts_absent">Not installed. The Vietnamese voice pack (%1$s) is downloaded once; after that Kachi speaks its replies on the car itself, with no network and no Google.</string>
+    <string name="kachi_voice_tts_absent">Not installed. The Vietnamese voice pack (%1$s) is downloaded once; after that Kachi speaks its replies on the device itself, with no network and no Google.</string>
     <string name="kachi_voice_tts_ready">%1$s installed · %2$d files · %3$s on disk</string>
     <string name="kachi_voice_tts_get">Download the voice pack</string>
     <string name="kachi_voice_tts_remove">Remove the voice pack</string>
     <string name="kachi_voice_tts_update">Update the voice pack</string>
     <string name="kachi_voice_tts_has_update">A new version of \"%1$s\" is available — tap Update to download it.</string>
-    <string name="kachi_voice_tts_sideload">No network on the car: copy the whole pack tree into Android/data/%1$s/files/sherpa/import/%2$s/ and press Download — every file is still sha256-checked.</string>
+    <string name="kachi_voice_tts_sideload">No network on the device: copy the whole pack tree into Android/data/%1$s/files/sherpa/import/%2$s/ and press Download — every file is still sha256-checked.</string>
     <string name="kachi_voice_speak_title">Speak replies out loud</string>
     <string name="kachi_voice_speak_sub">Kachi reads its answer aloud instead of only showing it.</string>
     <string name="kachi_voice_offline_title">Prefer the offline voice</string>
@@ -493,7 +492,7 @@
     <string name="kachi_voice_wav_nothing">No words recognised in %1$s</string>
     <string name="kachi_voice_wav_failed">Could not run: %1$s</string>
     <string name="kachi_voice_wav_where">Put kachi-voice-test.wav (16 kHz · mono · 16-bit PCM) in one of: %1$s</string>
-    <string name="kachi_pill_voice">Talk to car</string>
+    <string name="kachi_pill_voice">Talk to Kachi</string>
     <!-- V3 · R14 — chip label toggle -->
     <!-- V3 · R7 — "Ask before running" + microphone source -->
     <string name="kachi_voice_confirm_sec">Ask before running</string>
@@ -531,7 +530,6 @@
     <string name="kachi_sc_no_stage">Couldn\'t set up a place to run it in the background — try again in a moment</string>
     <string name="kachi_sc_refuse_system">System apps can\'t run in the background</string>
     <string name="kachi_sc_refuse_self">Kachi can\'t run itself in the background</string>
-    <string name="kachi_sc_refuse_cast">%1$s is being cast to the cluster</string>
     <string name="kachi_sc_not_installed">%1$s is not installed</string>
     <string name="kachi_sc_bg_failed">%1$s couldn\'t start in the background</string>
     <string name="kachi_sc_bg_failed_why">[%2$s] %1$s couldn\'t start in the background</string>
@@ -543,7 +541,7 @@
     <string name="kachi_drawer_hint_trip">Tap to add or remove an app · tap Apply to save · choose how each opens in Settings</string>
     <string name="kachi_trip_cap_note">Ignition apps hold at most %1$d apps — remove one to add another</string>
     <string name="kachi_trip_title">Open apps at ignition</string>
-    <string name="kachi_trip_hint">Runs once per ignition, after the home screen is ready (about 15–45 seconds). Background = opened out of sight, then moved behind the home screen (an app slot is used if there is one — that slot may flash for 1–2 seconds). Apps already in a slot or cast to the cluster are skipped.</string>
+    <string name="kachi_trip_hint">Runs once per ignition, after the home screen is ready (about 15–45 seconds). Background = opened out of sight, then moved behind the home screen (an app slot is used if there is one — that slot may flash for 1–2 seconds). Apps already in a slot are skipped.</string>
     <string name="kachi_trip_add_n">+ Add apps (%1$d/%2$d)</string>
     <string name="kachi_trip_mode_bg">Run in background</string>
     <string name="kachi_trip_mode_normal">Open normally</string>
@@ -559,10 +557,10 @@
     <string name="kachi_trip_music_title">Play music when you get in</string>
     <string name="kachi_trip_music_mode">Music</string>
     <string name="kachi_trip_music_off">Off</string>
-    <string name="kachi_trip_music_car">Car\'s player</string>
+    <string name="kachi_trip_music_car">The device\'s own player</string>
     <string name="kachi_trip_music_query">What to play (keyword or YouTube link; empty = resume)</string>
     <string name="kachi_trip_music_query_set">What to play: %1$s</string>
-    <string name="kachi_trip_music_note">Apps are usually closed after the car is switched off — set a keyword or link to be sure music plays. The app you choose plays even if the car is already playing another source.</string>
+    <string name="kachi_trip_music_note">Apps are usually closed after the device is switched off — set a keyword or link to be sure music plays. The app you choose plays even if the device is already playing another source.</string>
     <string name="kachi_trip_res_noop">nothing could be opened (%1$s)</string>
     <string name="kachi_trip_res_partial">partly ran at %1$s</string>
     <string name="kachi_trip_step">• %1$s: %2$s</string>
@@ -583,7 +581,7 @@
     <string name="kachi_trip_why_system_app">skipped — system apps can\'t run in the background; put it in a slot</string>
     <string name="kachi_trip_why_not_installed">skipped — app not installed</string>
     <string name="kachi_trip_why_self">skipped — that is Kachi</string>
-    <string name="kachi_trip_why_camera_unknown">skipped — opening normally isn\'t supported on this car yet</string>
+    <string name="kachi_trip_why_camera_unknown">skipped — the previous version did not support opening normally</string>
     <string name="kachi_trip_why_camera">skipped — the camera screen was showing</string>
     <string name="kachi_trip_why_other_front">skipped — another app was in front</string>
     <string name="kachi_trip_why_not_staged">skipped — the app couldn\'t be started</string>
@@ -647,10 +645,10 @@
     <string name="kachi_vn_listening">Listening…</string>
     <string name="kachi_vn_decoding">Working it out…</string>
     <string name="kachi_vn_e_busy">Kachi is busy with another command — try again</string>
-    <string name="kachi_vn_no_model">Download the speech model in Voice › Talk to the car — you can still type a name</string>
+    <string name="kachi_vn_no_model">Download the speech model in Voice › Speech recognition — you can still type a name</string>
     <string name="kachi_vn_r_shape">A name must be 1–4 words with at least 3 letters</string>
-    <string name="kachi_vn_r_command">Same as a car command</string>
-    <string name="kachi_vn_r_command_prefix">It is the start of a car command — it would hijack it</string>
+    <string name="kachi_vn_r_command">Same as a Kachi command</string>
+    <string name="kachi_vn_r_command_prefix">Is the start of a Kachi command — it would hijack the command</string>
     <string name="kachi_vn_r_reserved">Starts with a verb, a joining word or an answer — add another word</string>
     <string name="kachi_vn_r_slot">Has a number or a slot phrase — it would mix with “vào ô số …”</string>
     <string name="kachi_vn_r_profile">Same as a profile name</string>
@@ -665,9 +663,9 @@
     <string name="kachi_vn_r_known">Kachi already understands this name (%1$s) — no need to save</string>
     <string name="kachi_vn_r_duplicate">This name is already saved</string>
     <string name="kachi_vn_r_steals">This phrase opens %1$s today — saving makes %1$s stop getting it</string>
-    <string name="kachi_vn_r_mismatch">The name contains a car-command word</string>
+    <string name="kachi_vn_r_mismatch">The name contains a word from a Kachi command</string>
     <string name="kachi_vn_r_no_bias">Still understood, but not boosted in listening (clashes with: %1$s)</string>
-    <string name="kachi_vn_r_near_command">Easy to confuse with a car command</string>
+    <string name="kachi_vn_r_near_command">Easily confused with a Kachi command</string>
     <string name="kachi_vn_r_near_app">Close to the app name %1$s</string>
     <string name="kachi_vn_r_one_word">A single word can clash with everyday speech</string>
     <string name="kachi_vn_r_homograph">Without accents it matches a word of the command “%1$s” — a sentence with that word may open this app</string>

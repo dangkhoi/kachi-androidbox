@@ -86,7 +86,7 @@ object VoiceReply {
      * bại thì không — người lái nói một câu và không thấy gì xảy ra sẽ nói lại lần hai, lần ba.
      */
     fun failed(i: VoiceIntent, why: String? = null, lang: Lang = Strings.current): String =
-        "✗ " + preview(i, lang) + (why?.let { " — $it" } ?: " — " + Strings.t("xe không nhận lệnh", "the car refused", lang))
+        "✗ " + preview(i, lang) + (why?.let { " — $it" } ?: " — " + Strings.t("máy không nhận lệnh", "the device refused", lang))
 
     /**
      * ═══ Câu cho các ca HỎNG CỤ THỂ ═══════════════════════════════════════════════════════════════════════════
@@ -104,7 +104,7 @@ object VoiceReply {
 
     /** Không có app dẫn đường nào trên máy. */
     fun noNavApp(i: VoiceIntent, lang: Lang = Strings.current): String =
-        failed(i, Strings.t("chưa có app dẫn đường nào trên xe", "no navigation app on this car", lang), lang)
+        failed(i, Strings.t("chưa có app dẫn đường nào trên máy", "no navigation app on this device", lang), lang)
 
     /**
      * Đã mở app dẫn đường **nhưng chưa chuyển điểm đến** — nói thẳng phần chưa làm được.
@@ -113,8 +113,8 @@ object VoiceReply {
      * phải chốt bằng phép đo K2 trên xe (CLAUDE.md §14). Hứa hơn thế là hứa một thứ chưa ai đo.
      */
     fun navOpenedWithoutDestination(i: VoiceIntent, lang: Lang = Strings.current): String = partial(i, lang) + " — " + Strings.t(
-        "đã mở app dẫn đường; nhập lại điểm đến trong app (đường chuyển giao chưa đo trên xe)",
-        "navigation app opened; enter the destination there (hand-over not measured on-car yet)",
+        "đã mở app dẫn đường; nhập lại điểm đến trong app",
+        "navigation app opened; enter the destination there",
         lang,
     )
 
@@ -149,7 +149,7 @@ object VoiceReply {
 
     /** Câu nêu đích danh một app mà xe **chưa cài**. Nói tên app, không nói tên gói. */
     fun appNotInstalled(i: VoiceIntent, appKey: String, lang: Lang = Strings.current): String =
-        failed(i, Strings.fIn(lang, "chưa cài {0} trên xe", "{0} is not installed", VoiceAppTargets.labelOf(appKey)), lang)
+        failed(i, Strings.fIn(lang, "chưa cài {0} trên máy", "{0} is not installed", VoiceAppTargets.labelOf(appKey)), lang)
 
     /**
      * *"Phát nhạc"* khi **chưa có phiên nhạc nào** ⇒ đã MỞ app nhạc, và nói rõ phần chưa làm được.
@@ -167,8 +167,8 @@ object VoiceReply {
 
     /** Không có app nhạc nào trong bảng đích có mặt trên xe. */
     fun noMusicApp(i: VoiceIntent, lang: Lang = Strings.current): String = failed(i, Strings.t(
-        "chưa có app nhạc nào trên xe",
-        "no music app on this car",
+        "chưa có app nhạc nào trên máy",
+        "no music app on this device",
         lang,
     ), lang)
 

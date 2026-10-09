@@ -2,16 +2,8 @@
 <!--
   Cấu hình lint của :app (AGP tự nạp `lint.xml` ở thư mục module).
 
-  `res/values/strings.xml` từng là HIỆN VẬT NIÊM PHONG theo byte (T11, hash ở `:offcar-planner`). Android box B2 · W2a
-  gỡ module niêm phong cùng layout mồ côi `activity_main.xml` ⇒ ngoại lệ `MissingClass` của layout ấy gỡ theo.
-  `strings.xml` vẫn còn 19 khoá chết từ màn ClusterNav cũ (gỡ 2026-09-13) chưa có bản EN; dọn ở đợt tài nguyên (W4) —
-  tới lúc đó giữ ngoại lệ dưới, theo ĐƯỜNG DẪN.
-
-  - MissingTranslation: 5 khoá còn sống (`app_name`, `nav_listener_label`, `idle`, `acc_label`, `acc_desc`) đã có
-    bản EN ở `values-en/strings.xml`; 19 khoá còn lại chết cùng màn cũ.
+  Android box B2 · W4: `res/values/strings.xml` chỉ còn 4 khoá hệ thống, đủ bản dịch ở mọi thư mục ngôn ngữ ⇒ ngoại lệ
+  `MissingTranslation` theo đường dẫn (giữ từ thời tệp còn 19 khoá chết của màn ClusterNav cũ) gỡ.
 -->
 <lint>
-    <issue id="MissingTranslation">
-        <ignore path="src/main/res/values/strings.xml" />
-    </issue>
 </lint>

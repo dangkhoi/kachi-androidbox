@@ -226,8 +226,8 @@ object UpdateChecker {
     internal fun installMessage(outcome: LocalInstallOutcome, apkPath: String): String = when (outcome) {
         is LocalInstallOutcome.Ok -> Lang.t("đã cài — đang mở lại…", "installed — reopening…")
         is LocalInstallOutcome.NoShellChannel -> Lang.f(
-            "không có kênh shell tới xe ({0}) — {1}. APK đã tải ở: {2}",
-            "no shell channel to the head unit ({0}) — {1}. APK saved at: {2}",
+            "không có kênh shell tới máy ({0}) — {1}. APK đã tải ở: {2}",
+            "no shell channel to the device ({0}) — {1}. APK saved at: {2}",
             outcome.reason.name, channelRemedy(outcome.reason), apkPath,
         )
         is LocalInstallOutcome.PmRejected -> Lang.f(

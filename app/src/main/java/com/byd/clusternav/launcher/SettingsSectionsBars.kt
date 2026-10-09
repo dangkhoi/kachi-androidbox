@@ -127,10 +127,7 @@ class SettingsBarsSection(
         body.addView(rows.note(context.getString(R.string.kachi_dock_note)))
         // WP4 — sắp chỗ các nút, NGAY dưới nút mở bộ chọn: nó sắp đúng danh sách mà bộ chọn vừa chốt.
         dockOrder.section(body, R.string.kachi_dock_order_title, R.string.kachi_dock_order_hint)
-        // Cảnh báo "nhóm đổi hành vi lái" là note RIÊNG, không nối vào câu trên: [ĐO] soát ảnh v2 câu gộp dài 2 dòng
-        // (R-UI: mô tả ≤ 1 dòng), và khi gộp thì câu hướng dẫn nuốt mất phần cảnh báo — thứ duy nhất ở đây có hệ quả
-        // lên XE. Giữ nguyên nội dung cảnh báo (R10), chỉ tách chỗ đứng.
-        body.addView(rows.note(context.getString(R.string.kachi_dock_warn)))
+        // Android box B2 · W4 — cảnh báo "nhóm An toàn/Động lực/Giải trí đổi hành vi lái" gỡ: thanh nút chỉ còn việc launcher.
     }
 
     /**

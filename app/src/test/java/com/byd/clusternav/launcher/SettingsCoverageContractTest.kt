@@ -200,16 +200,16 @@ class SettingsCoverageContractTest {
     /**
      * Khoá lấy gió trong (`recirc_on_start_enabled`, trước ở `Prefs.K_RECIRC_ON_START`) — Android box B2 · W2e: mã gỡ cùng
      * tiện nghi xe BYD. Bài cũ đọc hằng trong `Prefs.kt` để chặn lệch tên giữa mã và danh mục; nay chặn chiều ngược lại:
-     * hằng KHÔNG còn trong mã, khoá không có chủ trên UI, tên ĐÚNG (có `_enabled`) vẫn được xếp phạm vi qua bảng retired.
+     * hằng KHÔNG còn trong mã, khoá không có chủ trên UI, và (W4) tên ĐÚNG (có `_enabled`) được lượt dọn một lần xoá khỏi máy.
      */
     @Test
-    fun `khoa lay gio trong da go ma, ten van xep pham vi`() {
+    fun `khoa lay gio trong da go ma va duoc don`() {
         val src = SourceRoots.codeOf("src/main/java/com/byd/clusternav/Prefs.kt")
         assertNull(Regex("""K_RECIRC_ON_START\s*=""").find(src), "hằng lấy gió trong đã gỡ khỏi Prefs (W2e)")
         val real = "recirc_on_start_enabled"
         assertNull(SettingsCatalog.groupOf(real), "khoá lấy gió trong đã rời UI ở Android box")
-        assertTrue(real in RetiredComfortKeys.PROFILE, "tên thật ('$real') phải khai ở RetiredComfortKeys")
-        assertTrue(real !in SettingsCatalog.RETIRED_UI_KEYS, "khoá đã gỡ mã rời bảng 'chỉ rời UI'")
+        assertTrue(BydDeadPrefs.isDeadClusterNavKey(real), "tên thật ('$real') phải được lượt dọn xoá")
+        assertEquals(ProfileScope.Scope.UNKNOWN, ProfileScope.scopeOf(real), "khoá đã gỡ không còn phạm vi")
         assertNull(
             SettingsCatalog.groupOf("recirc_on_start"),
             "tên trong spec §2 bị thiếu hậu tố _enabled — danh mục không được dùng tên đó",

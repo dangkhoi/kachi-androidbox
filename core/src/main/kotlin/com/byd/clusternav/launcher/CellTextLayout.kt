@@ -27,7 +27,7 @@ package com.byd.clusternav.launcher
  *     [lineStartX] đặt CON SỐ vào trục ô (đơn vị treo bên phải nó), chỉ đẩy cụm sang khi mép thẻ không đủ chỗ.
  *     Ô dựng bằng `TextView` mắc đúng lỗi này qua `LinearLayout(HORIZONTAL) + gravity = CENTER`; ở `:app` chúng
  *     dùng `AxisRow` — một `ViewGroup` mỏng gọi đúng [lineStartX], không có phép canh thứ hai.
- *  3. **Thẻ đục ĐÈ LÊN ảnh** [ĐO]. Cho thẻ chạy tới `neo ∓ gap` trong khi neo ([CarLayout.wheel]/[CarLayout.part])
+ *  3. **Thẻ đục ĐÈ LÊN ảnh** [ĐO]. Cho thẻ chạy tới `neo ∓ gap` trong khi neo (`CarLayout.wheel`/`CarLayout.part`)
  *     nằm BÊN TRONG thân xe ⇒ thẻ đục (vẽ SAU lớp ảnh) cắt mất gương + mép cửa. [cardSpanX] kẹp mép TRONG của thẻ
  *     theo **khung ảnh thật** (letterbox đo được), nên đổi ảnh khác tỉ lệ hay đổi cỡ ô đều tự đúng — không hằng,
  *     không rẽ nhánh theo tên ảnh (CLAUDE.md §7).

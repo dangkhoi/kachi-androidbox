@@ -34,7 +34,8 @@ object VoiceRiskTable {
 
     // Android box B2 · W3 (2026-10-09): bảng `Rule`/`CONTROL_RULES` (hạ hết kính · mở cốp · mở cửa sổ trời — hỏi mặc định
     // từ 2.86) và `MACRO_IDS` (gói *"mở hết kính"*) gỡ cùng nút / gói lệnh xe. Mã `control:` / `macro:` đã lưu trong
-    // `voice_confirm_ids` vẫn đọc lên được và bị bỏ qua ([of] không còn ý định nào ra chúng).
+    // `voice_confirm_ids` vẫn đọc lên được và bị bỏ qua ([of] không còn ý định nào ra chúng); W4: lượt dọn một lần gỡ chúng
+    // khỏi tập đã lưu (`BydDeadPrefs.cleanConfirmIds`).
 
     // ── V3 · R7 — mã của MỘT VIỆC CÓ THỂ HỎI, và tập đang được bật ───────────────────────────────
 
@@ -46,10 +47,6 @@ object VoiceRiskTable {
 
     /** Mã của việc *"mở bài/nghệ sĩ do nhận dạng tự do đọc ra"*. */
     const val ID_MEDIA_QUERY = "media_query"
-
-    /** Tiền tố mã của nút / gói lệnh xe trong tập ĐÃ LƯU ≤ 2.98 — chỉ còn để [launcherAskableIds] lọc chúng khỏi màn chọn. */
-    const val PREFIX_CONTROL = "control:"
-    const val PREFIX_MACRO = "macro:"
 
     /**
      * Mã *"việc này là việc gì"* để tra trong tập `voice_confirm_ids`, hoặc `null` khi việc ấy **không hỏi được**
@@ -71,13 +68,6 @@ object VoiceRiskTable {
     /** Mọi mã có thể bật trong Cài đặt, theo thứ tự hiện ra. Sinh từ hai bảng trên — không chép tay. */
     fun askableIds(): List<String> =
         listOf(ID_PROFILE, ID_MEDIA_QUERY)   // owner 2026-09-24: bỏ ID_NAV_QUERY (nav không hỏi nữa)
-
-    /**
-     * Android box B2 · W1 — mã HIỆN ở mục Cài đặt *"Hỏi xác nhận trước khi chạy"*: [askableIds] trừ nút xe ([PREFIX_CONTROL])
-     * và gói lệnh xe ([PREFIX_MACRO]) — Android box không có nút xe BYD. Mã đã lưu thì không đụng (tập vẫn ghi nguyên vẹn).
-     */
-    fun launcherAskableIds(): List<String> =
-        askableIds().filterNot { it.startsWith(PREFIX_CONTROL) || it.startsWith(PREFIX_MACRO) }
 
     /**
      * ═══ V3 · R7 — MẶC ĐỊNH **KHÔNG HỎI GÌ CẢ** ═════════════════════════════════════════════════════════════

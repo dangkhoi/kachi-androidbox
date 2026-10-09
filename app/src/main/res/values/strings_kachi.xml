@@ -95,11 +95,11 @@
     <string name="kachi_shell_approval_retry">Thử lại</string>
     <!-- READY-AT-HOME §4.9 — thẻ xin quyền + chữ tình trạng kênh trên ô chưa có bộ chiếu -->
     <string name="kachi_access_title">Kachi cần quyền điều khiển cửa sổ</string>
-    <string name="kachi_access_never_body">Để đưa app vào ô, chiếu lên cụm và tự sửa phím vô-lăng, hãy cho phép gỡ lỗi. Khi hộp \"Cho phép gỡ lỗi USB?\" hiện: tích \"Luôn cho phép từ máy tính này\" rồi bấm OK.</string>
-    <string name="kachi_access_lost_title">Xe không còn nhận quyền của Kachi</string>
+    <string name="kachi_access_never_body">Để đưa app vào ô và tự sửa phím vật lý, hãy cho phép gỡ lỗi. Khi hộp “Cho phép gỡ lỗi USB?” hiện: tích “Luôn cho phép từ máy tính này” rồi bấm OK.</string>
+    <string name="kachi_access_lost_title">Máy không còn nhận quyền của Kachi</string>
     <string name="kachi_access_lost_body">Có thể do lâu không dùng (quá hạn của hệ thống), đã thu hồi, hoặc lần trước chỉ chọn \"Cho phép\" một lần. Bấm Hỏi lại và nhớ tích \"Luôn cho phép\".</string>
     <string name="kachi_access_env_title">Kênh điều khiển cửa sổ chưa mở</string>
-    <string name="kachi_access_env_body">Cổng gỡ lỗi của xe chưa sẵn sàng. Bấm Thử lại sau ít giây.</string>
+    <string name="kachi_access_env_body">Cổng gỡ lỗi của máy chưa sẵn sàng. Bấm Thử lại sau ít giây.</string>
     <string name="kachi_access_ask_again">Hỏi lại</string>
     <string name="kachi_access_later">Để sau</string>
     <string name="kachi_slot_connecting">Đang kết nối…</string>
@@ -120,19 +120,19 @@
     <string name="kachi_row_tone">Tông thẻ</string>
     <!-- 2.87 · R-OP1 — độ đục nền chung (thanh trên · thanh nút xe · widget), lưu trong color_choice -->
     <string name="kachi_row_bg_opacity">Độ trong suốt nền</string>
-    <string name="kachi_bg_opacity_note">Một mức chung cho nền thanh trên, thanh nút xe và widget — kéo hết về trái là như cũ, kéo sang phải nền trong dần, kéo hết về phải (100 %) là nền trong hoàn toàn. Chữ và icon luôn giữ nguyên; trên ảnh nền sáng, mức trong cao có thể làm chữ khó đọc — tùy bạn chọn. Thả tay là áp; đóng Cài đặt để thấy kết quả.</string>
+    <string name="kachi_bg_opacity_note">Một mức chung cho nền thanh trên, thanh nút và widget — kéo hết về trái là như cũ, kéo sang phải nền trong dần, kéo hết về phải (100 %) là nền trong hoàn toàn. Chữ và icon luôn giữ nguyên; trên ảnh nền sáng, mức trong cao có thể làm chữ khó đọc — tùy bạn chọn. Thả tay là áp; đóng Cài đặt để thấy kết quả.</string>
     <string name="kachi_bg_opacity_a11y">Độ trong suốt nền: %1$s</string>
     <!-- 2.89 · B3 DOCK-SCALE — Cài đặt › Hiển thị: cỡ thanh nút xe 50–150 % (spec kachi-289-field-fixes §B3). -->
-    <string name="kachi_sec_bar_scale">Thanh nút xe</string>
+    <string name="kachi_sec_bar_scale">Thanh nút</string>
     <string name="kachi_row_bar_scale">Cỡ</string>
-    <string name="kachi_bar_scale_a11y">Cỡ thanh nút xe: %1$s</string>
-    <string name="kachi_bar_scale_note">Kéo để thu nhỏ hoặc phóng to thanh nút xe — 100 % là như cũ. Dải ô phía trên là mẫu đúng cỡ (chỉ xem, không bấm). Thả tay là áp: vùng ô, widget và lối tắt tự khớp lại theo chỗ mới, app trong ô có thể vẽ lại một lần. Nút nhỏ đi nhưng vùng chạm vẫn đủ lớn để bấm khi lái.</string>
+    <string name="kachi_bar_scale_a11y">Cỡ thanh nút: %1$s</string>
+    <string name="kachi_bar_scale_note">Kéo để thu nhỏ hoặc phóng to thanh nút — 100 % là như cũ. Dải ô phía trên là mẫu đúng cỡ (chỉ xem, không bấm). Thả tay là áp: vùng ô, widget và lối tắt tự khớp lại theo chỗ mới, app trong ô có thể vẽ lại một lần. Nút nhỏ đi nhưng vùng chạm vẫn đủ lớn để bấm khi lái.</string>
     <string name="kachi_copy_path">Sao chép đường dẫn thư mục</string>
     <string name="kachi_path_copied">Đã sao chép đường dẫn</string>
     <string name="kachi_color_note">Lưu theo hồ sơ đang dùng. "Theo ảnh nền" lấy màu trội của ảnh đầu tiên trong thư mục hình nền. Chữ luôn được giữ đọc được: màu nào quá sáng thì chữ trên nút tự đậm lại. Màu mới áp ngay tại chỗ, app trong ô vẫn chạy tiếp.</string>
     <string name="kachi_sec_lang">Ngôn ngữ</string>
     <string name="kachi_row_lang">Chữ trên màn</string>
-    <string name="kachi_lang_note">\"Theo xe\" = tiếng Việt khi xe đặt tiếng Việt, còn lại tiếng Anh. Tiếng Trung, Thái và Mã Lai chỉ dùng khi bạn tự chọn. Giọng nói chỉ hiểu tiếng Việt, dù chữ trên màn là tiếng nào. Đổi ngôn ngữ thì màn hình dựng lại một lượt.</string>
+    <string name="kachi_lang_note">“Theo máy” = tiếng Việt khi máy đặt tiếng Việt, còn lại tiếng Anh. Tiếng Trung, Thái và Mã Lai chỉ dùng khi bạn tự chọn. Giọng nói chỉ hiểu tiếng Việt, dù chữ trên màn là tiếng nào. Đổi ngôn ngữ thì màn hình dựng lại một lượt.</string>
 
     <!-- ── SettingsSections — Hồ sơ tài xế ── -->
     <string name="kachi_profile_export_full">Xuất đầy đủ (sao lưu)</string>
@@ -151,7 +151,7 @@
     <!-- Senior review FIX286 Pass 1 · P3: không thay khung nào của xe ⇒ không in "thay 0 khung". -->
     <string name="kachi_profile_import_use_now">Dùng hồ sơ này ngay</string>
     <string name="kachi_profile_import_later">Để sau</string>
-    <string name="kachi_profiles_note">Mỗi hồ sơ giữ RIÊNG gần như mọi thứ: bố cục, nội dung ô, thanh nút, chip, hình nền, giao diện, đơn vị, ngôn ngữ, cấu hình dẫn đường, cụm đồng hồ, chiếu lên cụm và camera. Chạm một hồ sơ để đổi sang nó — chip hồ sơ ở thanh trên cũng đổi được, nhưng tạo và xoá thì chỉ ở đây. Tệp xuất đầy đủ có địa chỉ đã lưu và lịch dẫn đường — gửi người khác thì dùng Xuất để chia sẻ.</string>
+    <string name="kachi_profiles_note">Mỗi hồ sơ giữ RIÊNG gần như mọi thứ: bố cục, nội dung ô, thanh nút, lối tắt, hình nền, giao diện, ngôn ngữ, sổ địa chỉ, lịch dẫn đường và phím vật lý. Chạm một hồ sơ để đổi sang nó — chip hồ sơ ở thanh trên cũng đổi được, nhưng tạo và xoá thì chỉ ở đây. Tệp xuất đầy đủ có địa chỉ đã lưu và lịch dẫn đường — gửi người khác thì dùng Xuất để chia sẻ.</string>
     <string name="kachi_profiles_add">Thêm hồ sơ (bản sao của %1$s)</string>
     <string name="kachi_profile_sub_active">Đang dùng · %1$s</string>
     <string name="kachi_profile_sub_switch">%1$s · chạm để đổi sang hồ sơ này</string>
@@ -159,7 +159,7 @@
     <string name="kachi_row_boot_profile">Lên bằng hồ sơ</string>
     <string name="kachi_profile_boot_last">Gần nhất</string>
     <string name="kachi_boot_profile_note">"Gần nhất" = lên đúng hồ sơ bạn đang dùng lúc tắt máy. Chọn một hồ sơ cụ thể thì mỗi lần nổ máy Kachi đều đổi về hồ sơ đó, kể cả khi chuyến trước bạn đã đổi sang hồ sơ khác.</string>
-    <string name="kachi_home_profile_note">Mọi thiết lập ở Cài đặt — trừ nhóm Hệ thống và quyền (riêng Tự mở Kachi khi nổ máy, Chạy dịch vụ nền khi nổ máy, Mở app khi nổ máy và Tự mở nhạc khi lên xe vẫn theo hồ sơ), hầu hết nhóm Giọng nói, App dẫn đường mặc định, Kính thật (làm mờ nền), Tự sấy kính khi mưa, phần chỉnh camera theo xe (xoay, lật gương, góc nhìn), và Giới thiệu — đều lưu cho hồ sơ «%1$s», kể cả chiếu lên cụm, khung và DPI từng app, nút nổi và camera. Đổi sang hồ sơ khác ở nhóm Hồ sơ tài xế thì bố cục, nội dung ô, chip, thanh nút, giao diện và đơn vị đổi ngay; khung và DPI khi chiếu đổi từ lần chiếu sau, còn bật/tắt chiếu đổi từ lần nổ máy sau.</string>
+    <string name="kachi_home_profile_note">Mọi thiết lập ở Cài đặt — trừ nhóm Hệ thống và quyền (riêng Tự mở Kachi khi nổ máy, Chạy dịch vụ nền khi nổ máy, Mở app khi nổ máy và Tự mở nhạc khi lên xe vẫn theo hồ sơ), hầu hết nhóm Giọng nói, App dẫn đường mặc định, Kính thật (làm mờ nền) và Giới thiệu — đều lưu cho hồ sơ «%1$s». Đổi sang hồ sơ khác ở nhóm Hồ sơ tài xế thì bố cục, nội dung ô, thanh nút và giao diện đổi ngay.</string>
     <string name="kachi_delete">Xoá</string>
 
     <!-- ── SettingsSections — Quyền · Khởi động ── -->
@@ -189,7 +189,7 @@
     <string name="kachi_wake_notif_title">Hey Kachi</string>
     <string name="kachi_wake_notif_text">Đang nghe câu gọi</string>
     <!-- FIX286 · VK2: chế độ HOLD — "Hey Kachi" tắt, phím vô-lăng gán Kachi nghe: giữ mô hình sẵn, KHÔNG mở micro. -->
-    <string name="kachi_wake_hold_notif_title">Kachi sẵn sàng nghe phím vô-lăng</string>
+    <string name="kachi_wake_hold_notif_title">Kachi sẵn sàng nghe phím vật lý</string>
     <string name="kachi_wake_hold_notif_text">Bấm phím đã gán để nói — micro chỉ mở khi bấm</string>
     <string name="kachi_wake_auto_off">Đã tắt Hey Kachi vì nghe nhầm nhiều lần. Bật lại trong Cài đặt.</string>
     <string name="kachi_home_result_no_shell">Cần kênh shell — xem hàng \"Kênh điều khiển cửa sổ\" ở trên.</string>
@@ -201,10 +201,10 @@
     <string name="kachi_autostart_sub">Nổ máy là Kachi tự dựng lại ô. Việc đặt làm màn hình chính nằm ở mục \"Màn hình chính\" phía trên. Tắt thì phải mở tay.</string>
 
     <!-- ── SettingsSections — ClusterNav · Giới thiệu ── -->
-    <string name="kachi_about_tagline">Kachi — màn hình chính cho xe BYD DiLink.</string>
+    <string name="kachi_about_tagline">Kachi — màn hình chính cho Android box trên ô tô.</string>
     <string name="kachi_about_version">Phiên bản %1$s (mã %2$d)</string>
     <string name="kachi_about_package">Tên gói: %1$s</string>
-    <string name="kachi_about_licence">Giấy phép MIT. Thử nghiệm cá nhân, KHÔNG liên kết với BYD.</string>
+    <string name="kachi_about_licence">Giấy phép MIT. Thử nghiệm cá nhân, không liên kết với hãng xe hay nhà sản xuất thiết bị nào.</string>
 
     <!-- ── SettingsSectionsHome — Màn hình chính ── -->
     <string name="kachi_sec_layout">Bố cục màn hình</string>
@@ -219,26 +219,25 @@
     <string name="kachi_wall_title">Dùng ảnh làm hình nền</string>
     <string name="kachi_wall_sub_nofolder">Bỏ ảnh vào thư mục ảnh của Kachi</string>
     <string name="kachi_wall_sub_folder">Bỏ ảnh vào: %1$s</string>
-    <string name="kachi_wall_steps">Cách thêm ảnh NỀN màn hình:\n1. Cắm USB vào xe, hoặc mở app Quản lý tệp.\n2. Chép ảnh vào thư mục: %1$s\n3. Bật công tắc bên trên — ảnh sẽ làm nền, đổi vòng theo chu kỳ.\n(Ảnh cho widget "Trình chiếu ảnh" nằm ở thư mục KHÁC — xem mục Trình chiếu ảnh.)\nBấm nút dưới để sao chép đường dẫn thư mục.</string>
+    <string name="kachi_wall_steps">Cách thêm ảnh NỀN màn hình:\n1. Cắm USB vào máy, hoặc mở app Quản lý tệp.\n2. Chép ảnh vào thư mục: %1$s\n3. Bật công tắc bên trên — ảnh sẽ làm nền, đổi vòng theo chu kỳ.\n(Ảnh cho widget "Trình chiếu ảnh" nằm ở thư mục KHÁC — xem mục Trình chiếu ảnh.)\nBấm nút dưới để sao chép đường dẫn thư mục.</string>
     <string name="kachi_photos_section">Widget Trình chiếu ảnh</string>
-    <string name="kachi_photos_steps">Ảnh cho widget "Trình chiếu ảnh" (KHÁC thư mục ảnh nền):\n1. Cắm USB vào xe, hoặc mở app Quản lý tệp.\n2. Chép ảnh vào thư mục: %1$s\n3. Đặt widget "Trình chiếu ảnh" vào một ô — ảnh sẽ đổi vòng.\nBấm nút dưới để sao chép đường dẫn thư mục.</string>
+    <string name="kachi_photos_steps">Ảnh cho widget "Trình chiếu ảnh" (KHÁC thư mục ảnh nền):\n1. Cắm USB vào máy, hoặc mở app Quản lý tệp.\n2. Chép ảnh vào thư mục: %1$s\n3. Đặt widget "Trình chiếu ảnh" vào một ô — ảnh sẽ đổi vòng.\nBấm nút dưới để sao chép đường dẫn thư mục.</string>
     <string name="kachi_wall_period">Đổi ảnh mỗi</string>
     <string name="kachi_wall_fit">Cách phủ</string>
     <string name="kachi_wall_dim">Làm tối ảnh</string>
-    <string name="kachi_sec_dock">Thanh nút xe</string>
-    <string name="kachi_dock_visible_title">Hiện thanh nút xe</string>
+    <string name="kachi_sec_dock">Thanh nút</string>
+    <string name="kachi_dock_visible_title">Hiện thanh nút</string>
     <string name="kachi_dock_visible_sub">Tắt để ẩn thanh nút; các khung lấp trọn màn hình</string>
     <string name="kachi_dock_edge">Viền đặt thanh</string>
     <string name="kachi_dock_note">Chạm một ô để thêm hoặc bớt nút khỏi thanh.</string>
     <!-- UX-OVERHAUL · WP4 — sắp chỗ các vật bên trong hai thanh (docs/specs/kachi-ux-overhaul.html §WP4). -->
     <string name="kachi_header_order_title">Vị trí trên thanh trên</string>
-    <string name="kachi_header_order_hint">Sắp lại chỗ đứng của đồng hồ, chip xe và các nút trên thanh trên.</string>
-    <string name="kachi_dock_order_title">Vị trí trên thanh nút xe</string>
+    <string name="kachi_header_order_hint">Sắp lại chỗ đứng của đồng hồ và các nút trên thanh trên.</string>
+    <string name="kachi_dock_order_title">Vị trí trên thanh nút</string>
     <string name="kachi_dock_order_hint">Sắp lại chỗ đứng của các nút đã chọn ở trên.</string>
     <string name="kachi_bar_order_index">%1$d/%2$d</string>
     <string name="kachi_bar_order_up">Lên một bậc</string>
     <string name="kachi_bar_order_down">Xuống một bậc</string>
-    <string name="kachi_dock_warn">⚠ Nhóm An toàn/Động lực/Giải trí đổi hành vi lái — tự dùng tự chịu.</string>
 
     <!-- ── TopStripPicker — chọn chip thanh trạng thái ── -->
 
@@ -273,11 +272,11 @@
     <string name="kachi_appwidget_granting">Đang xin quyền đặt widget…</string>
     <string name="kachi_appwidget_err_alloc">Không cấp được ô cho widget — thử lại sau.</string>
     <string name="kachi_appwidget_err_no_shell">Chưa nối được kênh hệ thống nên chưa xin được quyền đặt widget. Thử lại sau khi mở lại Kachi.</string>
-    <string name="kachi_appwidget_err_bind">Xe không cho đặt widget của app khác. Thẻ dựng tay và nhóm vẫn dùng được bình thường.</string>
+    <string name="kachi_appwidget_err_bind">Máy không cho đặt widget của app khác. Thẻ dựng tay và nhóm vẫn dùng được bình thường.</string>
     <string name="kachi_appwidget_dead">Widget của %1$s không còn — app đã bị gỡ hoặc tắt. Chạm để chọn lại.</string>
 
     <!-- ── T6 · R-UI (m) · Ngăn kéo ở chế độ CHỌN NÚT CHO THANH NÚT XE (AppDrawer.Mode.PICK_DOCK) ── -->
-    <string name="kachi_drawer_title_dock">Chọn nút cho thanh nút xe</string>
+    <string name="kachi_drawer_title_dock">Chọn nút cho thanh nút</string>
     <string name="kachi_drawer_hint_dock">Chạm để bật/tắt một ô trên thanh nút · chọn bao nhiêu cũng được · bấm Áp dụng để lưu</string>
     <string name="kachi_drawer_apply_n">Áp dụng (%1$d)</string>
 
@@ -288,7 +287,7 @@
     <string name="kachi_bridge_accessibility_enabled">Đã bật. Bấm nút đã gán để mở app.</string>
     <string name="kachi_bridge_accessibility_not_bound">Đã bật quyền Hỗ trợ nhưng dịch vụ chưa gắn được — thử lại sau vài giây, hoặc bật/tắt tay ở Cài đặt hệ thống > Hỗ trợ.</string>
     <string name="kachi_bridge_accessibility_restarting">Mối nối phím đang kẹt ở mức hệ thống. Đang tự chữa: giao diện khởi động lại một nhịp rồi phím hoạt động lại — app đang mở trong ô sẽ phải vẽ lại (chạm vào ô là hiện lại).</string>
-    <string name="kachi_bridge_accessibility_failed">Chưa bật được Hỗ trợ — bấm Allow USB debugging trên xe rồi thử lại, hoặc bật tay ở Cài đặt > Hỗ trợ.</string>
+    <string name="kachi_bridge_accessibility_failed">Chưa bật được Hỗ trợ — bấm Allow USB debugging trên máy rồi thử lại, hoặc bật tay ở Cài đặt > Hỗ trợ.</string>
     <string name="kachi_bridge_checking">Đang kiểm tra…</string>
     <string name="kachi_bridge_voice_key_ready">Phím-thoại đã sẵn sàng.</string>
     <string name="kachi_bridge_binding_removed">Đã xoá gán</string>
@@ -371,22 +370,22 @@
     <!-- B1b · CLUSTER-RECT-OPTION (2.89) — Kiểu chiếu cụm: Bo tròn / Chữ nhật (SettingsSectionsCastStyle.kt) -->
 
     <!-- ── IA v2 nhóm 7 — Phím vô-lăng (SettingsKeysSection) ── -->
-    <string name="kachi_sec_keys">Nút vật lý → app · nút xe</string>
+    <string name="kachi_sec_keys">Nút vật lý → app · trợ lý</string>
     <string name="kachi_keys_enabled_title">Nhận nút vật lý</string>
-    <string name="kachi_keys_enabled_sub">Bật là tự cấp lại dịch vụ Hỗ trợ qua kênh của xe.</string>
+    <string name="kachi_keys_enabled_sub">Bật là tự cấp lại dịch vụ Hỗ trợ qua kênh gỡ lỗi của máy.</string>
     <string name="kachi_keys_status_off">Phím-thoại: đang tắt</string>
     <string name="kachi_keys_status_active">Phím-thoại: ĐANG HOẠT ĐỘNG ✓</string>
     <string name="kachi_keys_status_broken">Phím-thoại: MẤT KẾT NỐI — bấm Kiểm tra / Sửa ngay</string>
     <string name="kachi_keys_check">Kiểm tra / Sửa ngay</string>
     <string name="kachi_sub_keys_bindings">Gán phím</string>
-    <string name="kachi_keys_no_bindings">Chưa gán nút nào. Bấm “Thêm gán…” để nối một nút vật lý với một app hoặc một nút xe.</string>
+    <string name="kachi_keys_no_bindings">Chưa gán nút nào. Bấm “Thêm gán…” để nối một nút vật lý với một app hoặc trợ lý.</string>
     <string name="kachi_keys_add">Thêm gán…</string>
     <string name="kachi_keys_pick_button">Bước 1 — chọn nút</string>
     <string name="kachi_keys_pick_target">Bước 3 — chọn ứng dụng / trợ lý</string>
     <string name="kachi_keys_no_buttons">Chưa có nút nào để gán.</string>
     <string name="kachi_keys_no_targets">Máy chưa có ứng dụng nào mở được từ phím.</string>
     <string name="kachi_sub_keys_custom">Nút tự học</string>
-    <string name="kachi_keys_no_custom">Chưa học nút nào. Bấm “Học phím mới…” rồi bấm nút trên vô-lăng.</string>
+    <string name="kachi_keys_no_custom">Chưa học nút nào. Bấm “Học phím mới…” rồi bấm nút cần học (trên vô-lăng hoặc trên máy).</string>
     <string name="kachi_keys_learn">Học phím mới…</string>
     <string name="kachi_keys_learn_name">Đặt tên cho nút vừa bấm</string>
     <string name="kachi_key_custom_name">%1$s (mã %2$d)</string>
@@ -420,18 +419,18 @@
     <!-- ── T-BRIDGE — cầu kiểm thử qua adb (docs/specs/kachi-test-bridge.html). Câu chữ phải NÓI THẲNG cái được
          mở ra: đây là công tắc duy nhất đứng giữa một receiver exported và cái xe. ── -->
     <string name="kachi_test_bridge_title">Chế độ kiểm thử qua adb</string>
-    <string name="kachi_test_bridge_sub_off">Cho phép máy tính nối bằng adb gửi lệnh thử vào Kachi (nói một câu, đổi hồ sơ, gắn app vào ô, đọc trạng thái). Chỉ bật khi bạn đang ngồi trong xe và đang cần thử. Tự tắt sau 60 phút và sau khi tắt máy.</string>
+    <string name="kachi_test_bridge_sub_off">Cho phép máy tính nối bằng adb gửi lệnh thử vào Kachi (nói một câu, đổi hồ sơ, gắn app vào ô, đọc trạng thái). Chỉ bật khi bạn đang ở cạnh máy và đang cần thử. Tự tắt sau 60 phút và sau khi tắt máy.</string>
     <string name="kachi_test_bridge_sub_on">Đang mở — còn %1$d phút. Lệnh gửi vào đều được ghi lại trong nhật ký và trong thư mục test của Kachi.</string>
 
     <!-- ── IA v2 nhóm 10 — miễn trừ trách nhiệm, chuyển từ hộp thoại một-lần của màn cũ (MainActivity:620–635) ── -->
-    <string name="kachi_about_disclaimer">Miễn trừ trách nhiệm: đây là thử nghiệm cá nhân, KHÔNG liên kết với BYD. Không có bảo đảm nào về an toàn lái xe, tương thích hay độ ổn định. Cài và dùng với rủi ro của riêng bạn.</string>
+    <string name="kachi_about_disclaimer">Miễn trừ trách nhiệm: Kachi là thử nghiệm cá nhân, không liên kết với hãng xe hay nhà sản xuất thiết bị nào. Không có bảo đảm nào về an toàn lái xe, tương thích hay độ ổn định. Cài và dùng với rủi ro của riêng bạn.</string>
 
     <!-- ══ S3 · gỡ màn ClusterNav cũ (docs/specs/kachi-remove-legacy-screen.html) ═══════════════════ -->
 
     <!-- R2(c) — miễn trừ trách nhiệm LẦN ĐẦU MỞ APP. Câu chữ của hộp thoại màn cũ (MainActivity:620–635),
          đổi đúng MỘT từ: tên app "ClusterNav" → "Kachi" (màn cũ đã gỡ, người dùng chỉ còn thấy tên này). -->
     <string name="kachi_disclaimer_title">Miễn trừ trách nhiệm</string>
-    <string name="kachi_disclaimer_body">Kachi là thử nghiệm cá nhân, KHÔNG liên kết với BYD. Không có bảo đảm về an toàn lái xe, tương thích hay độ ổn định. Cài và dùng với rủi ro của riêng bạn.</string>
+    <string name="kachi_disclaimer_body">Kachi là thử nghiệm cá nhân, không liên kết với hãng xe hay nhà sản xuất thiết bị nào. Không có bảo đảm về an toàn lái xe, tương thích hay độ ổn định. Cài và dùng với rủi ro của riêng bạn.</string>
     <string name="kachi_disclaimer_ok">Tôi hiểu</string>
 
     <!-- R2(d) — dòng trạng thái op-39 trên cụm (chuyển từ NavClusterOp39Status, đã gỡ). -->
@@ -446,11 +445,11 @@
          Nay chấm hạ giọng (mực mờ nhất, 1/5 cạnh icon) và CON SỐ chuyển thành một dòng cho cả nhóm. -->
 
     <!-- ══ V1 · đường thử lệnh bằng CHỮ (docs/specs/kachi-voice-command.html R6) ═════════════════════ -->
-    <string name="kachi_voice_note">Gõ câu đúng như khi nói, để đo xem máy hiểu gì — ví dụ: “bật đèn đọc”, “đặt nhiệt độ 22”, “đóng hết kính”, “xem pin”, “mở Cài đặt”. Muốn NÓI thì dùng ô “Nói với xe” trên thanh nút hoặc nút mic ở thanh trên.</string>
+    <string name="kachi_voice_note">Gõ câu đúng như khi nói, để đo xem máy hiểu gì — ví dụ: “mở YouTube”, “phát nhạc”, “đổi bố cục 4 ô”, “dẫn đường về nhà”, “mở Cài đặt”. Muốn NÓI thì dùng ô “Nói với Kachi” trên thanh nút hoặc nút mic ở thanh trên.</string>
 
     <!-- ══ 2.74 · R3 — danh sách CÂU LỆNH NÓI ĐƯỢC ở cuối nhóm Giọng nói ═══════════════════════════════ -->
     <string name="kachi_voice_cmds_section">Câu lệnh nói được</string>
-    <string name="kachi_voice_cmds_sub">Danh sách này sinh từ chính ngữ pháp của Kachi, nên nó luôn khớp với thứ xe hiểu. Chạm một nhóm để xem câu mẫu.</string>
+    <string name="kachi_voice_cmds_sub">Danh sách này sinh từ chính ngữ pháp của Kachi, nên nó luôn khớp với thứ Kachi hiểu. Chạm một nhóm để xem câu mẫu.</string>
     <!-- kachi-i18n-zh-th-ms R4: giọng nói chỉ nhận dạng tiếng Việt (một gói ASR zipformer-vi), ở MỌI ngôn ngữ giao diện. -->
     <string name="kachi_voice_lang_only">Giọng nói hiện chỉ hiểu tiếng Việt — hãy nói đúng các câu tiếng Việt trong danh sách.</string>
     <!-- ⚠ `<plurals>` chứ không `<string>`: bản một-chuỗi in "1 phrases" ở tiếng Anh (cùng finding #18 của
@@ -460,7 +459,7 @@
         <item quantity="other">%1$d câu</item>
     </plurals>
     <string name="kachi_voice_cmds_asks">%1$s · sẽ hỏi lại trước khi chạy</string>
-    <string name="kachi_voice_hint">Nói gì với xe…</string>
+    <string name="kachi_voice_hint">Nói gì với Kachi…</string>
     <string name="kachi_voice_run">Chạy câu lệnh</string>
     <string name="kachi_voice_idle">Chưa chạy câu nào.</string>
     <string name="kachi_voice_empty">Chưa gõ gì.</string>
@@ -480,9 +479,9 @@
     <string name="kachi_voice_engine_failed">Bộ nhận dạng không khởi động được</string>
     <string name="kachi_voice_nothing_heard">Không nghe rõ</string>
     <string name="kachi_voice_open_settings">Mở Cài đặt</string>
-    <string name="kachi_voice_listen_not_here">Phiên nghe mở ở màn chính (ô “Nói với xe” hoặc nút mic trên thanh trên), không mở từ ô thử này.</string>
+    <string name="kachi_voice_listen_not_here">Phiên nghe mở ở màn chính (ô “Nói với Kachi” hoặc nút mic trên thanh trên), không mở từ ô thử này.</string>
     <string name="kachi_voice_model_title">Nhận dạng giọng nói (tại máy)</string>
-    <string name="kachi_voice_model_absent">Chưa cài. Cần tải mô hình tiếng Việt %1$s một lần; sau đó tiếng nói được nhận dạng ngay trên xe, không gửi ra mạng.</string>
+    <string name="kachi_voice_model_absent">Chưa cài. Cần tải mô hình tiếng Việt %1$s một lần; sau đó tiếng nói được nhận dạng ngay trên máy, không gửi ra mạng.</string>
     <string name="kachi_voice_model_ready">Đã cài %1$s · %2$d từ · %3$s trên đĩa</string>
     <string name="kachi_voice_model_get">Tải mô hình tiếng Việt</string>
     <string name="kachi_voice_model_remove">Gỡ mô hình</string>
@@ -498,13 +497,13 @@
     <string name="kachi_voice_model_credits_title">Về mô hình nghe</string>
     <string name="kachi_voice_model_credits_line">%1$s — %2$s · giấy phép %3$s · %4$s</string>
     <string name="kachi_voice_tts_title">Giọng đọc offline (tại máy)</string>
-    <string name="kachi_voice_tts_absent">Chưa cài. Gói giọng Việt %1$s — tải một lần rồi Kachi đọc câu trả lời ngay trên xe, không cần mạng và không cần Google.</string>
+    <string name="kachi_voice_tts_absent">Chưa cài. Gói giọng Việt %1$s — tải một lần rồi Kachi đọc câu trả lời ngay trên máy, không cần mạng và không cần Google.</string>
     <string name="kachi_voice_tts_ready">Đã cài %1$s · %2$d tệp · %3$s trên đĩa</string>
     <string name="kachi_voice_tts_get">Tải gói giọng đọc</string>
     <string name="kachi_voice_tts_remove">Gỡ gói giọng đọc</string>
     <string name="kachi_voice_tts_update">Cập nhật gói giọng đọc</string>
     <string name="kachi_voice_tts_has_update">Đã có bản mới của \"%1$s\" — bấm Cập nhật để tải bản mới.</string>
-    <string name="kachi_voice_tts_sideload">Xe không có mạng: chép cả cây thư mục gói vào Android/data/%1$s/files/sherpa/import/%2$s/ rồi bấm Tải — máy vẫn kiểm sha256 từng tệp.</string>
+    <string name="kachi_voice_tts_sideload">Máy không có mạng: chép cả cây thư mục gói vào Android/data/%1$s/files/sherpa/import/%2$s/ rồi bấm Tải — máy vẫn kiểm sha256 từng tệp.</string>
     <string name="kachi_voice_speak_title">Đọc phản hồi bằng giọng</string>
     <string name="kachi_voice_speak_sub">Kachi đọc to câu trả lời thay vì chỉ hiện chữ.</string>
     <string name="kachi_voice_offline_title">Ưu tiên giọng offline</string>
@@ -515,7 +514,7 @@
     <string name="kachi_voice_wav_nothing">Không nghe ra chữ nào trong %1$s</string>
     <string name="kachi_voice_wav_failed">Không chạy được: %1$s</string>
     <string name="kachi_voice_wav_where">Đặt tệp kachi-voice-test.wav (16 kHz · 1 kênh · PCM 16-bit) ở một trong: %1$s</string>
-    <string name="kachi_pill_voice">Nói với xe</string>
+    <string name="kachi_pill_voice">Nói với Kachi</string>
     <!-- V3 · R14 — công tắc nhãn chip thanh trên (owner 2026-09-16) -->
     <!-- V3 · R7 — mục "Hỏi xác nhận trước khi chạy" + nguồn micro -->
     <string name="kachi_voice_confirm_sec">Hỏi xác nhận trước khi chạy</string>
@@ -554,7 +553,6 @@
     <string name="kachi_sc_no_stage">Chưa dựng được chỗ chạy ngầm — thử lại sau giây lát</string>
     <string name="kachi_sc_refuse_system">Không chạy ngầm được app hệ thống</string>
     <string name="kachi_sc_refuse_self">Không chạy ngầm được chính Kachi</string>
-    <string name="kachi_sc_refuse_cast">%1$s đang chiếu lên cụm</string>
     <string name="kachi_sc_not_installed">%1$s chưa cài</string>
     <string name="kachi_sc_bg_failed">%1$s chưa chạy ngầm được</string>
     <!-- 2.93 · TOAST-2LINE-DL5: mã lý do ĐỨNG ĐẦU — Android 12 cắt toast của app targetSdk ≥ 31 ở 2 dòng, ellipsize=end (AOSP r34 text_toast.xml). -->
@@ -567,7 +565,7 @@
     <string name="kachi_drawer_hint_trip">Chạm để chọn hoặc bỏ một ứng dụng · bấm Áp dụng để lưu · kiểu mở chọn trong Cài đặt</string>
     <string name="kachi_trip_cap_note">Mở khi nổ máy có tối đa %1$d ứng dụng — bỏ một app để thêm</string>
     <string name="kachi_trip_title">Mở app khi nổ máy</string>
-    <string name="kachi_trip_hint">Chạy một lần mỗi lần nổ máy, sau khi màn nhà sẵn sàng (khoảng 15–45 giây). Chạy nền = mở ẩn rồi đưa ra sau màn nhà (dùng một ô app nếu có — ô đó có thể nháy 1–2 giây). App đã ở ô hoặc đang chiếu cụm thì bỏ qua.</string>
+    <string name="kachi_trip_hint">Chạy một lần mỗi lần nổ máy, sau khi màn nhà sẵn sàng (khoảng 15–45 giây). Chạy nền = mở ẩn rồi đưa ra sau màn nhà (dùng một ô app nếu có — ô đó có thể nháy 1–2 giây). App đã ở ô thì bỏ qua.</string>
     <string name="kachi_trip_add_n">+ Thêm app (%1$d/%2$d)</string>
     <string name="kachi_trip_mode_bg">Chạy nền</string>
     <string name="kachi_trip_mode_normal">Mở bình thường</string>
@@ -583,10 +581,10 @@
     <string name="kachi_trip_music_title">Tự mở nhạc khi lên xe</string>
     <string name="kachi_trip_music_mode">Nhạc</string>
     <string name="kachi_trip_music_off">Tắt</string>
-    <string name="kachi_trip_music_car">Theo player của xe</string>
+    <string name="kachi_trip_music_car">Theo trình phát của máy</string>
     <string name="kachi_trip_music_query">Phát gì (từ khoá hoặc link YouTube; để trống = tiếp tục)</string>
     <string name="kachi_trip_music_query_set">Phát gì: %1$s</string>
-    <string name="kachi_trip_music_note">Sau khi tắt máy app thường bị đóng — đặt từ khoá hoặc link để chắc có nhạc. App bạn chọn sẽ phát kể cả khi xe đang tự phát nguồn khác.</string>
+    <string name="kachi_trip_music_note">Sau khi tắt máy app thường bị đóng — đặt từ khoá hoặc link để chắc có nhạc. App bạn chọn sẽ phát kể cả khi máy đang tự phát nguồn khác.</string>
     <string name="kachi_trip_res_noop">không mở được gì (%1$s)</string>
     <string name="kachi_trip_res_partial">chạy một phần lúc %1$s</string>
     <string name="kachi_trip_step">• %1$s: %2$s</string>
@@ -607,7 +605,7 @@
     <string name="kachi_trip_why_system_app">bỏ qua — app hệ thống không chạy nền được; hãy đặt nó vào một ô</string>
     <string name="kachi_trip_why_not_installed">bỏ qua — app chưa cài</string>
     <string name="kachi_trip_why_self">bỏ qua — đó là Kachi</string>
-    <string name="kachi_trip_why_camera_unknown">bỏ qua — đời xe này chưa hỗ trợ mở bình thường</string>
+    <string name="kachi_trip_why_camera_unknown">bỏ qua — bản trước chưa hỗ trợ mở bình thường</string>
     <string name="kachi_trip_why_camera">bỏ qua — màn camera đang hiện</string>
     <string name="kachi_trip_why_other_front">bỏ qua — app khác đang ở trước</string>
     <string name="kachi_trip_why_not_staged">bỏ qua — không mở được app</string>
@@ -671,10 +669,10 @@
     <string name="kachi_vn_listening">Đang nghe…</string>
     <string name="kachi_vn_decoding">Đang hiểu…</string>
     <string name="kachi_vn_e_busy">Kachi đang nghe lệnh khác — thử lại</string>
-    <string name="kachi_vn_no_model">Tải mô hình nghe ở Giọng nói › Nói với xe — vẫn gõ tên được</string>
+    <string name="kachi_vn_no_model">Tải mô hình nghe ở Giọng nói › Nhận dạng giọng nói — vẫn gõ tên được</string>
     <string name="kachi_vn_r_shape">Tên phải 1–4 từ, ít nhất 3 chữ cái</string>
-    <string name="kachi_vn_r_command">Trùng một câu lệnh của xe</string>
-    <string name="kachi_vn_r_command_prefix">Là phần đầu của một câu lệnh xe — sẽ cướp lệnh</string>
+    <string name="kachi_vn_r_command">Trùng một câu lệnh của Kachi</string>
+    <string name="kachi_vn_r_command_prefix">Là phần đầu của một câu lệnh Kachi — sẽ cướp lệnh</string>
     <string name="kachi_vn_r_reserved">Mở đầu bằng động từ / từ nối / câu trả lời — thêm một chữ khác</string>
     <string name="kachi_vn_r_slot">Có số hoặc mệnh đề ô — sẽ lẫn với “vào ô số …”</string>
     <string name="kachi_vn_r_profile">Trùng tên một hồ sơ</string>
@@ -689,9 +687,9 @@
     <string name="kachi_vn_r_known">Kachi đã hiểu tên này (%1$s) — không cần lưu</string>
     <string name="kachi_vn_r_duplicate">Đã lưu tên này rồi</string>
     <string name="kachi_vn_r_steals">Câu này hôm nay mở %1$s — lưu thì %1$s thôi nhận câu này</string>
-    <string name="kachi_vn_r_mismatch">Tên chứa một từ của lệnh xe</string>
+    <string name="kachi_vn_r_mismatch">Tên chứa một từ của lệnh Kachi</string>
     <string name="kachi_vn_r_no_bias">Vẫn hiểu được, nhưng không được ưu tiên nghe (đụng: %1$s)</string>
-    <string name="kachi_vn_r_near_command">Dễ lẫn với một lệnh xe</string>
+    <string name="kachi_vn_r_near_command">Dễ lẫn với một lệnh Kachi</string>
     <string name="kachi_vn_r_near_app">Gần tên app %1$s</string>
     <string name="kachi_vn_r_one_word">Một từ đơn dễ trùng câu nói thường</string>
     <string name="kachi_vn_r_homograph">Bỏ dấu thì trùng một chữ trong câu lệnh “%1$s” — nói câu có chữ ấy có thể mở app này</string>

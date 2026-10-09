@@ -177,7 +177,7 @@ class LauncherI18nLocalesContractTest {
          */
         val SPOKEN_VI_QUOTES: Map<String, List<String>> = mapOf(
             // ô gõ thử lệnh (VoiceTextConsole) — "gõ đúng như khi nói" ⇒ ví dụ là câu nói
-            "kachi_voice_note" to listOf("bật đèn đọc", "đặt nhiệt độ 22", "đóng hết kính", "xem pin", "mở Cài đặt"),
+            "kachi_voice_note" to listOf("mở YouTube", "phát nhạc", "đổi bố cục 4 ô", "dẫn đường về nhà", "mở Cài đặt"),
             // Cài đặt › Sổ địa chỉ — câu dẫn đường tới địa chỉ đã lưu
             "kachi_places_note" to listOf("về nhà", "đến công ty", "đi &lt;tên&gt;"),
             // 2.91 VOICE-APP-NAMES — hộp/trang Dạy tên app: người dùng NÓI câu lệnh thật để dạy (spec §4.2) ⇒ ví dụ là câu nói
@@ -192,6 +192,40 @@ class LauncherI18nLocalesContractTest {
 
         /** `%1$s` / `%s` / `%.1f` — KHÔNG nhận cờ dấu cách (`50 % của` không phải tham số). `%%` bị bỏ qua ở [args]. */
         val FORMAT = Regex("""%%|%(?:(\d+)\$)?[-#+0,(]*\d*(?:\.\d+)?([sdfxXc])""")
+    }
+
+    // ── Android box B2 · W4 — chữ người dùng thấy không còn tên hãng xe / sản phẩm cũ ────────────────────────────────
+    // Mọi `<string>`/`<plurals>` của `strings.xml` + `strings_kachi.xml` (chữ launcher + bốn khoá hệ thống: nhãn app · bộ nghe
+    // thông báo · dịch vụ Hỗ trợ — người dùng thấy cả ở Cài đặt Android) không được chứa `BYD` / `DiLink` / `ClusterNav`.
+    // Chú thích XML không tính. Chữ trong mã + bảng dịch: `UserFacingBrandTest` (`:core`).
+
+    private val brandWords = listOf("BYD", "DiLink", "ClusterNav")
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["values", "values-en", "values-zh-rCN", "values-th", "values-ms"])
+    fun `chuoi nguoi dung thay khong nhac BYD DiLink ClusterNav`(folder: String) {
+        var seen = 0
+        val bad = listOf("strings.xml", "strings_kachi.xml").flatMap { file ->
+            val xml = SourceRoots.text("src/main/res/$folder/$file").replace(Regex("<!--.*?-->", RegexOption.DOT_MATCHES_ALL), "")
+            Regex("""<(string|plurals) name="([^"]+)"[^>]*>(.*?)</\1>""", RegexOption.DOT_MATCHES_ALL).findAll(xml).mapNotNull { m ->
+                seen++
+                val word = brandWords.firstOrNull { m.groupValues[3].contains(it, ignoreCase = true) }
+                word?.let { "$file:${m.groupValues[2]} ($it)" }
+            }.toList()
+        }
+        assertTrue(seen > 100, "$folder: chỉ đọc được $seen chuỗi — nghi bộ đọc hỏng")
+        assertEquals(emptyList<String>(), bad, "$folder: chuỗi người dùng thấy còn tên hãng/sản phẩm cũ")
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = ["values", "values-en", "values-zh-rCN", "values-th", "values-ms"])
+    fun `nhan dich vu he thong mang ten Kachi`(folder: String) {
+        val xml = SourceRoots.text("src/main/res/$folder/strings.xml")
+        listOf("nav_listener_label", "acc_label").forEach { key ->
+            val v = Regex("""<string name="$key">(.*?)</string>""").find(xml)?.groupValues?.get(1)
+            // `acc_label` bắt đầu bằng "Kachi": ROM chỉ-in-nhãn nhận dịch vụ đã gắn bằng token đầu nhãn (AccessibilityRebind).
+            assertTrue(v != null && v.startsWith("Kachi"), "$folder/$key = $v — phải mở đầu bằng \"Kachi\"")
+        }
     }
 
     private fun rel(folder: String) = "src/main/res/$folder/strings_kachi.xml"

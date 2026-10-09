@@ -160,14 +160,14 @@ class VoiceGrammarCoverageTest {
      */
     @Test
     fun `tap da luu co ma nut xe cu van dung duoc va bi bo qua`() {
-        val legacy = setOf(VoiceRiskTable.PREFIX_CONTROL + "sunroof", VoiceRiskTable.PREFIX_MACRO + "mac_win_open_all", "control:trunk")
+        val legacy = setOf("control:sunroof", "macro:mac_win_open_all", "control:trunk")
         val eff = VoiceRiskTable.effectiveIds(legacy, chosenSinceDefaults = true)
         listOf(
             VoiceIntent.Profile("Vợ"), VoiceIntent.Media(VoiceMediaOp.QUERY, "Diễm Xưa"), VoiceIntent.OpenApp("YouTube"),
             VoiceIntent.Launcher(com.byd.clusternav.launcher.LauncherActions.SETTINGS), VoiceIntent.Nav("Bitexco"),
         ).forEach { assertEquals(VoiceRisk.NORMAL, VoiceRiskTable.of(it, eff), "$it") }
         assertTrue(VoiceRiskTable.askableIds().none { it in legacy }, "mã nút xe cũ không còn là ô tích")
-        assertTrue(VoiceRiskTable.askableIds().none { it.startsWith(VoiceRiskTable.PREFIX_CONTROL) || it.startsWith(VoiceRiskTable.PREFIX_MACRO) })
+        assertTrue(VoiceRiskTable.askableIds().none { it.startsWith("control:") || it.startsWith("macro:") })
         assertEquals(legacy, VoiceRiskTable.effectiveIds(legacy, chosenSinceDefaults = false), "chưa chọn lại ⇒ cộng mặc định RỖNG")
     }
 

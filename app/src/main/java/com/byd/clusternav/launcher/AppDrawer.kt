@@ -372,7 +372,7 @@ class AppDrawer(
     /**
      * ⚠ U7 · R6 — hàm `iconWithBadge` CŨ đã dời sang [PickerBadge.icon].
      *
-     * Không phải dọn cho gọn: [TopStripPicker] bày **đúng những ô ấy** mà lại **không** vẽ chấm nào, tức cùng một
+     * Không phải dọn cho gọn: `TopStripPicker` bày **đúng những ô ấy** mà lại **không** vẽ chấm nào, tức cùng một
      * mã thì hai màn nói hai điều khác nhau về độ tin cậy của nó. Gom về một nơi là cách duy nhất để hai màn không
      * lệch tiếp — cùng lẽ với [CapabilityPicker.COLS].
      */

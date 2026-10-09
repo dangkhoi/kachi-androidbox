@@ -16,7 +16,7 @@ class ProfileScopeMigrationTest {
 
     private val cn = "clusternav_prefs"
     private val cnKeys = ProfileScope.CLUSTERNAV_KEYS.getValue(cn)
-    private val newCam = listOf("camera_projection", "camera_zoom")
+    private val newCam = listOf("headless_autostart", "voice_music_default_app")
 
     @Test
     fun `rot chi dien cho trong, gia tri dang song, khoa vang thanh null tuong minh`() {
@@ -39,21 +39,22 @@ class ProfileScopeMigrationTest {
      */
     @Test
     fun `ca QA 2_92 — khoa moi khong ro sang ho so luu bang ban cu`() {
-        val old = mapOf<String, Any?>("camera_dewarp_amount" to 0, "camera_shape" to "RECT")
+        // Android box B2 · W4: ca gốc dùng khoá camera (gỡ); cùng cơ chế với hai khoá còn sống, tên khác.
+        val old = mapOf<String, Any?>("voicekey_enabled" to false, "theme_choice" to "dark")
         val types = ProfileScopeTypes.CLUSTERNAV
-        val liveAfterChoice = mapOf<String, Any?>("camera_projection" to "WIDE", "camera_zoom" to 120, "camera_dewarp_amount" to 100)
+        val liveAfterChoice = mapOf<String, Any?>("headless_autostart" to false, "voice_music_default_app" to "ytmusic", "voicekey_enabled" to true)
 
         val leak = PrefSnapshotPlan.apply(liveAfterChoice, old, cnKeys, types)
-        assertFalse("camera_projection" in leak.writes || "camera_zoom" in leak.writes, "mô tả bệnh: $leak")
+        assertFalse("headless_autostart" in leak.writes || "voice_music_default_app" in leak.writes, "mô tả bệnh: $leak")
 
         val filled = ProfileScopeMigration.fillNewKeys(mapOf("Mặc định" to old), emptyMap(), newCam).getValue("Mặc định")
-        assertTrue(filled.containsKey("camera_projection") && filled["camera_projection"] == null)
-        assertTrue(filled.containsKey("camera_zoom") && filled["camera_zoom"] == null)
-        assertEquals(0, filled["camera_dewarp_amount"], "khoá có sẵn trong ảnh không bị đụng")
+        assertTrue(filled.containsKey("headless_autostart") && filled["headless_autostart"] == null)
+        assertTrue(filled.containsKey("voice_music_default_app") && filled["voice_music_default_app"] == null)
+        assertEquals(false, filled["voicekey_enabled"], "khoá có sẵn trong ảnh không bị đụng")
         val edit = PrefSnapshotPlan.apply(liveAfterChoice, filled, cnKeys, types)
-        assertTrue(edit.writes.containsKey("camera_projection") && edit.writes["camera_projection"] == null)
-        assertTrue(edit.writes.containsKey("camera_zoom") && edit.writes["camera_zoom"] == null)
-        assertEquals(0, edit.writes["camera_dewarp_amount"])
+        assertTrue(edit.writes.containsKey("headless_autostart") && edit.writes["headless_autostart"] == null)
+        assertTrue(edit.writes.containsKey("voice_music_default_app") && edit.writes["voice_music_default_app"] == null)
+        assertEquals(false, edit.writes["voicekey_enabled"])
     }
 
     @Test
@@ -67,14 +68,14 @@ class ProfileScopeMigrationTest {
     @Test
     fun `khoa moi rot gia tri DANG SONG, chi dien cho trong, chay hai lan khong doi`() {
         val shots = mapOf(
-            "A" to mapOf<String, Any?>("enabled" to true),
-            "B" to mapOf<String, Any?>("vm_bubble_hidden" to false),
+            "A" to mapOf<String, Any?>("voicekey_enabled" to true),
+            "B" to mapOf<String, Any?>("headless_autostart" to false),
         )
-        val live = mapOf<String, Any?>("vm_bubble_hidden" to true)
-        val out = ProfileScopeMigration.fillNewKeys(shots, live, listOf("vm_bubble_hidden"))
-        assertEquals(true, out.getValue("A")["vm_bubble_hidden"], "khoá đã có giá trị sống ⇒ ai cũng bắt đầu từ cái đang dùng")
+        val live = mapOf<String, Any?>("headless_autostart" to true)
+        val out = ProfileScopeMigration.fillNewKeys(shots, live, listOf("headless_autostart"))
+        assertEquals(true, out.getValue("A")["headless_autostart"], "khoá đã có giá trị sống ⇒ ai cũng bắt đầu từ cái đang dùng")
         assertFalse("B" in out, "B đã có khoá (kể cả khác giá trị sống) ⇒ của B, không chạm")
-        assertTrue(ProfileScopeMigration.fillNewKeys(shots + out, live + ("vm_bubble_hidden" to false), listOf("vm_bubble_hidden")).isEmpty())
+        assertTrue(ProfileScopeMigration.fillNewKeys(shots + out, live + ("headless_autostart" to false), listOf("headless_autostart")).isEmpty())
     }
 
     @Test
@@ -93,7 +94,7 @@ class ProfileScopeMigrationTest {
     fun `tep prefs MOI - ho so da chup o tep khac duoc rot, ho so chua chup o dau khong`() {
         val newFile = "kachi_new_prefs"
         val shots = mapOf(
-            cn to mapOf("A" to mapOf<String, Any?>("enabled" to true), "B" to emptyMap()),
+            cn to mapOf("A" to mapOf<String, Any?>("voicekey_enabled" to true), "B" to emptyMap()),
             newFile to mapOf("A" to emptyMap(), "B" to emptyMap()),
         )
         val captured = ProfileScopeMigration.captured(shots)

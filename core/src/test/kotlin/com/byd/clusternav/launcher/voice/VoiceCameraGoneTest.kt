@@ -30,7 +30,7 @@ class VoiceCameraGoneTest {
     @Test
     fun `cau tra loi noi dung ten camera`() {
         val u = parse("bật camera") as VoiceIntent.Unknown
-        assertEquals("Tính năng camera đã bỏ khỏi Kachi — dùng màn hình của xe", VoiceReply.unknown(u, Lang.VI))
+        assertEquals("Kachi không có tính năng camera", VoiceReply.unknown(u, Lang.VI))
     }
 
     @Test

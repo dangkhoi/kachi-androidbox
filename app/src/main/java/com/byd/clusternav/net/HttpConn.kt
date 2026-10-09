@@ -22,7 +22,7 @@ import java.net.URL
 object HttpConn {
 
     /** Nhãn tự giới thiệu — giữ NGUYÊN chuỗi cũ để nhật ký máy chủ của dự án không đứt mạch. */
-    private const val UA = "ClusterNav-Updater"
+    private const val UA = "Kachi-Updater"
 
     private const val CONNECT_TIMEOUT_MS = 15_000
 

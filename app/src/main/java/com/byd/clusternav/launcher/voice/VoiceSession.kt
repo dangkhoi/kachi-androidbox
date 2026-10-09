@@ -317,7 +317,7 @@ class VoiceSession(
         // câu ghép có vế đầu bất đồng bộ (*"tăng gió rồi tắt điều hoà"* lúc đang AUTO ⇒ hai lệnh + nhịp 400 ms trên
         // luồng nền): lúc trả về chưa có một lời `say` nào ⇒ [batch] RỖNG ⇒ `speakLines` thoát ngay ⇒ `onReplyDone`
         // mở micro nối trong vài ms ⇒ ~400 ms sau hai câu trả lời thật về với `flushed = true` **và mic đang mở** nên
-        // cổng `micOpen` của [speakLines] bỏ CẢ HAI — kể cả câu *"xe không nhận lệnh"* / *"xe này không có"*. Người
+        // cổng `micOpen` của [speakLines] bỏ CẢ HAI — kể cả câu *"máy không nhận lệnh"* / *"xe này không có"*. Người
         // lái chỉ nghe tiếng chuông, xe đổi hai thứ, không ai nói gì. 2.75 còn đọc được vế 2.
         //
         // Nay [VoiceDispatcher.execute] gọi lại đúng một lần khi cả câu đã ghi xong HOẶC đã dừng ở hộp hỏi lại (phần
@@ -348,7 +348,7 @@ class VoiceSession(
             Log.w(TAG, "làn ghi chưa báo xong sau $TURN_SETTLE_MS ms ⇒ chốt lượt nói bằng lưới an toàn")
             settle()
         }
-        // Lưới an toàn BẮT BUỘC: một vế quên gọi `done` sẽ ghim làn (KDoc [VoiceWriteLane]) — không có mốc này thì
+        // Lưới an toàn BẮT BUỘC: một vế quên gọi `done` sẽ ghim làn (KDoc `VoiceWriteLane`) — không có mốc này thì
         // tấm chữ treo và `running` không bao giờ nhả, tức giọng nói chết tới khi khởi động lại launcher.
         ui.postDelayed(settleTask, TURN_SETTLE_MS)
         d.execute(intents) { post { settle() } }

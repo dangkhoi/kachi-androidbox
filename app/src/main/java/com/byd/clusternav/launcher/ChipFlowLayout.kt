@@ -9,7 +9,7 @@ import kotlin.math.max
  * ═══ Dãy chip TỰ XUỐNG DÒNG — cho [SettingsRows.chipRow] khi `wrap = true` ═════════════════════════════════════
  *
  * Spec `docs/specs/kachi-i18n-zh-th-ms.html` R1 · §4.5: bộ chọn ngôn ngữ nay có SÁU mục (Theo xe · Tiếng Việt ·
- * English · 简体中文 · ไทย · Bahasa Melayu), và nhãn "Theo xe" còn được dịch sang tiếng đang chọn (Mã Lai dài hơn
+ * English · 简体中文 · ไทย · Bahasa Melayu), và nhãn "Theo máy" còn được dịch sang tiếng đang chọn (Mã Lai dài hơn
  * tiếng Anh 20–40%) ⇒ một hàng `LinearLayout` ngang không xuống dòng sẽ đẩy chip cuối ra ngoài mép mà KHÔNG báo gì —
  * đúng mục người dùng cần bấm để quay về thứ tiếng họ đọc được.
  *

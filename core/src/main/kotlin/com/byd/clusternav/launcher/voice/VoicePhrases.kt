@@ -191,7 +191,10 @@ object VoicePhrases {
     ): List<String> {
         val out = ArrayList<String>(1024)
         // Android box B2 · W3: nhãn nút / datum / gói lệnh xe gỡ cùng bộ đăng ký xe.
-        LauncherActions.ALL.forEach { a -> out.add(a.label); a.labelEn?.let(out::add) }
+        LauncherActions.ALL.forEach { a ->
+            out.add(a.label); a.labelEn?.let(out::add)
+            out.addAll(VoiceGrammar.LAUNCHER_SPOKEN_ALIASES[a.id].orEmpty())   // W4: cách nói cũ của nhãn mới không nói được
+        }
         out.addAll(VoiceSynonyms.MEDIA_WORDS)
         out.addAll(VoiceSynonyms.NAV_WORDS)
         out.addAll(profiles)

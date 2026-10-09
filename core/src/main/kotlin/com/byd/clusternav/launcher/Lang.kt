@@ -110,7 +110,7 @@ enum class LangMode(val code: String) {
      * của `LauncherI18nContractTest` kèm lý do.
      */
     fun label(): String = when (this) {
-        AUTO -> Strings.t("Theo xe", "By car")
+        AUTO -> Strings.t("Theo máy", "Follow device")
         VI -> "Tiếng Việt"
         EN -> "English"
         ZH -> "简体中文"

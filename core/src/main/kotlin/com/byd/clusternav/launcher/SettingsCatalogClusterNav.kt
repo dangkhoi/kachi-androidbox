@@ -20,8 +20,7 @@ internal object SettingsCatalogClusterNav {
     /**
      * Tiền tố khoá dựng động → lý do. Bài canh nguyên-văn tra bảng này trước khi kết luận "khoá không tồn tại".
      *
-     * Android box B2 · W2e: RỖNG — tiền tố duy nhất (`seat_level_`, mức từng ghế ghi bằng `"seat_level_$seatIndex"`) gỡ cùng
-     * mã ghế; bốn tên `seat_level_0..3` xếp phạm vi ở [RetiredComfortKeys].
+     * Android box B2 · W2e: RỖNG — tiền tố duy nhất (`seat_level_`, mức từng ghế) gỡ cùng mã ghế.
      */
     val DYNAMIC_KEY_PREFIXES: Map<String, String> = emptyMap()
 
@@ -45,17 +44,12 @@ internal object SettingsCatalogClusterNav {
      * hữu"* — câu sau đã có [SettingsCatalog.groupOf].
      */
     val KEYS: Map<String, String> = buildMap {
-        // ── clusternav_prefs (Prefs.kt, trừ hai khoá bong bóng do VmOverlayPosition.kt khai) ──
+        // ── clusternav_prefs (Prefs.kt + các tệp hàm mở rộng `Prefs*.kt`) ──
+        // Android box B2 · W4 — khoá dẫn đường cụm/HUD (`enabled` · `nav_cluster_screen_mode` · `marquee`), biển báo tốc độ
+        // (`badge_*`) và bong bóng VietMap (`vm_bubble_*`) rời bảng cùng mã; lượt dọn một lần xoá chúng khỏi máy
+        // ([BydDeadPrefs]).
         listOf(
-            "enabled", "nav_cluster_screen_mode", "marquee",
-            "badge_enabled", "show_upcoming_badge", "show_alert_chip", "badge_size_dp",
-            "badge_center_x", "badge_center_y",
-            "vm_bubble_enabled", "vm_bubble_x", "vm_bubble_y",
-            // 2.90 · R8 — cờ "người lái CHỦ ĐỘNG ẩn bóng"; 2.91 · F1: chủ là công tắc hiện bóng (mục `vm_bubble_enabled`).
-            "vm_bubble_hidden",
             "voicekey_enabled", "voicekey_bindings", "voicekey_custom_buttons", "voicekey_learn",
-            // Android box B2 · W2e — ghế · lọc bụi · lấy gió (`seat_*` · `pm25_filter_enabled` · `recirc_on_start_enabled`) rời
-            // bảng cùng mã; tên + phạm vi ở [RetiredComfortKeys].
             "headless_autostart",
             // V1 pha NÓI · R4 (spec `kachi-voice-feedback.html` T9) — hai công tắc của đường ra TIẾNG. Khoá nằm
             // cùng tệp với `voice_mic_pill` (cũng của `Prefs`), nên "cấu hình giọng nói ở đâu" có một câu trả lời.
@@ -74,13 +68,11 @@ internal object SettingsCatalogClusterNav {
             // AUTOMATION (1.85, spec kachi-automation) — khoá CẤU HÌNH của lịch tự dẫn. Khai ở `PrefsAutomation.kt` (hàm mở
             // rộng của `Prefs`, cùng tệp `clusternav_prefs` — tách vì trần 500 dòng, xem KDoc tệp đó).
             // ⚠ `nav_automation_fired` KHÔNG ở đây: nó là TRẠNG THÁI CHẠY, khai ở `SettingsCatalog.NOT_SETTINGS`.
-            // Android box B2 · W2e — ba khoá tự sấy kính `rain_defrost_*` rời bảng cùng mã ([RetiredComfortKeys], theo XE).
             "nav_automation_rules",
             // V8 (owner 2026-09-25) — công tắc *"Tự động cập nhật"*. Chủ là mục `system_update` (hàng *Kiểm tra
             // cập nhật* của nhóm Hệ thống nay có một công tắc **và** một nút) — xem [COMPANION_KEYS].
             "auto_update_enabled",
         ).forEach { put(it, "clusternav_prefs") }
-        // Android box B2 · W2c — khoá `simple_cast_prefs` (chiếu cụm) rời bảng: mã gỡ, tệp rời ảnh chụp ([RetiredClusterKeys]).
         // ── hai tệp một-khoá ──
         put("theme_choice", "clusternav_theme")
         put("lang", "clusternav_lang")
@@ -90,13 +82,9 @@ internal object SettingsCatalogClusterNav {
      * Khoá ĐI KÈM → mã mục đặt nó. Đây là ca *"một điều khiển ghi hai khoá"*, không phải ca *"khoá không ai nhận"*.
      *
      * Bất biến "một khoá đúng một chủ" của [SettingsCatalog] vẫn nguyên: chủ là **mục**, và mục đó ghi cả cặp trong
-     * MỘT lượt. Tách `badge_center_y` ra thành mục riêng thì người dùng đặt được nửa toạ độ — một trạng thái vô
-     * nghĩa mà giao diện tự dựng ra (cùng lập luận đã dùng cho cặp cờ boot ở [SettingsCatalog.NOT_SETTINGS]).
+     * MỘT lượt (cùng lập luận đã dùng cho cặp cờ boot ở [SettingsCatalog.NOT_SETTINGS]).
      */
     val COMPANION_KEYS: Map<String, String> = mapOf(
-        // Android box B2 · W1 — khoá đi kèm của các mục đã gỡ (`badge_center_y` · `vm_bubble_y` · `seat_level_1..3` ·
-        // `rain_defrost_front/rear`) rời bảng này sang [SettingsCatalogRetired.KEYS]: mục chủ của chúng không còn, mà khoá
-        // vẫn ở [KEYS] (= còn theo hồ sơ). Hai dòng còn lại là của mục còn sống.
         // IA v2 · R3 — chip sáng/tối của Kachi ghi CẢ `theme_mode` (nguồn sự thật của launcher) lẫn `theme_choice`
         // (màn nâng cao đọc ở attachBaseContext). Một khái niệm, một công tắc, hai chỗ lưu vì hai màn đọc khác nhau.
         "theme_choice" to "display_theme",
@@ -113,22 +101,11 @@ internal object SettingsCatalogClusterNav {
      * Cùng khuôn [SettingsCatalog.NOT_SETTINGS]: không có danh sách này thì không phân biệt được *"quên gom"* với
      * *"cố ý không gom"*, và câu trả lời cho *"sao Settings mới thiếu cái này"* sẽ phải đi tìm lại trong mã.
      *
-     * Phạm vi: đúng những khoá mà kiểm kê §4.3 xét qua. Khoá trạng-thái-máy của ClusterNav (`disclaimer_shown`,
-     * `vm_float_whitelist_applied`, `nav_verbose_log`, `badge_corner/dx/dy` đời cũ) không thuộc phạm vi đợt này —
-     * chúng chưa bao giờ là một dòng cài đặt. `bubble_auto` và họ `mod_*` là mã chết: không khai, không đụng.
+     * Phạm vi: đúng những khoá mà kiểm kê §4.3 xét qua. Khoá trạng-thái-máy (`disclaimer_shown`) chưa bao giờ là một dòng
+     * cài đặt. Android box B2 · W4: sáu khoá ép-giá-trị của dẫn đường cụm (`interpolate` · `acc_booster` · `lane` ·
+     * `source_mode` · `anim_opt` · `hud`) rời bảng cùng mã — lượt dọn một lần xoá chúng ([BydDeadPrefs]).
      */
     val HIDDEN_KEYS: Map<String, String> = mapOf(
-        "interpolate" to
-            "ép true — bù cự ly theo tốc độ là hành vi mặc định từ 2026-08-12; màn cũ không có nút, và một nút " +
-                "\"tắt phần bù\" chỉ có nghĩa khi đang gỡ lỗi trên xe",
-        "acc_booster" to "ép true — bộ đọc màn GMaps tự câm khi bị che, không có nút ở màn cũ",
-        "lane" to
-            "ép true khi bật dẫn đường (MainActivity.kt:99–126 gọi setLane(true)) — tách ra thành công tắc riêng " +
-                "thì bật dẫn đường mà cụm vẫn trống, một trạng thái không ai muốn dựng",
-        "source_mode" to
-            "không có nút ở màn cũ — màn chỉ HIỆN nguồn đang dùng (txt_nav_source_active); chọn tay nguồn nào là " +
-                "việc của bộ trọng tài, không phải của người lái",
-        "anim_opt" to "ép true — tối ưu hoạt ảnh cụm, không có nút ở màn cũ",
         // owner 2026-09-21 (bản release production) — RỜI [KEYS] sang đây: ô tích *Giữ nhật ký lượt nói* và nút
         // *Xuất nhật ký voice* gỡ khỏi Cài đặt cùng mọi bề mặt dev/debug/log, nên khoá này nay là ca kinh điển của
         // bảng này — **còn sống, cố ý không có UI**. (Chiều ngược lại của `voice_ask_aloud`, khoá đã rời bảng này
@@ -148,9 +125,6 @@ internal object SettingsCatalogClusterNav {
                 "cabin này (đủ để nói tiếp, không đủ để nghe nhầm một câu của người ngồi cạnh). Bày một ô nhập " +
                 "mili-giây ra là mời đặt 30 000 và để micro mở suốt chuyến. Tắt hội thoại = đặt 0 qua cầu kiểm " +
                 "thử; nếu owner muốn một công tắc thật thì nó là một mục MỚI, không phải ô số này",
-        "hud" to
-            "ép false — HUD kính lái mới chỉ có vòng đời request/output, KHÔNG có đường ghi nội dung thật; bày nút " +
-                "ra là hứa một tính năng chưa tồn tại",
         "inputd_disabled" to
             "1.69 — ép CHẠM trong ô đi đường lùi theo cử chỉ (tắt daemon bơm chạm). Là một công tắc ĐO, không " +
                 "phải một lựa chọn: nó chỉ tồn tại để máy ảo diễn được đúng nhánh mà xe đang mắc kẹt ([ĐO xe " +

@@ -6,7 +6,7 @@ import android.widget.LinearLayout
 import com.byd.clusternav.R
 
 /**
- * Nhóm **"Phím vô-lăng"** (IA v2 §4.1 nhóm 7) — công tắc nhận nút vật lý · trạng thái dịch vụ Hỗ trợ · danh sách
+ * Nhóm **"Phím vật lý"** (IA v2 §4.1 nhóm 7) — công tắc nhận nút vật lý · trạng thái dịch vụ Hỗ trợ · danh sách
  * gán (xoá từng dòng) · thêm gán · học phím mới · danh sách nút tự học.
  *
  * ## Hai danh sách phải DỰNG LẠI được, nên chúng nằm trong hai khối con

@@ -18,7 +18,7 @@ import android.util.Log
  * mount slots (VirtualDisplays are surface-bound → they live in [com.byd.clusternav.launcher.KachiHomeActivity],
  * which restores + mounts the saved workspace when it renders).
  *
- * Modeled on [VietMapAutostartService]: [startForeground] FIRST (inside the ~5 s `startForegroundService` budget),
+ * Modeled on `VietMapAutostartService`: [startForeground] FIRST (inside the ~5 s `startForegroundService` budget),
  * a SINGLE background worker (CAS latch + `latestStartId`) so overlapping starts (boot + OTA + a relaunch) don't
  * tear the FGS mid-run, then [finish] (stopForeground + stopSelf). The anti-loop guard (in-flight + cooldown)
  * lives in [KachiAutostart.runBoot], so a duplicate start is a harmless no-op.

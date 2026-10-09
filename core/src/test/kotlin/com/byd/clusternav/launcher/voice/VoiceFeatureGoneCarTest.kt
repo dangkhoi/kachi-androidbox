@@ -101,8 +101,11 @@ class VoiceFeatureGoneCarTest {
     @Test
     fun `cau tra loi noi dieu khien xe da bo o ca hai tieng`() {
         val vi = VoiceReply.unknown(VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, "mở kính"), com.byd.clusternav.launcher.Lang.VI)
-        assertTrue(vi.contains("điều khiển xe") && vi.contains("đã bỏ"), vi)
+        assertTrue(vi.contains("điều khiển xe") && vi.contains("Kachi không có tính năng"), vi)
+        // Android box B2 · W4 — câu trả lời KHÔNG mời người lái sang điều khiển xe (bỏ đuôi "dùng màn hình của xe").
+        assertTrue(!vi.contains("dùng ") && !vi.contains("màn hình của xe"), vi)
         val en = VoiceReply.unknown(VoiceIntent.Unknown(VoiceUnknownReason.FEATURE_GONE, "mở kính"), com.byd.clusternav.launcher.Lang.EN)
-        assertTrue(en.contains("Car control") && en.contains("removed"), en)
+        assertTrue(en.contains("Car control") && en.contains("not part of Kachi"), en)
+        assertTrue(!en.contains("use the car"), en)
     }
 }

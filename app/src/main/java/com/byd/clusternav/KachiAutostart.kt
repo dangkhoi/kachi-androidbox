@@ -36,7 +36,7 @@ import com.byd.clusternav.system.FreeformSeedStore
  *
  * ── Idempotent + degrade-safe ─────────────────────────────────────────────────────────────────────────────────
  * Single in-flight run + cooldown via [AutostartGate] (the reusable generalization of the proven
- * [VietMapAutostart] guard): a burst of boot triggers runs the setup at most once. Every step is wrapped so a
+ * `VietMapAutostart` guard): a burst of boot triggers runs the setup at most once. Every step is wrapped so a
  * failure (no dadb loopback on the emulator, a rejected write on a locked trim) NEVER crashes boot and is simply
  * retried on the next trigger. Gated by [WorkspacePrefs.launcherAutostart] (default ON) so the user can opt out.
  */
@@ -46,7 +46,7 @@ object KachiAutostart {
     /** READY-AT-HOME — chờ F4 đo kênh ở lượt nâng cấp đầu (chưa có dấu duyệt). Hết hạn ⇒ cổng quyết như thường. */
     private const val AUTOSTART_CHANNEL_WAIT_MS = 60_000L
 
-    /** Minimum spacing between two runs — mirrors [VietMapAutostart.COOLDOWN_MS]. */
+    /** Minimum spacing between two runs — mirrors `VietMapAutostart.COOLDOWN_MS`. */
     const val COOLDOWN_MS = 30_000L
 
     private val gate = AutostartGate(COOLDOWN_MS)

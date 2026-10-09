@@ -232,9 +232,17 @@ object VoiceGrammar {
             extraShort.filterNotNull().forEach { add(it, kind, id) }
         }
 
-        LauncherActions.ALL.forEach { a -> addLocalized(a, a.id, VoiceTermKind.LAUNCHER) }
+        LauncherActions.ALL.forEach { a -> addLocalized(a, a.id, VoiceTermKind.LAUNCHER, LAUNCHER_SPOKEN_ALIASES[a.id].orEmpty()) }
         out
     }
+
+    /**
+     * Android box B2 · W4 — cách NÓI thêm cho một việc launcher mà nhãn mới không nói được. Nhãn *"Nói với xe"* đổi thành
+     * *"Nói với Kachi"* (chữ trên nút), nhưng mô hình nghe tiếng Việt không có từ *"Kachi"* (ASR in ra *"ca chi"* …) ⇒ cụm của
+     * nhãn mới bị loại khỏi từ vựng; giữ câu cũ *"nói với xe"* làm cách nói để việc này còn gọi được bằng lời (corpus giọng
+     * nói + harness đang dùng). Chỉ là đầu VÀO được nhận — không câu trả lời nào nói chữ này.
+     */
+    internal val LAUNCHER_SPOKEN_ALIASES: Map<String, List<String>> = mapOf(LauncherActions.VOICE to listOf("Nói với xe"))
 
     /** Từ khoá LOẠI (nhạc / điểm đến) — đứng CUỐI như bản dựng-mỗi-lần, xem ghi chú thứ tự ở [terms]. */
     private val STATIC_TAIL: List<VoiceTerm> by lazy {

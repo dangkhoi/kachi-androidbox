@@ -9,7 +9,7 @@ import android.util.Log
  * phép thuần → đổ kết quả vào `Editor`**: logic (kiểm kiểu, phạm vi) là [PrefSnapshotPlan] ở `:core`, có test chạy thật.
  *
  * Android box B2 · W2c: họ tiền tố `cast_geometry`, khoá hoãn `cast_enabled` và lượt merge khung chiếu lúc nhập GỠ cùng
- * chiếu cụm; tệp `simple_cast_prefs` không còn trong ảnh chụp ([RetiredClusterKeys]). Còn **kiểm kiểu** trước khi ghi:
+ * chiếu cụm; tệp `simple_cast_prefs` không còn trong ảnh chụp (W4 dọn khỏi máy — [BydDeadPrefs]). Còn **kiểm kiểu** trước khi ghi:
  * ảnh trên đĩa sửa tay được và tệp nhập là dữ liệu người khác gửi.
  */
 

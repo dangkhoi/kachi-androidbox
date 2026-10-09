@@ -47,7 +47,7 @@ internal object SettingsCatalogEntries {
         // `home_scene_save` bị `SceneWiringContractTest` tra), nên đổi mã ở đây không phá dây nối nào. KHOÁ lưu bền
         // thì giữ nguyên (`top_strip`/`dock_edge`/`dock_enabled`) — đổi khoá là mất cấu hình của người đang dùng.
         // Android box B2 · W1 — `bars_top_strip` (khoá `top_strip`) + `bars_top_strip_labels` (khoá `top_strip_labels`) gỡ:
-        // mọi chip thanh trạng thái là chip dữ liệu xe BYD. Khoá còn đi theo hồ sơ — xem [SettingsCatalogRetired].
+        // mọi chip thanh trạng thái là chip dữ liệu xe BYD. W4: khoá chết dọn một lần — [BydDeadPrefs].
         // UX-OVERHAUL · WP4 (owner 2026-09-20) — *"cho user CHỌN VỊ TRÍ item BÊN TRONG header + taskbar"*. Đứng SAU
         // hai mục *chọn chip* vì nó sắp lại thứ vừa chọn: sắp chỗ cho một vật chưa có mặt là một câu hỏi vô nghĩa.
         SettingsEntry(
@@ -59,9 +59,9 @@ internal object SettingsCatalogEntries {
         // là thứ tự nghe hợp lý khi đọc danh sách.
         // S1b — ẩn/hiện thanh nút. TRƯỚC danh sách nút + viền vì "có hiện không" là câu hỏi đầu tiên; ẩn rồi thì
         // viền/nút bên dưới không còn tác dụng ngay, nhưng vẫn để lộ ra để đặt sẵn cho lần hiện lại.
-        SettingsEntry("bars_dock_visible", SettingsGroup.BARS, "Hiện thanh nút xe", "dock_visible", "Show the car bar"),
+        SettingsEntry("bars_dock_visible", SettingsGroup.BARS, "Hiện thanh nút", "dock_visible", "Show the button bar"),
         SettingsEntry("bars_dock_edge", SettingsGroup.BARS, "Viền đặt thanh nút", "dock_edge", "Button bar edge"),
-        SettingsEntry("bars_dock_items", SettingsGroup.BARS, "Nút trên thanh nút xe", "dock_enabled", "Buttons on the car bar"),
+        SettingsEntry("bars_dock_items", SettingsGroup.BARS, "Nút trên thanh nút", "dock_enabled", "Buttons on the button bar"),
         // UX-OVERHAUL · WP4 — sắp lại chỗ đứng của những nút vừa chọn.
         //
         // ⚠⚠ `prefKey = null` là **BẮT BUỘC**, không phải bỏ sót: thứ tự nút LÀ thứ tự của `dock_enabled`
@@ -69,15 +69,15 @@ internal object SettingsCatalogEntries {
         // ([ĐO] khai `dock_enabled` lần thứ hai ở đây ⇒ `ExceptionInInitializerError` *"khoá hai chủ"*, 45 bài
         // đỏ). Đúng tiền lệ `home_grid_editor`: một mục **sửa** giá trị mà mục khác **sở hữu**.
         SettingsEntry(
-            "bars_dock_order", SettingsGroup.BARS, "Vị trí trên thanh nút xe",
-            null, "Car-bar item order",
+            "bars_dock_order", SettingsGroup.BARS, "Vị trí trên thanh nút",
+            null, "Button-bar item order",
         ),
         // F1 (owner 01/10, spec shortcuts-autostart R1.4) — app nào hiện trên khối lối tắt (thanh nút) + widget
         // `w_apps`, mỗi app một kiểu mở. Ở nhóm THANH vì chỗ người dùng gặp khối này đầu tiên là chính thanh nút.
         SettingsEntry("bars_app_shortcuts", SettingsGroup.BARS, "Lối tắt ứng dụng", "app_shortcuts", "App shortcuts"),
 
         // ── Hiển thị & đơn vị ──
-        // Android box B2 · W1 — `display_units` (khoá `unit_prefs`) gỡ: đơn vị chỉ dùng cho dữ liệu xe. Xem [SettingsCatalogRetired].
+        // Android box B2 · W1 — `display_units` (khoá `unit_prefs`) gỡ: đơn vị chỉ dùng cho dữ liệu xe. W4: khoá dọn một lần — [BydDeadPrefs].
         // [ĐO] kiểm kê S1 §2: khoá này lưu bền, có enum + có đường ghi, nhưng TRƯỚC S1 không có nút nào chạm tới.
         // IA v2 · R3 — cùng một chip nay ghi THÊM `theme_choice` (tệp `clusternav_theme`) để màn nâng cao theo cùng
         // lựa chọn; khoá thứ hai đó khai ở [SettingsCatalog.CLUSTERNAV_COMPANION_KEYS], không mở mục riêng.
@@ -85,7 +85,7 @@ internal object SettingsCatalogEntries {
         // VISUAL-REFRESH P1b · R8 — màu nhấn (8 ô + theo ảnh nền) và tông thẻ, theo hồ sơ; mã hoá ở `ColorChoice`.
         SettingsEntry("display_color", SettingsGroup.DISPLAY, "Màu sắc", "color_choice", "Colours"),
         // 2.89 · B3 DOCK-SCALE (owner 05/10 *"50-150% đi"*) — cỡ thanh nút theo %, theo hồ sơ (`dock_scale`, mã hoá `BarScale`).
-        SettingsEntry("display_bar_scale", SettingsGroup.DISPLAY, "Cỡ thanh nút xe", "dock_scale", "Car bar size"),
+        SettingsEntry("display_bar_scale", SettingsGroup.DISPLAY, "Cỡ thanh nút", "dock_scale", "Button bar size"),
         // U5·T3 — NGÔN NGỮ. ⚠ Khoá `lang` KHÔNG nằm trong tệp `kachi_workspace` mà trong tệp lưu ngôn ngữ đã có của
         // ClusterNav (`clusternav_lang`, `com.byd.clusternav.Lang`) — cố ý, để một APK chỉ có MỘT công tắc ngôn ngữ
         // thay vì hai cái lệch nhau; lập luận đầy đủ ở KDoc `WorkspacePrefs.langMode`.
@@ -149,7 +149,7 @@ internal object SettingsCatalogEntries {
             "nav_automation_rules", "Scheduled navigation",
         ),
         // Android box B2 · W1 — gỡ `nav_reconnect`, biển báo tốc độ (`badge_*`), bong bóng VietMap (`vm_bubble_*`) và CẢ
-        // nhóm Chiếu màn lên cụm (`cast_*`): phần chỉ-BYD. Khoá còn đi theo hồ sơ — xem [SettingsCatalogRetired].
+        // nhóm Chiếu màn lên cụm (`cast_*`): phần chỉ-BYD. W4: khoá chết dọn một lần — [BydDeadPrefs].
 
         // ── Phím vô-lăng ──
         // switch_voicekey_enabled · Prefs.setVoiceKeyEnabled + NavConnect.grantAccessibility(reset=true)

@@ -278,7 +278,7 @@ object VoiceIntentParser {
      *
      * Chỉ nhận MACRO/CONTROL/LAUNCHER: chúng là những thứ **được đặt tên như một việc**. Một datum hay một app
      * đứng trần thì không phải câu lệnh (*"pin"* một mình không nói lên là xem hay làm gì), nên chúng vẫn phải đi
-     * qua đường động từ. `internal`: [VoiceBareCover] hỏi đúng phép khớp này (không chép một bản thứ hai).
+     * qua đường động từ. `internal`: `VoiceBareCover` hỏi đúng phép khớp này (không chép một bản thứ hai).
      */
     internal fun headMatch(t: List<Token>, terms: List<VoiceTerm>, verbWords: Int): VoiceTerm? {
         val cands = VoiceGrammar.matchAt(t, 0, terms).filter { it.kind == VoiceTermKind.LAUNCHER }

@@ -46,7 +46,7 @@ class IconStyleContractTest {
         "ic_kind_view.xml" to "huy hiệu THÔNG TIN (mắt) của picker — vẽ nét trắng trên nền pill màu, không thuộc đường ống icon lĩnh vực (owner 2026-09-22)",
         "ic_kind_act.xml" to "huy hiệu HÀNH ĐỘNG (nút bấm) của picker — vẽ nét trắng trên nền pill màu, không thuộc đường ống icon lĩnh vực (owner 2026-09-22)",
         // (`ic_turn_left` · `ic_turn_right` · `ic_turn_straight` — mũi tên thẻ dẫn đường trên cụm — xoá ở Android box B2 · W2d.)
-        "ic_turn_right_g.xml" to "mũi tên rẽ cockpit cũ (turn_tile_bg) — cùng họ dẫn đường",
+        // (`ic_turn_right_g` — mũi tên rẽ cockpit cũ của màn ClusterNav — xoá ở Android box B2 · W4 cùng tài nguyên mồ côi.)
         // ⚠ WP6 · R6.2 (2026-09-20) — `ic_bubble_nav.xml` (mũi tên xanh `#1565C0`) đã **XOÁ**: nút nổi nay vẽ
         // `launcher_fg` = chính icon app Kachi (owner *"đổi icon nút nổi thành icon app Kachi"*). Dòng legacy phải
         // rời theo, vì bài `danh sach legacy tu rua hai chieu` đòi mọi tệp khai ở đây còn tồn tại thật.

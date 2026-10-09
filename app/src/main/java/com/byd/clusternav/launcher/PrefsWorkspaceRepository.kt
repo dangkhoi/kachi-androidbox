@@ -53,6 +53,9 @@ class PrefsWorkspaceRepository(context: Context) : WorkspaceRepository {
         prefs.migrateNavScheduleOnce()
         // 2.92 PROFILE-NEW-KEYS: khoá vào phạm vi hồ sơ ở bản SAU lượt trên (sổ đã-rót) — cùng lẽ, cùng thời điểm.
         prefs.fillNewProfileKeysOnce()
+        // Android box B2 · W4: dọn MỘT LẦN khoá chết của Kachi BYD (cài đè lên máy từng chạy bản BYD) — trước `load()` đầu
+        // tiên để không ảnh chụp nào còn mang khoá của tính năng đã gỡ. Sau dấu `migrated_androidbox_v1` = 0 chi phí.
+        prefs.cleanBydDeadPrefsOnce()
     }
 
     /**

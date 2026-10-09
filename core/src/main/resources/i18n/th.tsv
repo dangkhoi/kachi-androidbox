@@ -10,7 +10,7 @@ không đọc được phản hồi	empty response	ไม่มีข้อม�
 không thấy APK trên nhánh {0}	no APK found on branch {0}	ไม่พบ APK ในแบรนช์ {0}
 lỗi mạng: {0}	network error: {0}	ข้อผิดพลาดเครือข่าย: {0}
 đã cài — đang mở lại…	installed — reopening…	ติดตั้งแล้ว — กำลังเปิดใหม่…
-không có kênh shell tới xe ({0}) — {1}. APK đã tải ở: {2}	no shell channel to the head unit ({0}) — {1}. APK saved at: {2}	ไม่มีช่องทาง shell ไปยังระบบรถ ({0}) — {1} ไฟล์ APK บันทึกไว้ที่: {2}
+không có kênh shell tới máy ({0}) — {1}. APK đã tải ở: {2}	no shell channel to the device ({0}) — {1}. APK saved at: {2}	ไม่มีช่องทาง shell ไปยังเครื่อง ({0}) — {1} ไฟล์ APK บันทึกไว้ที่: {2}
 pm install từ chối: {0}. APK đã tải ở: {1}	pm install rejected: {0}. APK saved at: {1}	pm install ปฏิเสธ: {0} ไฟล์ APK บันทึกไว้ที่: {1}
 bấm "Cho phép/Allow" (tích "luôn cho phép") trên hộp thoại gỡ lỗi USB rồi cài lại	tap "Allow" (tick "always allow") on the USB-debugging dialog, then install again	แตะ “อนุญาต/Allow” (ติ๊ก “อนุญาตเสมอ”) ในกล่องโต้ตอบการแก้ไขข้อบกพร่อง USB แล้วติดตั้งอีกครั้ง
 xem Cài đặt › Hệ thống & quyền	see Settings › System & permissions	ดูที่ การตั้งค่า › ระบบและสิทธิ์
@@ -52,16 +52,16 @@ tệp {0} không khớp bản ghim ({1} byte, sha {2}…)	{0} does not match pin
 chưa có lượt nói nào được ghi — bật công tắc rồi nói một câu	no utterances recorded yet — turn the switch on and say something	ยังไม่มีการบันทึกคำพูด — เปิดสวิตช์แล้วลองพูดสักประโยค
 không thấy tệp {0}	no {0} found	ไม่พบ {0}
 mô hình chưa sẵn sàng	model not ready	โมเดลยังไม่พร้อม
-Đang thử nối vào xe để mở trợ lý — chờ vài giây…	Still reaching the head unit to open the assistant — hang on…	กำลังเชื่อมต่อระบบรถเพื่อเปิดผู้ช่วย — รอสักครู่…
-Đã gửi lệnh mở trợ lý nhưng xe không trả lời kịp — thử lại nếu chưa thấy trợ lý.	Sent the assistant key but the head unit did not answer in time — retry if nothing opened.	ส่งคำสั่งเปิดผู้ช่วยแล้ว แต่ระบบรถไม่ตอบสนองทันเวลา — ลองอีกครั้งหากผู้ช่วยยังไม่เปิด
+Đang thử nối vào máy để mở trợ lý — chờ vài giây…	Still reaching the device to open the assistant — hang on…	กำลังเชื่อมต่อเครื่องเพื่อเปิดผู้ช่วย — รอสักครู่…
+Đã gửi lệnh mở trợ lý nhưng máy không trả lời kịp — thử lại nếu chưa thấy trợ lý.	Sent the assistant key but the device did not answer in time — retry if nothing opened.	ส่งคำสั่งเปิดผู้ช่วยแล้ว แต่เครื่องไม่ตอบสนองทันเวลา — ลองอีกครั้งหากผู้ช่วยยังไม่เปิด
 Bấm "Cho phép/Allow" (tích "luôn cho phép") trên hộp thoại gỡ lỗi USB — app đang chờ…	Tap "Allow" (tick "always allow") on the USB-debugging dialog — waiting…	แตะ “อนุญาต/Allow” (ติ๊ก “อนุญาตเสมอ”) ในกล่องโต้ตอบการแก้ไขข้อบกพร่อง USB — กำลังรอ…
 Chưa được cấp quyền gỡ lỗi USB. Bấm "Cho phép/Allow" (nhớ tích "luôn cho phép") rồi thử lại.	USB debugging not authorised yet. Tap "Allow" (tick "always allow") then try again.	ยังไม่ได้รับอนุญาตการแก้ไขข้อบกพร่อง USB แตะ “อนุญาต/Allow” (ติ๊ก “อนุญาตเสมอ”) แล้วลองอีกครั้ง
-Cổng gỡ lỗi 5555 chưa bật trên xe — trợ lý giọng nói không chạy được.	Debug port 5555 is off on the head unit — the voice assistant cannot run.	พอร์ตแก้ไขข้อบกพร่อง 5555 ปิดอยู่บนระบบรถ — ผู้ช่วยเสียงทำงานไม่ได้
-Không nối được vào xe để mở trợ lý. Thử lại sau.	Could not reach the head unit to open the assistant. Try again later.	เชื่อมต่อระบบรถเพื่อเปิดผู้ช่วยไม่ได้ ลองอีกครั้งภายหลัง
+Cổng gỡ lỗi 5555 chưa bật trên máy — trợ lý giọng nói không chạy được.	Debug port 5555 is off on the device — the voice assistant cannot run.	พอร์ตแก้ไขข้อบกพร่อง 5555 ปิดอยู่บนเครื่อง — ผู้ช่วยเสียงทำงานไม่ได้
+Không nối được vào máy để mở trợ lý. Thử lại sau.	Could not reach the device to open the assistant. Try again later.	เชื่อมต่อเครื่องเพื่อเปิดผู้ช่วยไม่ได้ ลองอีกครั้งภายหลัง
 Chưa được cấp quyền gỡ lỗi USB. Mở màn chính Kachi để cấp (nhớ tích "luôn cho phép") rồi thử lại.	USB debugging not authorised yet. Open the Kachi home screen to grant it (tick "always allow") then try again.	ยังไม่ได้รับอนุญาตการแก้ไขข้อบกพร่อง USB เปิดหน้าจอหลัก Kachi เพื่ออนุญาต (ติ๊ก “อนุญาตเสมอ”) แล้วลองอีกครั้ง
 Công thức trợ lý mới chạy được một phần — bật lại công tắc để chạy đủ.	The assistant recipe was only partly applied — toggle it again to finish.	ตั้งค่าผู้ช่วยได้เพียงบางส่วน — สลับสวิตช์อีกครั้งเพื่อให้ครบ
 Launcher — việc của chính màn hình này	Launcher — this screen's own actions	ลันเชอร์ — คำสั่งของหน้าจอนี้เอง
-Không gửi lệnh nào xuống xe: mở danh sách ứng dụng, mở Cài đặt, nói với xe, khối lối tắt ứng dụng.	These send nothing to the car: open the app list, open Settings, talk to the car, the app-shortcut block.	รายการเหล่านี้ไม่ส่งคำสั่งใดไปยังรถ: เปิดรายการแอป เปิดการตั้งค่า คุยกับรถ บล็อกทางลัดแอป
+Việc của chính Kachi: mở danh sách ứng dụng, mở Cài đặt, nói với Kachi, khối lối tắt ứng dụng.	Kachi's own actions: open the app list, open Settings, talk to Kachi, the app-shortcut block.	การทำงานของ Kachi เอง: เปิดรายการแอป เปิดการตั้งค่า คุยกับ Kachi บล็อกทางลัดแอป
 Xanh Kachi	Kachi blue	ฟ้า Kachi
 Tím	Violet	ม่วง
 Lục ngọc	Teal	เขียวหัวเป็ด
@@ -79,7 +79,7 @@ Trái	Left	ซ้าย
 Phải	Right	ขวา
 Trên	Top	บน
 Mở 	Open 	เปิด
-Theo xe	By car	ตามระบบรถ
+Theo máy	Follow device	ตามเครื่อง
 thẻ	card	การ์ด
 xem	view	ดู
 bấm	press	กด
@@ -119,8 +119,8 @@ Dẫn đường	Navigation	การนำทาง
 Ứng dụng · ô · bố cục	Apps · slots · layout	แอป · ช่อง · เลย์เอาต์
 Hồ sơ tài xế	Driver profiles	โปรไฟล์ผู้ขับขี่
 điểm đến	a place	สถานที่
-Tính năng {0} đã bỏ khỏi Kachi — dùng màn hình của xe	{1} was removed from Kachi — use the car's own screen	{1} ถูกนำออกจาก Kachi แล้ว — ใช้หน้าจอของรถแทน
-Kachi chưa điều khiển được {0} — dùng nút trên xe	Kachi cannot control {0} yet — use the car's own control	Kachi ยังควบคุม {0} ไม่ได้ — ใช้ปุ่มควบคุมของรถแทน
+Kachi không có tính năng {0}	{1} is not part of Kachi	Kachi ไม่มีฟีเจอร์ {1}
+Kachi không điều khiển được {0}	Kachi cannot control {0}	Kachi ควบคุม {0} ไม่ได้
 Đã 	Done: 	เรียบร้อย: 
 Đã xong {0} việc	{0} things done	ทำเสร็จแล้ว {0} อย่าง
 Chưa 	Could not 	ไม่สามารถ
@@ -130,16 +130,16 @@ Dẫn đường tới 	Navigate to 	นำทางไป
 Mở ứng dụng 	Open app 	เปิดแอป 
 Bố cục 	Layout 	เลย์เอาต์ 
 Tạm biệt, hẹn gặp lại	Bye, see you	ลาก่อน แล้วพบกันใหม่
-xe không nhận lệnh	the car refused	รถไม่รับคำสั่ง
+máy không nhận lệnh	the device refused	เครื่องไม่รับคำสั่ง
 việc trước còn đang chạy	the previous run is still going	คำสั่งก่อนหน้ายังทำงานอยู่
-chưa có app dẫn đường nào trên xe	no navigation app on this car	ไม่มีแอปนำทางในรถคันนี้
-đã mở app dẫn đường; nhập lại điểm đến trong app (đường chuyển giao chưa đo trên xe)	navigation app opened; enter the destination there (hand-over not measured on-car yet)	เปิดแอปนำทางแล้ว ป้อนจุดหมายในแอป (การส่งต่อยังไม่ได้ทดสอบบนรถจริง)
+chưa có app dẫn đường nào trên máy	no navigation app on this device	ไม่มีแอปนำทางในเครื่องนี้
+đã mở app dẫn đường; nhập lại điểm đến trong app	navigation app opened; enter the destination there	เปิดแอปนำทางแล้ว ป้อนจุดหมายในแอป
 chưa có phiên nhạc nào — mở app nhạc rồi nói lại	no active music session — open a music app first	ไม่มีเซสชันเพลงที่ทำงานอยู่ — เปิดแอปเพลงก่อน
 Kachi không tìm bài hát offline — mở app nhạc rồi nói lại ở đó	Kachi does not search songs offline — open a music app and ask there	Kachi ไม่ค้นหาเพลงแบบออฟไลน์ — เปิดแอปเพลงแล้วค้นหาในแอปนั้น
 bố cục hiện chỉ có {0} ô	the current layout only has {0} slot(s)	เลย์เอาต์ปัจจุบันมีเพียง {0} ช่อง
-chưa cài {0} trên xe	{0} is not installed	ยังไม่ได้ติดตั้ง {0}
+chưa cài {0} trên máy	{0} is not installed	ยังไม่ได้ติดตั้ง {0}
 đã mở {0}; chưa có phiên nhạc nào để điều khiển — bấm Play trong app	opened {0}; no music session to control yet — press Play in the app	เปิด {0} แล้ว ยังไม่มีเซสชันเพลงให้ควบคุม — กดเล่นในแอป
-chưa có app nhạc nào trên xe	no music app on this car	ไม่มีแอปเพลงในรถคันนี้
+chưa có app nhạc nào trên máy	no music app on this device	ไม่มีแอปเพลงในเครื่องนี้
 đang phát	playing now	กำลังเล่น
 chưa kiểm cửa nhận chữ của {0}	{0}'s hand-over door is not verified yet	ช่องทางรับข้อความของ {0} ยังไม่ได้ตรวจสอบ
 đã mở kết quả tìm — bấm Play để phát	search results opened — press Play	เปิดผลการค้นหาแล้ว — กดเล่น
@@ -155,7 +155,6 @@ chưa lưu địa chỉ «{0}» — thêm ở Cài đặt › Dẫn đường �
 {0} chỉ nhận toạ độ; thêm lat/lng cho mục này trong Sổ địa chỉ	{0} only takes coordinates — add lat/lng to this entry in the address book	{0} รับเฉพาะพิกัด — เพิ่ม lat/lng ให้รายการนี้ในสมุดที่อยู่
 đã huỷ	cancelled	ยกเลิกแล้ว
 , {0} việc sau không chạy	, {0} later step(s) not run	 อีก {0} ขั้นตอนถัดไปไม่ได้ทำงาน
-xe này không có bộ phận này (xe tự báo)	this car reports it doesn't have this part	รถคันนี้รายงานว่าไม่มีชิ้นส่วนนี้
 Phát nhạc	Play	เล่นเพลง
 Dừng nhạc	Pause	หยุดเพลงชั่วคราว
 Chuyển bài tiếp theo	Skip to the next track	ข้ามไปเพลงถัดไป
@@ -165,7 +164,7 @@ Tìm bài 	Search 	ค้นหา
  vào ô {0}	 in slot {0}	 ในช่อง {0}
 Chưa có câu lệnh nào	No command yet	ยังไม่มีคำสั่ง
 Chưa rõ cần làm gì — thử {0}	No action word — commands are in Vietnamese, e.g. {0}	ไม่พบคำกริยา — คำสั่งต้องเป็นภาษาเวียดนาม เช่น {0}
-Không tìm thấy thứ đó trong xe hay trong ứng dụng	No such thing on this car or in the app	ไม่พบสิ่งนี้ในรถหรือในแอป
+Không tìm thấy thứ đó trong Kachi hay trong ứng dụng	No such thing in Kachi or in the apps	ไม่พบสิ่งนี้ใน Kachi หรือในแอป
 Việc đó không đi với thứ đó — thử nêu mức, hoặc đổi động từ	That action does not fit that thing — give a level, or use another verb	คำสั่งนี้ใช้กับสิ่งนั้นไม่ได้ — ระบุระดับ หรือใช้คำกริยาอื่น
 Phần này Kachi không tự làm offline (tên bài hát / điểm đến)	Kachi does not do this offline (song names / destinations)	Kachi ทำส่วนนี้แบบออฟไลน์ไม่ได้ (ชื่อเพลง / จุดหมาย)
 Chưa đóng được app bằng giọng — bấm phím Home, hoặc mở app khác đè lên	Closing an app by voice is not supported yet — press Home, or open another app over it	ยังปิดแอปด้วยเสียงไม่ได้ — กดปุ่ม Home หรือเปิดแอปอื่นทับ
@@ -183,7 +182,7 @@ Trình chiếu ảnh	Photo slideshow	สไลด์โชว์ภาพ
 Lưới lối tắt app	App shortcut grid	ตารางทางลัดแอป
 Màn hình chính	Home screen	หน้าจอหลัก
 Thanh trạng thái & thanh nút	Status bar & button bar	แถบสถานะและแถบปุ่ม
-Phím vô-lăng	Steering-wheel keys	ปุ่มพวงมาลัย
+Phím vật lý	Physical keys	ปุ่มกายภาพ
 Giọng nói	Voice	สั่งงานด้วยเสียง
 Hệ thống & quyền	System & permissions	ระบบและสิทธิ์
 Giới thiệu	About	เกี่ยวกับ
@@ -193,10 +192,10 @@ Vẽ bố cục riêng…	Draw your own layout…	วาดเลย์เอา
 Tự ẩn nút ⇄	Auto-hide the ⇄ button	ซ่อนปุ่ม ⇄ อัตโนมัติ
 Hình nền & trình chiếu	Wallpaper & slideshow	ภาพพื้นหลังและสไลด์โชว์
 Vị trí trên thanh trên	Status-bar item order	ลำดับรายการบนแถบสถานะ
-Hiện thanh nút xe	Show the car bar	แสดงแถบปุ่มรถ
+Hiện thanh nút	Show the button bar	แสดงแถบปุ่ม
 Viền đặt thanh nút	Button bar edge	ขอบที่วางแถบปุ่ม
-Nút trên thanh nút xe	Buttons on the car bar	ปุ่มบนแถบปุ่มรถ
-Vị trí trên thanh nút xe	Car-bar item order	ลำดับรายการบนแถบปุ่มรถ
+Nút trên thanh nút	Buttons on the button bar	ปุ่มบนแถบปุ่ม
+Vị trí trên thanh nút	Button-bar item order	ลำดับรายการบนแถบปุ่ม
 Lối tắt ứng dụng	App shortcuts	ทางลัดแอป
 Giao diện sáng/tối	Light / dark theme	ธีมสว่าง / มืด
 Màu sắc	Colours	สี
@@ -244,16 +243,16 @@ Micro	Microphone	ไมโครโฟน
 Định vị	Location	ตำแหน่ง
 Ứng dụng	Apps	แอป
 Cài đặt	Settings	การตั้งค่า
-Nói với xe	Talk to car	คุยกับรถ
+Nói với Kachi	Talk to Kachi	คุยกับ Kachi
 Đồng hồ và ngày	Clock and date	นาฬิกาและวันที่
 Nút nói	Talk button	ปุ่มพูด
 Nút ứng dụng	Apps button	ปุ่มแอป
 Nút cài đặt	Settings button	ปุ่มการตั้งค่า
 Chip hồ sơ	Profile chip	ชิปโปรไฟล์
 Bố cục và hình nền	Layout and wallpaper	เลย์เอาต์และภาพพื้นหลัง
-Chip trên đỉnh và thanh nút xe	Top chips and the car button bar	ชิปด้านบนและแถบปุ่มรถ
+Thanh trên và thanh nút	Top bar and the button bar	แถบด้านบนและแถบปุ่ม
 Mỗi hồ sơ giữ bố cục riêng	Each profile keeps its own layout	แต่ละโปรไฟล์มีเลย์เอาต์ของตัวเอง
-Nói với xe, giọng đọc, Hey Kachi	Talk to the car, reply voice, Hey Kachi	คุยกับรถ เสียงตอบกลับ Hey Kachi
+Nói với Kachi, giọng đọc, Hey Kachi	Talk to Kachi, reply voice, Hey Kachi	คุยกับ Kachi เสียงตอบกลับ Hey Kachi
 Quyền, khởi động, bảo trì, nâng cao	Permissions, startup, maintenance	สิทธิ์ การเริ่มทำงาน การบำรุงรักษา
 Phiên bản, giấy phép và miễn trừ	Version, licence and disclaimer	เวอร์ชัน สัญญาอนุญาต และข้อจำกัดความรับผิดชอบ
 app không vào được ô — đây là tính năng lõi của launcher	apps cannot go into a slot — this is the launcher's core feature	แอปเข้าไปอยู่ในช่องไม่ได้ — นี่คือฟังก์ชันหลักของลันเชอร์
@@ -261,9 +260,9 @@ app không vào được ô theo đường cửa sổ tự do	apps cannot go int
 bấm HOME không về Kachi	pressing HOME does not come back to Kachi	กด HOME แล้วไม่กลับมาที่ Kachi
 Vào Cài đặt › Hệ thống & quyền › Màn hình chính rồi bấm "Đặt Kachi làm màn hình chính"	Open Settings › System & permissions › Home screen, then tap "Set Kachi as home screen"	เปิด การตั้งค่า › ระบบและสิทธิ์ › หน้าจอหลัก แล้วแตะ “ตั้ง Kachi เป็นหน้าจอหลัก”
 dải tiêu đề ô và ngăn kéo app không nổi lên được	slot title bars and the app drawer cannot float on top	แถบชื่อช่องและลิ้นชักแอปแสดงทับด้านบนไม่ได้
-dẫn đường trên cụm mất nguồn dữ liệu	cluster navigation loses its data source	การนำทางบนหน้าปัดจะไม่มีแหล่งข้อมูล
-gán phím vô-lăng và đọc màn hình dẫn đường không chạy	steering-wheel key mapping and navigation screen reading stop working	การกำหนดปุ่มพวงมาลัยและการอ่านหน้าจอนำทางจะหยุดทำงาน
-không nói được với xe (ô "Nói với xe" và nút mic)	you cannot talk to the car (the "Talk to car" tile and the mic button)	คุยกับรถไม่ได้ (ไทล์ “คุยกับรถ” และปุ่มไมค์)
+widget nhạc không thấy bài đang phát	the music widget cannot see what is playing	วิดเจ็ตเพลงมองไม่เห็นเพลงที่กำลังเล่น
+gán phím vật lý không chạy	physical-key mapping stops working	การกำหนดปุ่มกายภาพจะไม่ทำงาน
+không nói được với Kachi (ô "Nói với Kachi" và nút mic)	you cannot talk to Kachi (the "Talk to Kachi" tile and the mic button)	คุยกับ Kachi ไม่ได้ (ไทล์ “คุยกับ Kachi” และปุ่มไมค์)
 tự dẫn đường theo lịch không biết đã ra khỏi hầm chưa nên sẽ không dẫn	scheduled navigation cannot tell whether you have left the car park, so it never starts	การนำทางตามกำหนดเวลาไม่รู้ว่าออกจากที่จอดรถแล้วหรือยัง จึงไม่เริ่มนำทาง
 đèn khẩn cấp	the hazard lights	ไฟฉุกเฉิน
 dây an toàn	the seat belts	เข็มขัดนิรภัย
@@ -295,7 +294,7 @@ chưa biết cỡ mô hình ⇒ nạp như cũ	model size unknown ⇒ loads as b
 còn {0} MB, cần {1} MB (mô hình {2} MB + thở {3} MB)	{0} MB free, {1} MB needed (model {2} MB + headroom {3} MB)	เหลือ {0} MB ต้องการ {1} MB (โมเดล {2} MB + ส่วนเผื่อ {3} MB)
 # CLUSTER-THEME-SAFE B1a (2.89) — màn Chẩn đoán › Cổng theme (chỉ đọc).
 # B3 DOCK-SCALE (2.89) — mục Cài đặt › Hiển thị "Cỡ thanh nút xe" (khoá dock_scale).
-Cỡ thanh nút xe	Car bar size	ขนาดแถบปุ่มรถ
+Cỡ thanh nút	Button bar size	ขนาดแถบปุ่ม
 # 2.91 · F1 — mục Cài đặt › Dẫn đường "Tự mở VietMap cho bong bóng" (khoá vm_bubble_enabled, nghĩa cũ: tự mở VietMap).
 # 2.91 VOICE-APP-NAMES — dạy tên app bằng giọng (spec docs/specs/kachi-290-voice-app-names.html).
 Tên app đã dạy	Taught app names	ชื่อแอปที่สอนแล้ว
