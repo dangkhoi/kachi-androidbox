@@ -114,8 +114,9 @@ android {
         // dọn chẩn đoán lúc khởi động, xoá APK OTA đã cài (spec kachi-298-plan).
         // Kachi Android box 1.0 (1) — B1 tách khỏi BYD: appId `com.kachi.box`, kênh OTA `dangkhoi/kachi-androidbox`
         // (`apk/Kachi-box-<ver>-release.apk`).
-        versionCode = 1
-        versionName = "1.0"
+        // 1.1 (2) — BOX-STALE-LEDGER-NOSHELL: box từng có adb mạng rồi mất ⇒ trang quyền/phím/HOME/OTA đi đường tay.
+        versionCode = 2
+        versionName = "1.1"
 
         // ─── V1 pha NGHE · Vosk mang thư viện NATIVE, và APK chỉ chở ABI có thật trên xe ───────────────
         // [ĐO] 2026-09-14 `vosk-android-0.3.47.aar` (12,3 MB) chở `libvosk.so` cho BỐN ABI:

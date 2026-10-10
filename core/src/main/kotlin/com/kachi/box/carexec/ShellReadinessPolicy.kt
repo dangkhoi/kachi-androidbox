@@ -282,9 +282,16 @@ object ShellReadinessPolicy {
         else -> Admission.DENY
     }
 
-    /** Tính năng cần kênh có được thử ngay không (điểm vào UI — không chờ). Cùng luật với [admit] cho đường nền. */
+    /**
+     * Tính năng cần kênh có được thử ngay không (điểm vào UI — không chờ). Cùng luật với [admit] cho đường nền, TRỪ
+     * [ShellChannelPhase.ENVIRONMENT]: đó là một PHÉP ĐO trong chính tiến trình này (cổng câm / đứt — chỉ lượt sớm và F4
+     * báo, đã UP thì giữ UP), nên nó thắng dấu bền ở điểm vào UI (`BOX-STALE-LEDGER-NOSHELL`, Android box 10/10: box từng
+     * có adb mạng rồi mất ⇒ dấu còn tươi mà trang quyền nói *"đang tự xin lại"*, không nút tay). Cổng thi hành [admit]
+     * KHÔNG đổi: đường nền có dấu tươi vẫn được thử — cổng mở lại thì một phiên nền báo UP và UI tự sáng lại.
+     */
     fun usable(phase: ShellChannelPhase, ledgerFresh: Boolean): Boolean =
-        admit(ShellSessionKind.BACKGROUND, phase, ledgerFresh, canWait = false) == Admission.ALLOW
+        phase != ShellChannelPhase.ENVIRONMENT &&
+            admit(ShellSessionKind.BACKGROUND, phase, ledgerFresh, canWait = false) == Admission.ALLOW
 
     // ─── HOME + giao diện (§4.7, §4.9) ───────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 # Project Context — Kachi Android box (luôn-bật)
 
-> **Trạng thái**: Current · **Cập nhật**: 2026-10-09 (viết lại sau B1–B3; thay bản tóm tắt kế thừa của Kachi BYD) ·
+> **Trạng thái**: Current · **Cập nhật**: 2026-10-10 (1.1 (2) đăng OTA; viết lại sau B1–B3) ·
 > **Mục đích**: tóm tắt luôn-bật, *derived* từ repo. Chi tiết: `docs/README.md` (index) · `docs/PROJECT-BACKLOG.md`
 > (khối ANDROIDBOX) · spec `docs/specs/androidbox-plan.html` (§9 nhật ký B1–B3). Lịch sử Kachi BYD (HAL, cụm, HUD, camera,
 > firmware DiLink, 2.x): repo `dangkhoi/byd-kachi` — không áp dụng ở đây, không chép lại.
@@ -9,12 +9,12 @@
 
 - **Kachi** = launcher (HOME) cho ô tô dùng Android box / đầu Android bất kỳ (owner 09/10: *"loại nào cũng như nhau"*).
   Chỉ phần launcher; dữ liệu xe cắm thêm (B4) hoãn.
-- `applicationId` **`com.kachi.box`** · bản **1.0 (1)** · minSdk 29 · compile/target 37 · JDK 17 · chỉ `arm64-v8a`.
-  Namespace Kotlin = `com.kachi.box.*` (`BOX-RENAME-PACKAGE` xong 09/10, chưa commit; tệp prefs vẫn `clusternav_*` có chủ ý).
+- `applicationId` **`com.kachi.box`** · bản **1.1 (2)** · minSdk 29 · compile/target 37 · JDK 17 · chỉ `arm64-v8a`.
+  Namespace Kotlin = `com.kachi.box.*` (`BOX-RENAME-PACKAGE` 09/10; tệp prefs vẫn `clusternav_*` có chủ ý).
 - Repo `dangkhoi/kachi-androidbox` (MIT), tách từ byd-launcher 2.98 `bf54415`. **Cấm** đụng `../byd-launcher/` hay đẩy lên
   `byd-kachi`.
 - OTA: `apk/Kachi-box-<ver>-release.apk` trên `main` của repo này (`UpdateChecker.REPO`); khuôn BYD `Kachi-<ver>` bị bỏ qua.
-  **Bản 1.0 (1) đăng 09/10** (`apk/Kachi-box-1.0-release.apk`, sha256 `953348c6…fc2f`).
+  **Bản 1.1 (2) đăng 10/10** (`apk/Kachi-box-1.1-release.apk`, sha256 `956c3a15…0dd8`; 1.0 (1) đăng 09/10, đã gỡ).
 - Khoá ký: dùng chung `~/.kachi` với bản BYD (OQ4) — cert SHA-256 `92:57…99:17`; `keystore.properties` gitignored.
 - Gói giọng nói (Hey Kachi KWS, giọng đọc Piper) CỐ Ý tải từ `byd-kachi/voice/` (OQ5, ghim sha256). Mô hình nghe
   zipformer-vi int8 tải từ Hugging Face. VAD Silero + từ khoá KWS đóng trong APK (`app/src/main/assets/voice/`).
@@ -83,13 +83,14 @@
 
 - **B1 xong** (tách gói, OTA riêng) · **B2 xong** W0–W4 (gỡ toàn bộ phần BYD: commit `b4e69b1`…`0b1e248`) · **B3 xong**
   (`9a71aa4`, QA máy ảo `docs/diagnostics/androidbox-b3-no-shell-emulator-2026-10-09.md`) · **B5** README + hướng dẫn +
-  trang giới thiệu viết lại (chưa commit) · **B4 hoãn** (owner).
-- Test cây hiện tại [ĐO sau BOX-RENAME-PACKAGE]: 3 856 / 0, lint 0 lỗi (sau review Pass 3).
-- **1.0 (1) đã đăng OTA 09/10**; **chưa thử trên Android box thật**. Bản kế tiếp ≥ 1.1 (2).
+  trang giới thiệu viết lại (`bce4ccef`) · **B4 hoãn** (owner).
+- Test cây hiện tại [ĐO 10/10, 1.1]: 3 857 / 0, lint 0 lỗi.
+- **1.1 (2) đã đăng OTA 10/10** (1.0 (1) 09/10); **chưa thử trên Android box thật**. Bản kế tiếp ≥ 1.2 (3).
+- Kênh dùng được ở điểm vào UI (`ShellReadinessPolicy.usable`): pha `ENVIRONMENT` đã đo THẮNG dấu duyệt tươi (1.1); cổng thi
+  hành `admit` vẫn cho đường nền có dấu tươi thử.
 
 ## Việc mở (backlog ANDROIDBOX)
 
-- `BOX-REL-1.0` đăng bản đầu (chờ owner) · `BOX-ONDEVICE` thử box thật (adb mạng có không, máy không micro, màn Cài đặt
-  có bị chặn không) · `BOX-STALE-LEDGER-NOSHELL` (dấu duyệt còn tươi ⇒ UI coi kênh dùng được dù
-  pha ENVIRONMENT) · `BOX-B4`. (`BOX-FREEFORM-NOSHELL` · `BOX-HOME-RESULT-LOST` · `BOX-KEYS-NOSHELL-TOAST` · `BOX-RENAME-PACKAGE`
-  DONE 09/10, chưa commit.)
+- `BOX-ONDEVICE` thử box thật (adb mạng có không, máy không micro, màn Cài đặt có bị chặn không, OTA 1.0 → 1.1 qua trình
+  cài hệ thống) · `BOX-B4` hoãn. (`BOX-REL-1.0` · `BOX-REL-1.1` · `BOX-STALE-LEDGER-NOSHELL` · `BOX-FREEFORM-NOSHELL` ·
+  `BOX-HOME-RESULT-LOST` · `BOX-KEYS-NOSHELL-TOAST` · `BOX-RENAME-PACKAGE` DONE.)

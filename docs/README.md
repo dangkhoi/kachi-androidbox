@@ -13,14 +13,14 @@
 | [`../README.md`](../README.md) | Overview — Kachi Android box là gì, tính năng còn lại, yêu cầu máy, cài, cấp quyền, build, quan hệ với Kachi BYD (VI + EN) | Current | 2026-10-09 |
 | [`HUONG-DAN-KACHI-BOX.md`](HUONG-DAN-KACHI-BOX.md) | Guide — hướng dẫn dùng: cài, cấp quyền hai đường, màn hình chính, ô, widget, hồ sơ, giọng nói, phím, cập nhật, lấy log (VI + EN) | Current | 2026-10-09 |
 | [`index.html`](index.html) | Trang giới thiệu GitHub Pages của Kachi Android box (VI + EN, sáng/tối) | Current | 2026-10-09 |
-| [`specs/androidbox-plan.html`](specs/androidbox-plan.html) | Spec kế hoạch Android box B1–B5 — **B1 · B2 (W0–W4) · B3 xong**, B4 hoãn; §9 nhật ký triển khai, §10 Reviewer Log | Current | 2026-10-09 |
+| [`specs/androidbox-plan.html`](specs/androidbox-plan.html) | Spec kế hoạch Android box B1–B5 — **B1 · B2 (W0–W4) · B3 xong**, B4 hoãn; §9 nhật ký triển khai (gồm 1.0 · 1.1), §10 Reviewer Log | Current | 2026-10-10 |
 | [`diagnostics/androidbox-b2-inventory-2026-10-09.md`](diagnostics/androidbox-b2-inventory-2026-10-09.md) | Kiểm kê B2: 11 vùng mã chỉ-BYD (tệp, LOC, lối vào, điểm dính, test ghim) + thứ tự gỡ theo đợt W0–W4 | Current (đã thực hiện) | 2026-10-09 |
-| [`diagnostics/androidbox-b3-no-shell-emulator-2026-10-09.md`](diagnostics/androidbox-b3-no-shell-emulator-2026-10-09.md) | QA máy ảo B3: không có kênh shell ⇒ tự cấp quyền bằng tay, ô mở toàn màn | Current | 2026-10-09 |
+| [`diagnostics/androidbox-b3-no-shell-emulator-2026-10-09.md`](diagnostics/androidbox-b3-no-shell-emulator-2026-10-09.md) | QA máy ảo B3: không có kênh shell ⇒ tự cấp quyền bằng tay, ô mở toàn màn; lượt 3 (10/10) sửa dấu duyệt tươi khi mất adb mạng | Current | 2026-10-10 |
 | [`layering-rules.md`](layering-rules.md) | Luật xếp chỗ `:core` / `:car-integration` / `:app` — `LayeringRulesTest` đọc tệp này | Current | 2026-10-09 |
-| [`PROJECT-BACKLOG.md`](PROJECT-BACKLOG.md) | Backlog — khối **ANDROIDBOX** đầu tệp là việc của box | Current | 2026-10-09 |
+| [`PROJECT-BACKLOG.md`](PROJECT-BACKLOG.md) | Backlog — khối **ANDROIDBOX** đầu tệp là việc của box | Current | 2026-10-10 |
 | [`../CLAUDE.md`](../CLAUDE.md) | Luật dự án viết lại cho Android box | Current | 2026-10-09 |
 | [`../.kiro/steering/project-context.md`](../.kiro/steering/project-context.md) | Tóm tắt luôn-bật — **viết lại 2026-10-09 cho Android box** (bản tóm tắt BYD cũ còn trong lịch sử git) | Current | 2026-10-09 |
-| [`../apk/README.md`](../apk/README.md) | Kênh OTA — từ 2026-10-09 là kênh **Kachi Android box** (`Kachi-box-<ver>`, chưa có bản); nhật ký phát hành 2.80 → 2.98 của Kachi BYD nằm ở repo `byd-kachi` | Current | 2026-10-09 |
+| [`../apk/README.md`](../apk/README.md) | Kênh OTA **Kachi Android box** (`Kachi-box-<ver>`) — bản hiện tại **1.1 (2)** (10/10), nhật ký từng bản; nhật ký 2.80 → 2.98 của Kachi BYD nằm ở repo `byd-kachi` | Current | 2026-10-10 |
 | [`../CREDITS.md`](../CREDITS.md) | Ghi công thư viện / mô hình bên thứ ba còn dùng | Current | 2026-10-09 |
 | [`_handoff/androidbox-b2-brief.md`](_handoff/androidbox-b2-brief.md) | Brief chung cho mọi đợt B2 (đọc trước khi làm một đợt) | Session | 2026-10-09 |
 | [`_handoff/HANDOFF-androidbox-2026-10-09.md`](_handoff/HANDOFF-androidbox-2026-10-09.md) | Handoff tách repo (phiên đầu) | Session | 2026-10-09 |

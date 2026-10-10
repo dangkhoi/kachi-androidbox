@@ -1,6 +1,6 @@
 # B3 — Kachi Android box khi KHÔNG có kênh shell: QA máy ảo (2026-10-09)
 
-**Trạng thái**: Current · **Cập nhật**: 2026-10-09 · **Mục đích**: bằng chứng QA cho spec `docs/specs/androidbox-plan.html` §4.2 (B3) — mọi quyền thiếu có đường tự cấp bằng tay, ô app có lối mở toàn màn, khi không có adb mạng.
+**Trạng thái**: Current · **Cập nhật**: 2026-10-10 (lượt 3) · **Mục đích**: bằng chứng QA cho spec `docs/specs/androidbox-plan.html` §4.2 (B3) — mọi quyền thiếu có đường tự cấp bằng tay, ô app có lối mở toàn màn, khi không có adb mạng.
 
 ## Môi trường
 - Máy ảo RIÊNG `emulator-5560` (AVD `kachi_box`, Android 10 / API 29, 1280×720), gói `com.kachi.box` 1.0 (1) bản debug dựng từ cây làm việc B3.
@@ -59,4 +59,18 @@ Bản debug dựng từ cây làm việc (chưa commit), `install -r` lên `emul
 
 **Trả lại**: `reverse tcp:5555 tcp:5561` ([ĐO] `reverse --list` → `host-15 tcp:5555 tcp:5561`) · `enable_freeform_support 1` · mở lại Kachi ⇒ `Preflight: … sau khi tự cấp: đủ quyền`.
 
-**Phát hiện thêm (không sửa — backlog `BOX-STALE-LEDGER-NOSHELL`)** [ĐO giao diện + log; nguyên nhân SUY từ mã `ShellReadinessPolicy.admit`]: lần đầu bỏ `reverse` mà KHÔNG `pm clear`, dấu duyệt `kachi_shell_approval` còn tươi ⇒ `KachiReady: env PORT_CLOSED src=early` nhưng `ShellAccessUi.usableNow()` = `ShellReadinessPolicy.usable(ENVIRONMENT, ledgerFresh = true)` = **true** ⇒ trang quyền hiện *"Kachi is re-requesting it"* + *"An environment limitation"* không nút tay, và nút Phím vật lý vẫn đi dadb. Ca thật: box từng có adb mạng rồi mất. Hàng *Freeform* thì ẩn đúng (đọc `shell != null` của màn chính).
+**Phát hiện thêm (lượt 2 không sửa — đã sửa 10/10 ở 1.1, xem Lượt 3)** [ĐO giao diện + log; nguyên nhân SUY từ mã `ShellReadinessPolicy.admit`]: lần đầu bỏ `reverse` mà KHÔNG `pm clear`, dấu duyệt `kachi_shell_approval` còn tươi ⇒ `KachiReady: env PORT_CLOSED src=early` nhưng `ShellAccessUi.usableNow()` = `ShellReadinessPolicy.usable(ENVIRONMENT, ledgerFresh = true)` = **true** ⇒ trang quyền hiện *"Kachi is re-requesting it"* + *"An environment limitation"* không nút tay, và nút Phím vật lý vẫn đi dadb. Ca thật: box từng có adb mạng rồi mất. Hàng *Freeform* thì ẩn đúng (đọc `shell != null` của màn chính).
+
+## Lượt 3 — `BOX-STALE-LEDGER-NOSHELL` đã sửa (2026-10-10, release 1.1 (2))
+
+`emulator-5560`, cài đè `adb install -r` bản release 1.1 (2) lên 1.0 (giữ prefs + dấu duyệt).
+
+| # | Bước | Kết quả [ĐO] |
+|---|---|---|
+| C1 | `tcpip 5555` + `reverse tcp:5555 tcp:5561`, mở Kachi | `early mode=LEDGER … -> UP`, `ledger markUp … ok=true`, tự cấp trợ năng. |
+| C2 | `reverse --remove tcp:5555` + `enabled_accessibility_services null` + force-stop, mở lại (dấu còn tươi) | `early mode=LEDGER try=1..3 -> PORT_CLOSED` ⇒ `env PORT_CLOSED src=early`. |
+| C3 | Cài đặt › Hệ thống & quyền | 3 hàng thiếu (kênh điều khiển · màn chính · Trợ năng) đều có câu *"No control channel for Kachi to grant this itself…"* + nút *Open system settings* — hết câu *"Kachi is re-requesting it"* của lượt 2. |
+| C4 | Phím vật lý › *Check / Fix now* | `KachiNoShell: mở android.settings.ACCESSIBILITY_SETTINGS`, màn trên cùng `Settings$AccessibilitySettingsActivity`, 0 dòng dadb. |
+| C5 | Về HOME, trả `reverse tcp:5555 tcp:5561`, chờ 30 s | `up src=f4` (F4 dò lại 20 s) ⇒ `Preflight: sau khi tự cấp: thiếu: default_home`, trợ năng = `KachiKeyService`. |
+| C6 | Ổn định | `logcat -b crash` 0 dòng Kachi. |
+

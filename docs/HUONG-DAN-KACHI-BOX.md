@@ -1,8 +1,8 @@
 # Hướng dẫn dùng Kachi Android box · User guide
 
 > **Trạng thái**: Current · **Cập nhật**: 2026-10-09 · **Mục đích**: hướng dẫn cài, cấp quyền và dùng Kachi trên Android
-> box / đầu Android (bản 1.0, `com.kachi.box`). Tên nhóm và tên hàng lấy theo app (`SettingsCatalogGroups.kt` ·
-> `SettingsCatalogEntries.kt`). Bản 1.0 đã đăng, **chưa thử trên box thật** — mọi bước dưới đây đã chạy trên máy ảo
+> box / đầu Android (bản 1.1, `com.kachi.box`). Tên nhóm và tên hàng lấy theo app (`SettingsCatalogGroups.kt` ·
+> `SettingsCatalogEntries.kt`). Bản 1.1 đã đăng, **chưa thử trên box thật** — mọi bước dưới đây đã chạy trên máy ảo
 > Android 10. Hướng dẫn cũ của Kachi BYD: `HUONG-DAN-KACHI.md` (lịch sử).
 
 ## Tiếng Việt

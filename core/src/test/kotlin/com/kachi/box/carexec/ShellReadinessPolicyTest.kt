@@ -190,6 +190,19 @@ class ShellReadinessPolicyTest {
         assertFalse(ShellReadinessPolicy.usable(UNKNOWN, false))
     }
 
+    @Test
+    fun `BOX-STALE-LEDGER-NOSHELL - moi truong da do thang dau tuoi o diem vao UI, cong thi hanh giu nguyen`() {
+        val bg = ShellSessionKind.BACKGROUND
+        assertFalse(ShellReadinessPolicy.usable(ENVIRONMENT, ledgerFresh = true), "cổng câm đã đo ⇒ UI không coi kênh dùng được")
+        assertFalse(ShellReadinessPolicy.usable(ENVIRONMENT, ledgerFresh = false))
+        assertEquals(Admission.ALLOW, ShellReadinessPolicy.admit(bg, ENVIRONMENT, true, true), "đường nền dấu tươi vẫn thử (cổng mở lại ⇒ UP)")
+        // Các pha khác: UI vẫn theo đúng luật cổng thi hành (luồng chính, không chờ).
+        assertTrue(ShellReadinessPolicy.usable(UNKNOWN, ledgerFresh = true))
+        assertTrue(ShellReadinessPolicy.usable(CHECKING, ledgerFresh = true))
+        assertFalse(ShellReadinessPolicy.usable(STARTING, ledgerFresh = false))
+        assertTrue(ShellReadinessPolicy.usable(UP, ledgerFresh = false))
+    }
+
     // ── HOME + giao diện ───────────────────────────────────────────────────────────────────────────────────
 
     @Test
